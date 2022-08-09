@@ -25,7 +25,6 @@ jobs:
     - id: get-chart
       name: 'Get modified charts'
       run: |
-        cd charts
         files_changed="$(git show --pretty="" --name-only)"
         # Adding || true to avoid "Process exited with code 1" errors
         charts_dirs_changed="$(echo "$files_changed" | xargs dirname | grep -o "stakater/[^/]*" | sort | uniq || true)"
