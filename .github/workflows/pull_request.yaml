@@ -82,10 +82,8 @@ jobs:
     #    helm install ${CHART_NAME} ${CHART_NAME} -f ${CHART_NAME}/values.yaml -n stakater-chart-pipeline-test --dry-run --debug
     # package
     - name: Helm Package
-      env:
-          CHART_NAME: ${{ steps.get-chart.outputs.chart }}
       run: |
-        helm package ${CHART_NAME}    
+        helm package stakater/${CHART_NAME}    
 
     - name: Comment on PR
       uses: mshick/add-pr-comment@v1
