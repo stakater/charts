@@ -38,8 +38,8 @@ jobs:
           echo "::set-output name=result::fail"
         elif [[ "$num_charts_changed" -eq "1" ]]; then
           # Changes done in only one chart -> OK
-          CHART_NAME=$(echo "$charts_dirs_changed" | sed "s|stakater/||g")
-          echo "::set-output name=chart::${CHART_NAME}"
+          chart_name=$(echo "$charts_dirs_changed" | sed "s|stakater/||g")
+          echo "::set-output name=chart::${chart_name}"
           echo "::set-output name=result::ok"
         elif [[ "$num_charts_changed" -le "0" ]]; then
           # Changes done in the bitnami/ folder but not inside a chart subfolder -> SKIP
@@ -67,6 +67,8 @@ jobs:
 
     # Lint
     - name: Helm Lint
+      env:
+        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
       run: |
         helm lint stakater/${CHART_NAME}
 
