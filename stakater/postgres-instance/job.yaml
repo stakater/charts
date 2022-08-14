@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: oauthservice-db-init
+  namespace: mattermost-operator
+spec:
+  template:
+    metadata:
+      name: oauthservice-db-init-job
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: postgres-instance
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: oauthservice-db-init
+        name: dbinit
+      containers:
+      - name: run-dbinit-script
+        image: postgres:alpine3.15
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: DB_HOST
+            valueFrom: 
+              secretKeyRef: 
+                name: postgres-pguser-oauthservice-user
+                key: host
+          - name: DATABASE_NAME
+            valueFrom: 
+              secretKeyRef: 
+                name: postgres-pguser-oauthservice-user
+                key: dbname
+          - name: DB_USER
+            valueFrom: 
+              secretKeyRef: 
+                name: postgres-pguser-oauthservice-user
+                key: user
+          - name: DB_PASSWORD
+            valueFrom: 
+              secretKeyRef: 
+                name: postgres-pguser-oauthservice-user
+                key: password       
+        command:
+        - /bin/sh
+        - -c
+        - "source /tmp/init.sh"
+        volumeMounts:
+        - mountPath: /tmp/init.sh
+          name: dbinit
+          subPath: init.sh

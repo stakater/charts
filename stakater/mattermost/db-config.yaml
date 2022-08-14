@@ -1,0 +1,10 @@
+## Take connection string or uri from postgres-pguser-documentservice-user secret and use postgres instead of postgresql in the beginning to avoid uri error
+## https://github.com/mattermost/mattermost-operator/issues/269
+apiVersion: v1
+data:
+  DB_CONNECTION_STRING: cG9zdGdyZXM6Ly9kb2N1bWVudHNlcnZpY2UtdXNlcjpPbnpLRSU3REhFTSU1RTJRbmklN0JOJTI5PUclN0IubDRUQHBvc3RncmVzLXByaW1hcnkubWF0dGVybW9zdC1vcGVyYXRvci5zdmM6NTQzMi9kb2N1bWVudHNlcnZpY2UtZGI=
+kind: Secret
+metadata:
+  name: mattermost-postgres-connection
+  namespace: mattermost-operator
+type: Opaque

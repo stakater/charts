@@ -1,0 +1,20 @@
+# Default values for mattermost-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+mattermost-operator:
+  mattermostOperator:
+    enabled: true
+    replicas: 1
+    rbac:
+      create: true
+    serviceAccount:
+      create: true
+    env:
+      maxReconcilingInstallations: 20
+      requeuOnLimitDelay: 20s
+    image:
+      repository: mattermost/mattermost-operator
+      tag: v1.18.0
+      pullPolicy: IfNotPresent
+    args:
+      - --enable-leader-election

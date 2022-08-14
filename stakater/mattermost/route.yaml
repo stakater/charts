@@ -1,0 +1,14 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: stakater-mattermost
+  namespace: mattermost-operator
+spec:
+  host: stakater-mattermost-mattermost-operator.apps.devtest.vxdqgl7u.kubeapp.cloud
+  to:
+    kind: Service
+    name: stakater-mattermost
+    weight: 100
+  port:
+    targetPort: app
+  wildcardPolicy: None
