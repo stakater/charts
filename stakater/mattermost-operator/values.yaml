@@ -1,6 +1,68 @@
 # Default values for mattermost-operator.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
+namespace:
+  createNamespace: false
+  labels:
+    stakater.com/tenant: gabbar
+
+tenant:
+  enabled: true
+  name: stakater-mattermost
+  route:
+    enabled: true
+    name: stakater
+    host: stakater-mattermost-operator.apps.devtest.vxdqgl7u.kubeapp.cloud
+    tls:
+      enabled: true
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+  licenseSecret: ""
+  database:
+    external: true
+    secretName: mattermost-postgres-connection
+    connectionString: postgres://documentservice-user:OnzKE%7DHEM%5E2Qni%7BN%29=G%7B.l4T@postgres-primary.mattermost-operator.svc:5432/documentservice-db
+  fileStore:
+    external: true
+    url: http://minio.mattermost-operator.svc:80
+    bucket: test
+    secretName: minio-creds-secret
+  ingress:
+    enabled: true
+    host: stakater-mattermost-mattermost-operator.apps.devtest.vxdqgl7u.kubeapp.cloud
+  size: 500users                               # Adjust to your requirements
+  replicas: 2
+  scheduling:
+    resources:
+      limits:
+        cpu: '2'
+        memory: 4Gi
+      requests:
+        cpu: 500m
+        memory: 500Mi 
+  probes:
+    livenessProbe:
+      httpGet:
+        path: /api/v4/system/ping
+        port: 8065
+        scheme: HTTP
+      initialDelaySeconds: 20
+      timeoutSeconds: 60
+      periodSeconds: 5
+      successThreshold: 1
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /api/v4/system/ping
+        port: 8065
+        scheme: HTTP
+      initialDelaySeconds: 20
+      timeoutSeconds: 60
+      periodSeconds: 5
+      successThreshold: 1
+      failureThreshold: 6
+
 mattermost-operator:
   mattermostOperator:
     enabled: true

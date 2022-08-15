@@ -1,0 +1,12 @@
+{{- if .Values.createNamespace }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mattermost-operator
+  labels:
+{{- if .Values.namespace.labels }}
+{{- toYaml .Values.namespace.labels | nindent 4 }}
+{{- end }}
+spec: {}
+status: {}
+{{- end }}
