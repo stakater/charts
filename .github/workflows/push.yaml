@@ -11,9 +11,6 @@ on:
     paths-ignore:
     - 'README.md'      
 
-env:
-  CHART_NAME: "rabbitmq-observability"
-
 jobs:
   build:
     name: Build
