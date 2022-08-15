@@ -1,0 +1,126 @@
+name: Push
+
+concurrency: 
+ group: push_on_master
+ cancel-in-progress: false
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+    - 'README.md'      
+
+env:
+  CHART_NAME: "rabbitmq-observability"
+
+jobs:
+  build:
+    name: Build
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
+    runs-on: ubuntu-latest
+    
+    steps:
+
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+        fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
+
+    - id: get-chart
+      name: 'Get modified charts'
+      run: |
+        # Using the Github API to detect the files changed as git merge-base stops working when the branch is behind
+        # and jitterbit/get-changed-files does not support pull_request_target
+        PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
+        files_changed_data=$(curl -s --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -X GET -G "$PR_URL")
+        files_changed="$(echo $files_changed_data | jq -r '.[] | .filename')"
+        # Adding || true to avoid "Process exited with code 1" errors
+        charts_dirs_changed="$(echo "$files_changed" | xargs dirname | grep -o "stakater/[^/]*" | sort | uniq || true)"
+        # Using grep -c as a better alternative to wc -l when dealing with empty strings."
+        num_charts_changed="$(echo "$charts_dirs_changed" | grep -c "stakater" || true)"
+        num_version_bumps="$(echo "$files_changed" | grep Chart.yaml | xargs git show | grep -c "+version" || true)"
+
+        if [[ "$num_charts_changed" -ne "$num_version_bumps" ]]; then
+          # Changes done in charts but version not bumped -> ERROR
+          echo "::set-output name=error::Detected changes in charts without version bump in Chart.yaml.\nCharts changed: ${num_charts_changed}\n${charts_dirs_changed}\nVersion bumps detected: ${num_version_bumps}"
+          echo "::set-output name=result::fail"
+        elif [[ "$num_charts_changed" -eq "1" ]]; then
+          # Changes done in only one chart -> OK
+          chart_name=$(echo "$charts_dirs_changed" | sed "s|stakater/||g")
+          echo "::set-output name=chart::${chart_name}"
+          echo "::set-output name=result::ok"
+        elif [[ "$num_charts_changed" -le "0" ]]; then
+          # Changes done in the bitnami/ folder but not inside a chart subfolder -> SKIP
+          echo "::set-output name=error::No changes detected in charts. The rest of the tests will be skipped."
+          echo "::set-output name=result::skip"
+        else
+          # Changes done in more than chart -> FAIL
+          echo -e "::set-output name=error::Changes detected in more than one chart directory:\n${charts_dirs_changed}\nThe publish process will be stopped. Please create different commits for each chart."
+          echo "::set-output name=result::fail"
+        fi
+
+
+    - id: show-error
+      name: 'Show error'
+      if: ${{ steps.get-chart.outputs.result == 'fail' }}
+      uses: actions/github-script@v3
+      with:
+        script: |
+            core.setFailed('${{ steps.get-chart.outputs.error }}')
+
+    # Set Up Helm
+    - name: Set up Helm
+      uses: azure/setup-helm@v1
+      with:
+        version: v3.7.0
+
+    # Lint
+    - name: Helm Lint
+      env:
+        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
+      run: |
+        helm lint stakater/${CHART_NAME}
+
+    - name: Helm Package
+      env:
+        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
+      run: |
+        helm package stakater/${CHART_NAME}    
+
+    # Dry run to ensure that manifests are generated successfully 
+    #- name: Dry Run Chart
+    #  run: |
+    #    helm install ${CHART_NAME} ${CHART_NAME} -f ${CHART_NAME}/values.yaml -n stakater-chart-pipeline-test --dry-run --debug
+    # Publish helm chart
+    - name: Publish Helm chart
+      uses: stefanprodan/helm-gh-pages@master
+      with:
+        branch: master
+        repository: stakater-charts
+        target_dir: docs
+        token: ${{ secrets.STAKATER_GITHUB_TOKEN }}
+        charts_dir: .
+        charts_url: https://stakater.github.io/stakater-charts
+        owner: stakater
+        linting: off 
+        commit_username: stakater-user
+        commit_email: stakater@gmail.com
+
+    # Generate tag for chart without "v" prefix
+    - name: Generate Tag
+      id: generate_tag
+      uses: anothrNick/github-tag-action@1.36.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.STAKATER_GITHUB_TOKEN }}
+        WITH_V: false
+        DEFAULT_BUMP: patch
+        DRY_RUN: true
+        
+    - name: Push Latest Tag
+      uses: anothrNick/github-tag-action@1.36.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.STAKATER_GITHUB_TOKEN }}
+        WITH_V: false
+        DEFAULT_BUMP: patch
