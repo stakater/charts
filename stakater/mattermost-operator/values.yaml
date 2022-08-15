@@ -22,7 +22,7 @@ tenant:
   database:
     external: true
     secretName: mattermost-postgres-connection
-    connectionString: postgres://documentservice-user:OnzKE%7DHEM%5E2Qni%7BN%29=G%7B.l4T@postgres-primary.mattermost-operator.svc:5432/documentservice-db
+    connectionString: cG9zdGdyZXM6Ly9kb2N1bWVudHNlcnZpY2UtdXNlcjpPbnpLRSU3REhFTSU1RTJRbmklN0JOJTI5PUclN0IubDRUQHBvc3RncmVzLXByaW1hcnkubWF0dGVybW9zdC1vcGVyYXRvci5zdmM6NTQzMi9kb2N1bWVudHNlcnZpY2UtZGI=
   fileStore:
     external: true
     url: http://minio.mattermost-operator.svc:80
