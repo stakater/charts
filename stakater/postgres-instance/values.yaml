@@ -1,0 +1,21 @@
+postgres:
+  name: postgres
+  postgresVersion: 14
+  pg_hba:
+    - "hostnossl all all all password"
+    - "host  all  all 0.0.0.0/0 md5"
+  users:
+  - name: documentservice-user
+    databases:
+      - documentservice-db
+  instances:
+    - name: instance1
+      dataVolumeClaimSpec:
+        accessModes:
+        - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: 10Gi
+  repo:
+    name: repo1
+    storage: 1Gi

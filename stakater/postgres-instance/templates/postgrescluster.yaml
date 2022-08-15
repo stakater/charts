@@ -1,0 +1,32 @@
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: {{ .Values.postgres.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  patroni:
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+{{- toYaml .Values.postgres.pg_hba | nindent 10 }}
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:centos8-14.2-0
+  users:
+{{- toYaml .Values.postgres.users | nindent 2 }}
+  postgresVersion: {{ .Values.postgres.postgresVersion }}
+  instances:
+{{- toYaml .Values.postgres.instances | nindent 4 }}
+  backups:
+    pgbackrest:
+      repos:
+      - name: {{ .Values.postgres.repo.name }}
+        volume:
+          volumeClaimSpec:
+            accessModes:
+            - "ReadWriteOnce"
+            resources:
+              requests:
+                storage: {{ .Values.postgres.repo.storage }}
+  monitoring:
+    pgmonitor:
+      exporter:
+        image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres-exporter:ubi8-5.1.1-0

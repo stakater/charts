@@ -1,0 +1,37 @@
+{{- if .Values.tenant.enabled }}
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: {{ .Values.tenant.name }}
+spec:
+  serviceAccountName: {{ .Values.tenant.serviceAccountName }}
+  console:
+    consoleSecret:
+      name: {{ .Values.tenant.consoleSecret }}
+    replicas: {{ .Values.tenant.consoleReplica }}
+  credsSecret:
+    name: {{ .Values.tenant.credsSecret }}
+  pools:
+    - servers: {{ .Values.tenant.pools.servers }}
+      volumeClaimTemplate:
+        metadata:
+          name: data
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.tenant.pools.storageSize }}
+          storageClassName: {{ .Values.tenant.pools.storageClassName }}
+      volumesPerServer: {{ .Values.tenant.pools.volumesPerServer }}
+  requestAutoCert: {{ .Values.tenant.requestAutoCert }}
+  serviceMetadata:
+    consoleServiceAnnotations:
+      v2.min.io: console-svc
+    consoleServiceLabels:
+      label: console-svc
+    minioServiceAnnotations:
+      v2.min.io: minio-svc
+    minioServiceLabels:
+      label: minio-svc
+{{- end }}
