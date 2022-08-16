@@ -18,4 +18,4 @@ postgres:
             storage: 10Gi
   repo:
     name: repo1
-    storage: 1Gi
+    storage: 2Gi
