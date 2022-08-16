@@ -35,6 +35,10 @@ jobs:
         num_charts_changed="$(echo "$charts_dirs_changed" | grep -c "stakater" || true)"
         num_version_bumps="$(echo "$files_changed" | grep Chart.yaml | xargs git show | grep -c "+version" || true)"
         echo '::echo::on'
+        echo "$files_changed"
+        echo "$charts_dirs_changed"
+        echo "$num_charts_changed"
+        echo "$num_version_bumps"
         echo "$charts_dirs_changed" | sed "s|stakater/||g"
         echo '::echo::off'
 
