@@ -104,12 +104,14 @@ jobs:
     # Publish helm chart
     - name: Publish Helm chart
       uses: stefanprodan/helm-gh-pages@master
+      env:
+        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
       with:
         branch: master
         repository: stakater-charts
         target_dir: docs
         token: ${{ secrets.STAKATER_GITHUB_TOKEN }}
-        charts_dir: .
+        charts_dir: ${CHART_NAME}
         charts_url: https://stakater.github.io/stakater-charts
         owner: stakater
         linting: off 
