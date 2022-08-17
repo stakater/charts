@@ -112,7 +112,7 @@ jobs:
         repository: stakater-charts
         target_dir: docs
         token: ${{ secrets.STAKATER_GITHUB_TOKEN }}
-        charts_dir: stakater/${{ steps.get-chart.outputs.chart }}
+        charts_dir: stakater
         charts_url: https://stakater.github.io/stakater-charts
         owner: stakater
         linting: off 
