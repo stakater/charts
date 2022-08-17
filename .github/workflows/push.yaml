@@ -86,12 +86,14 @@ jobs:
 
     # Lint
     - name: Helm Lint
+      if: ${{ steps.get-chart.outputs.result == 'ok' }}
       env:
         CHART_NAME: ${{ steps.get-chart.outputs.chart }}
       run: |
         helm lint stakater/${CHART_NAME}
 
     - name: Helm Package
+      if: ${{ steps.get-chart.outputs.result == 'ok' }}
       env:
         CHART_NAME: ${{ steps.get-chart.outputs.chart }}
       run: |
@@ -104,14 +106,13 @@ jobs:
     # Publish helm chart
     - name: Publish Helm chart
       uses: stefanprodan/helm-gh-pages@master
-      env:
-        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
+      if: ${{ steps.get-chart.outputs.result == 'ok' }}
       with:
         branch: master
         repository: stakater-charts
         target_dir: docs
         token: ${{ secrets.STAKATER_GITHUB_TOKEN }}
-        charts_dir: stakater/${{ CHART_NAME }}
+        charts_dir: stakater/${{ steps.get-chart.outputs.chart }}
         charts_url: https://stakater.github.io/stakater-charts
         owner: stakater
         linting: off 
@@ -122,6 +123,7 @@ jobs:
     - name: Generate Tag
       id: generate_tag
       uses: anothrNick/github-tag-action@1.36.0
+      if: ${{ steps.get-chart.outputs.result == 'ok' }}
       env:
         GITHUB_TOKEN: ${{ secrets.STAKATER_GITHUB_TOKEN }}
         WITH_V: false
@@ -130,6 +132,7 @@ jobs:
         
     - name: Push Latest Tag
       uses: anothrNick/github-tag-action@1.36.0
+      if: ${{ steps.get-chart.outputs.result == 'ok' }}
       env:
         GITHUB_TOKEN: ${{ secrets.STAKATER_GITHUB_TOKEN }}
         WITH_V: false
