@@ -23,7 +23,6 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
       with:
-        path: charts
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
         fetch-depth: 2  # to be able to obtain files changed in the latest commit
 
@@ -32,9 +31,6 @@ jobs:
       run: |
         path="$(pwd)"
         files="$(ls)"
-        cd charts
-        path1="$(pwd)"
-        files1="$(ls)"
         files_changed="$(git show --pretty="" --name-only)"
         # Adding || true to avoid "Process exited with code 1" errors
         charts_dirs_changed="$(echo "$files_changed" | grep -o "stakater/[^/]*" | sort | uniq || true)"
@@ -44,8 +40,6 @@ jobs:
         echo '::echo::on'
         echo "$path"
         echo "$files"
-        echo "$path1"
-        echo "$files1"
         echo "$files_changed"
         echo "$charts_dirs_changed"
         echo "$num_charts_changed"
