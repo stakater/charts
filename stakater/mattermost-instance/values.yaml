@@ -1,4 +1,4 @@
-# Default values for mattermost-operator.
+# Default values for mattermost-instance.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -13,7 +13,7 @@ tenant:
   route:
     enabled: true
     name: stakater
-    host: stakater-mattermost-operator.apps.devtest.vxdqgl7u.kubeapp.cloud
+    host: stakater-mattermost-instance.apps.devtest.vxdqgl7u.kubeapp.cloud
     tls:
       enabled: true
       termination: edge
@@ -22,15 +22,15 @@ tenant:
   database:
     external: true
     secretName: mattermost-postgres-connection
-    connectionString: cG9zdGdyZXM6Ly9kb2N1bWVudHNlcnZpY2UtdXNlcjpPbnpLRSU3REhFTSU1RTJRbmklN0JOJTI5PUclN0IubDRUQHBvc3RncmVzLXByaW1hcnkubWF0dGVybW9zdC1vcGVyYXRvci5zdmM6NTQzMi9kb2N1bWVudHNlcnZpY2UtZGI=
+    connectionString: cG9zdGdyZXM6Ly9kb2N1bWVudHNlcnZpY2UtdXNlcjpPbnpLRSU3REhFTSU1RTJRbmklN0JOJTI5PUclN0IubDRUQHBvc3RncmVzLXByaW1hcnkubWF0dGVybW9zdC1pbnN0YW5jZS5zdmM6NTQzMi9kb2N1bWVudHNlcnZpY2UtZGI=
   fileStore:
     external: true
-    url: http://minio.mattermost-operator.svc:80
+    url: http://minio.mattermost-instance.svc:80
     bucket: test
     secretName: minio-creds-secret
   ingress:
-    enabled: true
-    host: stakater-mattermost-mattermost-operator.apps.devtest.vxdqgl7u.kubeapp.cloud
+    enabled: false
+    host: stakater-mattermost-instance.apps.devtest.vxdqgl7u.kubeapp.cloud
   size: 500users                               # Adjust to your requirements
   replicas: 2
   scheduling:
