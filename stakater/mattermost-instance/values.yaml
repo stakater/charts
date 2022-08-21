@@ -64,8 +64,11 @@ tenant:
       successThreshold: 1
       failureThreshold: 6
 
+postgres-instance:
+  enabled: true
 
 minio-operator:
+  enabled: true
   secret:
     enabled: false
   sealedSecret:
