@@ -80,7 +80,7 @@ jobs:
       env:
         CHART_NAME: ${{ steps.get-chart.outputs.chart }}
       run: |
-        helm dependency update
+        helm dependency update stakater/${CHART_NAME}
         helm lint stakater/${CHART_NAME}
 
     # Dry run to ensure that manifests are generated successfully 
@@ -92,7 +92,7 @@ jobs:
       env:
         CHART_NAME: ${{ steps.get-chart.outputs.chart }}
       run: |
-        helm dependency update
+        helm dependency update stakater/${CHART_NAME}
         helm package stakater/${CHART_NAME}    
 
     - name: Comment on PR
