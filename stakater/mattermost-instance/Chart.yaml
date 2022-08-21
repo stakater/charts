@@ -5,9 +5,11 @@ dependencies:
   - name: postgres-instance
     version: 0.1.0
     repository: https://stakater.github.io/stakater-charts
+    condition: postgres-instance.enabled
   - name: minio-operator
     version: 0.1.2
     repository: https://stakater.github.io/stakater-charts
+    condition: minio-operator.enabled
 
 # A chart can be either an 'application' or a 'library' chart.
 #
