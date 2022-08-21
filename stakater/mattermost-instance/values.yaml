@@ -67,7 +67,7 @@ tenant:
 postgres-instance:
   enabled: true
 
-minio-operator:
+minio:
   enabled: true
   secret:
     enabled: false
