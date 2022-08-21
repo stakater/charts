@@ -1,6 +1,10 @@
 apiVersion: v2
 name: mattermost-operator
 description: A Helm chart for Kubernetes
+dependencies:
+  - name: postgres-instance
+    version: 0.1.0
+    repository: https://stakater.github.io/stakater-charts
 
 # A chart can be either an 'application' or a 'library' chart.
 #
