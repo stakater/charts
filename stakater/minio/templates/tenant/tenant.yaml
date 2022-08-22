@@ -5,10 +5,11 @@ metadata:
   name: {{ .Values.tenant.name }}
 spec:
   serviceAccountName: {{ .Values.tenant.serviceAccountName }}
-  console:
-    consoleSecret:
-      name: {{ .Values.tenant.consoleSecret }}
-    replicas: {{ .Values.tenant.consoleReplica }}
+# Currently there is a bug and the bucket might not be created automatically. github issue: https://github.com/minio/operator/issues/1224
+{{- if .Values.tenant.buckets }}
+  buckets:
+{{- toYaml .Values.tenant.buckets | nindent 4 }}
+{{- end }}
   credsSecret:
     name: {{ .Values.tenant.credsSecret }}
   pools:
