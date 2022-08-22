@@ -5,15 +5,17 @@ tenant:
   enabled: true
   name: minio
   serviceAccountName: minio-tenant
-  consoleSecret: console-secret
-  consoleReplica: 1
+# Currently there is a bug and the bucket might not be created automatically. github issue: https://github.com/minio/operator/issues/1224
+  buckets:
+  - name: "test"
+    region: "us-east-1"
   credsSecret: minio-creds-secret
   requestAutoCert: false
   pools:
-    servers: 2
-    storageSize: 4Gi
+    servers: 1
+    storageSize: 1Gi
     storageClassName: stakater
-    volumesPerServer: 2
+    volumesPerServer: 1
 
 serviceAccount:
   enabled: true
@@ -33,12 +35,6 @@ secret:
   annotations: 
     # key: value
   files:    
-  - name: console-secret
-    data:
-      CONSOLE_ACCESS_KEY: YWRtaW4=
-      CONSOLE_PBKDF_PASSPHRASE: YWRtaW4=
-      CONSOLE_PBKDF_SALT: YWRtaW4=
-      CONSOLE_SECRET_KEY: YWRtaW4=
   - name: minio-creds-secret
     data:
       ## Access Key for MinIO Tenant
