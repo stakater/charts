@@ -15,7 +15,6 @@ tenant:
     name: stakater
     host: stakater-mattermost-instance.apps.devtest.vxdqgl7u.kubeapp.cloud
     tls:
-      enabled: true
       termination: edge
       insecureEdgeTerminationPolicy: Redirect
   licenseSecret: ""

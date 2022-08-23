@@ -12,7 +12,7 @@ spec:
     weight: 100
   port:
     targetPort: app
-{{- if .Values.tenant.route.tls.enabled }}
+{{- if .Values.tenant.route.tls }}
   tls:
 {{- toYaml .Values.tenant.route.tls | nindent 4 }}
 {{- end }}
