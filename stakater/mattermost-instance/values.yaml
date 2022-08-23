@@ -10,6 +10,8 @@ namespace:
 tenant:
   enabled: true
   name: stakater-mattermost
+  rbac:
+    enabled: true
   route:
     enabled: true
     name: stakater

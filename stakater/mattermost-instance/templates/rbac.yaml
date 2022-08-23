@@ -1,0 +1,15 @@
+{{- if and .Values.tenant.rbac .Values.tenant.rbac.enabled }}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mattermost-instance
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - verbs:
+      - "*"
+    apiGroups:
+      - installation.mattermost.com
+    resources:
+      - mattermosts
+{{- end }}
