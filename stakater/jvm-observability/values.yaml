@@ -5,6 +5,6 @@
 global:
   namespace:
 
-javaObservability:
+jvmObservability:
   jvmMicrometer:
     enabled: true

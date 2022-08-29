@@ -1,5 +1,5 @@
 apiVersion: v2
-name: java-observability
+name: jvm-observability
 description: A Helm chart for Kubernetes showing Java Observability
 
 # A chart can be either an 'application' or a 'library' chart.
