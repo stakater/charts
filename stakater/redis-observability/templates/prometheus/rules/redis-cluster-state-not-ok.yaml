@@ -1,0 +1,29 @@
+{{- if and ( .Values.prometheus.rules.redisClusterStateNotOk ) ( .Values.prometheus.rules.redisClusterStateNotOk.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: redis-cluster-state-not-ok
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: redis
+    rules:
+    - alert: RedisClusterStateNotOk
+      expr: |
+        redis_cluster_state == 0
+      for: 5m
+      annotations:
+        description: |
+          Redis cluster is not ok\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}.
+        summary: |
+          Redis cluster state is not ok (instance {{`{{ $labels.instance }}`}})
+      labels:
+        severity: critical
+{{- end }}

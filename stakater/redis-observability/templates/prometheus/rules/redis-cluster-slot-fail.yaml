@@ -1,0 +1,29 @@
+{{- if and ( .Values.prometheus.rules.redisClusterSlotFail ) ( .Values.prometheus.rules.redisClusterSlotFail.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: redis-cluster-slot-fail
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: redis
+    rules:
+    - alert: RedisClusterSlotFail
+      expr: |
+        redis_cluster_slots_fail > 0
+      for: 5m
+      annotations:
+        description: |
+          Redis cluste has slots fail\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}.
+        summary: |
+          Number of hash slots mapping to a node in FAIL state (instance {{`{{ $labels.instance }}`}})
+      labels:
+        severity: warning
+{{- end }}

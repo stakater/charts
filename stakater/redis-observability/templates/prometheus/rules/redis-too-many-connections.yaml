@@ -1,0 +1,29 @@
+{{- if and ( .Values.prometheus.rules.redisTooManyConnections ) ( .Values.prometheus.rules.redisTooManyConnections.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: redis-too-many-connections
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: redis
+    rules:
+    - alert: RedisTooManyConnections
+      expr: |
+        redis_connected_clients > {{ .Values.prometheus.rules.redisTooManyConnections.redisConnectionsThreshold }}
+      for: 5m
+      annotations:
+        description: |
+          Redis instance has too many connections\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}.
+        summary: |
+          Redis too many connections (instance {{`{{ $labels.instance }}`}})
+      labels:
+        severity: warning
+{{- end }}
