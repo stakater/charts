@@ -1,0 +1,29 @@
+{{- if and ( .Values.prometheus.rules.redisOutOfMemory ) ( .Values.prometheus.rules.redisOutOfMemory.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: redis-out-of-memory
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: redis
+    rules:
+    - alert: RedisOutOfMemory
+      expr: |
+        redis_memory_used_bytes / redis_total_system_memory_bytes * 100 > 90
+      for: 5m
+      annotations:
+        description: |
+          Redis is running out of memory (> 90%)\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}.
+        summary: |
+          Redis out of memory (instance {{`{{ $labels.instance }}`}})
+      labels:
+        severity: warning
+{{- end }}
