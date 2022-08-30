@@ -1,0 +1,42 @@
+---
+{{- if and ( .Values.prometheus.rules.rabbitmq.tcpSocketsNearLimit ) ( .Values.prometheus.rules.rabbitmq.tcpSocketsNearLimit.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-tcp-sockets-near-limit
+{{- if .Values.prometheus.rules.rabbitmq.tcpSocketsNearLimit.namespace  }}
+  namespace: {{ .Values.prometheus.rules.rabbitmq.tcpSocketsNearLimit.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: rabbitmq
+    rules:
+    - alert: RabbitMqTCPSocketsNearLimit
+      expr: |
+        sum by(namespace, rabbitmq_cluster, pod, rabbitmq_node) (max_over_time(rabbitmq_process_open_tcp_sockets[5m]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node, pod) rabbitmq_identity_info)
+        /
+        sum by(namespace, rabbitmq_cluster, pod, rabbitmq_node) (rabbitmq_process_max_tcp_sockets  * on(instance) group_left(rabbitmq_cluster, rabbitmq_node, pod) rabbitmq_identity_info)
+        > 0.8
+      for: 10m
+      annotations:
+        description: |
+          `{{`{{ $value | humanizePercentage }}`}}` TCP sockets of TCP socket
+          limit are open in RabbitMQ node `{{`{{ $labels.rabbitmq_node }}`}}`, pod `{{`{{ $labels.pod }}`}}`,
+          RabbitMQ cluster `{{`{{ $labels.rabbitmq_cluster }}`}}`, namespace `{{`{{ $labels.namespace }}`}}`.
+        summary: |
+          More than 80% of TCP sockets are open on the RabbitMQ node.
+          When this value reaches 100%, new connections will not be accepted.
+          Client libraries, peer nodes and CLI tools will not be able to connect when the node runs out of available TCP sockets.
+          See https://www.rabbitmq.com/networking.html.
+      labels:
+        rulesgroup: rabbitmq
+        severity: warning
+{{- end }}

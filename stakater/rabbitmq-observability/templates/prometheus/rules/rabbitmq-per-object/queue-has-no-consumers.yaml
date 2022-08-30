@@ -1,0 +1,39 @@
+---
+{{- if and ( .Values.prometheus.rules.rabbitmqPerObject.queueHasNoConsumers ) ( .Values.prometheus.rules.rabbitmqPerObject.queueHasNoConsumers.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-queue-has-no-consumers
+{{- if .Values.prometheus.rules.rabbitmqPerObject.queueHasNoConsumers.namespace  }}
+  namespace: {{ .Values.prometheus.rules.rabbitmqPerObject.queueHasNoConsumers.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: rabbitmq
+    rules:
+    - alert: RabbitMqQueueHasNoConsumers
+      expr: |
+          (
+            ((rabbitmq_detailed_queue_consumers{vhost="/", queue=~".*"} == 0) + rabbitmq_detailed_queue_messages) > 0
+          ) * on (instance, job) group_left(rabbitmq_cluster) rabbitmq_identity_info
+      for: 10m
+      annotations:
+        description: |
+          Over the last 10 minutes, non-empty queue `{{`{{ $labels.queue }}`}}` with {{`{{ $value }}`}} messages
+          in virtual host `{{`{{ $labels.vhost }}`}}` didn't have any consumers in
+          RabbitMQ cluster `{{`{{ $labels.rabbitmq_cluster }}`}}` in namespace `{{`{{ $labels.namespace }}`}}`.
+        summary: |
+          Messages are sitting idle in the queue, without any processing.
+          This alert is highly application specific (and e.g. doesn't make sense for stream queues).
+      labels:
+        rulesgroup: rabbitmq
+        severity: warning
+{{- end }}

@@ -1,0 +1,92 @@
+# Default values for rabbitmq-observability.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  namespace:
+
+grafana:
+  labels: {}
+  erlangDistribution:
+    enabled: true
+  erlangDistributionCompare:
+    enabled: true
+  erlangMemoryAllocators:
+    enabled: true
+  rabbitmqAlerts:
+    enabled: true
+  rabbitmqOverview:
+    enabled: true
+  rabbitmqQueue:
+    enabled: true
+  rabbitmqQuorumQueues:
+    enabled: true
+  rabbitmqStream:
+    enabled: true
+prometheus:
+  alertmanager:
+    labels: {}
+    slack:
+      enabled: true
+      name: slack-config
+      channel: rabbitmq
+      apiSecret:
+        key: api_url
+        name: rabbitmq-slack-webhook
+  monitors:
+    podMonitor:
+      enabled: false
+    serviceMonitor:
+      enabled: false
+  rules:
+    labels: {}
+    rabbitmq:
+      containerRestarts:
+        enabled: true
+      fileDescriptorsNearLimit:
+        enabled: true
+      highConnectionChurn:
+        enabled: true
+      insufficientDistributionLinks:
+        enabled: true
+      lowDiskWatermarkPredicted:
+        enabled: true
+      noMajorityOfNodesReady:
+        enabled: true
+      persistentVolumeMissing:
+        enabled: true
+      recordingRules:
+        enabled: true
+      tcpSocketsNearLimit:
+        enabled: true
+      unroutableMessages:
+        enabled: true
+      rabbitMqMemoryUsageHigh:
+        enabled: true
+      rabbitMqMemoryAlarm:
+        enabled: true
+      rabbitMqDiskSpaceAlarm:
+        enabled: true
+      rabbitMQServerDown:
+        enabled: true
+      rabbitMqClusterNotAllNodesRunning:
+        enabled: true
+      rabbitmqDiskSpaceBelowThreshold:
+        enabled: true
+        threshold: 1073741824 #1Gb
+      rabbitmqNodesBelowThreshold:
+        enabled: true
+        threshold: 3
+        rabbitmqCluster: rabbitmq
+      rabbitmqMemoryBelowThreshold:
+        enabled: true
+        threshold: 268435456 #256Mb
+        rabbitmqCluster: rabbitmq
+    clusterOperator:
+      unavailableReplicas:
+        enabled: true
+    rabbitmqPerObject:
+      queueHasNoConsumers:
+        enabled: true
+      queueIsGrowing:
+        enabled: true

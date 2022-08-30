@@ -1,0 +1,32 @@
+---
+{{- if and ( .Values.prometheus.rules.rabbitmq.rabbitMQServerDown ) ( .Values.prometheus.rules.rabbitmq.rabbitMQServerDown.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-server-down
+{{- if .Values.prometheus.rules.rabbitmq.rabbitMQServerDown.namespace  }}
+  namespace: {{ .Values.prometheus.rules.rabbitmq.rabbitMQServerDown.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: rabbitmq
+    rules:
+    - alert: RabbitMQServerDown
+      expr: min(rabbitmq_up) by(instance) != 1
+      for: 1m
+      annotations:
+        description: "The RabbitMQ Server instance at {{`{{$labels.instance}}`}} has been down the last <%= p('rabbitmq_alerts.server_down.evaluation_time') %>"
+        summary: "Rabbitmq Server instance {{`{{$labels.instance}}`}} is down"
+      labels:
+        rabbitmq_cluster: '{{`{{ $labels.label_app_kubernetes_io_name }}`}}'
+        rulesgroup: rabbitmq
+        severity: critical
+{{- end }}
