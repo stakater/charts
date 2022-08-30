@@ -1,0 +1,39 @@
+---
+{{- if and ( .Values.prometheus.rules.rabbitmqPerObject.queueIsGrowing ) ( .Values.prometheus.rules.rabbitmqPerObject.queueIsGrowing.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-queue-is-growing
+{{- if .Values.prometheus.rules.rabbitmqPerObject.queueIsGrowing.namespace  }}
+  namespace: {{ .Values.prometheus.rules.rabbitmqPerObject.queueIsGrowing.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: rabbitmq
+    rules:
+    - alert: RabbitMqQueueIsGrowing
+      # `> 1` because of floating point rounding errors
+      expr: |
+          (
+              avg_over_time(rabbitmq_detailed_queue_messages[10m]) - avg_over_time(rabbitmq_detailed_queue_messages[10m] offset 1m) > 1
+          ) * on (instance, job) group_left(rabbitmq_cluster) rabbitmq_identity_info
+      for: 10m
+      annotations:
+        description: |
+          Over the last 10 minutes, queue `{{`{{ $labels.queue }}`}}` in virtual host `{{`{{ $labels.vhost }}`}}`
+          was growing. 10 minute moving average has grown by {{`{{ $value }}`}}.
+          This happens in RabbitMQ cluster `{{`{{ $labels.rabbitmq_cluster }}`}}` in namespace `{{`{{ $labels.namespace }}`}}`.
+        summary: |
+          Queue size is steadily growing over time.
+      labels:
+        rulesgroup: rabbitmq
+        severity: warning
+{{- end }}

@@ -1,0 +1,32 @@
+---
+{{- if and ( .Values.prometheus.rules.rabbitmq.rabbitmqNodesBelowThreshold ) ( .Values.prometheus.rules.rabbitmq.rabbitmqNodesBelowThreshold.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-nodes-below-threshold
+{{- if .Values.prometheus.rules.rabbitmq.rabbitmqNodesBelowThreshold.namespace  }}
+  namespace: {{ .Values.prometheus.rules.rabbitmq.rabbitmqNodesBelowThreshold.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: rabbitmq
+    rules:
+    - alert: RabbitmqNodesBelowThreshold
+      expr: sum(rabbitmq_build_info * on(instance) group_left(rabbitmq_cluster) rabbitmq_identity_info{rabbitmq_cluster="{{ .Values.prometheus.rules.rabbitmq.rabbitmqNodesBelowThreshold.rabbitmqCluster }}"}) < {{ .Values.prometheus.rules.rabbitmq.rabbitmqNodesBelowThreshold.threshold }}
+      for: 1m
+      annotations:
+        description: RabbitMQ {{`{{ $labels.instance }}`}} Nodes threshold has been reached. Current value=`{{`{{ $value | printf "%.0f" }}`}}`, Threshold= {{ .Values.prometheus.rules.rabbitmq.rabbitmqNodesBelowThreshold.threshold }}
+        summary: RabbitMQ is Out of Nodes
+      labels:
+        rabbitmq_cluster: '{{`{{ $labels.label_app_kubernetes_io_name }}`}}'
+        rulesgroup: rabbitmq
+        severity: critical
+{{- end }}
