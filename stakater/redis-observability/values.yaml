@@ -16,7 +16,7 @@ prometheus:
     port: redis-exporter
     scheme: http
     interval: 10s
-    scrapeTimeout: 15s
+    scrapeTimeout: 5s
     path: /metrics
     matchLabels: 
       app: redis
@@ -39,3 +39,4 @@ prometheus:
       enabled: true
     redisTooManyConnections:
       enabled: true
+      redisConnectionsThreshold: 5

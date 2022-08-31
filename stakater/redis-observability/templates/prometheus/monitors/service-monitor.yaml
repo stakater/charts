@@ -12,7 +12,7 @@ spec:
     scheme: {{ .Values.prometheus.serviceMonitor.scheme }}
     interval: {{ .Values.prometheus.serviceMonitor.interval }}
     scrapeTimeout: {{ .Values.prometheus.serviceMonitor.scrapeTimeout }}
-    path: {{ .Values.prometheus.serviceMonitor.name }}
+    path: {{ .Values.prometheus.serviceMonitor.path }}
   selector:
     matchLabels:
 {{- if .Values.prometheus.serviceMonitor.matchLabels }}
