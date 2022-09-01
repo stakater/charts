@@ -5,7 +5,8 @@ global:
   namespace:
 
 grafana:
-  labels: {}
+  labels:
+    grafanaDashboard: grafana-operator
   redisExporterOverview:
     enabled: true
 
