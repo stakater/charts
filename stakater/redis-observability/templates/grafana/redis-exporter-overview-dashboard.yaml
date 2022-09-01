@@ -31,8 +31,8 @@ spec:
       "editable": true,
       "gnetId": 763,
       "graphTooltip": 1,
-      "id": 24,
-      "iteration": 1602758020790,
+      "id": 40,
+      "iteration": 1662065334334,
       "links": [],
       "panels": [
         {
@@ -60,7 +60,7 @@ spec:
           "error": false,
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -92,9 +92,10 @@ spec:
           "links": [],
           "nullPointMode": "connected",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -104,6 +105,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "exemplar": true,
               "expr": "avg(irate(redis_commands_total{instance=~\"$instance\"} [$__rate_interval])) by (cmd)",
               "format": "time_series",
               "interval": "",
@@ -167,7 +169,7 @@ spec:
           "error": false,
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -199,9 +201,10 @@ spec:
           "links": [],
           "nullPointMode": "connected",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -277,7 +280,7 @@ spec:
           "error": false,
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -307,9 +310,10 @@ spec:
           "links": [],
           "nullPointMode": "connected",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": true,
+          "pluginVersion": "7.5.16",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -415,7 +419,7 @@ spec:
           "error": false,
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -447,9 +451,10 @@ spec:
           "links": [],
           "nullPointMode": "null as zero",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -548,7 +553,7 @@ spec:
           "error": false,
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -578,9 +583,10 @@ spec:
           "links": [],
           "nullPointMode": "connected",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -598,7 +604,8 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "redis_memory_fragmentation_ratio{instance=~\"$instance\"}",
+              "exemplar": true,
+              "expr": "redis_mem_fragmentation_ratio{instance=~\"$instance\"}",
               "hide": false,
               "interval": "",
               "legendFormat": "{{`{{instance}}`}}",
@@ -664,7 +671,7 @@ spec:
           "error": false,
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -694,9 +701,10 @@ spec:
           "links": [],
           "nullPointMode": "connected",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -785,7 +793,7 @@ spec:
           "description": "Sum taken across instances",
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -813,9 +821,10 @@ spec:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -895,7 +904,7 @@ spec:
           "error": false,
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -929,9 +938,10 @@ spec:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1004,7 +1014,7 @@ spec:
           "error": false,
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -1034,9 +1044,10 @@ spec:
           "links": [],
           "nullPointMode": "connected",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1118,7 +1129,7 @@ spec:
           "description": "This metric will only be non-zero if the instance is a master",
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -1145,9 +1156,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1213,7 +1225,7 @@ spec:
           "description": "This metric is only exported if the instance is a slave.",
           "fieldConfig": {
             "defaults": {
-              "custom": {}
+              "links": []
             },
             "overrides": []
           },
@@ -1240,9 +1252,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.5.16",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1252,6 +1265,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "exemplar": true,
               "expr": "redis_master_last_io_seconds_ago{instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{`{{instance}}`}}",
@@ -1301,7 +1315,7 @@ spec:
         }
       ],
       "refresh": false,
-      "schemaVersion": 25,
+      "schemaVersion": 27,
       "style": "dark",
       "tags": [
         "prometheus",
@@ -1314,21 +1328,27 @@ spec:
             "current": {
               "selected": true,
               "tags": [],
-              "text": "redisdb-7d6b98cd98-kjt5x + redisdb-7d6b98cd98-pbkg6",
+              "text": [
+                "10.130.4.36:9121"
+              ],
               "value": [
-                "redisdb-7d6b98cd98-kjt5x",
-                "redisdb-7d6b98cd98-pbkg6"
+                "10.130.4.36:9121"
               ]
             },
             "datasource": "${datasource}",
             "definition": "label_values(redis_up, instance)",
+            "description": null,
+            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": null,
             "multi": true,
             "name": "instance",
             "options": [],
-            "query": "label_values(redis_up, instance)",
+            "query": {
+              "query": "label_values(redis_up, instance)",
+              "refId": "prometheus-instance-Variable-Query"
+            },
             "refresh": 2,
             "regex": "",
             "skipUrlSync": false,
@@ -1341,10 +1361,12 @@ spec:
           },
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "prometheus",
               "value": "prometheus"
             },
+            "description": null,
+            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "Data Source",
@@ -1390,6 +1412,6 @@ spec:
       },
       "timezone": "browser",
       "title": "Redis Dashboard for Prometheus Redis Exporter 1.x",
-      "version": 5
+      "version": 1
     }
 {{- end }}
