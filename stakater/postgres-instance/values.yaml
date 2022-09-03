@@ -29,6 +29,8 @@ postgres:
       port: 9187
       targetPort: 9187
       labels:
+        postgres-operator.crunchydata.com/crunchy-postgres-exporter: 'true'
+        postgres-operator.crunchydata.com/cluster: postgres
       selector:
         postgres-operator.crunchydata.com/crunchy-postgres-exporter: 'true'
         postgres-operator.crunchydata.com/data: postgres
