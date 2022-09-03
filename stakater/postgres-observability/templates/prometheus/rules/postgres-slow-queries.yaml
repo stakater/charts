@@ -1,0 +1,25 @@
+{{- if and ( .Values.prometheus.rules.postgreSlowQueries ) ( .Values.prometheus.rules.postgreSlowQueries.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+  name: postgres-slow-queries
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+spec:
+  groups:
+  - name: postgres
+    rules:
+    - alert: PostgreSlowQueries
+      expr: avg(rate(pg_stat_activity_max_tx_duration{datname!~"template.*"}[2m])) by (datname) > 2 * 60
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "PostgreSQL high number of slow on {{`{{ $labels.cluster }}`}} for database {{`{{ $labels.datname }}`}} "
+        description: "PostgreSQL high number of slow queries {{`{{ $labels.cluster }}`}} for database {{`{{ $labels.datname }}`}} with a value of {{`{{ $value }}`}} "
+{{- end }}

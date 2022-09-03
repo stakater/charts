@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.postgresInstanceDown ) ( .Values.prometheus.rules.postgresInstanceDown.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+  name: postgres-instance-down
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+spec:
+  groups:
+  - name: postgres
+    rules:
+    - alert: PostgresInstanceDown
+      expr: pg_up == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: "PostgreSQL"
+      annotations:
+        summary: "Postgres server instance is down"
+        description: "Postgres has not been responding for the past 1 minutes on {{`{{ $labels.instance }}`}}"
+        title: "Postgres server instance {{`{{ $labels.instance }}`}} is down "
+{{- end }}
