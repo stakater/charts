@@ -33,4 +33,4 @@ postgres:
         postgres-operator.crunchydata.com/cluster: postgres
       selector:
         postgres-operator.crunchydata.com/crunchy-postgres-exporter: 'true'
-        postgres-operator.crunchydata.com/data: postgres
+        postgres-operator.crunchydata.com/cluster: postgres
