@@ -1,0 +1,21 @@
+{{- if and .Values.postgres.exporter.enabled .Values.postgres.exporter.service }}
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.postgres.exporter.service.name | default "postgres-exporter" }}
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.postgres.exporter.service.labels }}
+  labels:
+{{- toYaml .Values.postgres.exporter.service.labels | nindent 4 }}
+{{- end }}
+spec:
+  ports:
+    - name: {{ .Values.postgres.exporter.service.portName | default "exporter" }}
+      protocol: {{ .Values.postgres.exporter.service.protocol | default "TCP" }}
+      port: {{ .Values.postgres.exporter.service.port | default "9187" }}
+      targetPort: {{ .Values.postgres.exporter.service.targetPort | default "9187" }}
+{{- if .Values.postgres.exporter.service.selector }}
+  selector:
+{{- toYaml .Values.postgres.exporter.service.selector | nindent 4 }}
+{{- end }}
+{{- end }}

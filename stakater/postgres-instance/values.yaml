@@ -19,3 +19,16 @@ postgres:
   repo:
     name: repo1
     storage: 1Gi
+
+  exporter:
+    enabled: true
+    service:
+      name: postgres-exporter
+      portName: exporter
+      protocol: TCP
+      port: 9187
+      targetPort: 9187
+      labels:
+      selector:
+        postgres-operator.crunchydata.com/crunchy-postgres-exporter: 'true'
+        postgres-operator.crunchydata.com/data: postgres
