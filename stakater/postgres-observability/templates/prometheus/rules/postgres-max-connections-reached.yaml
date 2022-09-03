@@ -1,0 +1,25 @@
+{{- if and ( .Values.prometheus.rules.postgreMaxConnectionsReached ) ( .Values.prometheus.rules.postgreMaxConnectionsReached.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+  name: postgres-max-connections-reached
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+spec:
+  groups:
+  - name: postgres
+    rules:
+    - alert: PostgreMaxConnectionsReached
+      expr: sum(pg_stat_activity_count) by (instance) >= sum(pg_settings_max_connections) by (instance) - sum(pg_settings_superuser_reserved_connections) by (instance)
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "{{`{{ $labels.instance }}`}} has maxed out Postgres connections."
+        description: "{{`{{ $labels.instance }}`}} is exceeding the currently configured maximum Postgres connection limit (current value: {{`{{ $value }}`}}s). Services may be degraded - please take immediate action (you probably need to increase max_connections in the Docker image and re-deploy."
+{{- end }}

@@ -1,0 +1,51 @@
+# Default values for postgres-observability.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  namespace:
+
+grafana:
+  labels:
+    grafanaDashboard: grafana-operator
+  databaseDashboard:
+    enabled: true
+  overviewDashboard:
+    enabled: true
+
+prometheus:
+  serviceMonitor:
+    enabled: true
+    name: posgtres-exporter
+    port: exporter
+    scheme: http
+    interval: 10s
+    scrapeTimeout: 5s
+    path: /metrics
+    matchLabels: 
+      postgres-operator.crunchydata.com/crunchy-postgres-exporter: 'true'
+      postgres-operator.crunchydata.com/cluster: postgres
+    namespaceSelector:
+      any: true
+
+# Sample rules are taken from below sources
+# https://github.com/fi-ts/postgreslet/issues/10
+# https://stackgres.io/doc/1.0/runbooks/postgres-alerts/
+
+  rules:
+    labels: {}
+    postgreSlowQueries:
+      enabled: true
+    postgresExporterErrors:
+      enabled: true
+    postgreMaxConnectionsReached:
+      enabled: true
+    postgresInstanceDown:
+      enabled: true
+    postgresNotEnoughConnections:
+      enabled: true
+    postgresTooManyConnections:
+      enabled: true
+    postgresTooManyDeadTuples:
+      enabled: true
+    postgreQueriesPerSecond:
+      enabled: true

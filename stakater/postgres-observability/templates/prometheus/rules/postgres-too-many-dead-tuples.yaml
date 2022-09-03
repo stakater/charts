@@ -1,0 +1,26 @@
+{{- if and ( .Values.prometheus.rules.postgresTooManyDeadTuples ) ( .Values.prometheus.rules.postgresTooManyDeadTuples.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+  name: postgres-too-many-dead-tuples
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+spec:
+  groups:
+  - name: postgres
+    rules:
+    - alert: PostgresTooManyDeadTuples
+      expr: ((ccp_stat_user_tables_n_dead_tup > 1e+06) / (ccp_stat_user_tables_n_live_tup + ccp_stat_user_tables_n_dead_tup)) >= 0.05
+      for: 30m
+      labels:
+        severity: warning
+        service: "PostgreSQL"
+      annotations:
+        summary: "PostgreSQL dead tuples is too large"
+        description: "The dead tuple ratio of {{`{{$labels.relname}}`}} on database {{`{{$labels.datname}}`}} is greater than 5% in cluster {{`{{$labels.cluster_name}}`}}"
+{{- end }}
