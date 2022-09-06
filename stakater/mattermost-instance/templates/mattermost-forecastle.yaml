@@ -1,0 +1,15 @@
+{{- if and .Values.tenant.route.enabled .Values.tenant.forecastle.enabled}}
+apiVersion: forecastle.stakater.com/v1alpha1
+kind: ForecastleApp
+metadata:
+  name: {{ .Values.tenant.route.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  name: {{ .Values.tenant.forecastle.name }}
+  group: {{ .Values.tenant.forecastle.group }}
+  icon: {{ .Values.tenant.forecastle.icon }}
+  urlFrom:
+    routeRef:
+      name: {{ .Values.tenant.route.name }} 
+  networkRestricted: false
+{{- end }}
