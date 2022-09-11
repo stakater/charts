@@ -1,0 +1,56 @@
+{{- if and ( .Values.prometheus.rules.signportPvcAlerts ) ( .Values.prometheus.rules.signportPvcAlerts.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: signport-pvc-alerts
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: signport
+    rules:
+    - alert: SignportPersistentVolumeFillingUp
+      expr: |
+        kubelet_volume_stats_available_bytes{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}",job="kubelet",
+        metrics_path="/metrics"}
+          /
+        kubelet_volume_stats_capacity_bytes{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}",job="kubelet",
+        metrics_path="/metrics"}
+          < 0.03
+      for: 2m
+      annotations:
+        message: The PersistentVolume claimed by {{`{{ $labels.persistentvolumeclaim }}`}} in Namespace {{`{{ $labels.namespace }}`}} is only {{`{{ $value | humanizePercentage }}`}} free.
+      labels:
+        severity: critical
+    - alert: SignportPersistentVolumeFillingUpPerdiction
+      expr: |
+        (
+          kubelet_volume_stats_available_bytes{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}",job="kubelet", metrics_path="/metrics"}
+            /
+          kubelet_volume_stats_capacity_bytes{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}",job="kubelet", metrics_path="/metrics"}
+        ) < 0.15
+
+        and
+
+        predict_linear(kubelet_volume_stats_available_bytes{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}",job="kubelet",
+        metrics_path="/metrics"}[6h], 4 * 24 * 3600) < 0
+      for: 1h
+      annotations:
+        message: Based on recent sampling, the PersistentVolume claimed by {{`{{ $labels.persistentvolumeclaim }}`}} in Namespace {{`{{ $labels.namespace }}`}} is expected to fill up within four days. Currently {{`{{ $value | humanizePercentage }}`}} is available.
+      labels:
+        severity: warning
+    - alert: SignportPersistentVolumeErrors
+      expr: |
+        kube_persistentvolume_status_phase{phase=~"Failed|Pending",namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}",job="kube-state-metrics"} > 0
+      for: 5m
+      annotations:
+        message: The persistent volume {{`{{ $labels.persistentvolume }}`}} has status {{`{{ $labels.phase }}`}}.
+      labels:
+        severity: critical
+{{- end }}

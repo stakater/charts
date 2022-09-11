@@ -1,0 +1,34 @@
+{{- if and ( .Values.prometheus.rules.signportDeploymentReplicasMismatch ) ( .Values.prometheus.rules.signportDeploymentReplicasMismatch.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: signport-deployment-replicas-mismatch
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: signport
+    rules:
+    - alert: SignportDeploymentReplicasMismatch
+      expr: |
+        (
+          kube_deployment_spec_replicas{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", deployment=~"frontend.*"}
+            !=
+          kube_deployment_status_replicas_available{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", deployment=~"frontend.*"}
+        ) and (
+          changes(kube_deployment_status_replicas_updated{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", deployment=~"frontend.*"}[5m])
+            ==
+          0
+        )
+      for: 10m
+      annotations:
+        message: Deployment {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has not matched the expected number of replicas for longer than 10 minutes.
+      labels:
+        severity: warning
+{{- end }}

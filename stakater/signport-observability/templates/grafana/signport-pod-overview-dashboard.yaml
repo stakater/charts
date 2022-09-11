@@ -1,0 +1,2664 @@
+---
+{{- if and ( .Values.grafana.kubePodOverview ) ( .Values.grafana.kubePodOverview.enabled ) }}
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: signport-pod-overview-dashboard
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    grafana_dashboard: "true"
+{{- if .Values.grafana.labels }}
+{{- toYaml .Values.grafana.labels | nindent 4 }}
+{{- end }}
+spec:
+  # https://raw.githubusercontent.com/oliver006/redis_exporter/master/contrib/redis-mixin/dashboards/redis-overview.json
+  json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "Monitors Kubernetes Pods using Prometheus. Shows overall cluster CPU / Memory / Filesystem usage as well as individual pod, containers, systemd services statistics. Uses cAdvisor metrics only.",
+      "editable": true,
+      "gnetId": 747,
+      "graphTooltip": 0,
+      "id": 201,
+      "iteration": 1662903820920,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 42,
+          "panels": [],
+          "title": "Pod Info",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 0,
+            "y": 1
+          },
+          "height": "1px",
+          "id": 34,
+          "isNew": true,
+          "links": [],
+          "options": {
+            "content": "# $Pod_ip",
+            "mode": "markdown"
+          },
+          "pluginVersion": "7.5.16",
+          "style": {
+            "font-size": "72pt"
+          },
+          "title": "Pod IP Address",
+          "type": "text"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "from": "",
+                  "id": 1,
+                  "text": "",
+                  "to": "",
+                  "type": 1
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 6,
+            "y": 1
+          },
+          "id": 35,
+          "links": [],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.5.16",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\"}",
+              "format": "time_series",
+              "interval": "",
+              "legendFormat": "{{`{{phase}}`}} ",
+              "refId": "A"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Pod Status",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 12,
+            "y": 1
+          },
+          "id": 40,
+          "links": [],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.5.16",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}",
+              "interval": "",
+              "legendFormat": "{{`{{container}}`}}",
+              "refId": "A"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Pod Container",
+          "type": "stat"
+        },
+        {
+          "cacheTimeout": null,
+          "datasource": "prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 18,
+            "y": 1
+          },
+          "id": 41,
+          "interval": null,
+          "links": [],
+          "maxDataPoints": 100,
+          "options": {
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "text": {}
+          },
+          "pluginVersion": "7.5.16",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "kube_pod_container_status_restarts_total{pod=~\"$Pod.*$\"}",
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{`{{container}}`}}",
+              "refId": "A",
+              "step": 40
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Container restarts",
+          "type": "bargauge"
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 4
+          },
+          "id": 43,
+          "panels": [],
+          "title": "Network I/O pressure",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "prometheus",
+          "decimals": 2,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "grid": {},
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 5
+          },
+          "height": "200px",
+          "hiddenSeries": false,
+          "id": 32,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": false,
+            "sideWidth": 200,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.5.16",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (rate (container_network_receive_bytes_total{pod=~\"^$Pod$\"}[1m]))",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "Received",
+              "metric": "network",
+              "refId": "A",
+              "step": 10
+            },
+            {
+              "exemplar": true,
+              "expr": "- sum (rate (container_network_transmit_bytes_total{pod=~\"^$Pod$\"}[1m]))",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "Sent",
+              "metric": "network",
+              "refId": "B",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Network I/O pressure",
+          "tooltip": {
+            "msResolution": false,
+            "shared": true,
+            "sort": 0,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 11
+          },
+          "id": 44,
+          "panels": [],
+          "title": "Total usage",
+          "type": "row"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": true,
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "datasource": "prometheus",
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "format": "percent",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": true,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 12,
+            "x": 0,
+            "y": 12
+          },
+          "height": "180px",
+          "id": 4,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "$$hashKey": "object:424",
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "$$hashKey": "object:425",
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (container_memory_working_set_bytes{pod=~\"^$Pod$\"}) / sum (machine_memory_bytes{node=~\"^$Node$\"}) * 100",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": "65, 90",
+          "title": "Pod memory usage",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:427",
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": true,
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "datasource": "prometheus",
+          "decimals": 2,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "format": "percent",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": true,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 12,
+            "x": 12,
+            "y": 12
+          },
+          "height": "180px",
+          "id": 6,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "$$hashKey": "object:566",
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "$$hashKey": "object:567",
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (rate (container_cpu_usage_seconds_total{pod=~\"^$Pod$\"}[1m])) / sum (machine_cpu_cores{node=~\"^$Node$\"}) * 100",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": "65, 90",
+          "title": "Pod CPU usage",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:569",
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "datasource": "prometheus",
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "format": "bytes",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 0,
+            "y": 17
+          },
+          "height": "100px",
+          "id": 36,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "$$hashKey": "object:911",
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "$$hashKey": "object:912",
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (container_memory_working_set_bytes{pod=~\"^$Pod$\"})",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 40
+            }
+          ],
+          "thresholds": "",
+          "title": "Used",
+          "type": "singlestat",
+          "valueFontSize": "50%",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:914",
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "datasource": "prometheus",
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "format": "bytes",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 6,
+            "y": 17
+          },
+          "height": "100px",
+          "id": 37,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "$$hashKey": "object:344",
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "$$hashKey": "object:345",
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (machine_memory_bytes{node=~\"^$Node$\"})",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 40
+            }
+          ],
+          "thresholds": "",
+          "title": "Total",
+          "type": "singlestat",
+          "valueFontSize": "50%",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:347",
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "datasource": "prometheus",
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "format": "bytes",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 12,
+            "y": 17
+          },
+          "height": "100px",
+          "id": 38,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "$$hashKey": "object:953",
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "$$hashKey": "object:954",
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (rate (container_cpu_usage_seconds_total{pod=~\"^$Pod$\"}[1m]))",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 40
+            }
+          ],
+          "thresholds": "",
+          "title": "Used",
+          "type": "singlestat",
+          "valueFontSize": "50%",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:956",
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "datasource": "prometheus",
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "format": "bytes",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 18,
+            "y": 17
+          },
+          "height": "100px",
+          "id": 39,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "$$hashKey": "object:386",
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "$$hashKey": "object:387",
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (rate (container_cpu_usage_seconds_total{node=~\"^$Node$\"}[1m]))",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 40
+            }
+          ],
+          "thresholds": "",
+          "title": "Total",
+          "type": "singlestat",
+          "valueFontSize": "50%",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:389",
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "datasource": "prometheus",
+          "decimals": 2,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "format": "bytes",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 24,
+            "x": 0,
+            "y": 20
+          },
+          "height": "1px",
+          "id": 9,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "$$hashKey": "object:687",
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "$$hashKey": "object:688",
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "20%",
+          "prefix": "",
+          "prefixFontSize": "20%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (container_memory_working_set_bytes{pod=~\"^$Pod$\"})",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": "",
+          "title": "Pod memory working bytes",
+          "type": "singlestat",
+          "valueFontSize": "50%",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:690",
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 23
+          },
+          "id": 45,
+          "panels": [],
+          "title": "Pods CPU usage",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "prometheus",
+          "decimals": 3,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "fill": 0,
+          "fillGradient": 0,
+          "grid": {},
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 24
+          },
+          "height": "",
+          "hiddenSeries": false,
+          "id": 17,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "sort": null,
+            "sortDesc": null,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.5.16",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (rate (container_cpu_usage_seconds_total{image!=\"\",name=~\"^k8s_.*\",pod=~\"^$Pod$\"}[1m])) by (io_kubernetes_pod_name)",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "{{`{{ io_kubernetes_pod_name }}`}}",
+              "metric": "container_cpu",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Pods CPU usage",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 2,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": "cores",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 31
+          },
+          "id": 46,
+          "panels": [],
+          "repeat": null,
+          "title": "All processes CPU usage",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "prometheus",
+          "decimals": 3,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "fill": 0,
+          "fillGradient": 0,
+          "grid": {},
+          "gridPos": {
+            "h": 14,
+            "w": 24,
+            "x": 0,
+            "y": 32
+          },
+          "hiddenSeries": false,
+          "id": 20,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.5.16",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (rate (container_cpu_usage_seconds_total{id!=\"/\",pod=~\"^$Pod$\"}[1m])) by (id)",
+              "hide": false,
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "{{`{{ id }}`}}",
+              "metric": "container_cpu",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "All processes CPU usage",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 2,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 46
+          },
+          "id": 47,
+          "panels": [],
+          "title": "Pods memory usage",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "prometheus",
+          "decimals": 2,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "fill": 0,
+          "fillGradient": 0,
+          "grid": {},
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 47
+          },
+          "hiddenSeries": false,
+          "id": 25,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "sideWidth": 200,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.5.16",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (container_memory_working_set_bytes{image!=\"\",name=~\"^k8s_.*\",pod=~\"^$Pod$\"}) by (io_kubernetes_pod_name)",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "{{`{{ io_kubernetes_pod_name }}`}}",
+              "metric": "container_memory_usage:sort_desc",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Pods memory usage",
+          "tooltip": {
+            "msResolution": false,
+            "shared": true,
+            "sort": 2,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "bytes",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 54
+          },
+          "id": 48,
+          "panels": [],
+          "title": "All processes memory usage",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "prometheus",
+          "decimals": 2,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "fill": 0,
+          "fillGradient": 0,
+          "grid": {},
+          "gridPos": {
+            "h": 14,
+            "w": 24,
+            "x": 0,
+            "y": 55
+          },
+          "hiddenSeries": false,
+          "id": 28,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 200,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.5.16",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (container_memory_working_set_bytes{id!=\"/\",pod=~\"^$Pod$\"}) by (id)",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "{{`{{ id }}`}}",
+              "metric": "container_memory_usage:sort_desc",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "All processes memory usage",
+          "tooltip": {
+            "msResolution": false,
+            "shared": true,
+            "sort": 2,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "bytes",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 69
+          },
+          "id": 49,
+          "panels": [],
+          "title": "Pods network I/O",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "prometheus",
+          "decimals": 2,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "grid": {},
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 70
+          },
+          "hiddenSeries": false,
+          "id": 16,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "sideWidth": 200,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.5.16",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (rate (container_network_receive_bytes_total{image!=\"\",name=~\"^k8s_.*\",pod=~\"^$Pod$\"}[1m])) by (io_kubernetes_pod_name)",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "-> {{`{{ io_kubernetes_pod_name }}`}}",
+              "metric": "network",
+              "refId": "A",
+              "step": 10
+            },
+            {
+              "exemplar": true,
+              "expr": "- sum (rate (container_network_transmit_bytes_total{image!=\"\",name=~\"^k8s_.*\",pod=~\"^$Pod$\"}[1m])) by (io_kubernetes_pod_name)",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "<- {{`{{ io_kubernetes_pod_name }}`}}",
+              "metric": "network",
+              "refId": "B",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Pods network I/O",
+          "tooltip": {
+            "msResolution": false,
+            "shared": true,
+            "sort": 2,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 77
+          },
+          "id": 50,
+          "panels": [],
+          "title": "All processes network I/O",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "prometheus",
+          "decimals": 2,
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "grid": {},
+          "gridPos": {
+            "h": 14,
+            "w": 24,
+            "x": 0,
+            "y": 78
+          },
+          "hiddenSeries": false,
+          "id": 29,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 200,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.5.16",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum (rate (container_network_receive_bytes_total{id!=\"/\",pod=~\"^$Pod$\"}[1m])) by (id)",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "-> {{`{{ id }}`}}",
+              "metric": "network",
+              "refId": "A",
+              "step": 10
+            },
+            {
+              "exemplar": true,
+              "expr": "- sum (rate (container_network_transmit_bytes_total{id!=\"/\",pod=~\"^$Pod$\"}[1m])) by (id)",
+              "interval": "10s",
+              "intervalFactor": 1,
+              "legendFormat": "<- {{`{{ id }}`}}",
+              "metric": "network",
+              "refId": "B",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "All processes network I/O",
+          "tooltip": {
+            "msResolution": false,
+            "shared": true,
+            "sort": 2,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 27,
+      "style": "dark",
+      "tags": [
+        "kubernetes"
+      ],
+      "templating": {
+        "list": [
+          {
+            "allValue": ".*",
+            "current": {
+              "selected": false,
+              "text": "devtest-w7fgh-worker-0-lt6xp",
+              "value": "devtest-w7fgh-worker-0-lt6xp"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, node)",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "Node",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, node)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": ".*",
+            "current": {
+              "selected": false,
+              "text": "redis-0",
+              "value": "redis-0"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Pod",
+            "multi": false,
+            "name": "Pod",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "10.130.4.36",
+              "value": "10.130.4.36"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, pod_ip)",
+            "description": null,
+            "error": null,
+            "hide": 2,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "Pod_ip",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, pod_ip)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "Failed",
+              "value": "Failed"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\"} , phase)",
+            "description": null,
+            "error": null,
+            "hide": 2,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "phase",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\"} , phase)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "redis",
+              "value": "redis"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, container)",
+            "description": null,
+            "error": null,
+            "hide": 2,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "container",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, container)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "signport-dev",
+              "value": "signport-dev"
+            },
+            "datasource": null,
+            "definition": "label_values(kube_pod_info, namespace)",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": true,
+            "label": "Namespace",
+            "multi": false,
+            "name": "namespace",
+            "options": [
+              {
+                "selected": false,
+                "text": "All",
+                "value": "$__all"
+              },
+              {
+                "selected": false,
+                "text": "flux-system",
+                "value": "flux-system"
+              },
+              {
+                "selected": false,
+                "text": "gabbar-build",
+                "value": "gabbar-build"
+              },
+              {
+                "selected": false,
+                "text": "gabbar-dev",
+                "value": "gabbar-dev"
+              },
+              {
+                "selected": false,
+                "text": "gabbar-test",
+                "value": "gabbar-test"
+              },
+              {
+                "selected": false,
+                "text": "gitlab",
+                "value": "gitlab"
+              },
+              {
+                "selected": false,
+                "text": "gitlab-system",
+                "value": "gitlab-system"
+              },
+              {
+                "selected": false,
+                "text": "group-sync-operator",
+                "value": "group-sync-operator"
+              },
+              {
+                "selected": false,
+                "text": "keycloak",
+                "value": "keycloak"
+              },
+              {
+                "selected": false,
+                "text": "main-review",
+                "value": "main-review"
+              },
+              {
+                "selected": false,
+                "text": "main-review-2",
+                "value": "main-review-2"
+              },
+              {
+                "selected": false,
+                "text": "main-review-ui",
+                "value": "main-review-ui"
+              },
+              {
+                "selected": false,
+                "text": "main-review-ui-2",
+                "value": "main-review-ui-2"
+              },
+              {
+                "selected": false,
+                "text": "mattermost-instance",
+                "value": "mattermost-instance"
+              },
+              {
+                "selected": false,
+                "text": "mattermost-operator",
+                "value": "mattermost-operator"
+              },
+              {
+                "selected": false,
+                "text": "mynordmartreview",
+                "value": "mynordmartreview"
+              },
+              {
+                "selected": false,
+                "text": "open-cluster-management-addon-observability",
+                "value": "open-cluster-management-addon-observability"
+              },
+              {
+                "selected": false,
+                "text": "open-cluster-management-agent",
+                "value": "open-cluster-management-agent"
+              },
+              {
+                "selected": false,
+                "text": "open-cluster-management-agent-addon",
+                "value": "open-cluster-management-agent-addon"
+              },
+              {
+                "selected": false,
+                "text": "openshift-apiserver",
+                "value": "openshift-apiserver"
+              },
+              {
+                "selected": false,
+                "text": "openshift-apiserver-operator",
+                "value": "openshift-apiserver-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-authentication",
+                "value": "openshift-authentication"
+              },
+              {
+                "selected": false,
+                "text": "openshift-authentication-operator",
+                "value": "openshift-authentication-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-cloud-controller-manager-operator",
+                "value": "openshift-cloud-controller-manager-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-cloud-credential-operator",
+                "value": "openshift-cloud-credential-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-cluster-csi-drivers",
+                "value": "openshift-cluster-csi-drivers"
+              },
+              {
+                "selected": false,
+                "text": "openshift-cluster-machine-approver",
+                "value": "openshift-cluster-machine-approver"
+              },
+              {
+                "selected": false,
+                "text": "openshift-cluster-node-tuning-operator",
+                "value": "openshift-cluster-node-tuning-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-cluster-samples-operator",
+                "value": "openshift-cluster-samples-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-cluster-storage-operator",
+                "value": "openshift-cluster-storage-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-cluster-version",
+                "value": "openshift-cluster-version"
+              },
+              {
+                "selected": false,
+                "text": "openshift-config-operator",
+                "value": "openshift-config-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-console",
+                "value": "openshift-console"
+              },
+              {
+                "selected": false,
+                "text": "openshift-console-operator",
+                "value": "openshift-console-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-controller-manager",
+                "value": "openshift-controller-manager"
+              },
+              {
+                "selected": false,
+                "text": "openshift-controller-manager-operator",
+                "value": "openshift-controller-manager-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-dns",
+                "value": "openshift-dns"
+              },
+              {
+                "selected": false,
+                "text": "openshift-dns-operator",
+                "value": "openshift-dns-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-etcd",
+                "value": "openshift-etcd"
+              },
+              {
+                "selected": false,
+                "text": "openshift-etcd-operator",
+                "value": "openshift-etcd-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-gitops",
+                "value": "openshift-gitops"
+              },
+              {
+                "selected": false,
+                "text": "openshift-image-registry",
+                "value": "openshift-image-registry"
+              },
+              {
+                "selected": false,
+                "text": "openshift-ingress",
+                "value": "openshift-ingress"
+              },
+              {
+                "selected": false,
+                "text": "openshift-ingress-canary",
+                "value": "openshift-ingress-canary"
+              },
+              {
+                "selected": false,
+                "text": "openshift-ingress-operator",
+                "value": "openshift-ingress-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-insights",
+                "value": "openshift-insights"
+              },
+              {
+                "selected": false,
+                "text": "openshift-kube-apiserver",
+                "value": "openshift-kube-apiserver"
+              },
+              {
+                "selected": false,
+                "text": "openshift-kube-apiserver-operator",
+                "value": "openshift-kube-apiserver-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-kube-controller-manager",
+                "value": "openshift-kube-controller-manager"
+              },
+              {
+                "selected": false,
+                "text": "openshift-kube-controller-manager-operator",
+                "value": "openshift-kube-controller-manager-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-kube-scheduler",
+                "value": "openshift-kube-scheduler"
+              },
+              {
+                "selected": false,
+                "text": "openshift-kube-scheduler-operator",
+                "value": "openshift-kube-scheduler-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-kube-storage-version-migrator",
+                "value": "openshift-kube-storage-version-migrator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-kube-storage-version-migrator-operator",
+                "value": "openshift-kube-storage-version-migrator-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-logging",
+                "value": "openshift-logging"
+              },
+              {
+                "selected": false,
+                "text": "openshift-machine-api",
+                "value": "openshift-machine-api"
+              },
+              {
+                "selected": false,
+                "text": "openshift-machine-config-operator",
+                "value": "openshift-machine-config-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-managed-upgrade-operator",
+                "value": "openshift-managed-upgrade-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-marketplace",
+                "value": "openshift-marketplace"
+              },
+              {
+                "selected": false,
+                "text": "openshift-monitoring",
+                "value": "openshift-monitoring"
+              },
+              {
+                "selected": false,
+                "text": "openshift-multus",
+                "value": "openshift-multus"
+              },
+              {
+                "selected": false,
+                "text": "openshift-network-diagnostics",
+                "value": "openshift-network-diagnostics"
+              },
+              {
+                "selected": false,
+                "text": "openshift-network-operator",
+                "value": "openshift-network-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-oauth-apiserver",
+                "value": "openshift-oauth-apiserver"
+              },
+              {
+                "selected": false,
+                "text": "openshift-openstack-infra",
+                "value": "openshift-openstack-infra"
+              },
+              {
+                "selected": false,
+                "text": "openshift-operator-lifecycle-manager",
+                "value": "openshift-operator-lifecycle-manager"
+              },
+              {
+                "selected": false,
+                "text": "openshift-operators",
+                "value": "openshift-operators"
+              },
+              {
+                "selected": false,
+                "text": "openshift-operators-redhat",
+                "value": "openshift-operators-redhat"
+              },
+              {
+                "selected": false,
+                "text": "openshift-pipelines",
+                "value": "openshift-pipelines"
+              },
+              {
+                "selected": false,
+                "text": "openshift-rbac-permissions",
+                "value": "openshift-rbac-permissions"
+              },
+              {
+                "selected": false,
+                "text": "openshift-sdn",
+                "value": "openshift-sdn"
+              },
+              {
+                "selected": false,
+                "text": "openshift-service-ca",
+                "value": "openshift-service-ca"
+              },
+              {
+                "selected": false,
+                "text": "openshift-service-ca-operator",
+                "value": "openshift-service-ca-operator"
+              },
+              {
+                "selected": false,
+                "text": "openshift-storage",
+                "value": "openshift-storage"
+              },
+              {
+                "selected": false,
+                "text": "openshift-velero",
+                "value": "openshift-velero"
+              },
+              {
+                "selected": false,
+                "text": "pr-166-stakater-nordmart-review-ui",
+                "value": "pr-166-stakater-nordmart-review-ui"
+              },
+              {
+                "selected": false,
+                "text": "pr-173-stakater-nordmart-review",
+                "value": "pr-173-stakater-nordmart-review"
+              },
+              {
+                "selected": false,
+                "text": "pr-194-stakater-nordmart-review",
+                "value": "pr-194-stakater-nordmart-review"
+              },
+              {
+                "selected": false,
+                "text": "prs-test1-stakater-nordmart-review",
+                "value": "prs-test1-stakater-nordmart-review"
+              },
+              {
+                "selected": false,
+                "text": "prs-test2-stakater-nordmart-review",
+                "value": "prs-test2-stakater-nordmart-review"
+              },
+              {
+                "selected": false,
+                "text": "prs-test3-stakater-nordmart-review",
+                "value": "prs-test3-stakater-nordmart-review"
+              },
+              {
+                "selected": false,
+                "text": "prs-test4-stakater-nordmart-review",
+                "value": "prs-test4-stakater-nordmart-review"
+              },
+              {
+                "selected": true,
+                "text": "signport-dev",
+                "value": "signport-dev"
+              },
+              {
+                "selected": false,
+                "text": "stakater-3scale",
+                "value": "stakater-3scale"
+              },
+              {
+                "selected": false,
+                "text": "stakater-auth",
+                "value": "stakater-auth"
+              },
+              {
+                "selected": false,
+                "text": "stakater-cert-manager-operator",
+                "value": "stakater-cert-manager-operator"
+              },
+              {
+                "selected": false,
+                "text": "stakater-external-secrets-operator",
+                "value": "stakater-external-secrets-operator"
+              },
+              {
+                "selected": false,
+                "text": "stakater-forecastle",
+                "value": "stakater-forecastle"
+              },
+              {
+                "selected": false,
+                "text": "stakater-gitops-connector",
+                "value": "stakater-gitops-connector"
+              },
+              {
+                "selected": false,
+                "text": "stakater-helm-operator",
+                "value": "stakater-helm-operator"
+              },
+              {
+                "selected": false,
+                "text": "stakater-ingress-monitor-controller",
+                "value": "stakater-ingress-monitor-controller"
+              },
+              {
+                "selected": false,
+                "text": "stakater-konfigurator",
+                "value": "stakater-konfigurator"
+              },
+              {
+                "selected": false,
+                "text": "stakater-kube-resource-report",
+                "value": "stakater-kube-resource-report"
+              },
+              {
+                "selected": false,
+                "text": "stakater-kubecost",
+                "value": "stakater-kubecost"
+              },
+              {
+                "selected": false,
+                "text": "stakater-kubehealth",
+                "value": "stakater-kubehealth"
+              },
+              {
+                "selected": false,
+                "text": "stakater-kubehealth-guestbook-sample",
+                "value": "stakater-kubehealth-guestbook-sample"
+              },
+              {
+                "selected": false,
+                "text": "stakater-kubernetes-replicator",
+                "value": "stakater-kubernetes-replicator"
+              },
+              {
+                "selected": false,
+                "text": "stakater-namespace-configuration-operator",
+                "value": "stakater-namespace-configuration-operator"
+              },
+              {
+                "selected": false,
+                "text": "stakater-nexus",
+                "value": "stakater-nexus"
+              },
+              {
+                "selected": false,
+                "text": "stakater-operators-build",
+                "value": "stakater-operators-build"
+              },
+              {
+                "selected": false,
+                "text": "stakater-pipelines-as-code",
+                "value": "stakater-pipelines-as-code"
+              },
+              {
+                "selected": false,
+                "text": "stakater-reloader",
+                "value": "stakater-reloader"
+              },
+              {
+                "selected": false,
+                "text": "stakater-sealed-secrets",
+                "value": "stakater-sealed-secrets"
+              },
+              {
+                "selected": false,
+                "text": "stakater-secret-distributor",
+                "value": "stakater-secret-distributor"
+              },
+              {
+                "selected": false,
+                "text": "stakater-sonarqube",
+                "value": "stakater-sonarqube"
+              },
+              {
+                "selected": false,
+                "text": "stakater-sre-pruning",
+                "value": "stakater-sre-pruning"
+              },
+              {
+                "selected": false,
+                "text": "stakater-stackrox",
+                "value": "stakater-stackrox"
+              },
+              {
+                "selected": false,
+                "text": "stakater-system",
+                "value": "stakater-system"
+              },
+              {
+                "selected": false,
+                "text": "stakater-tenant-insights",
+                "value": "stakater-tenant-insights"
+              },
+              {
+                "selected": false,
+                "text": "stakater-tenant-operator",
+                "value": "stakater-tenant-operator"
+              },
+              {
+                "selected": false,
+                "text": "stakater-tronador",
+                "value": "stakater-tronador"
+              },
+              {
+                "selected": false,
+                "text": "stakater-vault",
+                "value": "stakater-vault"
+              },
+              {
+                "selected": false,
+                "text": "stakater-volume-expander-operator",
+                "value": "stakater-volume-expander-operator"
+              },
+              {
+                "selected": false,
+                "text": "stakater-workload-monitoring",
+                "value": "stakater-workload-monitoring"
+              },
+              {
+                "selected": false,
+                "text": "test-pipelines-build",
+                "value": "test-pipelines-build"
+              },
+              {
+                "selected": false,
+                "text": "veeru-build",
+                "value": "veeru-build"
+              },
+              {
+                "selected": false,
+                "text": "veeru-dev",
+                "value": "veeru-dev"
+              }
+            ],
+            "query": {
+              "query": "label_values(kube_pod_info, namespace)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 0,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": [
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ],
+        "time_options": [
+          "5m",
+          "15m",
+          "1h",
+          "6h",
+          "12h",
+          "24h",
+          "2d",
+          "7d",
+          "30d"
+        ]
+      },
+      "timezone": "browser",
+      "title": "Signport Pod Overview Dashboard",
+      "version": 1
+    }
+{{- end }}
