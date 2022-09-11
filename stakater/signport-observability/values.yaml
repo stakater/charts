@@ -1,0 +1,44 @@
+# Default values for signport-observability.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  namespace:
+
+grafana:
+  labels:
+    grafanaDashboard: grafana-operator
+  kubePodOverview:
+    enabled: true
+
+prometheus:
+  serviceMonitor:
+    enabled: true
+    labels: {}
+    name: frontend
+    port: http
+    scheme: http
+    interval: 10s
+    scrapeTimeout: 5s
+    path: /metrics
+    matchLabels: 
+      app: frontend
+      app.kubernetes.io/instance: signport-services
+      release: signport-services
+    namespaceSelector:
+      any: true
+  
+  rules:
+    labels: {}
+    signportContainerWaiting:
+      enabled: true
+    signportDeploymentGenerationMismatch:
+      enabled: true
+    signportDeploymentReplicasMismatch:
+      enabled: true
+    signportPodCrashLooping:
+      enabled: true
+    signportPodNotReady:
+      enabled: true
+    signportPvcAlerts:
+      enabled: true
