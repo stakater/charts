@@ -7,8 +7,7 @@ Stakater Helm Charts
 1. Test the chart locally to make sure that it works. Pipeline only checks the linting errors
 2. Create a pull request containing the change
 3. Only change one chart at a time, changing more than one chart will fail the pipeline
-4. Bump the chart version manually, not changing the chart version will fail the pipeline
-5. When merging the PR into main, use the option **Rebase and Merge**. <span style="color:red"> **DO NOT** </span> use the option **Merge**, otherwise the push pipeline will fail and will not publish the charts
+4. When merging the PR into main, use the option **Rebase and Merge**. <span style="color:red"> **DO NOT** </span> use the option **Merge**, otherwise the push pipeline will fail and will not publish the charts
 
 ## Local Testing
 
