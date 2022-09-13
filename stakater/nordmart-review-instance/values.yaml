@@ -1,0 +1,201 @@
+nordmartReviewUi:
+  applicationName: "nordmart-review-ui"
+  deployment:
+    imagePullSecrets: docker-stakater-config-workshop
+    additionalLabels:
+      appCategory: "frontend"
+    additionalPodAnnotations:
+      sidecar.istio.io/inject: "true"
+      sidecar.istio.io/rewriteAppHTTPProbers: "true"
+    podLabels:
+      maistra.io/expose-route: "true"
+    volumes: {}
+    image:
+      repository: docker.io/stakater/stakater-nordmart-review-ui
+      tag: 1.0.14
+    env:
+      PORT:
+        value: "4200"
+      REVIEW_API:
+        value: "https://nordmart-review-api-{{ .Release.Namespace }}.apps.devtest.vxdqgl7u.kubeapp.cloud"
+    probes:
+      readinessProbe:
+        failureThreshold: 3
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+        initialDelaySeconds: 10
+        httpGet:
+          path: /health
+          port: 4200
+      livenessProbe:
+        failureThreshold: 3
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+        initialDelaySeconds: 10
+        httpGet:
+          path: /health
+          port: 4200
+  service:
+    ports:
+    - port: 8080
+      name: http
+      protocol: TCP
+      targetPort: 4200
+
+  rbac:
+    serviceAccount:
+      enabled: true
+
+  route:
+    enabled: true
+
+  forecastle:
+    enabled: true
+    displayName: "Nordmart Review UI"
+    group: "Nordmart"
+
+nordmartReviewApi:
+  applicationName: "nordmart-review-api"
+  deployment:
+    additionalLabels:
+      appCategory: backend
+    imagePullSecrets: docker-stakater-config-workshop
+    envFrom:
+      review-config:
+        type: configmap
+        nameSuffix: config
+    image:
+      repository: docker.io/stakater/stakater-nordmart-review
+      tag: 1.0.35
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 0.6
+      requests:
+        memory: 128Mi
+        cpu: 0.1
+    probes:
+      readinessProbe:
+        failureThreshold: 3
+        periodSeconds: 60
+        successThreshold: 1
+        timeoutSeconds: 1
+        initialDelaySeconds: 10
+        httpGet:
+          path: /actuator/health
+          port: 8080
+      livenessProbe:
+        failureThreshold: 3
+        periodSeconds: 60
+        successThreshold: 1
+        timeoutSeconds: 1
+        initialDelaySeconds: 10
+        httpGet:
+          path: /actuator/health
+          port: 8080
+
+  ## Prometheus Rule to trigger alerts based on ratings
+  prometheusRule:
+    enabled: true
+    additionalLabels:
+      prometheus: stakater-workload-monitoring
+    groups:
+      - name: nordmart-review-low-rating-warning
+        rules:
+          - alert: NordmartReviewLowRatingsCritical
+            annotations:
+              message: >-
+                Total ratings below 2 has crossed the threshold 8. Total reviews: {{ $value }}.
+            expr: >
+              sum by (namespace) (nordmart_review_ratings_total{rating="2"} or nordmart_review_ratings_total{rating="1"}) > 8
+            labels:
+              severity: critical
+
+  ## Alert manager Configuration to send the alerts
+  alertmanagerConfig:
+    enabled: true
+    selectionLabels:
+      alertmanagerConfig: workload
+    spec:
+      receivers:
+        - name: nordmart-review-receiver
+          slackConfigs:
+            - apiURL:
+                key: api_url
+                name: review-slack-webhook
+              channel: '#nordmart-gabbar-application-alerts'
+              sendResolved: true
+              text: |2-
+                {{ range .Alerts }}
+                *Alert:* `{{ .Labels.severity | toUpper }}` - {{ .Annotations.summary }}
+                *Description:* {{ .Annotations.description }}
+                *Details:*
+                  {{ range .Labels.SortedPairs }} *{{ .Name }}:* `{{ .Value }}`
+                  {{ end }}
+                {{ end }}
+              title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] SAAP Alertmanager Event Notification'
+              httpConfig:
+                tlsConfig:
+                  insecureSkipVerify: true
+      route:
+        groupBy:
+          - alertname
+          - severity
+        groupInterval: 3m
+        groupWait: 30s
+        repeatInterval: 6h
+        matchers:
+          - name: alertname
+            value: NordmartReviewLowRatingsCritical
+        receiver: nordmart-review-receiver
+
+  ## ConfigMap
+  configMap:
+    enabled: true
+    files:
+      config:
+        DB_NAME: "nordmartDB"
+        MONGO_HOST: "review-mongodb"
+
+  ## RBAC
+  rbac:
+    serviceAccount:
+      enabled: true
+
+  ## Service
+  service:
+    ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+
+  ## Route
+  route:
+    enabled: true
+    port:
+      targetPort: http
+
+  ## Service Monitor
+  serviceMonitor:
+    enabled: true
+
+mongodb:
+  fullnameOverride: review-mongodb
+  resources: 
+    limits:
+      memory: 1Gi 
+      cpu: 0.5
+    requests:
+      memory: 128Mi
+      cpu: 0.1
+      
+  auth:
+    enabled: false
+
+  podSecurityContext:
+    enabled: false
+
+  containerSecurityContext:
+    enabled: false
