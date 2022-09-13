@@ -10,7 +10,7 @@ on:
       - main
     paths-ignore:
     - 'README.md'
-    - 'stakater/(.*)/README.md' 
+    - 'stakater/(.*)/README.md'
 
 jobs:
   build:
