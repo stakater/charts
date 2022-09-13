@@ -108,7 +108,6 @@ jobs:
         echo New Tag for "$CHART_NAME": "$NEW_TAG"
         echo '::echo::off'
         sed -i "s/^version:.*/version: ${NEW_TAG}/" stakater/${CHART_NAME}/Chart.yaml
-        cat stakater/${CHART_NAME}/Chart.yaml
 
     # Dry run to ensure that manifests are generated successfully 
     #- name: Dry Run Chart
