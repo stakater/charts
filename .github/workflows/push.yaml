@@ -36,22 +36,16 @@ jobs:
         charts_dirs_changed="$(echo "$files_changed" | grep -o "stakater/[^/]*" | sort | uniq || true)"
         # Using grep -c as a better alternative to wc -l when dealing with empty strings."
         num_charts_changed="$(echo "$charts_dirs_changed" | grep -c "stakater" || true)"
-        num_version_bumps="$(echo "$files_changed" | grep Chart.yaml | xargs git show | grep -c "+version" || true)"
         echo '::echo::on'
         echo "$path"
         echo "$files"
         echo "$files_changed"
         echo "$charts_dirs_changed"
         echo "$num_charts_changed"
-        echo "$num_version_bumps"
         echo "$charts_dirs_changed" | sed "s|stakater/||g"
         echo '::echo::off'
 
-        if [[ "$num_charts_changed" -ne "$num_version_bumps" ]]; then
-          # Changes done in charts but version not bumped -> ERROR
-          echo "::set-output name=error::Detected changes in charts without version bump in Chart.yaml.\nCharts changed: ${num_charts_changed}\n${charts_dirs_changed}\nVersion bumps detected: ${num_version_bumps}"
-          echo "::set-output name=result::fail"
-        elif [[ "$num_charts_changed" -eq "1" ]]; then
+        if [[ "$num_charts_changed" -eq "1" ]]; then
           # Changes done in only one chart -> OK
           chart_name=$(echo "$charts_dirs_changed" | sed "s|stakater/||g")
           echo "::set-output name=chart::${chart_name}"
@@ -99,7 +93,22 @@ jobs:
         CHART_NAME: ${{ steps.get-chart.outputs.chart }}
       run: |
         helm dependency update stakater/${CHART_NAME}
-        helm package stakater/${CHART_NAME}    
+        helm package stakater/${CHART_NAME}
+
+    - name: Bump Chart Version
+      id: bump_chart_version
+      env:
+        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
+      run: |
+        OLD_TAG=$(sed -n -e 's/^version: //p' stakater/${CHART_NAME}/Chart.yaml)
+        NEW_TAG=$(echo "$OLD_TAG" | awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{if(length($NF+1)>length($NF))$(NF-1)++; $NF=sprintf("%0*d", length($NF), ($NF+1)%(10^length($NF))); print}')
+        echo "::set-output name=result::${NEW_TAG}"
+        echo '::echo::on'
+        echo Old Tag for "$CHART_NAME": "$OLD_TAG"
+        echo New Tag for "$CHART_NAME": "$NEW_TAG"
+        echo '::echo::off'
+        sed -i "s/^version:.*/version: ${NEW_TAG}/" stakater/${CHART_NAME}/Chart.yaml
+        cat stakater/${CHART_NAME}/Chart.yaml
 
     # Dry run to ensure that manifests are generated successfully 
     #- name: Dry Run Chart
@@ -120,6 +129,23 @@ jobs:
         linting: off 
         commit_username: stakater-user
         commit_email: stakater@gmail.com
+
+    # Commit back changes
+    - name: Commit files
+      env:
+        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
+      run: |
+        git config --local user.email "stakater@gmail.com"
+        git config --local user.name "stakater-user"
+        git status 
+        git add stakater/${CHART_NAME}/Chart.yaml
+        git commit -m "[skip-ci] Update artifacts for chart: ${CHART_NAME}" -a
+        
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.STAKATER_GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
 
     # Generate tag for chart without "v" prefix
     - name: Generate Tag
