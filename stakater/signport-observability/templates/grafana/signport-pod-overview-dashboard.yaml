@@ -3,7 +3,7 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
-  name: signport-pod-overview-dashboard
+  name: kubernetes-metrics-overview-dashboard
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
   labels:
     grafana_dashboard: "true"
