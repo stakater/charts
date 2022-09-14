@@ -1,6 +1,6 @@
 apiVersion: v2
 name: nordmart-review
-description: A Helm chart for Kubernetes
+description: Chart for deploying nordmart review, nordmart review ui and mongodb
 
 dependencies:
 - name: mongodb
