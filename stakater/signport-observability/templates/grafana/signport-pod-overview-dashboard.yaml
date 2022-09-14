@@ -31,8 +31,8 @@ spec:
       "editable": true,
       "gnetId": 747,
       "graphTooltip": 0,
-      "id": 201,
-      "iteration": 1662903820920,
+      "id": 524,
+      "iteration": 1663176881831,
       "links": [],
       "panels": [
         {
@@ -59,7 +59,7 @@ spec:
           },
           "gridPos": {
             "h": 3,
-            "w": 6,
+            "w": 4,
             "x": 0,
             "y": 1
           },
@@ -77,140 +77,6 @@ spec:
           },
           "title": "Pod IP Address",
           "type": "text"
-        },
-        {
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [
-                {
-                  "from": "",
-                  "id": 1,
-                  "text": "",
-                  "to": "",
-                  "type": 1
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 3,
-            "w": 6,
-            "x": 6,
-            "y": 1
-          },
-          "id": 35,
-          "links": [],
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "7.5.16",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\"}",
-              "format": "time_series",
-              "interval": "",
-              "legendFormat": "{{`{{phase}}`}} ",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Pod Status",
-          "type": "stat"
-        },
-        {
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 3,
-            "w": 6,
-            "x": 12,
-            "y": 1
-          },
-          "id": 40,
-          "links": [],
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "7.5.16",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}",
-              "interval": "",
-              "legendFormat": "{{`{{container}}`}}",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Pod Container",
-          "type": "stat"
         },
         {
           "cacheTimeout": null,
@@ -240,8 +106,8 @@ spec:
           },
           "gridPos": {
             "h": 3,
-            "w": 6,
-            "x": 18,
+            "w": 4,
+            "x": 4,
             "y": 1
           },
           "id": 41,
@@ -277,6 +143,183 @@ spec:
           "timeShift": null,
           "title": "Container restarts",
           "type": "bargauge"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "from": "",
+                  "id": 1,
+                  "text": "Not Running",
+                  "to": "",
+                  "type": 1,
+                  "value": "0"
+                },
+                {
+                  "from": "",
+                  "id": 2,
+                  "text": "Running",
+                  "to": "",
+                  "type": 1,
+                  "value": "1"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 0
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 5,
+            "x": 8,
+            "y": 1
+          },
+          "id": 35,
+          "links": [],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.5.16",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\", phase=\"Running\"}",
+              "format": "time_series",
+              "interval": "",
+              "legendFormat": "{{`{{phase}}`}} ",
+              "refId": "A"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Pod Status",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "description": "Node name on which pod is running",
+          "editable": true,
+          "error": false,
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 5,
+            "x": 13,
+            "y": 1
+          },
+          "height": "1px",
+          "id": 51,
+          "isNew": true,
+          "links": [],
+          "options": {
+            "content": "# $Node",
+            "mode": "markdown"
+          },
+          "pluginVersion": "7.5.16",
+          "style": {
+            "font-size": "72pt"
+          },
+          "title": "Node",
+          "type": "text"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 18,
+            "y": 1
+          },
+          "id": 40,
+          "links": [],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.5.16",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}",
+              "interval": "",
+              "legendFormat": "{{`{{container}}`}}",
+              "refId": "A"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Pod Container",
+          "type": "stat"
         },
         {
           "collapsed": false,
@@ -1850,165 +1893,11 @@ spec:
       "schemaVersion": 27,
       "style": "dark",
       "tags": [
-        "kubernetes"
+        "kubernetes",
+        "Pod"
       ],
       "templating": {
         "list": [
-          {
-            "allValue": ".*",
-            "current": {
-              "selected": false,
-              "text": "devtest-w7fgh-worker-0-lt6xp",
-              "value": "devtest-w7fgh-worker-0-lt6xp"
-            },
-            "datasource": "prometheus",
-            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, node)",
-            "description": null,
-            "error": null,
-            "hide": 0,
-            "includeAll": false,
-            "label": null,
-            "multi": false,
-            "name": "Node",
-            "options": [],
-            "query": {
-              "query": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, node)",
-              "refId": "StandardVariableQuery"
-            },
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
-          {
-            "allValue": ".*",
-            "current": {
-              "selected": false,
-              "text": "redis-0",
-              "value": "redis-0"
-            },
-            "datasource": "prometheus",
-            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
-            "description": null,
-            "error": null,
-            "hide": 0,
-            "includeAll": false,
-            "label": "Pod",
-            "multi": false,
-            "name": "Pod",
-            "options": [],
-            "query": {
-              "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
-              "refId": "StandardVariableQuery"
-            },
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
-          {
-            "allValue": null,
-            "current": {
-              "selected": false,
-              "text": "10.130.4.36",
-              "value": "10.130.4.36"
-            },
-            "datasource": "prometheus",
-            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, pod_ip)",
-            "description": null,
-            "error": null,
-            "hide": 2,
-            "includeAll": false,
-            "label": null,
-            "multi": false,
-            "name": "Pod_ip",
-            "options": [],
-            "query": {
-              "query": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, pod_ip)",
-              "refId": "StandardVariableQuery"
-            },
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
-          {
-            "allValue": null,
-            "current": {
-              "selected": false,
-              "text": "Failed",
-              "value": "Failed"
-            },
-            "datasource": "prometheus",
-            "definition": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\"} , phase)",
-            "description": null,
-            "error": null,
-            "hide": 2,
-            "includeAll": false,
-            "label": null,
-            "multi": false,
-            "name": "phase",
-            "options": [],
-            "query": {
-              "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\"} , phase)",
-              "refId": "StandardVariableQuery"
-            },
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
-          {
-            "allValue": null,
-            "current": {
-              "selected": false,
-              "text": "redis",
-              "value": "redis"
-            },
-            "datasource": "prometheus",
-            "definition": "label_values(kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, container)",
-            "description": null,
-            "error": null,
-            "hide": 2,
-            "includeAll": false,
-            "label": null,
-            "multi": false,
-            "name": "container",
-            "options": [],
-            "query": {
-              "query": "label_values(kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, container)",
-              "refId": "StandardVariableQuery"
-            },
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
           {
             "allValue": null,
             "current": {
@@ -2625,6 +2514,161 @@ spec:
             "tagsQuery": "",
             "type": "query",
             "useTags": false
+          },
+          {
+            "allValue": ".*",
+            "current": {
+              "selected": false,
+              "text": "devtest-w7fgh-worker-0-lt6xp",
+              "value": "devtest-w7fgh-worker-0-lt6xp"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, node)",
+            "description": null,
+            "error": null,
+            "hide": 2,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "Node",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, node)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": ".*",
+            "current": {
+              "selected": false,
+              "text": "redis-0",
+              "value": "redis-0"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Pod",
+            "multi": false,
+            "name": "Pod",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "10.130.4.36",
+              "value": "10.130.4.36"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, pod_ip)",
+            "description": null,
+            "error": null,
+            "hide": 2,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "Pod_ip",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, pod_ip)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "Failed",
+              "value": "Failed"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\"} , phase)",
+            "description": null,
+            "error": null,
+            "hide": 2,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "phase",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$Pod\"} , phase)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "redis",
+              "value": "redis"
+            },
+            "datasource": "prometheus",
+            "definition": "label_values(kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, container)",
+            "description": null,
+            "error": null,
+            "hide": 2,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "container",
+            "options": [],
+            "query": {
+              "query": "label_values(kube_pod_container_info{namespace=~\"$namespace\", pod=~\"$Pod\"}, container)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
           }
         ]
       },
@@ -2658,7 +2702,7 @@ spec:
         ]
       },
       "timezone": "browser",
-      "title": "Signport Pod Overview Dashboard",
+      "title": "Kubernetes Metrics Overview Dashboard",
       "version": 1
     }
 {{- end }}
