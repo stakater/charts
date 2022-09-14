@@ -1,5 +1,5 @@
 apiVersion: v2
-name: nordmart-review-instance
+name: nordmart-review
 description: A Helm chart for Kubernetes
 
 dependencies:
