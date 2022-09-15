@@ -12,10 +12,9 @@ grafana:
     enabled: true
 
 prometheus:
-  serviceMonitor:
-    enabled: true
+  serviceMonitors:
+  - name: frontend
     labels: {}
-    name: frontend
     port: http
     scheme: http
     interval: 10s
@@ -32,13 +31,23 @@ prometheus:
     labels: {}
     signportContainerWaiting:
       enabled: true
+      podNamePrefixList:
+        - frontend
     signportDeploymentGenerationMismatch:
       enabled: true
+      deploymentNamePrefixList:
+        - frontend
     signportDeploymentReplicasMismatch:
       enabled: true
+      deploymentNamePrefixList:
+        - frontend
     signportPodCrashLooping:
       enabled: true
+      podNamePrefixList:
+        - frontend
     signportPodNotReady:
       enabled: true
+      podNamePrefixList:
+        - frontend
     signportPvcAlerts:
       enabled: true

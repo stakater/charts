@@ -1,29 +1,32 @@
 ---
-{{- if and ( .Values.prometheus.serviceMonitor ) ( .Values.prometheus.serviceMonitor.enabled ) }}
+{{- if .Values.prometheus.serviceMonitors }}
+{{- range .Values.prometheus.serviceMonitors }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.prometheus.serviceMonitor.name }}
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
-{{- if .Values.prometheus.serviceMonitor.labels }}
+  name: {{ .name }}
+  namespace: {{ $.Values.global.namespace | default $.Release.Namespace }}
+{{- if .labels }}
   labels:
-{{- toYaml .Values.prometheus.serviceMonitor.labels | nindent 4 }}
+{{- toYaml .labels | nindent 4 }}
 {{- end }}
   # If labels are defined in spec.serviceMonitorSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
 spec:
   endpoints:
-  - port: {{ .Values.prometheus.serviceMonitor.port }}
-    scheme: {{ .Values.prometheus.serviceMonitor.scheme }}
-    interval: {{ .Values.prometheus.serviceMonitor.interval }}
-    scrapeTimeout: {{ .Values.prometheus.serviceMonitor.scrapeTimeout }}
-    path: {{ .Values.prometheus.serviceMonitor.path }}
+  - port: {{ .port }}
+    scheme: {{ .scheme }}
+    interval: {{ .interval }}
+    scrapeTimeout: {{ .scrapeTimeout }}
+    path: {{ .path }}
   selector:
     matchLabels:
-{{- if .Values.prometheus.serviceMonitor.matchLabels }}
-{{- toYaml .Values.prometheus.serviceMonitor.matchLabels | nindent 6 }}
+{{- if .matchLabels }}
+{{- toYaml .matchLabels | nindent 6 }}
 {{- end }}
-{{- if .Values.prometheus.serviceMonitor.namespaceSelector }}
+{{- if .namespaceSelector }}
   namespaceSelector:
-{{- toYaml .Values.prometheus.serviceMonitor.namespaceSelector | nindent 4 }}
+{{- toYaml .namespaceSelector | nindent 4 }}
+{{- end }}
+---
 {{- end }}
 {{- end }}

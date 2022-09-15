@@ -15,11 +15,12 @@ spec:
   groups:
   - name: signport
     rules:
-    - alert: SignportPodNotReady
+{{- range .Values.prometheus.rules.signportPodNotReady.podNamePrefixList }}
+    - alert: SignportPodNotReady-{{.}}
       expr: |
         sum by (namespace, pod) (
           max by(namespace, pod) (
-            kube_pod_status_phase{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", phase=~"Pending|Unknown"}
+            kube_pod_status_phase{namespace=~"{{ $.Values.global.namespace | default $.Release.Namespace }}", pod=~"{{.}}.*", phase=~"Pending|Unknown"}
           ) * on(namespace, pod) group_left(owner_kind) topk by(namespace, pod) (
             1, max by(namespace, pod, owner_kind) (kube_pod_owner{owner_kind!="Job"})
           )
@@ -29,4 +30,5 @@ spec:
         message: Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a non-ready state for longer than 15 minutes.
       labels:
         severity: warning
+{{- end }}
 {{- end }}
