@@ -17,9 +17,9 @@ spec:
     rules:
     - alert: SignportDeploymentGenerationMismatch
       expr: |
-        kube_deployment_status_observed_generation{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", deployment=~"frontend.*"}
+        kube_deployment_status_observed_generation{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}
           !=
-        kube_deployment_metadata_generation{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", deployment=~"frontend.*"}
+        kube_deployment_metadata_generation{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}
       for: 10m
       annotations:
         message: Deployment generation for {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} does not match, this indicates that the Deployment has failed but has not been rolled back.

@@ -18,11 +18,11 @@ spec:
     - alert: SignportDeploymentReplicasMismatch
       expr: |
         (
-          kube_deployment_spec_replicas{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", deployment=~"frontend.*"}
+          kube_deployment_spec_replicas{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}
             !=
-          kube_deployment_status_replicas_available{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", deployment=~"frontend.*"}
+          kube_deployment_status_replicas_available{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}
         ) and (
-          changes(kube_deployment_status_replicas_updated{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", deployment=~"frontend.*"}[5m])
+          changes(kube_deployment_status_replicas_updated{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}[5m])
             ==
           0
         )

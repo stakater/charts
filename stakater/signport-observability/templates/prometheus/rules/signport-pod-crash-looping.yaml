@@ -17,7 +17,7 @@ spec:
     rules:
     - alert: SignportPodCrashLooping
       expr: |
-        rate(kube_pod_container_status_restarts_total{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", pod=~"frontend.*"}[5m]) * 60 * 5 > 0
+        rate(kube_pod_container_status_restarts_total{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}[5m]) * 60 * 5 > 0
       for: 10m
       annotations:
         message: Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} ({{`{{$labels.container }}`}}) is restarting {{`{{ printf "%.2f" $value }}`}} times / 5 minutes.
