@@ -19,7 +19,7 @@ spec:
       expr: |
         sum by (namespace, pod) (
           max by(namespace, pod) (
-            kube_pod_status_phase{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", pod=~"frontend.*", phase=~"Pending|Unknown"}
+            kube_pod_status_phase{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", phase=~"Pending|Unknown"}
           ) * on(namespace, pod) group_left(owner_kind) topk by(namespace, pod) (
             1, max by(namespace, pod, owner_kind) (kube_pod_owner{owner_kind!="Job"})
           )

@@ -18,7 +18,7 @@ spec:
     - alert: SignportContainerWaiting
       expr: |
         sum by (namespace, pod, container)
-        (kube_pod_container_status_waiting_reason{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}", pod=~"frontend.*"})
+        (kube_pod_container_status_waiting_reason{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"})
         > 0
       for: 1h
       annotations:
