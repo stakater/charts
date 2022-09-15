@@ -15,14 +15,16 @@ spec:
   groups:
   - name: signport
     rules:
-    - alert: SignportContainerWaiting
+{{- range .Values.prometheus.rules.signportContainerWaiting.podNamePrefixList }}
+    - alert: SignportContainerWaiting-{{.}}
       expr: |
         sum by (namespace, pod, container)
-        (kube_pod_container_status_waiting_reason{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"})
+        (kube_pod_container_status_waiting_reason{namespace=~"{{ $.Values.global.namespace | default $.Release.Namespace }}", pod=~"{{.}}.*"})
         > 0
       for: 1h
       annotations:
         message: Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} container {{`{{ $labels.container }}`}} has been in waiting state for longer than 1 hour.
       labels:
         severity: warning
+{{- end }}
 {{- end }}

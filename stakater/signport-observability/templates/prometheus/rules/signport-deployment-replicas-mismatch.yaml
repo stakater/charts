@@ -15,14 +15,15 @@ spec:
   groups:
   - name: signport
     rules:
-    - alert: SignportDeploymentReplicasMismatch
+{{- range .Values.prometheus.rules.signportDeploymentReplicasMismatch.deploymentNamePrefixList }}
+    - alert: SignportDeploymentReplicasMismatch-{{.}}
       expr: |
         (
-          kube_deployment_spec_replicas{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}
+          kube_deployment_spec_replicas{namespace=~"{{ $.Values.global.namespace | default $.Release.Namespace }}", deployment=~"{{.}}.*"}
             !=
-          kube_deployment_status_replicas_available{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}
+          kube_deployment_status_replicas_available{namespace=~"{{ $.Values.global.namespace | default $.Release.Namespace }}", deployment=~"{{.}}.*"}
         ) and (
-          changes(kube_deployment_status_replicas_updated{namespace=~"{{ .Values.global.namespace | default .Release.Namespace }}"}[5m])
+          changes(kube_deployment_status_replicas_updated{namespace=~"{{ $.Values.global.namespace | default $.Release.Namespace }}", deployment=~"{{.}}.*"}[5m])
             ==
           0
         )
@@ -31,4 +32,5 @@ spec:
         message: Deployment {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has not matched the expected number of replicas for longer than 10 minutes.
       labels:
         severity: warning
+{{- end }}
 {{- end }}
