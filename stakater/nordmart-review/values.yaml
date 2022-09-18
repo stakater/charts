@@ -6,10 +6,8 @@ nordmartReviewUi:
   
   ## Deployment
   deployment:
-    imagePullSecrets: docker-stakater-config-workshop
     additionalLabels:
       appCategory: "frontend"
-    volumes: {}
     image:
       repository: docker.io/stakater/stakater-nordmart-review-ui
       tag: 1.0.14
@@ -71,7 +69,6 @@ nordmartReviewApi:
   deployment:
     additionalLabels:
       appCategory: backend
-    imagePullSecrets: docker-stakater-config-workshop
     envFrom:
       review-config:
         type: configmap
