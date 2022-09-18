@@ -1,14 +1,14 @@
+####################################
+# Review Web User Interface
+####################################
 nordmartReviewUi:
   applicationName: "nordmart-review-ui"
+  
+  ## Deployment
   deployment:
     imagePullSecrets: docker-stakater-config-workshop
     additionalLabels:
       appCategory: "frontend"
-    additionalPodAnnotations:
-      sidecar.istio.io/inject: "true"
-      sidecar.istio.io/rewriteAppHTTPProbers: "true"
-    podLabels:
-      maistra.io/expose-route: "true"
     volumes: {}
     image:
       repository: docker.io/stakater/stakater-nordmart-review-ui
@@ -37,6 +37,8 @@ nordmartReviewUi:
         httpGet:
           path: /health
           port: 4200
+
+  ## Service
   service:
     ports:
     - port: 8080
@@ -44,20 +46,28 @@ nordmartReviewUi:
       protocol: TCP
       targetPort: 4200
 
+  ## RBAC
   rbac:
     serviceAccount:
       enabled: true
 
+  ## Route
   route:
     enabled: true
 
+  ## Forecastl App
   forecastle:
     enabled: true
     displayName: "Nordmart Review UI"
     group: "Nordmart"
 
+####################################
+# Review REST API
+####################################
 nordmartReviewApi:
   applicationName: "nordmart-review-api"
+  
+  ## Deployment
   deployment:
     additionalLabels:
       appCategory: backend
@@ -181,6 +191,9 @@ nordmartReviewApi:
   serviceMonitor:
     enabled: true
 
+####################################
+# Review MongoDB
+####################################
 mongodb:
   fullnameOverride: review-mongodb
   resources: 
