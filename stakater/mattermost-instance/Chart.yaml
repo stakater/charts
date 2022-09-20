@@ -3,7 +3,7 @@ name: mattermost-instance
 description: A Helm chart for Kubernetes
 dependencies:
   - name: postgres-instance
-    version: 0.1.5
+    version: 0.1.6
     repository: https://stakater.github.io/stakater-charts
     condition: postgres-instance.enabled
   - name: minio
