@@ -21,7 +21,7 @@ postgres:
     storage: 1Gi
 
   global:
-    retentionCount: "1"
+    retentionCount: 1
     retentionType: count
     pushQueueMax: 5G
 
