@@ -30,7 +30,7 @@ spec:
       global:
         repo1-retention-full: {{ .Values.postgres.global.retentionCount }}
         repo1-retention-full-type: {{ .Values.postgres.global.retentionType }}
-        archive-puslsh-queue-max: {{ .Values.postgres.global.pushQueueMax }}
+        archive-push-queue-max: {{ .Values.postgres.global.pushQueueMax }}
 #---------------------#
 {{- if and .Values.postgres.exporter.enabled }}
   monitoring:
