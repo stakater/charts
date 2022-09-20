@@ -28,9 +28,9 @@ spec:
                 storage: {{ .Values.postgres.repo.storage }}
 #--------Added to reduce WAL file size and WAL file count-----------#
       global:
-        repo1-retention-full: {{ .Values.postgres.retentionCount }}
-        repo1-retention-full-type: {{ .Values.postgres.retentionType}}
-        archive-push-queue-max: {{ .Values.postgres.pushQueueMax }}
+        repo1-retention-full: {{ .Values.postgres.global.retentionCount }}
+        repo1-retention-full-type: {{ .Values.postgres.global.retentionType }}
+        archive-puslsh-queue-max: {{ .Values.postgres.global.pushQueueMax }}
 #---------------------#
 {{- if and .Values.postgres.exporter.enabled }}
   monitoring:
