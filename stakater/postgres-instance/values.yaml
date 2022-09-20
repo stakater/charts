@@ -20,6 +20,11 @@ postgres:
     name: repo1
     storage: 1Gi
 
+ # global:
+ #   retentionCount: "1"
+ #   retentionType: count
+ #   pushQueueMax: 5G
+
   exporter:
     enabled: true
     service:

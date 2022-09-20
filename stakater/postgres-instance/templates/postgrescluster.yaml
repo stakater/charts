@@ -26,6 +26,12 @@ spec:
             resources:
               requests:
                 storage: {{ .Values.postgres.repo.storage }}
+#--------Added this to reduce WAL file size-----------#
+      global:
+        repo1-retention-full: "1"
+        repo1-retention-full-type: count
+        archive-push-queue-max: 5G
+#---------------------#
 {{- if and .Values.postgres.exporter.enabled }}
   monitoring:
     pgmonitor:
