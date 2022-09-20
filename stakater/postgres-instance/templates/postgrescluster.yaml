@@ -26,7 +26,7 @@ spec:
             resources:
               requests:
                 storage: {{ .Values.postgres.repo.storage }}
-#--------Added this to reduce WAL file size-----------#
+#--------Added to reduce WAL file size and WAL file count-----------#
       global:
         repo1-retention-full: "1"
         repo1-retention-full-type: count
