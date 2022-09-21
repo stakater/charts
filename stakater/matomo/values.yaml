@@ -1,0 +1,24 @@
+# Default values for matomo.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+matomo:
+  podSecurityContext:
+    enabled: false
+  containerSecurityContext:
+    enabled: false
+  matomoUsername: user
+  matomoPassword: password
+  mariadb:
+    primary:
+      containerSecurityContext:
+        enabled: false
+      podSecurityContext:
+        enabled: false
+    secondary:
+      podSecurityContext:
+        enabled: false
+      containerSecurityContext:
+        enabled: false
+    auth:
+      rootPassword: secretpassword
