@@ -2,6 +2,16 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+route:
+  enabled: true
+  name: matomo
+  host: matomo-gabbar-dev.apps.devtest.vxdqgl7u.kubeapp.cloud
+  service: stakater-matomo
+  targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+
 matomo:
   podSecurityContext:
     enabled: false
