@@ -5,7 +5,6 @@
 route:
   enabled: true
   name: matomo
-  host: matomo-gabbar-dev.apps.devtest.vxdqgl7u.kubeapp.cloud
   service: stakater-matomo
   targetPort: http
   tls:

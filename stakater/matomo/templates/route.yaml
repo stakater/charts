@@ -5,7 +5,6 @@ metadata:
   name: {{ .Values.route.name }}
   namespace: {{ .Release.Namespace }}
 spec:
-  host: {{ .Values.route.host }}
   to:
     kind: Service
     name: {{ .Values.route.service }}
