@@ -4,7 +4,6 @@
 
 route:
   enabled: true
-  name: matomo
   targetPort: http
   tls:
     termination: edge
