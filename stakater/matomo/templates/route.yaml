@@ -2,11 +2,12 @@
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
-  name: {{ .Values.route.name }}
+  name: {{ template "application.name" . }}
   namespace: {{ .Release.Namespace }}
 spec:
   to:
     kind: Service
+    name: {{ template "application.name" . }}
     weight: 100
   port:
     targetPort: {{ .Values.route.targetPort }}
