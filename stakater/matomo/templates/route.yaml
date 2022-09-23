@@ -7,7 +7,6 @@ metadata:
 spec:
   to:
     kind: Service
-    name: {{ .Values.route.service }}
     weight: 100
   port:
     targetPort: {{ .Values.route.targetPort }}
