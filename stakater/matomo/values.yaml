@@ -5,7 +5,6 @@
 route:
   enabled: true
   name: matomo
-  service: stakater-matomo
   targetPort: http
   tls:
     termination: edge
