@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "allure.fullname" . }}
+  labels:
+    {{- include "allure.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: 5050-tcp
+    port: 5050
+    protocol: TCP
+    targetPort: 5050
+  selector:
+    {{- include "allure.selectorLabels" . | nindent 4 }}
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

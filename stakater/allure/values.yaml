@@ -1,70 +1,34 @@
-# Default values for allure.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-allure:
-  containerSecurityContext:
-    enabled: false
-
-  host: allure-gabbar-dev.apps.devtest.vxdqgl7u.kubeapp.cloud
-  network:
-    route:
-      enabled: true
-      tls:
-        termination: edge
-        insecureEdgeTerminationPolicy: Redirect
-
-  registrySealedSecret:
-    # either enable registrySealedSecret or registry
+# key:value
+check_results_every_seconds: 3
+keep_history: 1
+make_viewer_endpoints_public: 1
+security:
+  enabled: 1
+  password: password
+  user: admin
+  secret: '' #when you have secret object defined with username/password info ie SealedSecrets
+image_repository: quay.io
+image_name: allure
+image_namespace: eformat
+image_version: latest
+# use the image specified above as tag (else tag overridden in pipeline say)
+istag:
+  enabled: true
+route: true
+persistence:
+  allure_data:
     enabled: true
-    name: qameta-secret
-    annotations:
-      sealedsecrets.bitnami.com/cluster-wide: "true"
-    dockerconfigjson: AgCTuCSZvUmERFiX8FQnXeXy65ZZrRIoWFGSfusHEfxS8J+BDd3sm5sJZESVkplfLer4FKdFcaLx6IkEX1iVVSB4s39/T3uHBUB+dkZ19YG8OiEkH3Mg9j+BPbCvKzTan7nCzFQadTmvyfHQkD6qdaOjj0GjrQBKFz0dxTjkHphTzXvfKFXbgHk5A68xhavbcyqfd7gAdRX0Nu8HqPrs8Z+JK+pjh7m85WgJUU/K4nrQwoJnwM777cpaaNPFqvs4mJQoV5hzvpwXDOJheA1+4k5oUalzh/uy/nBnflhhKO79FxLdNU7PhQHFDtM2kFp65bVfX1WDPA9rLCixlsaWht7wH04HPQX36ZX51F83OT3emPocNbB21FaBQTklKPhWecni8ddz/qA5ffeTzB3dGebUGgKj5cOxaa33PgKfxk7C5IfVhdz0rcj0A3zD1FqQSiYACsr3McBuy306IguzBYitNOuEcnXDJPTucupv8kbKeFNi78ukmZsqEFY8oKM0jLR2Uglx/wfocYhgOKsuxonh8nNxPh/FRRx9JJIyJR+bacapEkXyHWy6Q7/70prCbT9p05pKyfy5z0kpVVhMmKl8M+ZTU5WqmzudubxUmoYC5WY5pv6dPezsbyH3eVlIp9VQnMasV9eHEUT3oh3zTpxJW11kkWpAMxqoNAUVdNxnCGP1zPijQW5hE+AuSdyiitERBLnpnNniwPgiqSItjd9S7W6wFMEta11Wd30+1vbj4ckfMH2xb3Dt2yMASrdgAWKyFLzvRo+jG50Oe2n/jEz3fJ6nv3tfEXp9MyMhcOtDAdJZC/GFgnUggeJCTlm3E6Q3jRnsdoW4dncOG/aZG7sfiIs6P/bVgv0e+KgprnnGG7z5iLSFB4w/nLapzRlM2vBOLHOQtbR0lpv2bIhhHYngTeaUCgY0TPNFArLx1u664qKOdg==
-
-  registry:
-    enabled: false
-    auth:
-      # provided by Qameta Software
-      # by default qametaaccess as username and random password provided by sales
-      username: qametaaccess
-      password: dckr_pat_oxrDnCpHuoFkF5w_4jMpVXixAc8
-
-  redis:
-    master:
-      podSecurityContext:
-        enabled: false
-      containerSecurityContext:
-        enabled: false
-    replica:
-      podSecurityContext:
-        enabled: false
-      containerSecurityContext:
-        enabled: false
-        
-  rabbitmq:
-    podSecurityContext:
-      enabled: false
-    containerSecurityContext:
-      enabled: false
-
-  postgresql:
-    primary:
-      podSecurityContext:
-        enabled: false
-      containerSecurityContext:
-        enabled: false
-
-    readReplicas:
-      podSecurityContext:
-        enabled: false
-      containerSecurityContext:
-        enabled: false
-  
-  minio:
-    podSecurityContext:
-      enabled: false
-    containerSecurityContext:
-      enabled: false
-    persistence:
-      size: 50Gi
+    annotations: {}
+    storageClass:
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    mountPath: /app/projects
+    storageClass: stakater
+  allure_swagger:
+    enabled: true
+    annotations: {}
+    storageClass:
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    mountPath: /app/allure-docker-api/static/swagger
+    storageClass: stakater

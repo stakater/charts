@@ -60,3 +60,14 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Lookup the application domain
+*/}}
+{{- define "allure.app_domain" -}}
+{{- if (lookup "operator.openshift.io/v1" "IngressController" "openshift-ingress-operator" "default") }}
+{{- print (lookup "operator.openshift.io/v1" "IngressController" "openshift-ingress-operator" "default").status.domain }}
+{{- else }}
+{{- default .Values.app_domain }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,90 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: patch-allure-ds
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "50"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: patch-allure-ds-{{ .Release.Name }}-{{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "50"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: patch-allure-ds-{{ .Release.Name }}-{{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "50"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: patch-allure-ds-{{ .Release.Name }}-{{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: patch-allure-ds
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: patch-allure-ds
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "100"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  backoffLimit: 10
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      containers:
+        - image: quay.io/eformat/jenkins-agent-graalvm:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -ux -o pipefail
+              echo "Waiting for allure pod ready..."
+              oc wait $(oc get pod -l app.kubernetes.io/instance={{ .Release.Name }} -o name) --for=condition=Ready --timeout=300s
+              sleep 5s
+              echo "Patching allure swagger data"
+              cd /tmp
+              git clone https://github.com/eformat/allure.git && cd allure
+              podname=$(oc get pods -l app.kubernetes.io/instance={{ .Release.Name }} -o name)
+              oc cp docker/swagger/ ${podname##pod/}:/app/allure-docker-api/static
+              oc delete pod -l app.kubernetes.io/instance={{ .Release.Name }}
+              oc wait $(oc get pod -l app.kubernetes.io/instance={{ .Release.Name }} -o name) --for=condition=Ready --timeout=300s
+              exit $?
+          imagePullPolicy: Always
+          name: patch-allure-ds
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      serviceAccount: patch-allure-ds
+      serviceAccountName: patch-allure-ds
+      terminationGracePeriodSeconds: 30

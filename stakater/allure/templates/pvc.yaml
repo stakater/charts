@@ -1,0 +1,56 @@
+---
+{{- if and .Values.persistence.allure_data.enabled (not .Values.persistence.allure_data.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "allure.fullname" . }}-data
+  labels:
+    {{- include "allure.labels" . | nindent 4 }}
+{{ if .Values.persistence.allure_data.annotations}}
+  annotations:
+    {{- range $key, $value := .Values.persistence.allure_data.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+{{- end }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.allure_data.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.allure_data.size | quote }}
+{{- if .Values.persistence.allure_data.storageClass }}
+{{- if (eq "-" .Values.persistence.allure_data.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.persistence.allure_data.storageClass }}"
+{{- end }}
+{{- end }}
+{{- end }}
+---
+{{- if and .Values.persistence.allure_swagger.enabled (not .Values.persistence.allure_swagger.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "allure.fullname" . }}-swagger
+  labels:
+    {{- include "allure.labels" . | nindent 4 }}
+{{ if .Values.persistence.allure_swagger.annotations}}
+  annotations:
+    {{- range $key, $value := .Values.persistence.allure_swagger.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+{{- end }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.allure_swagger.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.allure_swagger.size | quote }}
+{{- if .Values.persistence.allure_swagger.storageClass }}
+{{- if (eq "-" .Values.persistence.allure_swagger.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.persistence.allure_swagger.storageClass }}"
+{{- end }}
+{{- end }}
+{{- end }}

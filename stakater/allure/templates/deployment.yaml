@@ -1,0 +1,84 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "allure.fullname" . }}
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"{{ include "allure.fullname" . }}:{{ .Values.image_version }}"},"fieldPath":"spec.template.spec.containers[?(@.name==\"allure\")].image"}]'
+  labels:
+    {{- include "allure.labels" . | nindent 4 }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      {{- include "allure.selectorLabels" . | nindent 6 }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+      labels:
+        {{- include "allure.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: CHECK_RESULTS_EVERY_SECONDS
+          value: {{ .Values.check_results_every_seconds | quote }}
+        - name: KEEP_HISTORY
+          value: {{ .Values.keep_history | quote }}
+        - name: MAKE_VIEWER_ENDPOINTS_PUBLIC
+          value: {{ .Values.make_viewer_endpoints_public | quote }}
+        - name: SECURITY_ENABLED
+          value: {{ .Values.security.enabled | quote }}
+        {{- if .Values.security.secret }}
+        - name: SECURITY_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.security.secret }}
+              key: username
+        - name: SECURITY_PASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.security.secret }}
+              key: password
+        {{- else }}
+        - name: SECURITY_PASS
+          value: {{ .Values.security.password | quote }}
+        - name: SECURITY_USER
+          value: {{ .Values.security.user | quote }} 
+        {{- end }}
+        image: 'quay.io/eformat/allure@sha256:73a13894c13a14a9f3a8269d6d60d3a37873067c5ff418bfb4e4d58ee21c52c7'
+        imagePullPolicy: Always
+        name: allure
+        ports:
+        - containerPort: 5050
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /app/allure-results
+          name: allure-docker-service-volume-1
+        - mountPath: /app/projects
+          name: allure-data
+        - mountPath: /app/allure-docker-api/static/swagger
+          name: allure-swagger
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: allure-docker-service-volume-1
+      - name: allure-data
+        persistentVolumeClaim:
+          claimName: {{ include "allure.fullname" . }}-data
+      - name: allure-swagger
+        persistentVolumeClaim:
+          claimName: {{ include "allure.fullname" . }}-swagger
