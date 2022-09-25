@@ -1,0 +1,25 @@
+{{- if and (eq .Values.route true) }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "allure.fullname" . }}
+  labels:
+    {{- include "allure.labels" . | nindent 4 }}
+spec:
+  port:
+    targetPort: 5050-tcp
+  to:
+    kind: Service
+    name: {{ include "allure.fullname" . }}
+    weight: 100
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  wildcardPolicy: None
+status:
+  ingress:
+    - conditions:
+        - status: 'True'
+          type: Admitted
+{{ end }}
