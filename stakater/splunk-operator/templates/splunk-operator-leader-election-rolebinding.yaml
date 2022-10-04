@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    name: splunk-operator
+  name: splunk-operator-leader-election-rolebinding
+  namespace: splunk-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: splunk-operator-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: splunk-operator-controller-manager
+  namespace: splunk-operator

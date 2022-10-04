@@ -1,0 +1,32 @@
+{{- if .Values.global.clusterScope }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    name: splunk-operator
+  name: splunk-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: splunk-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: splunk-operator-controller-manager
+  namespace: splunk-operator
+{{- else }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    name: splunk-operator
+  name: splunk-operator-manager-rolebinding
+  namespace: splunk-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: splunk-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: splunk-operator-controller-manager
+  namespace: splunk-operator
+{{- end }}
