@@ -4,7 +4,7 @@ metadata:
   labels:
     name: splunk-operator
   name: splunk-operator-app-download
-  namespace: splunk-operator
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
 spec:
   accessModes:
   - ReadWriteOnce

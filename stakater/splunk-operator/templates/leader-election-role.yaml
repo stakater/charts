@@ -4,7 +4,7 @@ metadata:
   labels:
     name: splunk-operator
   name: splunk-operator-leader-election-role
-  namespace: splunk-operator
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
 rules:
 - apiGroups:
   - ""

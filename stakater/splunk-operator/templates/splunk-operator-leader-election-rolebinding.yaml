@@ -4,7 +4,7 @@ metadata:
   labels:
     name: splunk-operator
   name: splunk-operator-leader-election-rolebinding
-  namespace: splunk-operator
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -12,4 +12,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: splunk-operator-controller-manager
-  namespace: splunk-operator
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}

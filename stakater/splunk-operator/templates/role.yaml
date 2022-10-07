@@ -1,5 +1,5 @@
 apiVersion: rbac.authorization.k8s.io/v1
-{{- if .Values.global.clusterScope }}
+{{- if eq .Values.global.clusterScope "true" }}
 kind: ClusterRole
 {{- else }}
 kind: Role
@@ -9,8 +9,8 @@ metadata:
   labels:
     name: splunk-operator
   name: splunk-operator-manager-role
-{{- if not .Values.global.clusterScope }}
-  namespace: splunk-operator
+{{- if eq .Values.global.clusterScope "false" }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
 {{- end }}
 rules:
 - apiGroups:

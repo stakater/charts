@@ -3,4 +3,13 @@
 # Declare variables to be passed into your templates.
 
 global:
-  clusterScope: true
+  clusterScope: "false"
+  namespace: rhsso-dev #splunk-operator
+
+metrics:
+  clusterRole:
+    enabled: false
+
+proxy:
+  clusterRole:
+    enabled: false

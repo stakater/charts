@@ -17,4 +17,4 @@ metadata:
   labels:
     name: splunk-operator
   name: splunk-operator-manager-config
-  namespace: splunk-operator
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
