@@ -8,8 +8,8 @@ global:
 
 metrics:
   clusterRole:
-    enabled: false
+    enabled: true
 
 proxy:
   clusterRole:
-    enabled: false
+    enabled: true
