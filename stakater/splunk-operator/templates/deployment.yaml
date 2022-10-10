@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: controller-manager
+    name: splunk-operator
+  name: splunk-operator-controller-manager
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      name: splunk-operator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+        kubectl.kubernetes.io/default-logs-container: manager
+      labels:
+        control-plane: controller-manager
+        name: splunk-operator
+    spec:
+      containers:
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=0
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 5m
+            memory: 64Mi
+      - args:
+        - --leader-elect
+        - --pprof
+        command:
+        - /manager
+        env:
+        - name: WATCH_NAMESPACE
+{{- if eq .Values.global.clusterScope "true" }}
+          value: ""
+{{- else }}
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+{{- end }}
+        - name: RELATED_IMAGE_SPLUNK_ENTERPRISE
+          value: splunk/splunk:9.0.0
+        - name: OPERATOR_NAME
+          value: splunk-operator
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: splunk/splunk-operator:2.0.0
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2000Mi
+          requests:
+            cpu: 1000m
+            memory: 2000Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+        volumeMounts:
+        - mountPath: /opt/splunk/appframework/
+          name: app-staging
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      securityContext:
+        fsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+      serviceAccountName: splunk-operator-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - configMap:
+          name: splunk-operator-config
+        name: splunk-operator-config
+      - name: app-staging
+        persistentVolumeClaim:
+          claimName: splunk-operator-app-download
