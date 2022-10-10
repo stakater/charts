@@ -10,7 +10,7 @@ metadata:
     name: splunk-operator
   name: splunk-operator-manager-role
 {{- if eq .Values.global.clusterScope "false" }}
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  namespace: splunk-operator
 {{- end }}
 rules:
 - apiGroups:

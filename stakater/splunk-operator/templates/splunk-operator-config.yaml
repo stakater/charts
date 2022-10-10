@@ -8,4 +8,4 @@ metadata:
   labels:
     name: splunk-operator
   name: splunk-operator-config
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  namespace: splunk-operator
