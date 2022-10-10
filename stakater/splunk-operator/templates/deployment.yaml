@@ -5,7 +5,7 @@ metadata:
     control-plane: controller-manager
     name: splunk-operator
   name: splunk-operator-controller-manager
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  namespace: splunk-operator
 spec:
   replicas: 1
   selector:
@@ -49,13 +49,9 @@ spec:
         - /manager
         env:
         - name: WATCH_NAMESPACE
-{{- if eq .Values.global.clusterScope "true" }}
-          value: ""
-{{- else }}
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-{{- end }}
         - name: RELATED_IMAGE_SPLUNK_ENTERPRISE
           value: splunk/splunk:9.0.0
         - name: OPERATOR_NAME
