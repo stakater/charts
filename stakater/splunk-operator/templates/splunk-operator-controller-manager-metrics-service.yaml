@@ -5,7 +5,7 @@ metadata:
     control-plane: controller-manager
     name: splunk-operator
   name: splunk-operator-controller-manager-metrics-service
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  namespace: splunk-operator
 spec:
   ports:
   - name: https
