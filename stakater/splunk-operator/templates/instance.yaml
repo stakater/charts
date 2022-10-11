@@ -8,12 +8,8 @@ metadata:
   - enterprise.splunk.com/delete-pvc
 spec:
   volumes:
-    - name: apps
+    - name: defaults
       configMap:
-        name: splunk-apps
-  defaults: |-
-    splunk:
-      apps_location:
-        - "/mnt/apps/app1.tgz"
-        - "/mnt/apps/app2.tgz"
+        name: splunk-defaults
+  defaultsUrl: /mnt/defaults/default.yml
 {{- end }}
