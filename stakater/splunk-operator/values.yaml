@@ -13,3 +13,6 @@ metrics:
 proxy:
   clusterRole:
     enabled: true
+
+instance:
+  enabled: true
