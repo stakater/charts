@@ -5,7 +5,7 @@
 namespace:
   createNamespace: false
   labels:
-    stakater.com/tenant: genesis
+    stakater.com/tenant: gabbar
 
 tenant:
   enabled: true
