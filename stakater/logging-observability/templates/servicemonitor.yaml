@@ -1,0 +1,2 @@
+# this is not needed for openshift-monitoring
+# they should already have a servicemonitor defined
