@@ -7,7 +7,7 @@ dependencies:
     repository: https://stakater.github.io/stakater-charts
     condition: postgres-instance.enabled
   - name: minio
-    version: 0.1.5
+    version: 0.1.4
     repository: https://stakater.github.io/stakater-charts
     condition: minio.enabled
 
@@ -30,4 +30,4 @@ version: 0.1.22
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "1.16.0"
+appVersion: "1.17.0"
