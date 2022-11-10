@@ -12,14 +12,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     name: Build
-    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"    
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
 
     steps:
 
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
