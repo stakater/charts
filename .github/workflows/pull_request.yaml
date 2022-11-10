@@ -25,7 +25,7 @@ jobs:
 
     - name: TEMP
       run: |
-        echo "${{github.event.commits.*.message}}"
+        echo "${{toJSON(github.event.commits.*.message)}}"
 
     - id: get-chart
       name: 'Get modified charts'
