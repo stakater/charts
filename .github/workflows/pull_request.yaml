@@ -5,9 +5,10 @@ on:
     branches:
       - main
     paths-ignore:
-    - 'README.md'
-    - 'stakater/(.*)/README.md'
-    - '.github/workflows'
+      - 'README.md'
+      - 'stakater/(.*)/README.md'
+      - '.github/workflows'
+      - 'CODEOWNERS'
 
 jobs:
   build:

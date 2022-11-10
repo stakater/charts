@@ -9,8 +9,9 @@ on:
     branches:
       - main
     paths-ignore:
-    - 'README.md'
-    - 'stakater/(.*)/README.md'
+      - 'README.md'
+      - 'stakater/(.*)/README.md'
+      - 'CODEOWNERS'
 
 jobs:
   build:
