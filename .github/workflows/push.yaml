@@ -1,8 +1,8 @@
 name: Push
 
 concurrency: 
- group: push_on_master
- cancel-in-progress: false
+  group: push_on_master
+  cancel-in-progress: false
 
 on:
   push:
