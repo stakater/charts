@@ -1,21 +1,22 @@
 name: Push
 
 concurrency: 
- group: push_on_master
- cancel-in-progress: false
+  group: push_on_master
+  cancel-in-progress: false
 
 on:
   push:
     branches:
       - main
     paths-ignore:
-    - 'README.md'
-    - 'stakater/(.*)/README.md'
+      - 'README.md'
+      - 'stakater/(.*)/README.md'
+      - 'CODEOWNERS'
 
 jobs:
   build:
     name: Build
-    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
+    if: "! contains(toJSON(github.event.pull_request.title), '[skip-ci]')"
     runs-on: ubuntu-latest
     
     steps:
