@@ -18,6 +18,11 @@ jobs:
 
     steps:
 
+    - name: messages
+      run: |
+        echo '${{toJSON(github.event.commits.*.message)}}'
+        echo '${{toJSON(github.event.commits)}}'
+
     - name: Check out code
       uses: actions/checkout@v2
       with:
