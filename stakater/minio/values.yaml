@@ -10,7 +10,7 @@ tenant:
   - name: "test"
     region: "us-east-1"
   credsSecret: minio-creds-secret
-  requestAutoCert: false
+  requestAutoCert: true
   pools:
     servers: 1
     storageSize: 1Gi
