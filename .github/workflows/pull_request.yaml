@@ -23,6 +23,10 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: TEMP
+      run: |
+        echo "${{github.event.commits}}"
+
     - id: get-chart
       name: 'Get modified charts'
       run: |
