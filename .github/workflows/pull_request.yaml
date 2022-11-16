@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Build
-    if: "! contains(toJSON(github.event.pull_request.title), '[skip-ci]')"
+    if: "! contains(toJSON(github.event.pull_request.title), '[skip-ci]') || ! contains(toJSON(github.event.commits.*.message.title), '[skip-ci]')"
 
     steps:
 
