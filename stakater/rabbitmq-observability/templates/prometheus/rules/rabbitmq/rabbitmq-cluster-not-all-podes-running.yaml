@@ -1,0 +1,32 @@
+---
+{{- if and ( .Values.prometheus.rules.rabbitmq.rabbitMqClusterNotAllPodsRunning ) ( .Values.prometheus.rules.rabbitmq.rabbitMqClusterNotAllPodsRunning.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-cluster-not-all-pods-running
+{{- if .Values.prometheus.rules.rabbitmq.rabbitMqClusterNotAllPodsRunning.namespace  }}
+  namespace: {{ .Values.prometheus.rules.rabbitmq.rabbitMqClusterNotAllPodsRunning.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: rabbitmq
+    rules:
+    - alert: rabbitMqClusterNotAllPodsRunning
+      expr: sum(up{job=~".*rabbitmq.*"}) < {{ .Values.prometheus.rules.rabbitmq.noMajorityOfPodsReady.totalPods }}
+      for: 1m
+      annotations:
+        description: Some RabbitMQ Cluster Pods Are Down in job {{`{{ $labels.instance }}`}}/{{`{{ $labels.job}}`}}
+        summary: Some RabbitMQ Cluster Pods Are Down in job {{`{{ $labels.instance }}`}}/{{`{{ $labels.job}}`}}
+      labels:
+        rabbitmq_cluster: '{{`{{ $labels.label_app_kubernetes_io_name }}`}}'
+        rulesgroup: rabbitmq
+        severity: critical
+{{- end }}

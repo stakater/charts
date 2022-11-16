@@ -53,6 +53,9 @@ prometheus:
         enabled: true
       noMajorityOfNodesReady:
         enabled: true
+      noMajorityOfPodsReady:
+        enabled: true
+        totalPods: 3
       persistentVolumeMissing:
         enabled: true
       recordingRules:
@@ -71,6 +74,9 @@ prometheus:
         enabled: true
       rabbitMqClusterNotAllNodesRunning:
         enabled: true
+      rabbitMqClusterNotAllPodsRunning:
+        enabled: true
+        totalPods: 3
       rabbitmqDiskSpaceBelowThreshold:
         enabled: true
         threshold: 1073741824 #1Gb
