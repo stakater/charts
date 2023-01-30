@@ -4,7 +4,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: rabbitmq-dead-letter-queue-not-empty
+  name: rabbitmq-dead-letter-queue-letters-over-threshold
 {{- if .Values.prometheus.rules.rabbitmq.deadLetterQueue.namespace  }}
   namespace: {{ .Values.prometheus.rules.rabbitmq.deadLetterQueue.namespace }}
 {{- else }}
@@ -25,7 +25,7 @@ spec:
 
         (rabbitmq_detailed_queue_messages{queue!~".*rpc.*"} and rabbitmq_detailed_queue_messages{queue=~".*dlq"})  * on(namespace, pod,container) group_left(rabbitmq_cluster) rabbitmq_identity_info
         >=
-        1
+        {{ .Values.prometheus.rules.rabbitmq.deadLetterQueue.threshold }}
       for: 5m
       annotations:
         description: |
