@@ -43,6 +43,9 @@ prometheus:
     rabbitmq:
       containerRestarts:
         enabled: true
+      deadLetterQueue:
+        enabled: false
+        threshold: 1
       fileDescriptorsNearLimit:
         enabled: true
       highConnectionChurn:
