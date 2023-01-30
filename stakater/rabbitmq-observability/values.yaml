@@ -41,6 +41,8 @@ prometheus:
   rules:
     labels: {}
     rabbitmq:
+      deadLetterQueue:
+        enabled: false
       containerRestarts:
         enabled: true
       fileDescriptorsNearLimit:
