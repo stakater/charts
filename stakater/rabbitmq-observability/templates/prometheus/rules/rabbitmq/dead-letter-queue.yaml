@@ -1,0 +1,40 @@
+
+{{- if and ( .Values.prometheus.rules.rabbitmq.deadLetterQueue ) ( .Values.prometheus.rules.rabbitmq.deadLetterQueue.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-dead-letter-queue-letters-over-threshold
+{{- if .Values.prometheus.rules.rabbitmq.deadLetterQueue.namespace  }}
+  namespace: {{ .Values.prometheus.rules.rabbitmq.deadLetterQueue.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: rabbitmq
+    rules:
+    - alert: RabbitMQDeadLetterQueueNotEmpty
+      expr: |
+
+        (rabbitmq_detailed_queue_messages{queue!~".*rpc.*"} and rabbitmq_detailed_queue_messages{queue=~".*dlq"})  * on(namespace, pod,container) group_left(rabbitmq_cluster) rabbitmq_identity_info
+        >=
+        {{ .Values.prometheus.rules.rabbitmq.deadLetterQueue.threshold }}
+      for: 5m
+      annotations:
+        description: |
+          Over the last 5 minutes, dead letter queue `{{`{{ $labels.queue }}`}}`
+          contained `{{`{{ $value | printf "%.0f" }}`}}` letters.
+        summary: ""
+          
+      labels:
+        rabbitmq_cluster: '{{`{{ $labels.rabbitmq_cluster }}`}}'
+        rulesgroup: rabbitmq
+        severity: warning
+{{- end }}
