@@ -1,0 +1,9 @@
+global:
+  namespace:
+
+grafana:
+  labels:
+    grafanaDashboard: grafana-operator
+  resourceUtilization:
+    enabled: true
+
