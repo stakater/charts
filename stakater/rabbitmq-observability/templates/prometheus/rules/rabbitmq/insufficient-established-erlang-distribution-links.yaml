@@ -1,4 +1,3 @@
----
 {{- if and ( .Values.prometheus.rules.rabbitmq.insufficientDistributionLinks ) ( .Values.prometheus.rules.rabbitmq.insufficientDistributionLinks.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule

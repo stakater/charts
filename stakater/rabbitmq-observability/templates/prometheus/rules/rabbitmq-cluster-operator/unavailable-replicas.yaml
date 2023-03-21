@@ -1,4 +1,4 @@
----
+{{- if .Values.ksm.enabled }}
 {{- if and ( .Values.prometheus.rules.clusterOperator.unavailableReplicas ) ( .Values.prometheus.rules.clusterOperator.unavailableReplicas.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -36,4 +36,5 @@ spec:
       labels:
         rulesgroup: rabbitmq-operator
         severity: warning
+{{- end }}
 {{- end }}

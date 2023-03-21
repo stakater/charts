@@ -1,4 +1,3 @@
----
 {{- if and ( .Values.prometheus.rules.rabbitmqPerObject.queueHasNoConsumers ) ( .Values.prometheus.rules.rabbitmqPerObject.queueHasNoConsumers.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
