@@ -74,9 +74,7 @@ prometheus:
         enabled: true
       rabbitMqMemoryUsageHigh:
         enabled: true
-      rabbitMqMemoryAlarm:
-        enabled: true
-      rabbitMqDiskSpaceAlarm:
+      rabbitMqDiskUsageHigh:
         enabled: true
       rabbitMQServerDown:
         enabled: true
