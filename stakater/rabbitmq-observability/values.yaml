@@ -7,7 +7,7 @@ global:
 
 #Please enable if kube-state-metrics is available. More info: https://github.com/kubernetes/kube-state-metrics
 ksm:
-  enabled: false
+  enabled: true
 #Grafana dashboard configuration
 grafana:
   labels: {}
