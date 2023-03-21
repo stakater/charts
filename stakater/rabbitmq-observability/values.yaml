@@ -5,6 +5,10 @@
 global:
   namespace:
 
+#Please enable if kube-state-metrics is available. More info: https://github.com/kubernetes/kube-state-metrics
+ksm:
+  enabled: false
+#Grafana dashboard configuration
 grafana:
   labels: {}
   erlangDistribution:
@@ -23,6 +27,7 @@ grafana:
     enabled: true
   rabbitmqStream:
     enabled: true
+#Prometheus configuration
 prometheus:
   alertmanager:
     labels: {}
@@ -44,7 +49,7 @@ prometheus:
       containerRestarts:
         enabled: true
       deadLetterQueue:
-        enabled: false
+        enabled: true
         threshold: 1
       fileDescriptorsNearLimit:
         enabled: true
