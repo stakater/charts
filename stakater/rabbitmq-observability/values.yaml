@@ -59,8 +59,6 @@ prometheus:
         enabled: true
       lowDiskWatermarkPredicted:
         enabled: true
-      noMajorityOfNodesReady:
-        enabled: true
       noMajorityOfPodsReady:
         enabled: true
         totalPods: 3
@@ -78,8 +76,6 @@ prometheus:
         enabled: true
       rabbitMQServerDown:
         enabled: true
-      rabbitMqClusterNotAllNodesRunning:
-        enabled: true
       rabbitMqClusterNotAllPodsRunning:
         enabled: true
         totalPods: 3
@@ -89,14 +85,9 @@ prometheus:
       rabbitmqNodesBelowThreshold:
         enabled: true
         threshold: 3
-        rabbitmqCluster: rabbitmq
       rabbitmqMemoryBelowThreshold:
         enabled: true
         threshold: 268435456 #256Mb
-        rabbitmqCluster: rabbitmq
-    clusterOperator:
-      unavailableReplicas:
-        enabled: true
     rabbitmqPerObject:
       queueHasNoConsumers:
         enabled: true
