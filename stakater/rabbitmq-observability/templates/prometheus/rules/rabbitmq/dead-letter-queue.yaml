@@ -1,6 +1,4 @@
-
 {{- if and ( .Values.prometheus.rules.rabbitmq.deadLetterQueue ) ( .Values.prometheus.rules.rabbitmq.deadLetterQueue.enabled ) }}
----
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

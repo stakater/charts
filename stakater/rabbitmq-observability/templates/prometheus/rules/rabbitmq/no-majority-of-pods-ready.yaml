@@ -1,4 +1,3 @@
----
 {{- if and ( .Values.prometheus.rules.rabbitmq.noMajorityOfPodsReady ) ( .Values.prometheus.rules.rabbitmq.noMajorityOfPodsReady.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
