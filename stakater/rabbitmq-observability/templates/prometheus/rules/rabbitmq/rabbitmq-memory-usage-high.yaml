@@ -1,4 +1,3 @@
----
 {{- if and ( .Values.prometheus.rules.rabbitmq.rabbitMqMemoryUsageHigh ) ( .Values.prometheus.rules.rabbitmq.rabbitMqMemoryUsageHigh.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -20,7 +19,7 @@ spec:
   - name: rabbitmq
     rules:
     - alert: RabbitMqMemoryUsageHigh
-      expr: (rabbitmq_node_mem_used{job=~".*rabbitmq.*"} / rabbitmq_node_mem_limit{job=~".*rabbitmq.*"}) > .9
+      expr: rabbitmq_process_resident_memory_bytes / rabbitmq_resident_memory_limit_bytes * 100 > 90
       for: 1m
       annotations:
         description: RabbitMQ {{`{{ $labels.instance }}`}} Memory Usage > 90%

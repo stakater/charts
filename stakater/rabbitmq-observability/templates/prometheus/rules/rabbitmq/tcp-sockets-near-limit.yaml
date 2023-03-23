@@ -1,4 +1,3 @@
----
 {{- if and ( .Values.prometheus.rules.rabbitmq.tcpSocketsNearLimit ) ( .Values.prometheus.rules.rabbitmq.tcpSocketsNearLimit.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule

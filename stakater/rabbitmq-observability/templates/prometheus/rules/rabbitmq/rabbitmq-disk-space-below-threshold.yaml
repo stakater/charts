@@ -1,4 +1,3 @@
----
 {{- if and ( .Values.prometheus.rules.rabbitmq.rabbitmqDiskSpaceBelowThreshold ) ( .Values.prometheus.rules.rabbitmq.rabbitmqDiskSpaceBelowThreshold.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -20,10 +19,10 @@ spec:
   - name: rabbitmq
     rules:
     - alert: RabbitmqDiskSpaceBelowThreshold
-      expr: rabbitmq_disk_space_available_bytes{job=~".*rabbitmq.*"} <= {{ .Values.prometheus.rules.rabbitmq.rabbitmqDiskSpaceBelowThreshold.threshold }}
+      expr: rabbitmq_disk_space_available_limit_bytes <= {{ .Values.prometheus.rules.rabbitmq.rabbitmqDiskSpaceBelowThreshold.threshold }}
       for: 1m
       annotations:
-        description: RabbitMQ {{`{{ $labels.instance }}`}} Disk Space threshold has been reached. Current value=`{{`{{ $value | printf "%.0f" }}`}}`, Threshold= {{ .Values.prometheus.rules.rabbitmq.rabbitmqDiskSpaceBelowThreshold.threshold }}
+        description: RabbitMQ {{`{{ $labels.instance }}`}} low watermark disk space threshold has been reached. Current value=`{{`{{ $value | printf "%.0f" }}`}}`, Threshold= {{ .Values.prometheus.rules.rabbitmq.rabbitmqDiskSpaceBelowThreshold.threshold }}
         summary: RabbitMQ is Out of Disk Space
       labels:
         rabbitmq_cluster: '{{`{{ $labels.label_app_kubernetes_io_name }}`}}'
