@@ -55,6 +55,7 @@ jobs:
 
     - name: Test and Package Helm Chart
       run: |
+        helm dependency build  ${{ inputs.SUBPATH }}/
         sed -i "s/^version:.*/version:  ${{ inputs.NEXT_VERSION }}/" ${{ inputs.SUBPATH }}/Chart.yaml
         helm lint ${{ inputs.SUBPATH }}/
         helm -n test template ${{ inputs.SUBPATH }} ${{ inputs.SUBPATH }}/
