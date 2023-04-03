@@ -1,0 +1,50 @@
+name: Jvm Observability Helm Chart
+on:
+  pull_request:
+    branches:
+    - main
+    paths:
+    - 'jvm-observability/**'
+
+  push:
+    branches:
+    - main
+    paths:
+    - 'jvm-observability/**'
+    - '.github/workflows/jvm_observability.yaml'
+
+jobs:
+  next-version:
+    uses: stakater/charts/.github/workflows/next_version.yaml@refactoring
+    with:
+      component: jvm-observability
+
+  pull-request:
+    uses: stakater/charts/.github/workflows/pull_request.yaml@refactoring
+    name: Pull Request
+    if: ${{ github.ref != 'refs/heads/main' }}
+    needs:
+    - next-version
+    secrets:
+      REGISTRY_USERNAME: ${{ github.actor }}
+      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      CONTAINER_REGISTRY_URL: ghcr.io/stakater
+      HELM_REGISTRY_URL: oci://ghcr.io/stakater/charts
+      SUBPATH: jvm-observability
+      NEXT_VERSION: ${{ needs.next-version.outputs.version }}
+
+  push-and-release:
+    uses: stakater/charts/.github/workflows/push.yaml@refactoring
+    name: Push and Release
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs:
+    - next-version
+    secrets:
+      REGISTRY_USERNAME: ${{ github.actor }}
+      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      CONTAINER_REGISTRY_URL: ghcr.io/stakater
+      HELM_REGISTRY_URL: oci://ghcr.io/stakater/charts
+      SUBPATH: jvm-observability
+      NEXT_VERSION: ${{ needs.next-version.outputs.version }}
