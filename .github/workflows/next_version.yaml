@@ -1,0 +1,60 @@
+name: Next version
+on:
+  workflow_call:
+    inputs:
+      component:
+        required: true
+        type: string
+
+    outputs:
+      version:
+        description: Next version
+        value: ${{ jobs.next-version.outputs.version }}
+
+jobs:
+  next-version:
+    name: Get Next Version
+    runs-on: ubuntu-latest
+    
+    steps:
+    # This is due to 'detached HEAD' issue
+    - name: Checkout
+      uses: actions/checkout@v3
+      if: github.event_name == 'pull_request'
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      if: github.event_name == 'push'
+      with:
+        fetch-depth: 0
+    
+    - name: Semver - Get Release Type
+      id: get_release_type
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: echo "::set-output name=type::$(.github/scripts/pr_info.sh release_type)"
+    
+    - name: Get Pull Request Number
+      id: get_pull_request
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: echo "::set-output name=pull_request_number::$(.github/scripts/pr_info.sh)"
+    
+    - name: Semver - Get next next version bump
+      id: next-version
+      run: |
+        echo ::set-output name=version::$(.github/scripts/next_semver.sh \
+        ${{ inputs.component }} \
+        '${{ steps.get_pull_request.outputs.pull_request_number }}' \
+        '${{ steps.get_release_type.outputs.type }}' \
+        '0.0.0')
+
+    - name: Show version
+      run: |
+        echo "${{ steps.next-version.outputs.version }}"
+
+    outputs:
+      version: ${{ steps.next-version.outputs.version }}
