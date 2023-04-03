@@ -49,10 +49,10 @@ jobs:
 
     - name: Test and Package Helm Chart
       run: |
-        sed -i "s/^version:.*/version:  ${{ inputs.NEXT_VERSION }}/" ${{ inputs.SUBPATH }}/helm/Chart.yaml
-        helm lint ${{ inputs.SUBPATH }}/helm/
-        helm -n test template ${{ inputs.SUBPATH }} ${{ inputs.SUBPATH }}/helm/
-        helm package ${{ inputs.SUBPATH }}/helm/
+        sed -i "s/^version:.*/version:  ${{ inputs.NEXT_VERSION }}/" ${{ inputs.SUBPATH }}/Chart.yaml
+        helm lint ${{ inputs.SUBPATH }}/
+        helm -n test template ${{ inputs.SUBPATH }} ${{ inputs.SUBPATH }}/
+        helm package ${{ inputs.SUBPATH }}/
 
     - name: Push Helm Chart to Registry
       run: |
