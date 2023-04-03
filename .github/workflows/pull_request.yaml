@@ -31,8 +31,6 @@ jobs:
   package-and-push-helm-chart:
     name: Package and Push Helm Chart
     runs-on: ubuntu-latest
-    needs:
-    - build-and-push-container-image
     if: |
       always() && !contains(needs.*.result, 'failure')
 
