@@ -1,167 +1,83 @@
 name: Push
-
-concurrency: 
-  group: push_on_master
-  cancel-in-progress: false
-
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'README.md'
-      - 'stakater/(.*)/README.md'
-      - 'CODEOWNERS'
+  workflow_call:
+    inputs:
+      CONTAINER_REGISTRY_URL:
+        required: true
+        type: string
+
+      HELM_REGISTRY_URL:
+        required: true
+        type: string
+
+      SUBPATH:
+        required: true
+        type: string
+
+      NEXT_VERSION:
+        required: false
+        type: string
+
+    secrets:
+      REGISTRY_USERNAME:
+        description: "Username for container registry to login"
+        required: true
+
+      REGISTRY_PASSWORD:
+        description: "Password for container registry to login"
+        required: true
 
 jobs:
-  build:
-    name: Build
-    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]') && ! contains(toJSON(github.event.pull_request.title), '[skip-ci]')"
+  package-and-push-helm-chart:
+    name: Package and Push Helm Chart
     runs-on: ubuntu-latest
-    
+    needs:
+    - build-and-push-container-image
+    if: |
+      always() && !contains(needs.*.result, 'failure')
+
     steps:
-
-    - name: Check out code
-      uses: actions/checkout@v2
+    - name: Checkout Code
+      uses: actions/checkout@v3
       with:
-        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
-        fetch-depth: 2  # to be able to obtain files changed in the latest commit
+        fetch-depth: '0'
 
-    - id: get-chart
-      name: 'Get modified charts'
-      run: |
-        path="$(pwd)"
-        files="$(ls)"
-        files_changed="$(git show --pretty="" --name-only)"
-        # Adding || true to avoid "Process exited with code 1" errors
-        charts_dirs_changed="$(echo "$files_changed" | grep -o "stakater/[^/]*" | sort | uniq || true)"
-        # Using grep -c as a better alternative to wc -l when dealing with empty strings."
-        num_charts_changed="$(echo "$charts_dirs_changed" | grep -c "stakater" || true)"
-        echo '::echo::on'
-        echo "$path"
-        echo "$files"
-        echo "$files_changed"
-        echo "$charts_dirs_changed"
-        echo "$num_charts_changed"
-        echo "$charts_dirs_changed" | sed "s|stakater/||g"
-        echo '::echo::off'
-
-        if [[ "$num_charts_changed" -eq "1" ]]; then
-          # Changes done in only one chart -> OK
-          chart_name=$(echo "$charts_dirs_changed" | sed "s|stakater/||g")
-          echo "::set-output name=chart::${chart_name}"
-          echo "::set-output name=result::ok"
-          echo '::echo::on'
-          echo "$chart_name"
-          echo '::echo::off'
-        elif [[ "$num_charts_changed" -le "0" ]]; then
-          # Changes done in the stakater/ folder but not inside a chart subfolder -> SKIP
-          echo "::set-output name=error::No changes detected in charts. The rest of the tests will be skipped."
-          echo "::set-output name=result::skip"
-        else
-          # Changes done in more than chart -> FAIL
-          echo -e "::set-output name=error::Changes detected in more than one chart directory:\n${charts_dirs_changed}\nThe publish process will be stopped. Please create different commits for each chart."
-          echo "::set-output name=result::fail"
-        fi
-
-
-    - id: show-error
-      name: 'Show error'
-      if: ${{ steps.get-chart.outputs.result == 'fail' }}
-      uses: actions/github-script@v3
+    - name: Login to Container Registry
+      uses: docker/login-action@v2
       with:
-        script: |
-            core.setFailed('${{ steps.get-chart.outputs.error }}')
+        registry: ${{ inputs.CONTAINER_REGISTRY_URL }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
 
-    # Set Up Helm
-    - name: Set up Helm
-      uses: azure/setup-helm@v1
+    - name: Test and Package Helm Chart
+      run: |
+        sed -i "s/^version:.*/version:  ${{ inputs.NEXT_VERSION }}/" ${{ inputs.SUBPATH }}/helm/Chart.yaml
+        helm lint ${{ inputs.SUBPATH }}/helm/
+        helm -n test template ${{ inputs.SUBPATH }} ${{ inputs.SUBPATH }}/helm/
+        helm package ${{ inputs.SUBPATH }}/helm/
+
+    - name: Push Helm Chart to Registry
+      run: |
+        helm push ${{ inputs.SUBPATH }}-${{ inputs.NEXT_VERSION }}.tgz ${{ inputs.HELM_REGISTRY_URL }}
+
+  release:
+    name: Create Release on GitHub
+    if: |
+      always() && !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    needs:
+    - build-and-push-container-image
+    - package-and-push-helm-chart
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
       with:
-        version: v3.7.0
+        fetch-depth: 1
 
-    # Lint
-    - name: Helm Lint
-      if: ${{ steps.get-chart.outputs.result == 'ok' }}
-      env:
-        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
-      run: |
-        helm dependency update stakater/${CHART_NAME}
-        helm lint stakater/${CHART_NAME}
-
-    - name: Helm Package
-      if: ${{ steps.get-chart.outputs.result == 'ok' }}
-      env:
-        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
-      run: |
-        helm dependency update stakater/${CHART_NAME}
-        helm package stakater/${CHART_NAME}
-
-    - name: Bump Chart Version
-      id: bump_chart_version
-      env:
-        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
-      run: |
-        OLD_TAG=$(sed -n -e 's/^version: //p' stakater/${CHART_NAME}/Chart.yaml)
-        NEW_TAG=$(echo "$OLD_TAG" | awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{if(length($NF+1)>length($NF))$(NF-1)++; $NF=sprintf("%0*d", length($NF), ($NF+1)%(10^length($NF))); print}')
-        echo "::set-output name=result::${NEW_TAG}"
-        echo '::echo::on'
-        echo Old Tag for "$CHART_NAME": "$OLD_TAG"
-        echo New Tag for "$CHART_NAME": "$NEW_TAG"
-        echo '::echo::off'
-        sed -i "s/^version:.*/version: ${NEW_TAG}/" stakater/${CHART_NAME}/Chart.yaml
-
-    # Dry run to ensure that manifests are generated successfully 
-    #- name: Dry Run Chart
-    #  run: |
-    #    helm install ${CHART_NAME} ${CHART_NAME} -f ${CHART_NAME}/values.yaml -n stakater-chart-pipeline-test --dry-run --debug
-    # Publish helm chart
-    - name: Publish Helm chart
-      uses: stefanprodan/helm-gh-pages@master
-      if: ${{ steps.get-chart.outputs.result == 'ok' }}
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
       with:
-        branch: master
-        repository: stakater-charts
-        target_dir: docs
-        token: ${{ secrets.STAKATER_GITHUB_TOKEN }}
-        charts_dir: stakater
-        charts_url: https://stakater.github.io/stakater-charts
-        owner: stakater
-        linting: off 
-        commit_username: stakater-user
-        commit_email: stakater@gmail.com
-
-    # Commit back changes
-    - name: Commit files
+        tag_name: ${{ inputs.SUBPATH }}-${{ inputs.NEXT_VERSION }}
       env:
-        CHART_NAME: ${{ steps.get-chart.outputs.chart }}
-      run: |
-        git config --local user.email "stakater@gmail.com"
-        git config --local user.name "stakater-user"
-        git status 
-        git add stakater/${CHART_NAME}/Chart.yaml
-        git commit -m "[skip-ci] Update artifacts for chart: ${CHART_NAME}" -a
-        
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.STAKATER_GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
-
-    # Generate tag for chart without "v" prefix
-    - name: Generate Tag
-      id: generate_tag
-      uses: anothrNick/github-tag-action@1.36.0
-      if: ${{ steps.get-chart.outputs.result == 'ok' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.STAKATER_GITHUB_TOKEN }}
-        WITH_V: false
-        DEFAULT_BUMP: patch
-        DRY_RUN: true
-        
-    - name: Push Latest Tag
-      uses: anothrNick/github-tag-action@1.36.0
-      if: ${{ steps.get-chart.outputs.result == 'ok' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.STAKATER_GITHUB_TOKEN }}
-        WITH_V: false
-        DEFAULT_BUMP: patch
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
