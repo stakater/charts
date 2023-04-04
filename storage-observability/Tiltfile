@@ -8,8 +8,8 @@ if settings.get("allow_k8s_contexts"):
   allow_k8s_contexts(settings.get("allow_k8s_contexts").format(namespace))
 
 yaml=helm(
-         './helm',
-         name='grafana-operator',
+         '.',
+         name='storage-observability',
          namespace=namespace,
          values=['values-local.yaml'])
 

@@ -5,6 +5,7 @@ metadata:
   namespace: {{ include "falco-observability.namespace" . }}
   labels:
     grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
     {{- include "falco-observability.labels" . | nindent 4 }}
 spec:
   json: |-
