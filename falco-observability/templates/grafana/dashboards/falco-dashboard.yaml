@@ -2,12 +2,10 @@ apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
   name: falco-dashboard
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  namespace: {{ include "falco-observability.namespace" . }}
   labels:
     grafana_dashboard: "true"
-{{- if .Values.falcoObservability.labels }}
-{{- toYaml .Values.falcoObservability.labels | nindent 4 }}
-{{- end }}
+    {{- include "falco-observability.labels" . | nindent 4 }}
 spec:
   json: |-
     {

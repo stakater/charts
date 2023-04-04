@@ -4,12 +4,10 @@ apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
   name: jvm-micrometer-dashboard
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  namespace: {{ include "jvm-observability.namespace" . }}
   labels:
     grafana_dashboard: "true"
-{{- if .Values.jvmObservability.jvmMicrometer.labels }}
-{{- toYaml .Values.jvmObservability.jvmMicrometer.labels | nindent 4 }}
-{{- end }}
+    {{- include "jvm-observability.labels" . | nindent 4 }}
 spec:
   json: |-
     {

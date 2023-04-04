@@ -2,12 +2,10 @@ apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
   name: storage-dashboard
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  namespace: {{ include "storage-observability.namespace" . }}
   labels:
     grafana_dashboard: "true"
-{{- if .Values.storageObservability.labels }}
-{{- toYaml .Values.storageObservability.labels | nindent 4 }}
-{{- end }}
+    {{- include "storage-observability.labels" . | nindent 4 }}
 spec:
   json: |-
     {
