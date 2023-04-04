@@ -1,4 +1,4 @@
-name: Jvm Observability Helm Chart
+name: Openshift Volumes Observability Helm Chart
 on:
   pull_request:
     branches:
