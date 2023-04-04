@@ -5,6 +5,7 @@ metadata:
   namespace: {{ include "haproxy-observability.namespace" . }}
   labels:
     grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
     {{- include "haproxy-observability.labels" . | nindent 4 }}
 spec:
   json: |-
