@@ -31,7 +31,7 @@ jobs:
     with:
       CONTAINER_REGISTRY_URL: ghcr.io/stakater
       HELM_REGISTRY_URL: oci://ghcr.io/stakater/charts
-      SUBPATH: falco-observability/helm
+      SUBPATH: falco-observability
       NEXT_VERSION: ${{ needs.next-version.outputs.version }}
 
   push-and-release:
