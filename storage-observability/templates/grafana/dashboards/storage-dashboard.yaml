@@ -1,7 +1,7 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
-  name: openshift-volumes-dashboard
+  name: storage-observability-dashboard
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
   labels:
     grafana_dashboard: "true"
