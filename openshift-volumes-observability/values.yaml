@@ -6,3 +6,4 @@ global:
   namespace:
 
 openshiftVolumesObservability:
+  labels:
