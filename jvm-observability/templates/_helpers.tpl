@@ -31,6 +31,13 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Allow the release namespace to be overridden
+*/}}
+{{- define "jvm-observability.namespace" -}}
+{{- default .Release.Namespace .Values.namespaceOverride -}}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "jvm-observability.labels" -}}

@@ -2,12 +2,10 @@ apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
   name: haproxy-dashboard
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  namespace: {{ include "haproxy-observability.namespace" . }}
   labels:
     grafana_dashboard: "true"
-{{- if .Values.haproxyObservability.labels }}
-{{- toYaml .Values.haproxyObservability.labels | nindent 4 }}
-{{- end }}
+    {{- include "haproxy-observability.labels" . | nindent 4 }}
 spec:
   json: |-
     {
