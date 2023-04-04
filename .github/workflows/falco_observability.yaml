@@ -4,13 +4,13 @@ on:
     branches:
     - main
     paths:
-    - 'falco-observability/**'
+    - 'falco-observability/helm/**'
 
   push:
     branches:
     - main
     paths:
-    - 'falco-observability/**'
+    - 'falco-observability/helm/**'
     - '.github/workflows/falco_observability.yaml'
 
 jobs:
