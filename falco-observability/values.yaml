@@ -4,3 +4,6 @@
 
 global:
   namespace:
+
+falcoObservability:
+  labels:
