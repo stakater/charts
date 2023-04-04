@@ -1,4 +1,4 @@
-name: Openshift Volumes Observability Helm Chart
+name: Storage Observability Helm Chart
 on:
   pull_request:
     branches:
