@@ -4,13 +4,13 @@ on:
     branches:
     - main
     paths:
-    - 'falco-observability/helm/**'
+    - 'falco-observability/**'
 
   push:
     branches:
     - main
     paths:
-    - 'falco-observability/helm/**'
+    - 'falco-observability/**'
     - '.github/workflows/falco_observability.yaml'
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
     with:
       CONTAINER_REGISTRY_URL: ghcr.io/stakater
       HELM_REGISTRY_URL: oci://ghcr.io/stakater/charts
-      SUBPATH: falco-observability
+      SUBPATH: falco-observability/helm
       NEXT_VERSION: ${{ needs.next-version.outputs.version }}
 
   push-and-release:
