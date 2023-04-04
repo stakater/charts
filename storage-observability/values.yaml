@@ -1,9 +1,8 @@
-# Default values for storage-observability.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# -- Put here the new name if you want to override the release name.
+nameOverride: ""
 
-global:
-  namespace:
+# -- Same as nameOverride but for the fullname.
+fullnameOverride: ""
 
-storageObservability:
-  labels:
+# -- Same as nameOverride but for the namespace.
+namespaceOverride: ""
