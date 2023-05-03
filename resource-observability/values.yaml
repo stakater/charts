@@ -6,4 +6,10 @@ grafana:
     grafanaDashboard: grafana-operator
   resourceUtilization:
     enabled: true
-
+prometheus:
+  rules:
+    resource:
+      requestMemoryUnderCommited:
+        enabled: true
+        # threshold in Mb 
+        treshold: 500
