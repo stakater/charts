@@ -16,7 +16,3 @@ prometheus:
         enabled: true
         # threshold in Mb 
         threshold: 500
-<<<<<<< HEAD
-=======
-  
->>>>>>> 58d8cc6 (remove whitesapace)
