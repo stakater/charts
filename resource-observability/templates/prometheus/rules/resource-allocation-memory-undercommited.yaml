@@ -21,7 +21,7 @@ spec:
     - alert: ResourceRequestMemoryUndercommited
       expr: |
         (sum(cluster:namespace:pod_memory:active:kube_pod_container_resource_requests{container_name!="POD",resource="memory", namespace!~"openshift.*"} > 0) by (container, pod, namespace)  -
-        max(max_over_time(container_memory_working_set_bytes{image!="", container_name!="POD", namespace!~"openshift.*"}[1d:1h])) by (container, pod, namespace) / 1000 / 1000)
+        max(max_over_time(container_memory_working_set_bytes{image!="", container_name!="POD", namespace!~"openshift.*"}[1d:1h])) by (container, pod, namespace)) / 1000 / 1000
         >=
         {{ .Values.prometheus.rules.resource.requestMemoryUnderCommited.threshold }}
       for: 5m
