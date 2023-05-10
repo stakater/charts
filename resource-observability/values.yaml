@@ -1,6 +1,5 @@
 global:
   namespace:
-
 grafana:
   labels:
     grafanaDashboard: grafana-operator
@@ -17,3 +16,4 @@ prometheus:
         enabled: true
         # threshold in Mb 
         threshold: 500
+  
