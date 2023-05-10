@@ -1,6 +1,5 @@
 global:
   namespace:
-
 grafana:
   labels:
     grafanaDashboard: grafana-operator
@@ -12,8 +11,12 @@ prometheus:
       requestMemoryUnderCommited:
         enabled: true
         # threshold in Mb 
-        treshold: 500
+        threshold: 500
       requestMemoryOverCommited:
         enabled: true
         # threshold in Mb 
-        treshold: 500
+        threshold: 500
+<<<<<<< HEAD
+=======
+  
+>>>>>>> 58d8cc6 (remove whitesapace)
