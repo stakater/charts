@@ -2,7 +2,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: resource-request-memory-undercommited
+  name: resource-request-memory-overcommited
 {{- if .Values.prometheus.rules.resource.requestMemoryOverCommited.namespace  }}
   namespace: {{ .Values.prometheus.rules.resource.requestMemoryOverCommited.namespace }}
 {{- else }}
