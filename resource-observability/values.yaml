@@ -12,8 +12,8 @@ prometheus:
       requestMemoryUnderCommited:
         enabled: true
         # threshold in Mb 
-        treshold: 500
+        threshold: 500
       requestMemoryOverCommited:
         enabled: true
         # threshold in Mb 
-        treshold: 500
+        threshold: 500
