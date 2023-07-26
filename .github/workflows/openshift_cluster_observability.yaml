@@ -1,23 +1,23 @@
-name: Falco Observability Helm Chart
+name: Openshift Cluster Observability Helm Chart
 on:
   pull_request:
     branches:
     - main
     paths:
-    - 'falco-observability/**'
+    - 'openshift-cluster-observability/**'
 
   push:
     branches:
     - main
     paths:
-    - 'falco-observability/**'
-    - '.github/workflows/falco_observability.yaml'
+    - 'openshift-cluster-observability/**'
+    - '.github/workflows/openshift_cluster_observability.yaml'
 
 jobs:
   next-version:
     uses: stakater/charts/.github/workflows/next_version.yaml@main
     with:
-      component: falco-observability
+      component: openshift-cluster-observability
 
   pull-request:
     uses: stakater/charts/.github/workflows/pull_request.yaml@main
@@ -31,7 +31,7 @@ jobs:
     with:
       CONTAINER_REGISTRY_URL: ghcr.io/stakater
       HELM_REGISTRY_URL: oci://ghcr.io/stakater/charts
-      SUBPATH: falco-observability
+      SUBPATH: openshift-cluster-observability
       NEXT_VERSION: ${{ needs.next-version.outputs.version }}
 
   push-and-release:
@@ -46,5 +46,5 @@ jobs:
     with:
       CONTAINER_REGISTRY_URL: ghcr.io/stakater
       HELM_REGISTRY_URL: oci://ghcr.io/stakater/charts
-      SUBPATH: falco-observability
+      SUBPATH: openshift-cluster-observability
       NEXT_VERSION: ${{ needs.next-version.outputs.version }}
