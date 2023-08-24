@@ -7,3 +7,4 @@ fullnameOverride: ""
 # -- Same as nameOverride but for the namespace.
 namespaceOverride: ""
 
+cluster: ""
