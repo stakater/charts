@@ -1,12 +1,12 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
-  name: slo-dashboard
-  namespace: {{ include "slo-dashboard.namespace" . }}
+  name: slo-observability
+  namespace: {{ include "slo-observability.namespace" . }}
   labels:
     grafana_dashboard: "true"
     grafanaDashboard: grafana-operator
-    {{- include "slo-dashboard.labels" . | nindent 4 }}
+    {{- include "slo-observability.labels" . | nindent 4 }}
 spec:
   json: |-
     {
