@@ -23,11 +23,11 @@ stringData:
     - name: 'null'
     - name: slack
       slack_configs:
-      - channel: ""
+      - channel: "C05JCN3URCN"
         api_url: https://slack.com/api/chat.postMessage
         http_config:
           authorization:
-            credentials: 
+            credentials: xoxb-249957207621-5644161945281-MVkYBgJhtJRWH9UoTQwQ0Kum
         send_resolved: true
         title: '{{`{{ .Status | toUpper }}`}}{{`{{ if eq .Status "firing" }}`}}:{{`{{ .Alerts.Firing | len }}`}}{{`{{ end }}`}}'
         text: |-

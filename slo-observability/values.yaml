@@ -12,9 +12,6 @@ global:
   namespace: ""
 
 prometheus:
-  endpoints:
-    - console.openshift-console.svc.cluster.local
-    - apiserver.openshift-kube-apiserver.svc.cluster.local/healthz
   rules:
     endpointDown:
       enabled: true

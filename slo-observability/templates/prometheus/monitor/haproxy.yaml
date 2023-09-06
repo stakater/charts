@@ -12,10 +12,10 @@ spec:
   - port: metrics
     basicAuth:
         password:
-          name: router-stats-default
+          name: {{ .Values.prometheus.secretOveride }}
           key: statsPassword
         username:
-          name: router-stats-default
+          name: {{ .Values.prometheus.secretOveride }}
           key: statsUsername
     scheme: https
     tlsConfig:
@@ -32,13 +32,4 @@ spec:
   selector:
     matchLabels:
       ingresscontroller.operator.openshift.io/owning-ingresscontroller: default
----
-apiVersion: v1
-data:
-  statsPassword: 
-  statsUsername: 
-kind: Secret
-metadata:
-  name: router-stats-default
-  namespace:  {{ .Values.global.namespace | default .Release.Namespace }}
-type: Opaque
+

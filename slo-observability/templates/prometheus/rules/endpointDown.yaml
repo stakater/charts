@@ -7,7 +7,7 @@ metadata:
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
   # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
   labels:
-    role: alert-rules
+    role: alertmanager-rules
     namespace: {{ .Values.global.namespace | default .Release.Namespace }}
 {{- if .Values.prometheus.rules.labels }}
 {{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
@@ -18,7 +18,7 @@ spec:
     rules:
 {{- range .Values.prometheus.endpoints }}
     - alert: EndpointDown
-      expr: probe_success{instance="https://{{ . }}"} == 1
+      expr: probe_success{instance="https://{{ . }}"} == 0
       for: 10m
       annotations:
         description: |

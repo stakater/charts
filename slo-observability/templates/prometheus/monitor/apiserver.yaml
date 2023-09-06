@@ -25,4 +25,4 @@ spec:
     - openshift-apiserver
   selector:
     matchLabels:
-      prometheus: openshift-apiserver                                                                                                               │
+      prometheus: openshift-apiserver
