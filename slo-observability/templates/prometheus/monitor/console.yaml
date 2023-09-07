@@ -5,7 +5,7 @@ metadata:
   name: {{ .Values.global.namespace | default .Release.Namespace }}-console
   namespace:  {{ .Values.global.namespace | default .Release.Namespace }}
   labels:
-    servicemonitor: tno3
+    servicemonitor: {{ .Values.cluster }}
     {{- include "slo-observability.labels" . | nindent 4 }}
 spec:
   endpoints:

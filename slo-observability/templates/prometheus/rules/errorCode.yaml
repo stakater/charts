@@ -23,8 +23,8 @@ spec:
         description: |
           More than 10 percent of the requests to the Openshift API Server for 10 minutes are returning 429 and 5xx status codes
         summary: |
-          Messages are sitting idle in the queue, without any processing.
-          This alert is highly application specific (and e.g. doesn't make sense for stream queues).
+          This error occurs when the service is not functioning correctly or when it receives an excessive number of requests. 
+          Please review the service and ensure that the service's pods are operating smoothly.
       labels:
         namespace: {{ .Values.global.namespace | default .Release.Namespace }}
         severity: critical
@@ -36,7 +36,11 @@ spec:
         > 10
       for: 10m
       annotations:
-        message: More than 10 percent of the requests to the Openshift Console for 10 minutes are returning 429 and 5xx status codes
+        message: |
+          More than 10 percent of the requests to the Openshift Console for 10 minutes are returning 429 and 5xx status codes
+        summary: |
+          This error occurs when the service is not functioning correctly or when it receives an excessive number of requests. 
+          Please review the service and ensure that the service's pods are operating smoothly.
       labels:
         namespace: {{ .Values.global.namespace | default .Release.Namespace }}
         severity: critical
@@ -57,7 +61,7 @@ spec:
         namespace: {{ .Values.global.namespace | default .Release.Namespace }}
         severity: critical
     - alert: OpenshiftAuthenticationErrorCode
-      expr: sum(apiserver_request_total{job="oauth-openshift", code=~"5..|429"})/sum(job="oauth-openshift", apiserver_request_total)*100 > 10
+      expr: sum(apiserver_request_total{job="oauth-openshift", code=~"5..|429"})/sum(apiserver_request_total{job="oauth-openshift"})*100 > 10
       for: 10m
       annotations:
         description: |

@@ -21,6 +21,8 @@ spec:
       for: 10m
       annotations:
         message: It took over 3 seconds to access the {{ . | splitList "."  | first | title | quote }} endpoint.
+        summary: |
+          The endpoint will take more than 3 seconds within 10 minutes.
       labels:
         severity: warning
 {{- end }}
