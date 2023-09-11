@@ -19,3 +19,6 @@ prometheus:
       enabled: true
     errorCode:
       enabled: true
+  slack:
+    channel: slo-observability
+    token: api_token
