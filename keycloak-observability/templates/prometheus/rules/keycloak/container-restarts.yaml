@@ -1,0 +1,43 @@
+{{- if .Values.ksm.enabled }}
+{{- if and ( .Values.prometheus.rules.rabbitmq.containerRestarts ) ( .Values.prometheus.rules.rabbitmq.containerRestarts.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-container-restarts
+{{- if .Values.prometheus.rules.rabbitmq.containerRestarts.namespace  }}
+  namespace: {{ .Values.prometheus.rules.rabbitmq.containerRestarts.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: rabbitmq
+    rules:
+    - alert: RabbitMqContainerRestarts
+      expr: |
+        increase(kube_pod_container_status_restarts_total[10m]) * on(namespace, pod, container) group_left(rabbitmq_cluster) rabbitmq_identity_info
+        >=
+        1
+      for: 5m
+      annotations:
+        description: |
+          Over the last 10 minutes, container `{{`{{ $labels.container }}`}}`
+          restarted `{{`{{ $value | printf "%.0f" }}`}}` times in pod `{{`{{ $labels.pod }}`}}` of RabbitMQ cluster
+          `{{`{{ $labels.rabbitmq_cluster }}`}}` in namespace `{{`{{ $labels.namespace }}`}}`.
+        summary: |
+          Investigate why the container got restarted.
+          Check the logs of the current container: `kubectl -n {{`{{ $labels.namespace }}`}} logs {{`{{ $labels.pod }}`}}`
+          Check the logs of the previous container: `kubectl -n {{`{{ $labels.namespace }}`}} logs {{`{{ $labels.pod }}`}} --previous`
+          Check the last state of the container: `kubectl -n {{`{{ $labels.namespace }}`}} get pod {{`{{ $labels.pod }}`}} -o jsonpath='{.status.containerStatuses[].lastState}'`
+      labels:
+        rabbitmq_cluster: '{{`{{ $labels.rabbitmq_cluster }}`}}'
+        rulesgroup: rabbitmq
+        severity: warning
+{{- end }}
+{{- end }}

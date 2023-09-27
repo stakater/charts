@@ -1,0 +1,17 @@
+---
+{{- if and ( .Values.prometheus.monitors.podMonitor ) ( .Values.prometheus.monitors.podMonitor.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: rabbitmq-cluster-operator
+  # If labels are defined in spec.podMonitorSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+spec:
+  podMetricsEndpoints:
+  - port: metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: rhsso-operator
+  namespaceSelector:
+    matchNames:
+    - rabbitmq-system
+{{- end }}
