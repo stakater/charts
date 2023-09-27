@@ -1,0 +1,95 @@
+# Default values for rabbitmq-observability.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  namespace:
+
+#Please enable if kube-state-metrics is available. More info: https://github.com/kubernetes/kube-state-metrics
+ksm:
+  enabled: true
+#Grafana dashboard configuration
+grafana:
+  labels: {}
+  erlangDistribution:
+    enabled: true
+  erlangDistributionCompare:
+    enabled: true
+  erlangMemoryAllocators:
+    enabled: true
+  rabbitmqAlerts:
+    enabled: true
+  rabbitmqOverview:
+    enabled: true
+  rabbitmqQueue:
+    enabled: true
+  rabbitmqQuorumQueues:
+    enabled: true
+  rabbitmqStream:
+    enabled: true
+#Prometheus configuration
+prometheus:
+  alertmanager:
+    labels: {}
+    slack:
+      enabled: true
+      name: slack-config
+      channel: rabbitmq
+      apiSecret:
+        key: api_url
+        name: rabbitmq-slack-webhook
+  monitors:
+    podMonitor:
+      enabled: false
+    serviceMonitor:
+      enabled: false
+  rules:
+    labels: {}
+    rabbitmq:
+      containerRestarts:
+        enabled: true
+      deadLetterQueue:
+        enabled: true
+        threshold: 1
+      fileDescriptorsNearLimit:
+        enabled: true
+      highConnectionChurn:
+        enabled: true
+      insufficientDistributionLinks:
+        enabled: true
+      lowDiskWatermarkPredicted:
+        enabled: true
+      noMajorityOfPodsReady:
+        enabled: true
+        totalPods: 3
+      persistentVolumeMissing:
+        enabled: true
+      recordingRules:
+        enabled: true
+      tcpSocketsNearLimit:
+        enabled: true
+      unroutableMessages:
+        enabled: true
+      rabbitMqMemoryUsageHigh:
+        enabled: true
+      rabbitMqDiskUsageHigh:
+        enabled: true
+      rabbitMQServerDown:
+        enabled: true
+      rabbitMqClusterNotAllPodsRunning:
+        enabled: true
+        totalPods: 3
+      rabbitmqDiskSpaceBelowThreshold:
+        enabled: true
+        threshold: 1073741824 #1Gb
+      rabbitmqNodesBelowThreshold:
+        enabled: true
+        threshold: 3
+      rabbitmqMemoryBelowThreshold:
+        enabled: true
+        threshold: 268435456 #256Mb
+    rabbitmqPerObject:
+      queueHasNoConsumers:
+        enabled: true
+      queueIsGrowing:
+        enabled: true
