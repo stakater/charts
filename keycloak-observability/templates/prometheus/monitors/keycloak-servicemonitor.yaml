@@ -3,7 +3,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: rabbitmq
+  name: keycloak
   # If labels are defined in spec.serviceMonitorSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
 spec:
   endpoints:
@@ -17,11 +17,6 @@ spec:
     scrapeTimeout: 14s
     tlsConfig:
       insecureSkipVerify: true # set to false and uncomment lines below to enable tls verification
-        # ca:
-        #   secret:
-        #     key: ca.crt
-        #     name: tls-secret # name of the secret containing the CA cert which signed the RabbitMQ Prometheus TLS cert
-        # serverName: '*.RABBITMQ-INSTANCE-NAME.NAMESPACE.svc.cluster.local'
   - port: prometheus
     scheme: http
     path: /metrics/detailed
@@ -55,7 +50,7 @@ spec:
       insecureSkipVerify: true  
   selector:
     matchLabels:
-      app.kubernetes.io/component: rabbitmq
+      app.kubernetes.io/component: keycloak
   namespaceSelector:
     any: true
 {{- end }}
