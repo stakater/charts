@@ -1,4 +1,4 @@
-# Default values for rabbitmq-observability.
+# Default values for keycloak-observability.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -11,22 +11,9 @@ ksm:
 #Grafana dashboard configuration
 grafana:
   labels: {}
-  erlangDistribution:
-    enabled: true
-  erlangDistributionCompare:
-    enabled: true
-  erlangMemoryAllocators:
-    enabled: true
-  rabbitmqAlerts:
-    enabled: true
-  rabbitmqOverview:
-    enabled: true
-  rabbitmqQueue:
-    enabled: true
-  rabbitmqQuorumQueues:
-    enabled: true
-  rabbitmqStream:
-    enabled: true
+  realm: "realm"
+  client_id: "client_id"
+  code: "code"
 #Prometheus configuration
 prometheus:
   alertmanager:
@@ -34,10 +21,10 @@ prometheus:
     slack:
       enabled: true
       name: slack-config
-      channel: rabbitmq
+      channel: keycloak
       apiSecret:
         key: api_url
-        name: rabbitmq-slack-webhook
+        name: kaycloak-slack-webhook
   monitors:
     podMonitor:
       enabled: false
@@ -45,51 +32,6 @@ prometheus:
       enabled: false
   rules:
     labels: {}
-    rabbitmq:
+    keycloak:
       containerRestarts:
-        enabled: true
-      deadLetterQueue:
-        enabled: true
-        threshold: 1
-      fileDescriptorsNearLimit:
-        enabled: true
-      highConnectionChurn:
-        enabled: true
-      insufficientDistributionLinks:
-        enabled: true
-      lowDiskWatermarkPredicted:
-        enabled: true
-      noMajorityOfPodsReady:
-        enabled: true
-        totalPods: 3
-      persistentVolumeMissing:
-        enabled: true
-      recordingRules:
-        enabled: true
-      tcpSocketsNearLimit:
-        enabled: true
-      unroutableMessages:
-        enabled: true
-      rabbitMqMemoryUsageHigh:
-        enabled: true
-      rabbitMqDiskUsageHigh:
-        enabled: true
-      rabbitMQServerDown:
-        enabled: true
-      rabbitMqClusterNotAllPodsRunning:
-        enabled: true
-        totalPods: 3
-      rabbitmqDiskSpaceBelowThreshold:
-        enabled: true
-        threshold: 1073741824 #1Gb
-      rabbitmqNodesBelowThreshold:
-        enabled: true
-        threshold: 3
-      rabbitmqMemoryBelowThreshold:
-        enabled: true
-        threshold: 268435456 #256Mb
-    rabbitmqPerObject:
-      queueHasNoConsumers:
-        enabled: true
-      queueIsGrowing:
         enabled: true
