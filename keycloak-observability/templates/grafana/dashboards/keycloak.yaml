@@ -1634,7 +1634,7 @@ spec:
               "format": "heatmap",
               "interval": "",
               "intervalFactor": 4,
-              "legendFormat": "{{ le }}",
+              "legendFormat": {{`{{ "le" }}`}},
               "refId": "A"
             }
           ],
@@ -1819,7 +1819,7 @@ spec:
               "format": "heatmap",
               "interval": "",
               "intervalFactor": 4,
-              "legendFormat": "{{ le }}",
+              "legendFormat": {{`{{ "le" }}`}},
               "refId": "A"
             }
           ],
