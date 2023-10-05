@@ -1,56 +1,32 @@
 ---
-{{- if and ( .Values.prometheus.monitors.serviceMonitor ) ( .Values.prometheus.monitors.serviceMonitor.enabled ) }}
+{{- if and ( .Values.prometheus.monitors.serviceMonitor ) ( .Values.prometheus.monitors.serviceMonitor.
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: keycloak
-  # If labels are defined in spec.serviceMonitorSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  name: keycloak-service-monitor
+  namespace: sso
 spec:
   endpoints:
-  - port: prometheus
-    scheme: http
-    interval: 15s
-    scrapeTimeout: 14s
-  - port: prometheus-tls
-    scheme: https
-    interval: 15s
-    scrapeTimeout: 14s
-    tlsConfig:
-      insecureSkipVerify: true # set to false and uncomment lines below to enable tls verification
-  - port: prometheus
-    scheme: http
-    path: /metrics/detailed
-    params:
-      family:
-        - queue_coarse_metrics
-        - queue_metrics
-    interval: 15s
-    scrapeTimeout: 14s
-  - port: prometheus-tls
-    scheme: https
-    path: /metrics/detailed
-    params:
-      family:
-        - queue_coarse_metrics
-        - queue_metrics
-    interval: 15s
-    scrapeTimeout: 14s
-    tlsConfig:
-      insecureSkipVerify: true
-  - port: prometheus-tls
-    scheme: https
-    path: /metrics
-    params:
-      family:
-        - queue_coarse_metrics
-        - queue_metrics
-    interval: 5s
-    scrapeTimeout: 14s
-    tlsConfig:
-      insecureSkipVerify: true  
+    - bearerTokenSecret:
+        key: ''
+      path: /auth/realms/master/metrics
+      port: keycloak
+      scheme: https
+      tlsConfig:
+        ca: {}
+        cert: {}
+        insecureSkipVerify: true
+    - bearerTokenSecret:
+        key: ''
+      path: /metrics
+      port: keycloak-monitoring
+      scheme: http
+      tlsConfig:
+        ca: {}
+        cert: {}
+        insecureSkipVerify: true
+  namespaceSelector: {}
   selector:
     matchLabels:
-      app.kubernetes.io/component: keycloak
-  namespaceSelector:
-    any: true
+      app: keycloak
 {{- end }}
