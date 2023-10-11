@@ -8,6 +8,7 @@ global:
 #Please enable if kube-state-metrics is available. More info: https://github.com/kubernetes/kube-state-metrics
 ksm:
   enabled: true
+  
 #Grafana dashboard configuration
 grafana:
   labels: {}
@@ -33,6 +34,8 @@ prometheus:
       enabled: false
     serviceMonitor:
       enabled: false
+      name: keycloak
+      #namespace: sso
   rules:
     labels: {}
     keycloak:

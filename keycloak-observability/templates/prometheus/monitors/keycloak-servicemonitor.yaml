@@ -3,8 +3,9 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: keycloak-service-monitor
-  namespace: sso
+  name: {{ .Values.prometheus.monitors.serviceMonitor.name }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+
 spec:
   endpoints:
     - bearerTokenSecret:
