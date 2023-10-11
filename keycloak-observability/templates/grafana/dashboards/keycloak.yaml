@@ -430,7 +430,7 @@ spec:
               },
               "expr": "sum by (realm)(increase(keycloak_logins[24h]))",
               "interval": "",
-              "legendFormat": {{`{{ "realm" }}`}},
+              "legendFormat": "{{` {{ realm }} `}}",
               "refId": "A"
             }
           ],
@@ -492,7 +492,7 @@ spec:
               },
               "expr": "sum by (realm)(increase(keycloak_registrations[24h]))",
               "interval": "",
-              "legendFormat": {{`{{ "realm" }}`}},
+              "legendFormat": "{{` {{ realm }} `}}",
               "refId": "A"
             }
           ],
@@ -577,7 +577,7 @@ spec:
               },
               "expr": "sum by (client_id)(increase(keycloak_logins[24h]))",
               "interval": "",
-              "legendFormat": {{`{{ "client_id" }}`}},
+              "legendFormat": "{{` {{ client_id }} `}}",
               "refId": "A"
             }
           ],
@@ -639,7 +639,7 @@ spec:
               },
               "expr": "sum by (client_id)(increase(keycloak_registrations[24h]))",
               "interval": "",
-              "legendFormat": {{`{{ "client_id" }}`}},
+              "legendFormat": "{{` {{ client_id }} `}}",
               "refId": "A"
             }
           ],
@@ -695,7 +695,7 @@ spec:
               },
               "expr": "sum by (code)(increase(keycloak_response_errors[30m]))",
               "interval": "",
-              "legendFormat": {{`{{ "code" }}`}},
+              "legendFormat": "{{` {{ code }} `}}",
               "refId": "A"
             }
           ],
@@ -792,7 +792,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": {{`{{ "realm" }}`}},
+              "legendFormat": "{{` {{ realm }} `}}",
               "refId": "A"
             }
           ],
@@ -891,7 +891,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{ "$realm" }}`}} {{`{{ "error" }}`}}",
+              "legendFormat": "\"{{` {{ $realm }} `}}\" \"{{` {{ error }} `}}\"",
               "refId": "A"
             },
             {
@@ -900,7 +900,7 @@ spec:
               },
               "expr": "sum by (realm) (increase(keycloak_failed_login_attempts{provider=\"keycloak\",realm=\"dialog-test\"} [30m]))",
               "interval": "",
-              "legendFormat": {{`{{ "sum by $realm" }}`}},
+              "legendFormat": "{{` {{ sum by $realm }} `}}",
               "refId": "B"
             }
           ],
@@ -998,7 +998,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": {{`{{ "client_id" }}`}},
+              "legendFormat": "{{` {{ client_id }} `}}",
               "refId": "A"
             }
           ],
@@ -1095,7 +1095,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "Sum by {{`{{ "realm" }}`}}",
+              "legendFormat": "Sum by \"{{` {{ realm }} `}}\"",
               "refId": "A"
             },
             {
@@ -1104,7 +1104,7 @@ spec:
               },
               "expr": "sum by (error) (increase(keycloak_registrations_errors{provider=\"keycloak\",realm=\"$realm\"} [30m]))",
               "interval": "",
-              "legendFormat": {{`{{ "error" }}`}},
+              "legendFormat": "{{` {{ error }} `}}",
               "refId": "B"
             }
           ],
@@ -1201,7 +1201,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": {{`{{ "realm" }}`}},
+              "legendFormat": "{{` {{ realm }} `}}",
               "refId": "A"
             }
           ],
@@ -1299,7 +1299,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": {{`{{ "error" }}`}},
+              "legendFormat": "{{` {{ error }} `}}",
               "refId": "A"
             }
           ],
@@ -1397,7 +1397,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": {{`{{ "client_id" }}`}},
+              "legendFormat": "{{` {{ client_id }} `}}",
               "refId": "A"
             },
             {
@@ -1406,7 +1406,7 @@ spec:
               },
               "expr": "sum by (realm)(increase(keycloak_registrations{provider=\"keycloak\",realm=\"$realm\"} [30m]))",
               "interval": "",
-              "legendFormat": "Sum by {{`{{ "realm" }}`}}",
+              "legendFormat": "Sum by \"{{` {{ realm }} `}}\"",
               "refId": "B"
             }
           ],
@@ -1503,7 +1503,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": {{`{{ "error" }}`}},
+              "legendFormat": "{{` {{ error }} `}}",
               "refId": "A"
             }
           ],
@@ -1631,7 +1631,7 @@ spec:
               "format": "heatmap",
               "interval": "",
               "intervalFactor": 4,
-              "legendFormat": {{`{{ "le" }}`}},
+              "legendFormat": "{{` {{ le }} `}}",
               "refId": "A"
             }
           ],
@@ -1816,7 +1816,7 @@ spec:
               "format": "heatmap",
               "interval": "",
               "intervalFactor": 4,
-              "legendFormat": {{`{{ "le" }}`}},
+              "legendFormat": "{{` {{ le }} `}}",
               "refId": "A"
             }
           ],
