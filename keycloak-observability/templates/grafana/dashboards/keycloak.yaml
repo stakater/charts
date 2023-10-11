@@ -1,15 +1,12 @@
----
-{{- if and ( .Values.grafana.keycloak ) ( .Values.grafana.keycloak.enabled ) }}
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
-  name: keycloak-dashboard
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  name: keycloak-dashboard-2
+  namespace: {{ include "keycloak-observability.namespace" . }}
   labels:
     grafana_dashboard: "true"
-{{- if .Values.grafana.labels }}
-{{- toYaml .Values.grafana.labels | nindent 4 }}
-{{- end }}
+    grafanaDashboard: grafana-operator
+    {{- include "keycloak-observability.labels" . | nindent 4 }}
 spec:
   # based of: https://grafana.com/grafana/dashboards/10441
   json: |-
@@ -2052,4 +2049,3 @@ spec:
       "version": 4,
       "weekStart": ""
     }
-{{- end }}
