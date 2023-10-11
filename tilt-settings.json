@@ -1,0 +1,4 @@
+{
+    "allow_k8s_contexts": "default/api-tno1-ams-s9nghh76-lab-kubeapp-cloud:6443/kube:admin",
+    "default_registry": "default-route-openshift-image-registry.apps.tno1-ams-s9nghh76.lab.kubeapp.cloud/{}"
+}
