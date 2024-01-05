@@ -19,3 +19,42 @@ prometheus:
       enabled: true
     errorCode:
       enabled: true
+  endpoints:
+  - "console.openshift-console.svc.cluster.local"
+  - "apiserver.openshift-kube-apiserver.svc.cluster.local/healthz"
+
+kube-prometheus-stack:
+  enabled: true
+prometheus-blackbox-exporter:
+  enabled: true
+  automountServiceAccountToken: true
+  config:
+    modules:
+      http_2xx:
+        http:
+          method: GET
+          follow_redirects: true
+          preferred_ip_protocol: ip4
+          valid_http_versions:
+            - HTTP/1.1
+            - HTTP/2.0
+          tls_config:
+            ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            cert_file: ""
+            key_file: ""
+            insecure_skip_verify: true
+        prober: http
+        timeout: 5s
+  networkPolicy:
+    enabled: true
+  serviceMonitor:
+    enabled: true
+    targets:
+      - name: apiserver
+        url: https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz
+      - name: console
+        url: https://console.openshift-console.svc.cluster.local
+      - name: haproxy
+        url: http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz
+      - name: authentication
+        url: https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz
