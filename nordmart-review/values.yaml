@@ -10,7 +10,7 @@ nordmartReviewUi:
       appCategory: frontend
     image:
       repository: docker.io/stakater/stakater-nordmart-review-ui
-      tag: 1.0.14
+      tag: 1.0.22
     env:
       PORT:
         value: "4200"
