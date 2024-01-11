@@ -20,7 +20,7 @@ jobs:
       component: slo-observability
 
   pull-request:
-    uses: stakater/charts/.github/workflows/pull_request.yaml@c309635a3919fe41ebd410f95936ac376d00240c
+    uses: stakater/charts/.github/workflows/pull_request.yaml@feature/slo
     name: Pull Request
     if: ${{ github.ref != 'refs/heads/main' }}
     needs:
