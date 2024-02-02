@@ -1,0 +1,17 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{ .Values.name }}-dashboard
+  labels:
+    {{- include "keycloak-observability.labels" . | nindent 4 }}
+spec:
+  folder: Rhsso
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{ toYaml .Values.grafana | nindent 3 }}
+  datasources:
+    {{ toYaml .Values.datasources | nindent 3 }}
+  resyncPeriod: 5s
+  configMapRef:
+    name: {{ .Values.name }}-dashboard-definition
+    key: json

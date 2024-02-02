@@ -1,43 +1,12 @@
-# Default values for keycloak-observability.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Dashboard name
+name: rhsso
 
-global:
-  namespace:
-
-#Please enable if kube-state-metrics is available. More info: https://github.com/kubernetes/kube-state-metrics
-ksm:
-  enabled: true
-  
-#Grafana dashboard configuration
+# Grafana instance selector
 grafana:
-  labels: {}
-  realm: "realm"
-  client_id: "client_id"
-  code: "code"
-  keycloak:
-    enabled: true
+  matchLabels:
+    dashboards: "grafana"
 
-#Prometheus configuration
-prometheus:
-  alertmanager:
-    labels: {}
-    slack:
-      enabled: true
-      name: slack-config
-      channel: keycloak
-      apiSecret:
-        key: api_url
-        name: kaycloak-slack-webhook
-  monitors:
-    podMonitor:
-      enabled: false
-    serviceMonitor:
-      enabled: false
-      name: keycloak
-      #namespace: sso
-  rules:
-    labels: {}
-    keycloak:
-      containerRestarts:
-        enabled: true
+# Default data sources
+datasources:
+  - inputName: "DS_PROMETHEUS"
+    datasourceName: "Prometheus"
