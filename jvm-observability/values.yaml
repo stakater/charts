@@ -15,7 +15,7 @@ jvmObservability:
   jvmMicrometer:
     enabled: true
 
-# name of the dashboard to
+# name of the dashboard
 name: "jvm-micrometer"
 
 # Grafana instance selector
