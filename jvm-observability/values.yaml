@@ -14,3 +14,16 @@ namespaceOverride: ""
 jvmObservability:
   jvmMicrometer:
     enabled: true
+
+# name of the dashboard to
+name: "jvm-micrometer"
+
+# Grafana instance selector
+instanceSelector:
+  matchLabels:
+    dashboards: "grafana"
+
+# Default datasources for the dashboard
+datasources:
+  - inputName: "DS_PROMETHEUS"
+    datasourceName: Prometheus
