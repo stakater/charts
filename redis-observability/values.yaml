@@ -2,30 +2,37 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 global:
+  name: redis-overview
   namespace:
 
 grafana:
-  labels:
-    grafanaDashboard: grafana-operator
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
   redisExporterOverview:
     enabled: true
+  dashboard:
+    datasources:
+      - inputName: "DS_PROMETHEUS"
+        datasourceName: "Prometheus"
 
 prometheus:
   serviceMonitor:
     enabled: true
-    name: redis
-    port: redis-exporter
-    scheme: http
-    interval: 10s
-    scrapeTimeout: 5s
-    path: /metrics
-    matchLabels: 
-      app: redis
-      redis_setup_type: standalone
-      role: standalone
-    namespaceSelector:
-      any: true
-  
+    spec:
+      endpoints:
+        - port: redis-exporter
+          scheme: http
+          interval: 10s
+          scrapeTimeout: 5s
+          path: /metrics
+      selector:
+        matchLabels:
+          app: redis
+          redis_setup_type: standalone
+          role: standalone
+      namespaceSelector:
+        any: true
   rules:
     labels: {}
     redisDown:
