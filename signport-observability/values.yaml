@@ -6,27 +6,33 @@ global:
   namespace:
 
 grafana:
-  labels:
-    grafanaDashboard: grafana-operator
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
   kubePodOverview:
     enabled: true
 
 prometheus:
   serviceMonitors:
   - name: frontend
-    labels: {}
-    port: http
-    scheme: http
-    interval: 10s
-    scrapeTimeout: 5s
-    path: /metrics
-    matchLabels: 
-      app: frontend
-      app.kubernetes.io/instance: signport-services
-      release: signport-services
-    namespaceSelector:
-      any: true
-  
+    labels: { }
+    specs:
+      endpoints:
+        - port: http
+          scheme: http
+          interval: 10s
+          scrapeTimeout: 5s
+          path: /metrics
+      selector:
+        matchLabels:
+          app: frontend
+          app.kubernetes.io/instance: signport-services
+          release: signport-services
+      namespaceSelector:
+        any: true
   rules:
     labels: {}
     signportContainerWaiting:
