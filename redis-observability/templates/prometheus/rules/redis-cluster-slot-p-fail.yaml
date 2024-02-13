@@ -21,7 +21,7 @@ spec:
       for: 5m
       annotations:
         description: |
-          Redis cluste has slots pfail\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}.
+          Redis cluster has slots pfail\n  VALUE = {{`{{ $value }}`}}\n  LABELS: {{`{{ $labels }}`}}.
         summary: |
           Number of hash slots mapping to a node in PFAIL state  (instance {{`{{ $labels.instance }}`}})
       labels:

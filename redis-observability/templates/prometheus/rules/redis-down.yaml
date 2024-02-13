@@ -1,5 +1,4 @@
 {{- if and ( .Values.prometheus.rules.redisDown ) ( .Values.prometheus.rules.redisDown.enabled ) }}
----
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
