@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{- include "redis-observability.name" . | nindent 4 }}-definition
+  name: {{- include "redis-observability.name" . | indent 1 }}-definition
   namespace: {{ default .Values.global.namespace .Release.Namespace }}
   labels:
     {{- include "redis-observability.labels" . | nindent 4 }}
@@ -14,26 +14,39 @@ data:
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
             "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
             "type": "dashboard"
           }
         ]
       },
       "description": "Redis Dashboard for Prometheus Redis Exporter 1.x",
       "editable": true,
+      "fiscalYearStartMonth": 0,
       "gnetId": 763,
       "graphTooltip": 1,
-      "id": 40,
-      "iteration": 1662065334334,
+      "id": 59,
       "links": [],
+      "liveNow": false,
       "panels": [
         {
           "collapsed": false,
-          "datasource": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -42,6 +55,15 @@ data:
           },
           "id": 24,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "Performance",
           "type": "row"
         },
@@ -50,7 +72,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "Average taken across instances",
           "editable": true,
           "error": false,
@@ -91,7 +115,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -101,21 +125,22 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "avg(irate(redis_commands_total{instance=~\"$instance\"} [$__rate_interval])) by (cmd)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{`{{cmd}}`}}",
+              "legendFormat": "{{ `{{` }}cmd{{ `}}` }}",
               "metric": "redis_command_calls_total",
               "refId": "A",
               "step": 240
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Commands per second",
           "tooltip": {
             "msResolution": true,
@@ -125,33 +150,24 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -159,7 +175,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "Average taken across instances",
           "editable": true,
           "error": false,
@@ -200,7 +218,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -210,20 +228,21 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "avg(irate(redis_commands_duration_seconds_total{instance=~\"$instance\"}[$__rate_interval])) by (cmd)\n  /\navg(irate(redis_commands_total{instance=~\"$instance\"}[$__rate_interval])) by (cmd)\n",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{`{{ cmd }}`}}",
+              "legendFormat": "{{ `{{` }} cmd {{ `}}` }}",
               "metric": "redis_command_calls_total",
               "refId": "A",
               "step": 240
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Command latency per second",
           "tooltip": {
             "msResolution": true,
@@ -233,33 +252,24 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "s",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -269,7 +279,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "decimals": 2,
           "description": "Hit rate shows the percentage of key space lookups that hit a key.",
           "editable": true,
@@ -309,7 +321,7 @@ data:
             "alertThreshold": true
           },
           "percentage": true,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -328,18 +340,24 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "avg(irate(redis_keyspace_hits_total{instance=~\"$instance\"}[$__rate_interval]) / (irate(redis_keyspace_misses_total{instance=~\"$instance\"}[$__rate_interval]) + irate(redis_keyspace_hits_total{instance=~\"$instance\"}[$__rate_interval]))) by (instance)",
               "format": "time_series",
               "hide": false,
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "metric": "",
               "refId": "A",
               "step": 240,
               "target": ""
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "1",
               "interval": "",
               "legendFormat": "Target hit ratio for cache",
@@ -347,9 +365,7 @@ data:
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Hit ratio per instance",
           "tooltip": {
             "msResolution": false,
@@ -359,9 +375,7 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -370,27 +384,25 @@ data:
               "format": "percentunit",
               "label": "",
               "logBase": 1,
-              "max": null,
               "min": 0,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
           "collapsed": false,
-          "datasource": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -399,6 +411,15 @@ data:
           },
           "id": 22,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "Memory",
           "type": "row"
         },
@@ -409,7 +430,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "Total taken across instances",
           "editable": true,
           "error": false,
@@ -450,7 +473,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -468,6 +491,9 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum(redis_memory_used_bytes{instance=~\"$instance\"})",
               "format": "time_series",
               "interval": "",
@@ -479,6 +505,9 @@ data:
               "target": ""
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum(redis_memory_max_bytes{instance=~\"$instance\"})",
               "format": "time_series",
               "hide": false,
@@ -489,6 +518,9 @@ data:
               "step": 240
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum(redis_memory_used_rss_bytes{instance=~\"$instance\"})",
               "interval": "",
               "legendFormat": "Used RSS memory",
@@ -496,9 +528,7 @@ data:
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Total Memory Usage",
           "tooltip": {
             "msResolution": false,
@@ -508,33 +538,25 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "bytes",
-              "label": null,
               "logBase": 1,
-              "max": null,
               "min": 0,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -544,7 +566,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "editable": true,
           "error": false,
           "fieldConfig": {
@@ -582,7 +606,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -600,18 +624,19 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "redis_mem_fragmentation_ratio{instance=~\"$instance\"}",
               "hide": false,
               "interval": "",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "C"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Memory fragmentation ratio per instance",
           "tooltip": {
             "msResolution": true,
@@ -621,33 +646,24 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -662,7 +678,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "editable": true,
           "error": false,
           "fieldConfig": {
@@ -700,7 +718,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -715,19 +733,20 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "irate(redis_evicted_keys_total{instance=~\"$instance\"}[$__rate_interval])",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "B",
               "step": 240
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Key evictions per second per instance",
           "tooltip": {
             "msResolution": false,
@@ -737,38 +756,32 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
           "collapsed": false,
-          "datasource": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -777,6 +790,15 @@ data:
           },
           "id": 26,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "Basic activity",
           "type": "row"
         },
@@ -785,7 +807,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "Sum taken across instances",
           "fieldConfig": {
             "defaults": {
@@ -820,7 +844,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -830,6 +854,9 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum(redis_connected_clients{instance=~\"$instance\"})",
               "format": "time_series",
               "interval": "",
@@ -838,6 +865,9 @@ data:
               "refId": "A"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum(redis_blocked_clients{instance=~\"$instance\"})",
               "format": "time_series",
               "interval": "",
@@ -847,9 +877,7 @@ data:
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Connected/Blocked Clients",
           "tooltip": {
             "shared": true,
@@ -858,33 +886,24 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -894,7 +913,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "Sum taken across instances",
           "editable": true,
           "error": false,
@@ -937,7 +958,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -947,20 +968,21 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum (redis_db_keys{instance=~\"$instance\"}) by (db)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{ db }}`}}",
+              "legendFormat": "{{ `{{` }} db {{ `}}` }}",
               "refId": "A",
               "step": 240,
               "target": ""
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Total Items per DB",
           "tooltip": {
             "msResolution": false,
@@ -970,33 +992,24 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "none",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1004,7 +1017,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "Sum taken across instances",
           "editable": true,
           "error": false,
@@ -1043,7 +1058,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1053,6 +1068,9 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum (redis_db_keys{instance=~\"$instance\"}) - sum (redis_db_keys_expiring{instance=~\"$instance\"})",
               "format": "time_series",
               "hide": false,
@@ -1064,6 +1082,9 @@ data:
               "target": ""
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum(redis_db_keys_expiring{instance=~\"$instance\"})",
               "format": "time_series",
               "interval": "",
@@ -1075,9 +1096,7 @@ data:
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Expiring vs Not-Expiring Keys",
           "tooltip": {
             "msResolution": false,
@@ -1087,33 +1106,24 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1121,7 +1131,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "This metric will only be non-zero if the instance is a master",
           "fieldConfig": {
             "defaults": {
@@ -1155,7 +1167,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1165,16 +1177,17 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "expr": "sum(redis_connected_slaves{instance=~\"$instance\"}) by (instance)",
               "interval": "",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Connected slaves by instance",
           "tooltip": {
             "shared": true,
@@ -1183,33 +1196,24 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1217,7 +1221,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "This metric is only exported if the instance is a slave.",
           "fieldConfig": {
             "defaults": {
@@ -1251,7 +1257,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "7.5.16",
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1261,17 +1267,18 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "redis_master_last_io_seconds_ago{instance=~\"$instance\"}",
               "interval": "",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Time since last master connection",
           "tooltip": {
             "shared": true,
@@ -1280,38 +1287,29 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "s",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         }
       ],
       "refresh": false,
-      "schemaVersion": 27,
+      "schemaVersion": 37,
       "style": "dark",
       "tags": [
         "prometheus",
@@ -1320,24 +1318,18 @@ data:
       "templating": {
         "list": [
           {
-            "allValue": null,
             "current": {
-              "selected": true,
-              "tags": [],
-              "text": [
-                "10.130.4.36:9121"
-              ],
-              "value": [
-                "10.130.4.36:9121"
-              ]
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
             },
-            "datasource": "${datasource}",
+            "datasource": {
+              "uid": "${datasource}"
+            },
             "definition": "label_values(redis_up, instance)",
-            "description": null,
-            "error": null,
             "hide": 0,
             "includeAll": false,
-            "label": null,
             "multi": true,
             "name": "instance",
             "options": [],
@@ -1350,20 +1342,17 @@ data:
             "skipUrlSync": false,
             "sort": 1,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
           },
           {
             "current": {
-              "selected": true,
-              "text": "prometheus",
-              "value": "prometheus"
+              "selected": false,
+              "text": "Prometheus",
+              "value": "Prometheus"
             },
-            "description": null,
-            "error": null,
-            "hide": 0,
+            "hide": 2,
             "includeAll": false,
             "label": "Data Source",
             "multi": false,
@@ -1408,6 +1397,8 @@ data:
       },
       "timezone": "browser",
       "title": "Redis Dashboard for Prometheus Redis Exporter 1.x",
-      "version": 1
+      "uid": "69fa0881-46e7-45b5-a002-b9d55bf7dff4",
+      "version": 1,
+      "weekStart": ""
     }
 {{- end }}
