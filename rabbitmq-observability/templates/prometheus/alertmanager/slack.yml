@@ -1,4 +1,3 @@
----
 {{- if and ( .Values.prometheus.alertmanager.slack ) ( .Values.prometheus.alertmanager.slack.enabled ) }}
 apiVersion: v1
 kind: Secret
