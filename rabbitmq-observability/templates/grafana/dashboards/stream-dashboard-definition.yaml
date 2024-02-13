@@ -1,16 +1,12 @@
----
 {{- if and ( .Values.grafana.rabbitmqStream ) ( .Values.grafana.rabbitmqStream.enabled ) }}
-apiVersion: integreatly.org/v1alpha1
-kind: GrafanaDashboard
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: rabbitmq-stream-dashboard
+  name: rabbitmq-stream-dashboard-definition
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
   labels:
-    grafana_dashboard: "true"
-{{- if .Values.grafana.labels }}
-{{- toYaml .Values.grafana.labels | nindent 4 }}
-{{- end }}
-spec:
+    {{- include "rabbitmq-observability.labels" . | nindent 4 }}
+data:
   # https://grafana.com/grafana/dashboards/14798
   json: |-
     {

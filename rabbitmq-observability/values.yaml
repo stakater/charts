@@ -10,7 +10,14 @@ ksm:
   enabled: true
 #Grafana dashboard configuration
 grafana:
-  labels: {}
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  dashboard:
+    resyncPeriod: 5s
+    datasources:
+      - inputName: "DS_PROMETHEUS"
+        datasourceName: "Prometheus"
   erlangDistribution:
     enabled: true
   erlangDistributionCompare:

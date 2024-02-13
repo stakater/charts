@@ -1,16 +1,12 @@
----
 {{- if and ( .Values.grafana.rabbitmqQueue ) ( .Values.grafana.rabbitmqQueue.enabled ) }}
-apiVersion: integreatly.org/v1alpha1
-kind: GrafanaDashboard
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: rabbitmq-queue-grafana-dashboard
+  name: rabbitmq-queue-dashboard-definition
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
   labels:
-    grafana_dashboard: "1"
-{{- if .Values.grafana.labels }}
-{{- toYaml .Values.grafana.labels | nindent 4 }}
-{{- end }}
-spec:
+    {{- include "rabbitmq-observability.labels" . | nindent 4 }}
+data:
   json: |-
     {
       "__inputs": [
