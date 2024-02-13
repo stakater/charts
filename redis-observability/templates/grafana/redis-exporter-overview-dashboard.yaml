@@ -2,7 +2,7 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: {{- include "redis-observability.name" . | nindent 4 }}-dashboard
+  name: {{- include "redis-observability.name" . | indent 1 }}-dashboard
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
   labels:
     {{- include "redis-observability.labels" . | nindent 4 }}
@@ -15,6 +15,6 @@ spec:
   datasources:
     {{- toYaml .Values.grafana.dashboard.datasources | nindent 4 }}
   configMapRef:
-    name: {{- include "redis-observability.name" . | nindent 5 }}-definition
+    name: {{- include "redis-observability.name" . | indent 1 }}-definition
     key: json
 {{- end }}
