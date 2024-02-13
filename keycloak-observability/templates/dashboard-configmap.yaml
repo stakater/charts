@@ -1,7 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.name }}-dashboard-definition
+  name: {{- include "keycloak-observability.name" . | indent 1 }}-dashboard-definition
+  namespace: {{- include "keycloak-observability.namespace" . | indent 1 }}
   labels:
     {{- include "keycloak-observability.labels" . | nindent 4 }}
 data:
