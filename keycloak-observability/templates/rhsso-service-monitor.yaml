@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rhsso
+  labels:
+    {{- include "keycloak-observability.labels" . | nindent 4 }}
+spec:
+  jobLabel: rhsso
+  selector:
+    matchLabels:
+      app: sso
+  endpoints:
+    - port: sso-monitoring
+      path: /metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelings:
+        - targetLabel: job
+          replacement: keycloak
+        - targetLabel: provider
+          replacement: keycloak
+        - targetLabel: instance
+          replacement: sso
+    - port: sso
+      path: /auth/realms/master/metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelings:
+        - targetLabel: job
+          replacement: keycloak
+        - targetLabel: provider
+          replacement: keycloak
+        - targetLabel: instance
+          replacement: sso

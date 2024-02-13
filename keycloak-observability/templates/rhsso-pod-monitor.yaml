@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: eap
+  labels:
+    {{- include "keycloak-observability.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: sso
+  podMetricsEndpoints:
+    - targetPort: 9990
