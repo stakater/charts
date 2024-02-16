@@ -1,17 +1,12 @@
----
-{{- if and ( .Values.grafana.overviewDashboard ) ( .Values.grafana.overviewDashboard.enabled ) }}
-apiVersion: integreatly.org/v1alpha1
-kind: GrafanaDashboard
+{{- if and ( .Values.grafana.dashboard.overviewDashboard ) ( .Values.grafana.dashboard.overviewDashboard.enabled ) }}
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: postgresql-overview-dashboard
+  name: postgresql-overview-dashboard-definition
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
   labels:
-    grafana_dashboard: "true"
-{{- if .Values.grafana.labels }}
-{{- toYaml .Values.grafana.labels | nindent 4 }}
-{{- end }}
-spec:
-  # https://grafana.com/grafana/dashboards/9628
+    {{- include "postgres-observability.labels" . | nindent 4 }}
+data:
   json: |-
     {
       "annotations": {
