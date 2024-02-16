@@ -1,25 +1,12 @@
----
 {{- if and ( .Values.prometheus.serviceMonitor ) ( .Values.prometheus.serviceMonitor.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.prometheus.serviceMonitor.name }}
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "postgres-observability.labels" . | nindent 4 }}
   # If labels are defined in spec.serviceMonitorSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
 spec:
-  endpoints:
-  - port: {{ .Values.prometheus.serviceMonitor.port }}
-    scheme: {{ .Values.prometheus.serviceMonitor.scheme }}
-    interval: {{ .Values.prometheus.serviceMonitor.interval }}
-    scrapeTimeout: {{ .Values.prometheus.serviceMonitor.scrapeTimeout }}
-    path: {{ .Values.prometheus.serviceMonitor.path }}
-  selector:
-    matchLabels:
-{{- if .Values.prometheus.serviceMonitor.matchLabels }}
-{{- toYaml .Values.prometheus.serviceMonitor.matchLabels | nindent 6 }}
-{{- end }}
-{{- if .Values.prometheus.serviceMonitor.namespaceSelector }}
-  namespaceSelector:
-{{- toYaml .Values.prometheus.serviceMonitor.namespaceSelector | nindent 4 }}
-{{- end }}
+  {{- toYaml .Values.prometheus.serviceMonitor.specs | nindent 2 }}
 {{- end }}
