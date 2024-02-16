@@ -7,8 +7,8 @@ global:
 grafana:
   # Grafana instance selector
   instanceSelector:
-    labels:
-      grafanaDashboard: grafana-operator
+    matchLabels:
+      dashboards: grafana
   dashboard:
     datasources:
       - inputName: "DS_PROMETHEUS"
@@ -21,18 +21,19 @@ grafana:
 prometheus:
   serviceMonitor:
     enabled: true
+    name: posgtres-exporter
     specs:
-      name: posgtres-exporter
-      port: exporter
-      scheme: http
-      interval: 10s
-      scrapeTimeout: 5s
-      path: /metrics
+      endpoints:
+        - port: exporter
+          scheme: http
+          interval: 10s
+          scrapeTimeout: 5s
+          path: /metrics
       selector:
         matchLabels:
           postgres-operator.crunchydata.com/crunchy-postgres-exporter: 'true'
           postgres-operator.crunchydata.com/cluster: postgres
-        namespaceSelector:
+      namespaceSelector:
           any: true
 
 # Sample rules are taken from below sources
