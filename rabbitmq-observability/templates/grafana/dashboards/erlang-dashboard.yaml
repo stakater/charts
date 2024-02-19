@@ -11,7 +11,7 @@ spec:
   allowCrossNamespaceImport: true
   plugins:
     - name: flant-statusmap-panel
-      version: 0.4.1
+      version: 0.5.1
   instanceSelector:
     {{- toYaml .Values.grafana.instanceSelector | nindent 3 }}
   datasources:

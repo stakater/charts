@@ -12,9 +12,8 @@ ksm:
 grafana:
   instanceSelector:
     matchLabels:
-      dashboards: "grafana"
+      app: "grafana"
   dashboard:
-    resyncPeriod: 5s
     datasources:
       - inputName: "DS_PROMETHEUS"
         datasourceName: "Prometheus"
