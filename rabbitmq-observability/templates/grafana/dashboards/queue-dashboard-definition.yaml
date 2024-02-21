@@ -41,7 +41,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+            "uid": "${Datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -157,7 +157,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+                "uid": "${Datasource}"
               },
               "exemplar": true,
               "expr": "(rabbitmq_detailed_queue_messages{namespace=\"$namespace\", queue=\"$queue\"} * on (instance, job) rabbitmq_identity_info{namespace=\"$namespace\",rabbitmq_cluster=\"$rabbitmq_cluster\"})",
@@ -168,7 +168,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+                "uid": "${Datasource}"
               },
               "exemplar": true,
               "expr": "rabbitmq_detailed_queue_consumers{namespace=\"$namespace\", queue=\"$queue\"} * on (instance, job) rabbitmq_identity_info{namespace=\"$namespace\",rabbitmq_cluster=\"$rabbitmq_cluster\"}",

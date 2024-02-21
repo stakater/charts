@@ -14,7 +14,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              "uid": "${Datasource}"
             },
             "enable": true,
             "expr": "ALERTS{rulesgroup=\"rabbitmq\", namespace=~\"$namespace\", rabbitmq_cluster=~\"$rabbitmq_cluster\", severity=~\"$severity\", alertname=~\"$alert_name\"}",
@@ -61,7 +61,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+            "uid": "${Datasource}"
           },
           "description": "Number of firing alerts at the end of the defined time range.",
           "fieldConfig": {
@@ -111,7 +111,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+                "uid": "${Datasource}"
               },
               "expr": "count(ALERTS{rulesgroup=\"rabbitmq\", alertstate=\"firing\", namespace=~\"$namespace\", rabbitmq_cluster=~\"$rabbitmq_cluster\", severity=~\"$severity\", alertname=~\"$alert_name\"})",
               "format": "table",
@@ -127,7 +127,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+            "uid": "${Datasource}"
           },
           "description": "Number of pending alerts at the end of the defined time range.",
           "fieldConfig": {
@@ -177,7 +177,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+                "uid": "${Datasource}"
               },
               "expr": "count(ALERTS{rulesgroup=\"rabbitmq\", alertstate=\"pending\", namespace=~\"$namespace\", rabbitmq_cluster=~\"$rabbitmq_cluster\", severity=~\"$severity\", alertname=~\"$alert_name\"})",
               "format": "table",
@@ -193,7 +193,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+            "uid": "${Datasource}"
           },
           "description": "Shows details of pending and firing alerts for the defined time range.\n\nColumn 'Number of Times Alert started' shows how many times a particular alert transitioned from inactive into active (i.e. pending or firing) state for the defined time range.\n",
           "fieldConfig": {
@@ -306,7 +306,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+                "uid": "${Datasource}"
               },
               "expr": "changes( ALERTS_FOR_STATE{rulesgroup=\"rabbitmq\", namespace=~\"$namespace\", rabbitmq_cluster=~\"$rabbitmq_cluster\", severity=~\"$severity\", alertname=~\"$alert_name\"}[$__range] ) + 1",
               "format": "table",
@@ -403,7 +403,7 @@ data:
           },
           "datasource": {
             "type": "prometheus",
-            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+            "uid": "${Datasource}"
           },
           "description": "The optional 'for' clause of a Prometheus alerting rule causes Prometheus to wait for a certain duration between first encountering a new expression output vector element and counting an alert as firing for this element. Elements that are active, but not firing yet, are in the pending state.",
           "gridPos": {
@@ -430,7 +430,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+                "uid": "${Datasource}"
               },
               "expr": "(max_over_time(ALERTS:rabbitmq_alert_state_discrete{alert_state_numeric=\"1\", namespace=~\"$namespace\", rabbitmq_cluster=~\"$rabbitmq_cluster\", severity=~\"$severity\", alertname=~\"$alert_name\"}[$__interval]) == 1) * 1",
               "format": "time_series",
@@ -442,7 +442,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+                "uid": "${Datasource}"
               },
               "expr": "(max_over_time(ALERTS:rabbitmq_alert_state_discrete{alert_state_numeric=\"2\", namespace=~\"$namespace\", rabbitmq_cluster=~\"$rabbitmq_cluster\", severity=~\"$severity\", alertname=~\"$alert_name\"}[$__interval]) == 1) * 2",
               "interval": "",
