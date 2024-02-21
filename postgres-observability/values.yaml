@@ -8,7 +8,7 @@ grafana:
   # Grafana instance selector
   instanceSelector:
     matchLabels:
-      dashboards: grafana
+      app: grafana
   dashboard:
     datasources:
       - inputName: "DS_PROMETHEUS"
