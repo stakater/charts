@@ -37,7 +37,7 @@ data:
       "fiscalYearStartMonth": 0,
       "gnetId": 11350,
       "graphTooltip": 1,
-      "id": 11,
+      "id": 12,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -2370,7 +2370,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(rabbitmq_identity_info, namespace)",
             "hide": 0,
@@ -2401,7 +2401,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
             "hide": 0,
@@ -2432,7 +2432,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}, rabbitmq_node)",
             "hide": 0,
@@ -2462,7 +2462,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(erlang_vm_allocators, alloc)",
             "hide": 0,
@@ -2513,7 +2513,7 @@ data:
       "timezone": "",
       "title": "Erlang-Memory-Allocators",
       "uid": "o_rtdpWik",
-      "version": 2,
+      "version": 3,
       "weekStart": ""
     }
 {{- end }}
