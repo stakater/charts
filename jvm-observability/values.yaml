@@ -19,7 +19,7 @@ grafana:
   # Grafana instance selector
   instanceSelector:
     matchLabels:
-      dashboards: "grafana"
+      app: "grafana"
 
   # Default datasources for the dashboard
   datasources:
