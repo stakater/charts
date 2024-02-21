@@ -7,7 +7,7 @@ grafana:
   resourceUtilization:
     enabled: true
   matchLabels:
-    dashboards: "grafana"
+    app: "grafana"
 
 # Default data sources
 dashboard:
