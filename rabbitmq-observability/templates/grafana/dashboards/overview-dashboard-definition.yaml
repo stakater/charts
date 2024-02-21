@@ -36,7 +36,7 @@ data:
       "fiscalYearStartMonth": 0,
       "gnetId": 10991,
       "graphTooltip": 1,
-      "id": 14,
+      "id": 24,
       "links": [
         {
           "icon": "doc",
@@ -5623,7 +5623,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(rabbitmq_identity_info, namespace)",
             "hide": 0,
@@ -5654,7 +5654,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
             "hide": 0,
@@ -5705,7 +5705,7 @@ data:
       "timezone": "",
       "title": "RabbitMQ-Overview",
       "uid": "Kn5xm-gZk",
-      "version": 2,
+      "version": 1,
       "weekStart": ""
     }
 {{- end }}
