@@ -2,7 +2,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.name }}-definition
+  name: {{- include "jvm-observability.name" . | indent 1 }}-definition
+  namespace: {{- include "jvm-observability.namespace" . | indent 1 }}
   labels:
     {{- include "jvm-observability.labels" . | nindent 4 }}
 data:
