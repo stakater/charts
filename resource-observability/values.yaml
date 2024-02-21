@@ -2,11 +2,19 @@
 global:
   namespace:
 
+# Grafana instance selector
 grafana:
-  labels:
-    grafanaDashboard: grafana-operator
   resourceUtilization:
     enabled: true
+  matchLabels:
+    dashboards: "grafana"
+
+# Default data sources
+dashboard:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
+
 prometheus:
   rules:
     resource:
