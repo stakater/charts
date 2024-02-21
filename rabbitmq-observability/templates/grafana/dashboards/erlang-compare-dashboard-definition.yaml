@@ -10,60 +10,42 @@ data:
   # https://grafana.com/grafana/dashboards/10988
   json: |-
     {
-      "__requires": [
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "7.0.0"
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "prometheus",
-          "version": "2.0.0"
-        },
-        {
-          "type": "table",
-          "id": "table",
-          "name": "Table",
-          "version": ""
-        },
-        {
-          "type": "panel",
-          "id": "graph",
-          "name": "Graph",
-          "version": ""
-        },
-        {
-          "type": "panel",
-          "id": "heatmap",
-          "name": "Heatmap",
-          "version": ""
-        }
-      ],
       "annotations": {
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
             "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
             "type": "dashboard"
           }
         ]
       },
       "editable": true,
+      "fiscalYearStartMonth": 0,
       "gnetId": 10988,
       "graphTooltip": 1,
-      "iteration": 1571066778520,
+      "id": 32,
       "links": [],
+      "liveNow": false,
       "panels": [
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -72,6 +54,15 @@ data:
           },
           "id": 67,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "rabbitmq-prometheus",
           "type": "row"
         },
@@ -94,7 +85,10 @@ data:
               "value": "current"
             }
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fontSize": "100%",
           "gridPos": {
             "h": 7,
@@ -103,8 +97,6 @@ data:
             "y": 1
           },
           "id": 56,
-          "options": {},
-          "pageSize": null,
           "pluginVersion": "6.4.1",
           "scroll": true,
           "showHeader": true,
@@ -115,7 +107,7 @@ data:
           "styles": [
             {
               "alias": "Node -> Peer",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -131,7 +123,7 @@ data:
             },
             {
               "alias": "",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -148,24 +140,35 @@ data:
           ],
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "rate(erlang_vm_dist_send_bytes[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=~\"$rabbitmq_cluster\", namespace=\"$namespace\"}",
-              "legendFormat": "{{`{{rabbitmq_node}}`}} -> {{`{{peer}}`}}",
+              "legendFormat": "{{ `{{` }}rabbitmq_node}} -> {{ `{{` }}peer{{ `}}` }}",
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Erlang Distribution outgoing traffic / s",
           "transform": "timeseries_aggregations",
-          "type": "table"
+          "type": "table-old"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "description": "Erlang Distribution traffic, node network traffic and CPU + PerfTest message throughput and latency",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -174,6 +177,7 @@ data:
             "x": 9,
             "y": 1
           },
+          "hiddenSeries": false,
           "id": 3,
           "legend": {
             "alignAsTable": true,
@@ -193,9 +197,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -246,17 +251,19 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "rate(erlang_vm_dist_send_bytes[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=~\"$rabbitmq_cluster\", namespace=\"$namespace\"}",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{rabbitmq_node}}`}} -> {{`{{peer}}`}}",
+              "legendFormat": "{{ `{{` }}rabbitmq_node}} -> {{ `{{` }}peer{{ `}}` }}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Erlang Distribution outgoing traffic / s",
           "tooltip": {
             "shared": true,
@@ -266,9 +273,7 @@ data:
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -276,29 +281,26 @@ data:
             {
               "decimals": 0,
               "format": "Bps",
-              "label": null,
               "logBase": 1,
-              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -307,6 +309,15 @@ data:
           },
           "id": 65,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "node-exporter_cadvisor",
           "type": "row"
         },
@@ -329,7 +340,10 @@ data:
               "value": "current"
             }
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fontSize": "100%",
           "gridPos": {
             "h": 7,
@@ -338,8 +352,6 @@ data:
             "y": 9
           },
           "id": 61,
-          "options": {},
-          "pageSize": null,
           "pluginVersion": "6.4.1",
           "scroll": true,
           "showHeader": true,
@@ -350,7 +362,7 @@ data:
           "styles": [
             {
               "alias": "Host",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -366,7 +378,7 @@ data:
             },
             {
               "alias": "",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -383,31 +395,45 @@ data:
           ],
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "sum by(instance) (rate(node_network_receive_bytes_total{instance=~\"$host\"}[5m]))",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "sum by(name) (rate(container_network_receive_bytes_total{name=~\"$container\"}[1m]))",
-              "legendFormat": "{{`{{name}}`}}",
+              "legendFormat": "{{ `{{` }}name{{ `}}` }}",
               "refId": "B"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Network incoming traffic / s",
           "transform": "timeseries_aggregations",
-          "type": "table"
+          "type": "table-old"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
-          "decimals": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "grid": {},
@@ -418,6 +444,7 @@ data:
             "y": 9
           },
           "height": "",
+          "hiddenSeries": false,
           "id": 58,
           "legend": {
             "alignAsTable": true,
@@ -440,9 +467,10 @@ data:
           "maxPerRow": 3,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -454,29 +482,35 @@ data:
           "targets": [
             {
               "calculatedInterval": "2s",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "datasourceErrors": {},
               "errors": {},
               "expr": "sum by(instance) (rate(node_network_receive_bytes_total{instance=~\"$host\"}[5m]))",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "metric": "",
               "refId": "A",
               "step": 20
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "sum by(name) (rate(container_network_receive_bytes_total{name=~\"$container\"}[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{name}}`}}",
+              "legendFormat": "{{ `{{` }}name{{ `}}` }}",
               "refId": "B"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Network incoming traffic / s",
           "tooltip": {
             "msResolution": false,
@@ -487,9 +521,7 @@ data:
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -499,21 +531,17 @@ data:
               "format": "Bps",
               "label": "",
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
               "logBase": 1,
-              "max": null,
               "min": 0,
               "show": false
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -535,7 +563,10 @@ data:
               "value": "current"
             }
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fontSize": "100%",
           "gridPos": {
             "h": 7,
@@ -544,8 +575,6 @@ data:
             "y": 16
           },
           "id": 60,
-          "options": {},
-          "pageSize": null,
           "pluginVersion": "6.4.1",
           "scroll": true,
           "showHeader": true,
@@ -556,7 +585,7 @@ data:
           "styles": [
             {
               "alias": "Host",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -572,7 +601,7 @@ data:
             },
             {
               "alias": "",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -589,31 +618,45 @@ data:
           ],
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "sum by(instance) (rate(node_network_transmit_bytes_total{instance=~\"$host\"}[5m]))",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "sum by(name) (rate(container_network_transmit_bytes_total{name=~\"$container\"}[1m]))",
-              "legendFormat": "{{`{{name}}`}}",
+              "legendFormat": "{{ `{{` }}name{{ `}}` }}",
               "refId": "B"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Network outgoing traffic / s",
           "transform": "timeseries_aggregations",
-          "type": "table"
+          "type": "table-old"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
-          "decimals": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "grid": {},
@@ -624,6 +667,7 @@ data:
             "y": 16
           },
           "height": "",
+          "hiddenSeries": false,
           "id": 57,
           "legend": {
             "alignAsTable": true,
@@ -646,9 +690,10 @@ data:
           "maxPerRow": 3,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -660,29 +705,35 @@ data:
           "targets": [
             {
               "calculatedInterval": "2s",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "datasourceErrors": {},
               "errors": {},
               "expr": "sum by(instance) (rate(node_network_transmit_bytes_total{instance=~\"$host\"}[5m]))",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "metric": "",
               "refId": "A",
               "step": 20
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "sum by(name) (rate(container_network_transmit_bytes_total{name=~\"$container\"}[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{name}}`}}",
+              "legendFormat": "{{ `{{` }}name{{ `}}` }}",
               "refId": "B"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Network outgoing traffic / s",
           "tooltip": {
             "msResolution": false,
@@ -693,9 +744,7 @@ data:
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -705,21 +754,17 @@ data:
               "format": "Bps",
               "label": "",
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
               "logBase": 1,
-              "max": null,
               "min": 0,
               "show": false
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -741,7 +786,10 @@ data:
               "value": "current"
             }
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fontSize": "100%",
           "gridPos": {
             "h": 7,
@@ -750,8 +798,6 @@ data:
             "y": 23
           },
           "id": 59,
-          "options": {},
-          "pageSize": null,
           "pluginVersion": "6.4.1",
           "scroll": true,
           "showHeader": true,
@@ -762,7 +808,7 @@ data:
           "styles": [
             {
               "alias": "Host",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -778,7 +824,7 @@ data:
             },
             {
               "alias": "",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -795,31 +841,45 @@ data:
           ],
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "(max by (instance) (irate(node_cpu_seconds_total{job=\"node\", mode=~\"user|system|iowait|softirq\", instance=~\"$host\"}[5m])) * 100)",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "sum by(name) (irate(container_cpu_usage_seconds_total{name=~\"$container\"}[1m])) * 100",
-              "legendFormat": "{{`{{name}}`}}",
+              "legendFormat": "{{ `{{` }}name{{ `}}` }}",
               "refId": "B"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "CPU",
           "transform": "timeseries_aggregations",
-          "type": "table"
+          "type": "table-old"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
-          "decimals": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "editable": true,
           "error": false,
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "grid": {},
@@ -830,6 +890,7 @@ data:
             "y": 23
           },
           "height": "",
+          "hiddenSeries": false,
           "id": 28,
           "legend": {
             "alignAsTable": true,
@@ -852,13 +913,13 @@ data:
           "maxPerRow": 3,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "repeat": null,
           "repeatDirection": "h",
           "seriesOverrides": [],
           "spaceLength": 10,
@@ -867,30 +928,36 @@ data:
           "targets": [
             {
               "calculatedInterval": "2s",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "datasourceErrors": {},
               "errors": {},
               "expr": "(max by (instance) (irate(node_cpu_seconds_total{job=\"node\", mode=~\"user|system|iowait|softirq\", instance=~\"$host\"}[5m])) * 100)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "metric": "",
               "refId": "A",
               "step": 20
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "sum by(name) (irate(container_cpu_usage_seconds_total{name=~\"$container\"}[1m])) * 100",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
-              "legendFormat": "{{`{{name}}`}}",
+              "legendFormat": "{{ `{{` }}name{{ `}}` }}",
               "refId": "B"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "CPU",
           "tooltip": {
             "msResolution": false,
@@ -901,9 +968,7 @@ data:
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -912,26 +977,26 @@ data:
               "format": "percent",
               "label": "",
               "logBase": 1,
-              "max": null,
               "min": 0,
               "show": true
             },
             {
               "format": "short",
               "logBase": 1,
-              "max": null,
               "min": 0,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -940,6 +1005,15 @@ data:
           },
           "id": 63,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "rabbitmq-perf-test",
           "type": "row"
         },
@@ -962,7 +1036,10 @@ data:
               "value": "current"
             }
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fontSize": "100%",
           "gridPos": {
             "h": 7,
@@ -971,8 +1048,6 @@ data:
             "y": 31
           },
           "id": 49,
-          "options": {},
-          "pageSize": null,
           "pluginVersion": "6.4.1",
           "scroll": true,
           "showHeader": true,
@@ -983,7 +1058,7 @@ data:
           "styles": [
             {
               "alias": "Instance",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -999,7 +1074,7 @@ data:
             },
             {
               "alias": "",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -1016,23 +1091,28 @@ data:
           ],
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "perftest_published{instance=~\"$instance\"}",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Messages published / s",
           "transform": "timeseries_aggregations",
-          "type": "table"
+          "type": "table-old"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1072,17 +1152,19 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "perftest_published{instance=~\"$instance\"}",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Messages published / s",
           "tooltip": {
             "shared": true,
@@ -1092,34 +1174,26 @@ data:
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
-              "decimals": null,
               "format": "short",
               "label": "",
               "logBase": 1,
-              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1141,7 +1215,10 @@ data:
               "value": "current"
             }
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fontSize": "100%",
           "gridPos": {
             "h": 7,
@@ -1150,8 +1227,6 @@ data:
             "y": 38
           },
           "id": 55,
-          "options": {},
-          "pageSize": null,
           "pluginVersion": "6.4.1",
           "scroll": true,
           "showHeader": true,
@@ -1162,7 +1237,7 @@ data:
           "styles": [
             {
               "alias": "Instance",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -1178,7 +1253,7 @@ data:
             },
             {
               "alias": "",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -1195,23 +1270,28 @@ data:
           ],
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "perftest_consumed{instance=~\"$instance\"}",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Messages consumed / s",
           "transform": "timeseries_aggregations",
-          "type": "table"
+          "type": "table-old"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1251,17 +1331,19 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "perftest_consumed{instance=~\"$instance\"}",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Messages consumed / s",
           "tooltip": {
             "shared": true,
@@ -1271,34 +1353,26 @@ data:
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
-              "decimals": null,
               "format": "short",
               "label": "",
               "logBase": 1,
-              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1320,7 +1394,10 @@ data:
               "value": "current"
             }
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fontSize": "100%",
           "gridPos": {
             "h": 7,
@@ -1329,8 +1406,6 @@ data:
             "y": 45
           },
           "id": 47,
-          "options": {},
-          "pageSize": null,
           "pluginVersion": "6.4.1",
           "scroll": true,
           "showHeader": true,
@@ -1341,7 +1416,7 @@ data:
           "styles": [
             {
               "alias": "Instance",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -1357,7 +1432,7 @@ data:
             },
             {
               "alias": "",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -1374,23 +1449,28 @@ data:
           ],
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "perftest_latency_seconds{quantile=\"$percentile\", instance=~\"$instance\"}",
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "End-to-end message latency",
           "transform": "timeseries_aggregations",
-          "type": "table"
+          "type": "table-old"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1430,19 +1510,21 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "perftest_latency_seconds{quantile=\"$percentile\", instance=~\"$instance\"}",
               "format": "time_series",
               "instant": false,
               "interval": "1s",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "End-to-end message latency",
           "tooltip": {
             "shared": true,
@@ -1452,33 +1534,25 @@ data:
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "s",
-              "label": null,
               "logBase": 1,
-              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1486,7 +1560,10 @@ data:
           "bars": true,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1526,17 +1603,19 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "perftest_latency_seconds{quantile=\"$percentile\", instance=~\"$instance\"}",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{`{{instance}}`}}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "End-to-end message latency distribution",
           "tooltip": {
             "shared": false,
@@ -1548,7 +1627,6 @@ data:
           "xaxis": {
             "buckets": 20,
             "mode": "histogram",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -1557,40 +1635,33 @@ data:
               "format": "none",
               "label": "",
               "logBase": 1,
-              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": false
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
-          "cards": {
-            "cardPadding": null,
-            "cardRound": null
-          },
+          "cards": {},
           "color": {
             "cardColor": "rgb(255, 255, 255)",
             "colorScale": "sqrt",
             "colorScheme": "interpolateBlues",
             "exponent": 0.4,
-            "max": null,
-            "min": null,
             "mode": "opacity"
           },
           "dataFormat": "timeseries",
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "gridPos": {
             "h": 8,
             "w": 15,
@@ -1605,10 +1676,13 @@ data:
             "show": true
           },
           "links": [],
-          "options": {},
           "reverseYBuckets": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "expr": "perftest_latency_seconds{quantile=\"$percentile\", instance=~\"$instance\"}",
               "format": "heatmap",
               "intervalFactor": 1,
@@ -1625,24 +1699,17 @@ data:
           "xAxis": {
             "show": true
           },
-          "xBucketNumber": null,
-          "xBucketSize": null,
           "yAxis": {
-            "decimals": null,
             "format": "s",
             "logBase": 1,
-            "max": null,
             "min": "0",
-            "show": true,
-            "splitFactor": null
+            "show": true
           },
-          "yBucketBound": "auto",
-          "yBucketNumber": null,
-          "yBucketSize": null
+          "yBucketBound": "auto"
         }
       ],
       "refresh": "15s",
-      "schemaVersion": 20,
+      "schemaVersion": 37,
       "style": "dark",
       "tags": [
         "cadvisor",
@@ -1658,23 +1725,30 @@ data:
               "text": "default",
               "value": "default"
             },
+            "datasource": "Prometheus",
             "hide": 2,
             "includeAll": false,
             "label": "datasource",
             "multi": false,
-            "name": "DS_PROMETHEUS",
+            "name": "Datasource",
             "options": [],
             "query": "prometheus",
             "refresh": 1,
             "regex": "",
             "skipUrlSync": false,
-            "type": "datasource",
-            "datasource": "${DS_PROMETHEUS}"
+            "type": "datasource"
           },
           {
-            "allValue": null,
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
             "definition": "label_values(rabbitmq_identity_info, namespace)",
             "hide": 0,
             "includeAll": false,
@@ -1682,26 +1756,33 @@ data:
             "multi": false,
             "name": "namespace",
             "options": [],
-            "query": "label_values(rabbitmq_identity_info, namespace)",
+            "query": {
+              "query": "label_values(rabbitmq_identity_info, namespace)",
+              "refId": "Prometheus-namespace-Variable-Query"
+            },
             "refresh": 2,
             "regex": "",
             "skipUrlSync": false,
             "sort": 1,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
           },
           {
-            "allValue": null,
             "current": {
-              "text": "All",
+              "selected": true,
+              "text": [
+                "All"
+              ],
               "value": [
                 "$__all"
               ]
             },
-            "datasource": "${DS_PROMETHEUS}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
             "definition": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
             "hide": 0,
             "includeAll": true,
@@ -1709,26 +1790,33 @@ data:
             "multi": true,
             "name": "rabbitmq_cluster",
             "options": [],
-            "query": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
+            "query": {
+              "query": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
+              "refId": "Prometheus-rabbitmq_cluster-Variable-Query"
+            },
             "refresh": 2,
             "regex": "",
             "skipUrlSync": false,
             "sort": 1,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
           },
           {
-            "allValue": null,
             "current": {
-              "text": "All",
+              "selected": true,
+              "text": [
+                "All"
+              ],
               "value": [
                 "$__all"
               ]
             },
-            "datasource": "${DS_PROMETHEUS}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
             "definition": "label_values(perftest_published, instance)",
             "hide": 0,
             "includeAll": true,
@@ -1736,24 +1824,30 @@ data:
             "multi": true,
             "name": "instance",
             "options": [],
-            "query": "label_values(perftest_published, instance)",
+            "query": {
+              "query": "label_values(perftest_published, instance)",
+              "refId": "Prometheus-instance-Variable-Query"
+            },
             "refresh": 2,
             "regex": "",
             "skipUrlSync": false,
             "sort": 1,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
           },
           {
-            "allValue": null,
             "current": {
-              "text": "0.99",
-              "value": "0.99"
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
             },
-            "datasource": "${DS_PROMETHEUS}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
             "definition": "label_values(perftest_latency_seconds, quantile)",
             "hide": 0,
             "includeAll": false,
@@ -1761,26 +1855,33 @@ data:
             "multi": false,
             "name": "percentile",
             "options": [],
-            "query": "label_values(perftest_latency_seconds, quantile)",
+            "query": {
+              "query": "label_values(perftest_latency_seconds, quantile)",
+              "refId": "Prometheus-percentile-Variable-Query"
+            },
             "refresh": 2,
             "regex": "",
             "skipUrlSync": false,
             "sort": 4,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
           },
           {
-            "allValue": null,
             "current": {
-              "text": "All",
+              "selected": true,
+              "text": [
+                "All"
+              ],
               "value": [
                 "$__all"
               ]
             },
-            "datasource": "${DS_PROMETHEUS}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
             "definition": "label_values(node_network_info, instance)",
             "hide": 0,
             "includeAll": true,
@@ -1788,26 +1889,33 @@ data:
             "multi": true,
             "name": "host",
             "options": [],
-            "query": "label_values(node_network_info, instance)",
+            "query": {
+              "query": "label_values(node_network_info, instance)",
+              "refId": "Prometheus-host-Variable-Query"
+            },
             "refresh": 2,
             "regex": "",
             "skipUrlSync": false,
             "sort": 1,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
           },
           {
-            "allValue": null,
             "current": {
-              "text": "All",
+              "selected": true,
+              "text": [
+                "All"
+              ],
               "value": [
                 "$__all"
               ]
             },
-            "datasource": "${DS_PROMETHEUS}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
             "definition": "label_values(container_network_receive_bytes_total, name)",
             "hide": 0,
             "includeAll": true,
@@ -1815,13 +1923,15 @@ data:
             "multi": true,
             "name": "container",
             "options": [],
-            "query": "label_values(container_network_receive_bytes_total, name)",
+            "query": {
+              "query": "label_values(container_network_receive_bytes_total, name)",
+              "refId": "Prometheus-container-Variable-Query"
+            },
             "refresh": 2,
             "regex": "",
             "skipUrlSync": false,
             "sort": 1,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
@@ -1855,16 +1965,7 @@ data:
       "timezone": "",
       "title": "Erlang-Distributions-Compare",
       "uid": "C0jeDstZk",
-      "version": 20210308,
-      "__inputs": [
-        {
-          "name": "DS_PROMETHEUS",
-          "label": "prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }
-      ]
+      "version": 1,
+      "weekStart": ""
     }
 {{- end }}

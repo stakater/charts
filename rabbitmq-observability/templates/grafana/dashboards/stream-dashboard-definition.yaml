@@ -10,77 +10,42 @@ data:
   # https://grafana.com/grafana/dashboards/14798
   json: |-
     {
-      "__inputs": [
-        {
-          "name": "DS_PROMETHEUS",
-          "label": "Prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }
-      ],
-      "__requires": [
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "8.0.3"
-        },
-        {
-          "type": "panel",
-          "id": "piechart",
-          "name": "Pie chart",
-          "version": ""
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "Prometheus",
-          "version": "1.0.0"
-        },
-        {
-          "type": "panel",
-          "id": "stat",
-          "name": "Stat",
-          "version": ""
-        },
-        {
-          "type": "panel",
-          "id": "text",
-          "name": "Text",
-          "version": ""
-        },
-        {
-          "type": "panel",
-          "id": "timeseries",
-          "name": "Time series",
-          "version": ""
-        }
-      ],
       "annotations": {
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
             "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
             "type": "dashboard"
           }
         ]
       },
       "description": "Stream protocol message rates and errors",
       "editable": true,
+      "fiscalYearStartMonth": 0,
       "gnetId": 14798,
       "graphTooltip": 1,
-      "id": null,
-      "iteration": 1630681958730,
+      "id": 31,
       "links": [],
+      "liveNow": false,
       "panels": [
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -124,9 +89,13 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "9.1.6",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_publishers{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "interval": "",
@@ -138,7 +107,10 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -182,9 +154,13 @@ data:
             "text": {},
             "textMode": "value"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "9.1.6",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (irate(rabbitmq_global_messages_received_total{protocol=\"stream\"}[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "instant": false,
@@ -197,7 +173,10 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -242,9 +221,13 @@ data:
             "text": {},
             "textMode": "value"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "9.1.6",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (irate(rabbitmq_global_messages_confirmed_total{protocol=\"stream\"}[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "instant": false,
@@ -257,7 +240,10 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -301,9 +287,13 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "9.1.6",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_consumers{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "interval": "",
@@ -315,7 +305,10 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -359,9 +352,13 @@ data:
             "text": {},
             "textMode": "value"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "9.1.6",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (irate(rabbitmq_global_messages_delivered_total{protocol=\"stream\"}[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "instant": false,
@@ -374,7 +371,10 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -419,9 +419,13 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "9.1.6",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_access_refused_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_authentication_failure_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_frame_too_large_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_internal_error_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_precondition_failed_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_publisher_does_not_exist_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_sasl_authentication_failure_loopback_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_sasl_challenge_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_sasl_error_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_sasl_mechanism_not_supported_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_stream_already_exists_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_stream_does_not_exist_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_stream_not_available_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_subscription_id_already_exists_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_subscription_id_does_not_exist_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_unknown_frame_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) +\n\nsum by(rabbitmq_cluster) (rabbitmq_global_stream_error_vhost_access_failure_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})\n",
               "instant": false,
@@ -434,8 +438,10 @@ data:
           "type": "stat"
         },
         {
-          "cacheTimeout": null,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -619,8 +625,9 @@ data:
             ],
             "legend": {
               "calcs": [],
-              "displayMode": "hidden",
+              "displayMode": "list",
               "placement": "bottom",
+              "showLegend": false,
               "values": [
                 "value"
               ]
@@ -634,26 +641,33 @@ data:
               "values": false
             },
             "tooltip": {
-              "mode": "multi"
+              "mode": "multi",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
-          "repeat": null,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sort_desc(sum by(rabbitmq_node) (rabbitmq_global_publishers{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}))",
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{`{{rabbitmq_node}}`}}",
+              "legendFormat": "{{ `{{` }}rabbitmq_node{{ `}}` }}",
               "refId": "A"
             }
           ],
           "type": "piechart"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -835,8 +849,9 @@ data:
               "value"
             ],
             "legend": {
-              "displayMode": "hidden",
-              "placement": "bottom"
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
             },
             "pieType": "pie",
             "reduceOptions": {
@@ -847,25 +862,33 @@ data:
               "values": false
             },
             "tooltip": {
-              "mode": "multi"
+              "mode": "multi",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sort_desc(sum by(rabbitmq_node) (irate(rabbitmq_global_messages_received_total{protocol=\"stream\"}[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}))",
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{`{{rabbitmq_node}}`}}",
+              "legendFormat": "{{ `{{` }}rabbitmq_node{{ `}}` }}",
               "refId": "A"
             }
           ],
           "type": "piechart"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1047,8 +1070,9 @@ data:
               "value"
             ],
             "legend": {
-              "displayMode": "hidden",
+              "displayMode": "list",
               "placement": "bottom",
+              "showLegend": false,
               "values": []
             },
             "pieType": "pie",
@@ -1060,25 +1084,33 @@ data:
               "values": false
             },
             "tooltip": {
-              "mode": "multi"
+              "mode": "multi",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sort_desc(sum by(rabbitmq_node) (irate(rabbitmq_global_messages_confirmed_total{protocol=\"stream\"}[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}))",
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{`{{rabbitmq_node}}`}}",
+              "legendFormat": "{{ `{{` }}rabbitmq_node{{ `}}` }}",
               "refId": "A"
             }
           ],
           "type": "piechart"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1260,8 +1292,9 @@ data:
               "value"
             ],
             "legend": {
-              "displayMode": "hidden",
-              "placement": "bottom"
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
             },
             "pieType": "pie",
             "reduceOptions": {
@@ -1272,25 +1305,33 @@ data:
               "values": false
             },
             "tooltip": {
-              "mode": "multi"
+              "mode": "multi",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sort_desc(sum by(rabbitmq_node) (rabbitmq_global_consumers{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}))",
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{`{{rabbitmq_node}}`}}",
+              "legendFormat": "{{ `{{` }}rabbitmq_node{{ `}}` }}",
               "refId": "A"
             }
           ],
           "type": "piechart"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1472,8 +1513,9 @@ data:
               "value"
             ],
             "legend": {
-              "displayMode": "hidden",
-              "placement": "bottom"
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
             },
             "pieType": "pie",
             "reduceOptions": {
@@ -1484,25 +1526,33 @@ data:
               "values": false
             },
             "tooltip": {
-              "mode": "multi"
+              "mode": "multi",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sort_desc(sum by(rabbitmq_node) (irate(rabbitmq_global_messages_delivered_total{protocol=\"stream\"}[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}))",
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{`{{rabbitmq_node}}`}}",
+              "legendFormat": "{{ `{{` }}rabbitmq_node{{ `}}` }}",
               "refId": "A"
             }
           ],
           "type": "piechart"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "gridPos": {
             "h": 6,
             "w": 4,
@@ -1514,19 +1564,33 @@ data:
             "content": "&nbsp; [What are Streams?](https://www.rabbitmq.com/streams.html)\n\n&nbsp; [Streams Overview + slides](https://blog.rabbitmq.com/posts/2021/07/rabbitmq-streams-overview/)\n\n&nbsp; [First Application + video](https://blog.rabbitmq.com/posts/2021/07/rabbitmq-streams-first-application/)\n\n&nbsp; [Using Stream protocol + diagrams](https://blog.rabbitmq.com/posts/2021/07/connecting-to-streams/)",
             "mode": "markdown"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "9.1.6",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "Learn more",
           "transparent": true,
           "type": "text"
         },
         {
-          "datasource": "-- Dashboard --",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -1741,32 +1805,41 @@ data:
                 "last"
               ],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "datasource",
+                "uid": "-- Dashboard --"
+              },
               "panelId": 16,
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Stream publishers",
           "type": "timeseries"
         },
         {
-          "datasource": "-- Dashboard --",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -1977,32 +2050,41 @@ data:
                 "last"
               ],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "datasource",
+                "uid": "-- Dashboard --"
+              },
               "panelId": 19,
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Stream consumers",
           "type": "timeseries"
         },
         {
-          "datasource": "-- Dashboard --",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -2216,32 +2298,41 @@ data:
                 "last"
               ],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "datasource",
+                "uid": "-- Dashboard --"
+              },
               "panelId": 17,
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Stream messages received / s",
           "type": "timeseries"
         },
         {
-          "datasource": "-- Dashboard --",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -2455,26 +2546,33 @@ data:
                 "last"
               ],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "datasource",
+                "uid": "-- Dashboard --"
+              },
               "panelId": 20,
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Stream messages delivered / s",
           "type": "timeseries"
         },
         {
-          "datasource": "-- Dashboard --",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2514,8 +2612,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2694,7 +2791,8 @@ data:
                 "last"
               ],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
               "mode": "single"
@@ -2703,17 +2801,22 @@ data:
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "datasource",
+                "uid": "-- Dashboard --"
+              },
               "panelId": 18,
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Stream messages confirmed to publishers / s",
           "type": "timeseries"
         },
         {
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2752,8 +2855,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "dark-red",
-                    "value": null
+                    "color": "dark-red"
                   }
                 ]
               },
@@ -2774,7 +2876,8 @@ data:
                 "last"
               ],
               "displayMode": "table",
-              "placement": "right"
+              "placement": "right",
+              "showLegend": true
             },
             "tooltip": {
               "mode": "single"
@@ -2783,6 +2886,10 @@ data:
           "pluginVersion": "8.0.3",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_access_refused_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "interval": "",
@@ -2790,6 +2897,10 @@ data:
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_authentication_failure_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2798,6 +2909,10 @@ data:
               "refId": "B"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_frame_too_large_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2806,6 +2921,10 @@ data:
               "refId": "C"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_internal_error_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2814,6 +2933,10 @@ data:
               "refId": "D"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_precondition_failed_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2822,6 +2945,10 @@ data:
               "refId": "E"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_publisher_does_not_exist_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2830,6 +2957,10 @@ data:
               "refId": "F"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_sasl_authentication_failure_loopback_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2838,6 +2969,10 @@ data:
               "refId": "G"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_sasl_challenge_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2846,6 +2981,10 @@ data:
               "refId": "H"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_sasl_error_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2854,6 +2993,10 @@ data:
               "refId": "I"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_sasl_mechanism_not_supported_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2862,6 +3005,10 @@ data:
               "refId": "J"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_stream_already_exists_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2870,6 +3017,10 @@ data:
               "refId": "K"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_stream_does_not_exist_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2878,6 +3029,10 @@ data:
               "refId": "L"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_stream_not_available_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2886,6 +3041,10 @@ data:
               "refId": "M"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_subscription_id_already_exists_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2894,6 +3053,10 @@ data:
               "refId": "N"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_subscription_id_does_not_exist_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2902,6 +3065,10 @@ data:
               "refId": "O"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_unknown_frame_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2910,6 +3077,10 @@ data:
               "refId": "P"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
+              },
               "exemplar": true,
               "expr": "sum by(rabbitmq_cluster) (rabbitmq_global_stream_error_vhost_access_failure_total{protocol=\"stream\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})",
               "hide": false,
@@ -2918,14 +3089,12 @@ data:
               "refId": "Q"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Errors since boot",
           "type": "timeseries"
         }
       ],
       "refresh": "15s",
-      "schemaVersion": 30,
+      "schemaVersion": 37,
       "style": "dark",
       "tags": [
         "rabbitmq-stream",
@@ -2939,14 +3108,12 @@ data:
               "text": "default",
               "value": "default"
             },
-            "datasource": "${DS_PROMETHEUS}",
-            "description": null,
-            "error": null,
+            "datasource": "Prometheus",
             "hide": 2,
             "includeAll": false,
             "label": "datasource",
             "multi": false,
-            "name": "DS_PROMETHEUS",
+            "name": "Datasource",
             "options": [],
             "query": "prometheus",
             "refresh": 1,
@@ -2955,12 +3122,17 @@ data:
             "type": "datasource"
           },
           {
-            "allValue": null,
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
             "definition": "label_values(rabbitmq_identity_info, namespace)",
-            "description": null,
-            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "Namespace",
@@ -2981,12 +3153,17 @@ data:
             "useTags": false
           },
           {
-            "allValue": null,
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
             "definition": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
-            "description": null,
-            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "RabbitMQ Cluster",
@@ -3024,6 +3201,7 @@ data:
       "timezone": "",
       "title": "RabbitMQ-Stream",
       "uid": "j7MCpqZ7k",
-      "version": 1
+      "version": 1,
+      "weekStart": ""
     }
 {{- end }}
