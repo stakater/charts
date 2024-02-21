@@ -37,14 +37,14 @@ data:
       "fiscalYearStartMonth": 0,
       "gnetId": 11350,
       "graphTooltip": 1,
-      "id": 12,
+      "id": 29,
       "links": [],
       "liveNow": false,
       "panels": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -113,7 +113,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n* 100",
               "format": "time_series",
@@ -127,7 +127,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -196,7 +196,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "(\n  sum (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n  -\n  sum (erlang_vm_allocators{usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n) / sum (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n* 100",
               "format": "time_series",
@@ -210,7 +210,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "description": "Total Size of Allocated Blocks\n\nMemory that is actively used by Erlang data.\n\nThe smallest unit of memory that an allocator can work with is called a `block`. When you call an allocator to allocate a certain amount of memory what you get back is a block. It is also blocks that you give as an argument to the allocator when you want to deallocate memory.\n\nThe allocator does not allocate blocks from the operating system directly though. Instead the allocator allocates a carrier from the operating system, either through `sys_alloc` or through `mseg_alloc`, which in turn uses `malloc` or `mmap`. If `sys_alloc` is used the carrier is placed on the C-heap and if `mseg_alloc` is used the carrier is placed in a segment.\n\nSmall blocks are placed in a multiblock carrier. A multiblock carrier can as the name suggests contain many blocks. Larger blocks are placed in a singleblock carrier, which as the name implies on contains one block.\n\nWhat’s considered a small and a large block is determined by the parameter singleblock carrier threshold (`sbct`).\n\n* [erts_alloc](http://erlang.org/doc/man/erts_alloc.html)\n* [The Memory Subsystem](https://github.com/happi/theBeamBook/blob/master/chapters/memory.asciidoc)",
           "fieldConfig": {
@@ -277,7 +277,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -291,7 +291,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "description": "Allocated Carriers - Allocated Blocks\n\n* [erts_alloc](http://erlang.org/doc/man/erts_alloc.html)\n* [The Memory Subsystem](https://github.com/happi/theBeamBook/blob/master/chapters/memory.asciidoc)",
           "fieldConfig": {
@@ -358,7 +358,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -372,7 +372,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "description": "Total Size of Allocated Carriers\n\nMemory that is reserved by the Erlang VM, which fits  one of the following descriptions:\n\n* actively used memory\n* memory given by the OS, yet-to-be-used\n* deallocated memory kept around before it is destroyed\n* carrier gaps in multi-block carriers (a.k.a. memory fragmentation)\n\nThe total size of allocated carriers can be either larger or smaller than the Erlang VM system process RSS memory.\n\n* [erts_alloc](http://erlang.org/doc/man/erts_alloc.html)\n* [The Memory Subsystem](https://github.com/happi/theBeamBook/blob/master/chapters/memory.asciidoc)",
           "fieldConfig": {
@@ -439,7 +439,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -453,7 +453,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "description": "Erlang VM Resident Set Size (RSS)\n\nAs reported by the OS",
           "fieldConfig": {
@@ -520,7 +520,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (rabbitmq_process_resident_memory_bytes * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -552,7 +552,7 @@ data:
           ],
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fontSize": "100%",
           "gridPos": {
@@ -607,7 +607,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "rabbitmq_process_resident_memory_bytes * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"}",
               "legendFormat": "Resident Set Size",
@@ -616,7 +616,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Allocated Used",
@@ -625,7 +625,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Allocated Unused",
@@ -642,7 +642,7 @@ data:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -708,7 +708,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "rabbitmq_process_resident_memory_bytes * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"}",
               "format": "time_series",
@@ -720,7 +720,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Allocated Used",
@@ -729,7 +729,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Allocated Unused",
@@ -771,7 +771,7 @@ data:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "gridPos": {
             "h": 1,
@@ -785,7 +785,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "refId": "A"
             }
@@ -814,7 +814,7 @@ data:
           ],
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "description": "",
           "fontSize": "100%",
@@ -870,7 +870,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum by(alloc) (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "{{ `{{` }}alloc{{ `}}` }}",
@@ -887,7 +887,7 @@ data:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -943,7 +943,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum by(alloc) (erlang_vm_allocators{usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -988,7 +988,7 @@ data:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "gridPos": {
             "h": 1,
@@ -1003,7 +1003,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "refId": "A"
             }
@@ -1014,7 +1014,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1082,7 +1082,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"mbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n* 100",
               "format": "time_series",
@@ -1097,7 +1097,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1162,7 +1162,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -1177,7 +1177,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1242,7 +1242,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -1257,7 +1257,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1325,7 +1325,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs_pool\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"mbcs_pool\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n* 100",
               "format": "time_series",
@@ -1340,7 +1340,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1405,7 +1405,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -1420,7 +1420,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1485,7 +1485,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -1500,7 +1500,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1568,7 +1568,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"sbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"sbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n* 100",
               "format": "time_series",
@@ -1583,7 +1583,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1648,7 +1648,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -1663,7 +1663,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1728,7 +1728,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -1761,7 +1761,7 @@ data:
           ],
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "description": "",
           "fontSize": "100%",
@@ -1817,7 +1817,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock - Used",
@@ -1826,7 +1826,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"mbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock - Unused",
@@ -1835,7 +1835,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs_pool\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock Pool - Used",
@@ -1844,7 +1844,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"mbcs_pool\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs_pool\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock Pool - Unused",
@@ -1853,7 +1853,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"sbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Singleblock - Used",
@@ -1862,7 +1862,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"sbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"sbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Singleblock - Unused",
@@ -1880,7 +1880,7 @@ data:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fieldConfig": {
             "defaults": {
@@ -1954,7 +1954,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -1965,7 +1965,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"mbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock - Unused",
@@ -1974,7 +1974,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs_pool\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock Pool - Used",
@@ -1983,7 +1983,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"mbcs_pool\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"mbcs_pool\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock Pool - Unused",
@@ -1992,7 +1992,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"sbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Singleblock - Used",
@@ -2001,7 +2001,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"carriers_size\", kind=\"sbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n-\nsum (erlang_vm_allocators{alloc=~\"$memory_allocator\", usage=\"blocks_size\", kind=\"sbcs\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Singleblock - Unused",
@@ -2061,7 +2061,7 @@ data:
           ],
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "description": "",
           "fontSize": "100%",
@@ -2117,7 +2117,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock - Carrier",
@@ -2126,7 +2126,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock - Block",
@@ -2135,7 +2135,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock Pool - Carrier",
@@ -2144,7 +2144,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock Pool - Block",
@@ -2153,7 +2153,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Singleblock - Carrier",
@@ -2162,7 +2162,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Singleblock - Block",
@@ -2180,7 +2180,7 @@ data:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
           },
           "fill": 0,
           "fillGradient": 0,
@@ -2247,7 +2247,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "format": "time_series",
@@ -2258,7 +2258,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock - Carrier",
@@ -2267,7 +2267,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock Pool - Block",
@@ -2276,7 +2276,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"mbcs_pool\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Multiblock Pool - Carrier",
@@ -2285,7 +2285,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"blocks_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"blocks\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Singleblock - Block",
@@ -2294,7 +2294,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "f438011c-b38c-46f0-84c0-d4dd442646a6"
               },
               "expr": "sum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"carriers_size\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})\n/\nsum (erlang_vm_allocators{kind=\"sbcs\", alloc=\"$memory_allocator\", usage=\"carriers\"} * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\", rabbitmq_node=\"$rabbitmq_node\"})",
               "legendFormat": "Singleblock - Carrier",
@@ -2353,7 +2353,7 @@ data:
             "includeAll": false,
             "label": "datasource",
             "multi": false,
-            "name": "DS_PROMETHEUS",
+            "name": "Datasource",
             "options": [],
             "query": "prometheus",
             "refresh": 1,
@@ -2370,7 +2370,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "${DS_PROMETHEUS}"
+              "uid": "${Datasource}"
             },
             "definition": "label_values(rabbitmq_identity_info, namespace)",
             "hide": 0,
@@ -2401,7 +2401,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "${DS_PROMETHEUS}"
+              "uid": "${Datasource}"
             },
             "definition": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
             "hide": 0,
@@ -2432,7 +2432,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "${DS_PROMETHEUS}"
+              "uid": "${Datasource}"
             },
             "definition": "label_values(rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}, rabbitmq_node)",
             "hide": 0,
@@ -2462,7 +2462,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "${DS_PROMETHEUS}"
+              "uid": "${Datasource}"
             },
             "definition": "label_values(erlang_vm_allocators, alloc)",
             "hide": 0,
@@ -2513,7 +2513,7 @@ data:
       "timezone": "",
       "title": "Erlang-Memory-Allocators",
       "uid": "o_rtdpWik",
-      "version": 3,
+      "version": 1,
       "weekStart": ""
     }
 {{- end }}
