@@ -15,15 +15,13 @@ jvmObservability:
   jvmMicrometer:
     enabled: true
 
-# name of the dashboard
-name: "jvm-micrometer"
+grafana:
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
 
-# Grafana instance selector
-instanceSelector:
-  matchLabels:
-    dashboards: "grafana"
-
-# Default datasources for the dashboard
-datasources:
-  - inputName: "DS_PROMETHEUS"
-    datasourceName: Prometheus
+  # Default datasources for the dashboard
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: Prometheus
