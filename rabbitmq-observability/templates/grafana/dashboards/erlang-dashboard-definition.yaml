@@ -38,7 +38,7 @@ data:
       "fiscalYearStartMonth": 0,
       "gnetId": 11352,
       "graphTooltip": 1,
-      "id": 9,
+      "id": 25,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -439,6 +439,7 @@ data:
             "x": 0,
             "y": 4
           },
+          "hideBranding": false,
           "highlightCards": true,
           "id": 19,
           "legend": {
@@ -1567,6 +1568,12 @@ data:
             "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
           },
           "description": "The total number of bytes allocated for this port by the runtime system. The port itself can have allocated memory that is not included.",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -1592,9 +1599,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1698,6 +1706,12 @@ data:
             "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
           },
           "description": "The total number of bytes queued by the port using the ERTS driver queue implementation\n\nAny values above a few KBs hint to an overloaded distribution",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1723,9 +1737,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1865,9 +1880,6 @@ data:
               }
             ]
           },
-          "data": {
-            "unitFormat": "short"
-          },
           "datasource": {
             "type": "prometheus",
             "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
@@ -1879,6 +1891,7 @@ data:
             "x": 0,
             "y": 32
           },
+          "hideBranding": false,
           "highlightCards": true,
           "id": 18,
           "legend": {
@@ -1886,6 +1899,11 @@ data:
           },
           "links": [],
           "nullPointMode": "as empty",
+          "pageSize": 15,
+          "seriesFilterIndex": -1,
+          "statusmap": {
+            "ConfigVersion": "v1"
+          },
           "targets": [
             {
               "aggregation": "Last",
@@ -1908,22 +1926,30 @@ data:
           ],
           "title": "Process state",
           "tooltip": {
-            "show": true
+            "extraInfo": "",
+            "freezeOnClick": true,
+            "items": [],
+            "show": true,
+            "showExtraInfo": false,
+            "showItems": false
           },
           "type": "flant-statusmap-panel",
           "useMax": true,
+          "usingPagination": false,
           "xAxis": {
-            "labelFormat": "%a %m/%d",
-            "minBucketWidthToShowWeekends": 4,
-            "show": true,
-            "showCrosshair": true,
-            "showWeekends": true
+            "show": true
           },
           "yAxis": {
-            "show": true,
-            "showCrosshair": false
+            "maxWidth": -1,
+            "minWidth": -1,
+            "show": true
           },
-          "yAxisSort": "metrics"
+          "yAxisSort": "metrics",
+          "yLabel": {
+            "delimiter": "",
+            "labelTemplate": "",
+            "usingSplitLabel": false
+          }
         },
         {
           "aliasColors": {},
@@ -1935,6 +1961,12 @@ data:
             "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
           },
           "description": "The number of messages currently in the message queue of the process\n\nAny values above 0 hint to an overloaded distribution",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -1960,9 +1992,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2039,6 +2072,12 @@ data:
             "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
           },
           "description": "The size in bytes of process memory. This includes call stack, heap, and internal structures.",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -2064,9 +2103,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2170,6 +2210,12 @@ data:
             "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
           },
           "description": "The number of reductions executed by the process",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -2195,9 +2241,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "9.1.6",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2328,7 +2375,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(rabbitmq_identity_info, namespace)",
             "hide": 0,
@@ -2359,7 +2406,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
             "hide": 0,
@@ -2393,7 +2440,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(erlang_vm_dist_proc_status, type)",
             "hide": 0,
@@ -2444,7 +2491,7 @@ data:
       "timezone": "",
       "title": "Erlang-Distribution",
       "uid": "d-SFCCmZz",
-      "version": 2,
+      "version": 4,
       "weekStart": ""
     }
 {{- end }}
