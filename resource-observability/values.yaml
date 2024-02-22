@@ -6,8 +6,9 @@ global:
 grafana:
   resourceUtilization:
     enabled: true
-  matchLabels:
-    app: "grafana"
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
 
 # Default data sources
 dashboard:

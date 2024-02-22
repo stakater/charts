@@ -10,7 +10,7 @@ spec:
   folder: "Resource Utilization"
   allowCrossNamespaceImport: true
   instanceSelector:
-    {{ toYaml .Values.grafana | nindent 3 }}
+    {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}
   datasources:
     {{ toYaml .Values.dashboard.datasources | nindent 3 }}
   resyncPeriod: 5s
