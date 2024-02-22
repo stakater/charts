@@ -433,7 +433,7 @@ data:
       "timepicker": {},
       "timezone": "",
       "title": "Resource used & requested",
-      "uid": "uT8AuDo4k",
+      "uid": "resource-used-requested",
       "version": 4
     }
   {{- end }}

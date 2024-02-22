@@ -858,7 +858,7 @@ data:
       },
       "timezone": "",
       "title": "RabbitMQ-Quorum-Queues-Raft",
-      "uid": "f1Mee9nZz",
+      "uid": "rabbitmq-quorum-queues-raft",
       "version": 1,
       "weekStart": ""
     }

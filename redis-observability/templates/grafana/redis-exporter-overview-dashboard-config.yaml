@@ -45,7 +45,7 @@ data:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -59,7 +59,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "${datasource}"
               },
               "refId": "A"
             }
@@ -401,7 +401,7 @@ data:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -415,7 +415,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "${datasource}"
               },
               "refId": "A"
             }
@@ -780,7 +780,7 @@ data:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -794,7 +794,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "3063d7f5-ff58-43d9-bfbe-bb2117a31348"
+                "uid": "${datasource}"
               },
               "refId": "A"
             }
@@ -1397,7 +1397,7 @@ data:
       },
       "timezone": "browser",
       "title": "Redis Dashboard for Prometheus Redis Exporter 1.x",
-      "uid": "69fa0881-46e7-45b5-a002-b9d55bf7dff4",
+      "uid": "redis-dashboard-overview",
       "version": 1,
       "weekStart": ""
     }

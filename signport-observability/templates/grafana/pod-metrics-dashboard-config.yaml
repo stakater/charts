@@ -1918,7 +1918,7 @@ data:
       "timepicker": {},
       "timezone": "",
       "title": "Kubernetes Pod Metrics Overview Dashboard",
-      "uid": "6914706b-b1e2-46bb-a675-27507d5a25a3",
+      "uid": "signport-pod-metrics",
       "version": 13,
       "weekStart": ""
     }

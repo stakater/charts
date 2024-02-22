@@ -308,7 +308,7 @@ data:
       "timepicker": {},
       "timezone": "",
       "title": "RabbitMQ-Queue",
-      "uid": "j9t8vwH7k",
+      "uid": "rabbitmq-queue",
       "version": 1,
       "weekStart": ""
     }
