@@ -648,7 +648,7 @@ data:
       },
       "timezone": "",
       "title": "RabbitMQ-Alerts",
-      "uid": "jjCq5SLMk",
+      "uid": "rabbitmq-alerts",
       "version": 1,
       "weekStart": ""
     }

@@ -43,7 +43,7 @@ data:
         {
           "collapsed": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "gridPos": {
             "h": 1,
@@ -56,7 +56,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "refId": "A"
             }
@@ -66,7 +66,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: server_version_num",
           "fieldConfig": {
@@ -129,7 +129,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "max(pg_settings_server_version_num)",
               "legendFormat": "",
@@ -141,7 +141,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Max Replication lag behind master in seconds\n\nOnly available on a standby system.\n\nSource: pg_last_xact_replay_timestamp\n\nUse: pg_stat_replication for Details.",
           "fieldConfig": {
@@ -205,7 +205,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
               "expr": "max(ccp_replication_lag_received_time{instance=\"$Instance\"})",
@@ -219,7 +219,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Clients executing Statements.\n\nSource: pg_stat_activity",
           "fieldConfig": {
@@ -283,7 +283,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum(pg_stat_activity_count{state=\"active\",instance=\"$Instance\"})",
               "refId": "A"
@@ -294,7 +294,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Shared buffer hits vs reads from disc",
           "fieldConfig": {
@@ -359,7 +359,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum(pg_stat_database_blks_hit{instance=~\"$Instance\"})/(sum(pg_stat_database_blks_hit{instance=~\"$Instance\"})+sum(pg_stat_database_blks_read{instance=~\"$Instance\"}))*100",
               "refId": "A"
@@ -370,7 +370,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Percentage of max_connections used",
           "fieldConfig": {
@@ -435,7 +435,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum(pg_stat_database_numbackends)/max(pg_settings_max_connections)",
               "refId": "A"
@@ -446,7 +446,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Transaction committed vs rollbacked",
           "fieldConfig": {
@@ -511,7 +511,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum(pg_stat_database_xact_commit{instance=\"$Instance\"})/(sum(pg_stat_database_xact_commit{instance=\"$Instance\"}) + sum(pg_stat_database_xact_rollback{instance=\"$Instance\"}))",
               "refId": "A"
@@ -522,7 +522,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: ccp_postmaster_uptime_seconds()",
           "fieldConfig": {
@@ -586,7 +586,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
               "expr": "ccp_postmaster_uptime_seconds{instance=\"$Instance\"}",
@@ -600,7 +600,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Transactions committed + roolback per minute\n\nSource: pg_stat_database,xact_commit + xact_rollback",
           "fieldConfig": {
@@ -665,7 +665,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum((rate(pg_stat_database_xact_commit{instance=\"$Instance\"}[$Interval])))+sum((rate(pg_stat_database_xact_rollback{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -678,7 +678,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Statements executed per Minute.\n\nSource: pg_stat_statements.calls",
           "fieldConfig": {
@@ -742,7 +742,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
               "expr": "sum((rate(ccp_pg_stat_statements_total_calls_count{instance=\"$Instance\"}[$Interval])))",
@@ -756,7 +756,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Size of all databases in $Instance.\n\nSource: pg_database_size()",
           "fieldConfig": {
@@ -821,7 +821,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
               "expr": "sum(ccp_database_size_bytes{instance=\"$Instance\"})",
@@ -835,7 +835,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: pg_stat_statements.total_time / pg_stat_statements.calls",
           "fieldConfig": {
@@ -899,7 +899,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
               "expr": "sum((delta(ccp_pg_stat_statements_total_exec_time_ms{instance=\"$Instance\"}[$Interval])))/sum((delta(ccp_pg_stat_statements_total_calls_count{instance=\"$Instance\"}[$Interval])))",
@@ -913,7 +913,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Setting: shared_buffers in PostgreSQL.conf",
           "fieldConfig": {
@@ -977,7 +977,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "pg_settings_shared_buffers_bytes{instance=\"$Instance\"}",
               "refId": "A"
@@ -988,7 +988,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Setting: max_connections in postgreSQL.conf",
           "fieldConfig": {
@@ -1051,7 +1051,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "pg_settings_max_connections{instance=\"$Instance\"}",
               "refId": "A"
@@ -1066,7 +1066,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "decimals": 0,
           "description": "View: pg_stat_activity",
@@ -1125,7 +1125,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum by (state) (pg_stat_activity_count{instance=\"$Instance\"})",
               "legendFormat": "{{ `{{` }}state{{ `}}` }}",
@@ -1170,7 +1170,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "decimals": 0,
           "description": "View: pg_stat_activity",
@@ -1229,7 +1229,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum by (datname) (pg_stat_activity_count{instance=\"$Instance\"})",
               "legendFormat": "{{ `{{` }}datname{{ `}}` }}",
@@ -1274,7 +1274,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "decimals": 2,
           "description": "1 Minute rate of transactions committed or rollback.",
@@ -1326,7 +1326,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum ((rate(pg_stat_database_xact_commit[$Interval])))",
               "interval": "",
@@ -1335,7 +1335,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum ((rate(pg_stat_database_xact_rollback[$Interval])))",
               "hide": false,
@@ -1380,7 +1380,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: pg_stat_database",
           "fieldConfig": {
@@ -1428,7 +1428,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum((rate(pg_stat_database_tup_inserted{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1437,7 +1437,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum((rate(pg_stat_database_tup_updated{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1446,7 +1446,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum((rate(pg_stat_database_tup_deleted{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1492,7 +1492,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "* blk_read_time: Time spent reading data file blocks by backends in this database, in milliseconds\n* blk_write_time: Time spent writing data file blocks by backends in this database, in milliseconds\n\ntrack_io_timings needs to be activated",
           "fieldConfig": {
@@ -1539,7 +1539,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum ((rate(pg_stat_database_blk_read_time{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1548,7 +1548,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum ((rate(pg_stat_database_blk_write_time{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1594,7 +1594,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: pg_stat_database\n\n* tup_fetched: rows needed to satisfy queries\n* tup_returned: rows read/scanned",
           "fieldConfig": {
@@ -1642,7 +1642,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum((rate(pg_stat_database_tup_fetched{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1651,7 +1651,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum((rate(pg_stat_database_tup_returned{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1697,7 +1697,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: pg_locks",
           "fieldConfig": {
@@ -1750,7 +1750,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum by (mode) (pg_locks_count{instance=\"$Instance\"})",
               "legendFormat": "{{ `{{` }}mode{{ `}}` }}",
@@ -1793,7 +1793,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Should be 0 \n\nSource: pg_stat_database\n\nWith log_lock_waits turned on, deadlocks will be logged to the PostgreSQL Logfiles.",
           "fieldConfig": {
@@ -1848,7 +1848,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum by (datname) ((rate(pg_stat_database_deadlocks{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1894,7 +1894,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Should be 0. If temporary files are created, it can indicate insufficient work_mem. With log_temp_files the creation of temporary files are logged to the PostgreSQL Logfiles.",
           "fieldConfig": {
@@ -1949,7 +1949,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum by (datname) ((rate(pg_stat_database_temp_files{instance=\"$Instance\"}[$Interval])))",
               "interval": "",
@@ -1995,7 +1995,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Lag behind master in seconds.\n\nOnly available on a standby System.",
           "fieldConfig": {
@@ -2044,7 +2044,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "max(pg_replication_lag{instance=\"$Instance\"})",
               "instant": false,
@@ -2088,7 +2088,7 @@ data:
         {
           "collapsed": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "gridPos": {
             "h": 1,
@@ -2102,7 +2102,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "refId": "A"
             }
@@ -2112,7 +2112,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2175,7 +2175,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
               "expr": "pg_stat_activity_count{state=\"active\",instance=\"$Instance\",datname=~\"$Database\"}",
@@ -2189,7 +2189,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2253,7 +2253,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
               "expr": "ccp_database_size_bytes{instance=\"$Instance\", dbname=\"$Database\"}",
@@ -2267,7 +2267,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Shared buffer hits vs reads from disc",
           "fieldConfig": {
@@ -2332,7 +2332,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "pg_stat_database_blks_hit{instance=~\"$Instance\",datname=~\"$Database\"}/(pg_stat_database_blks_hit{instance=~\"$Instance\",datname=~\"$Database\"}+pg_stat_database_blks_read{instance=~\"$Instance\",datname=~\"$Database\"})",
               "refId": "A"
@@ -2343,7 +2343,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Transaction committed vs rollbacked",
           "fieldConfig": {
@@ -2408,7 +2408,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "pg_stat_database_xact_commit{instance=\"$Instance\",datname=~\"$Database\"}/(pg_stat_database_xact_commit{instance=\"$Instance\",datname=~\"$Database\"} + pg_stat_database_xact_rollback{instance=\"$Instance\",datname=~\"$Database\"})",
               "refId": "A"
@@ -2419,7 +2419,7 @@ data:
         },
         {
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Transactions committed + roolback per minute\n\nSource: pg_stat_database,xact_commit + xact_rollback",
           "fieldConfig": {
@@ -2483,7 +2483,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum((rate(pg_stat_database_xact_commit{instance=\"$Instance\",datname=\"$Database\"}[$Interval])))+sum((rate(pg_stat_database_xact_rollback{instance=\"$Instance\",datname=\"$Database\"}[$Interval])))",
               "interval": "",
@@ -2500,7 +2500,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "decimals": 0,
           "description": "View: pg_stat_activity",
@@ -2559,7 +2559,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum by (state) (pg_stat_activity_count{instance=\"$Instance\",datname=\"$Database\"})",
               "legendFormat": "{{ `{{` }}state{{ `}}` }}",
@@ -2604,7 +2604,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "decimals": 2,
           "description": "1 Minute rate of transactions committed or rollback.",
@@ -2656,7 +2656,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_xact_commit{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "interval": "",
@@ -2665,7 +2665,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_xact_rollback{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "hide": false,
@@ -2710,7 +2710,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: pg_stat_database",
           "fieldConfig": {
@@ -2758,7 +2758,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_tup_inserted{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "interval": "",
@@ -2767,7 +2767,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_tup_updated{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "interval": "",
@@ -2776,7 +2776,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_tup_deleted{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "interval": "",
@@ -2822,7 +2822,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: pg_stat_database\n\n* tup_fetched: rows needed to satisfy queries\n* tup_returned: rows read/scanned",
           "fieldConfig": {
@@ -2870,7 +2870,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_tup_fetched{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "interval": "",
@@ -2879,7 +2879,7 @@ data:
             },
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_tup_returned{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "interval": "",
@@ -2925,7 +2925,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Source: pg_locks",
           "fieldConfig": {
@@ -2978,7 +2978,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum by (mode) (pg_locks_count{instance=\"$Instance\",datname=\"$Database\"})",
               "legendFormat": "{{ `{{` }}mode{{ `}}` }}",
@@ -3023,7 +3023,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Should be 0 \n\nSource: pg_stat_database\n\nWith log_lock_waits turned on, deadlocks will be logged to the PostgreSQL Logfiles.",
           "fieldConfig": {
@@ -3078,7 +3078,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_deadlocks{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "interval": "",
@@ -3124,7 +3124,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "description": "Should be 0. If temporary files are created, it can indicate insufficient work_mem. With log_temp_files the creation of temporary files are logged to the PostgreSQL Logfiles.",
           "fieldConfig": {
@@ -3179,7 +3179,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "prometheus"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "rate(pg_stat_database_temp_files{instance=\"$Instance\",datname=\"$Database\"}[$Interval])",
               "interval": "",
@@ -3235,7 +3235,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "${Datasource}"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values({job=\"postgres-exporter\"}, instance)",
             "hide": 0,
@@ -3264,7 +3264,7 @@ data:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "${Datasource}"
+              "uid": "${DS_PROMETHEUS}"
             },
             "definition": "label_values(datname)",
             "hide": 0,
@@ -3385,7 +3385,7 @@ data:
       },
       "timezone": "",
       "title": "PostgreSQL Database Dashboard",
-      "uid": "cc4e5bba-5a58-49c3-b1d3-5a8eb23103c0",
+      "uid": "postgresql-database-dashboard",
       "version": 1,
       "weekStart": ""
     }
