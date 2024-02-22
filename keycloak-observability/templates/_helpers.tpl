@@ -34,7 +34,7 @@ Create chart name and version as used by the chart label.
 Allow the release namespace to be overridden
 */}}
 {{- define "keycloak-observability.namespace" -}}
-{{- default .Values.global.namespace .Release.Namespace .Values.namespaceOverride -}}
+{{- default .Release.Namespace .Values.global.namespace .Values.namespaceOverride -}}
 {{- end -}}
 
 {{/*
