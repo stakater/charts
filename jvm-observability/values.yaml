@@ -16,6 +16,7 @@ jvmObservability:
     enabled: true
 
 grafana:
+  folder: # "JVM micrometer"
   # Grafana instance selector
   instanceSelector:
     matchLabels:

@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "keycloak-observability.labels" . | nindent 4 }}
 spec:
-  folder: Rhsso
+  folder: {{ .Values.grafana.folder }}
   allowCrossNamespaceImport: true
   instanceSelector:
     {{ toYaml .Values.grafana | nindent 3 }}

@@ -10,6 +10,7 @@ ksm:
   enabled: true
 #Grafana dashboard configuration
 grafana:
+  folder: # RabbitMQ
   instanceSelector:
     matchLabels:
       app: "grafana"

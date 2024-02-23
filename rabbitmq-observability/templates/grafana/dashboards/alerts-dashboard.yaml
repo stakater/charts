@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "rabbitmq-observability.labels" . | nindent 4}}
 spec:
-  folder: RabbitMQ
+  folder: {{ .Values.grafana.folder }}
   allowCrossNamespaceImport: true
   plugins:
     - name: flant-statusmap-panel

@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "signport-observability.labels" . | nindent 4 }}
 spec:
-  folder: Signport
+  folder: {{ .Values.grafana.folder }}
   allowCrossNamespaceImport: true
   instanceSelector:
     {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
