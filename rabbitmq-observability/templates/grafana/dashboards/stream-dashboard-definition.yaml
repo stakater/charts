@@ -3200,7 +3200,6 @@ data:
       },
       "timezone": "",
       "title": "RabbitMQ-Stream",
-      "uid": "rabbitMQ-stream",
       "version": 1,
       "weekStart": ""
     }

@@ -648,7 +648,6 @@ data:
       },
       "timezone": "",
       "title": "RabbitMQ-Alerts",
-      "uid": "rabbitmq-alerts",
       "version": 1,
       "weekStart": ""
     }
