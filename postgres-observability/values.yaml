@@ -5,6 +5,7 @@ global:
   namespace:
 
 grafana:
+  folder: # PostgreSQL
   # Grafana instance selector
   instanceSelector:
     matchLabels:

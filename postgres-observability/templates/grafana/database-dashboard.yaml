@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "postgres-observability.labels" . | nindent 4 }}
 spec:
-  folder: PostgreSQL
+  folder: {{ .Values.grafana.folder }}
   allowCrossNamespaceImport: true
   instanceSelector:
     {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}

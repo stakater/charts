@@ -6,6 +6,7 @@ global:
   namespace:
 
 grafana:
+  folder: # Redis
   instanceSelector:
     matchLabels:
       app: "grafana"

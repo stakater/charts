@@ -6,6 +6,7 @@ global:
   namespace:
 
 grafana:
+  folder: # Signport
   instanceSelector:
     matchLabels:
       app: "grafana"

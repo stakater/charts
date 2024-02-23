@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "redis-observability.labels" . | nindent 4 }}
 spec:
-  folder: Redis
+  folder: {{ .Values.grafana.folder }}
   allowCrossNamespaceImport: true
   resyncPeriod: 5s
   instanceSelector:

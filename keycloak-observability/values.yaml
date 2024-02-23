@@ -5,6 +5,7 @@ global:
 
 # Grafana instance selector
 grafana:
+  folder: # Keycloak
   matchLabels:
     app: "grafana"
 

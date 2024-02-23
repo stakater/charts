@@ -4,6 +4,7 @@ global:
 
 # Grafana instance selector
 grafana:
+  folder: "Resource Utilization"
   resourceUtilization:
     enabled: true
   matchLabels:
