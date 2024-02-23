@@ -3594,7 +3594,6 @@ data:
       },
       "timezone": "",
       "title": "PostgreSQL Overview Dashboard",
-      "uid": "postgresql-overview-dashboard",
       "version": 1,
       "weekStart": ""
     }

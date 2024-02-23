@@ -2484,7 +2484,6 @@ data:
       },
       "timezone": "",
       "title": "RHSSO Metrics Dashboard",
-      "uid": "keycloak-dashboard",
       "version": 1,
       "weekStart": ""
     }

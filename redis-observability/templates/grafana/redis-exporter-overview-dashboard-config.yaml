@@ -1397,7 +1397,6 @@ data:
       },
       "timezone": "browser",
       "title": "Redis Dashboard for Prometheus Redis Exporter 1.x",
-      "uid": "redis-dashboard-overview",
       "version": 1,
       "weekStart": ""
     }

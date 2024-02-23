@@ -3385,7 +3385,6 @@ data:
       },
       "timezone": "",
       "title": "PostgreSQL Database Dashboard",
-      "uid": "postgresql-database-dashboard",
       "version": 1,
       "weekStart": ""
     }

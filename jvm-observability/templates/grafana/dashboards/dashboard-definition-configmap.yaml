@@ -3277,7 +3277,6 @@ data:
         },
         "timezone": "",
         "title": "JVM Micrometer Dashboard",
-        "version": 1,
-        "uid": "jvm-micrometer-dashboard"
+        "version": 1
         }
 {{- end }}
