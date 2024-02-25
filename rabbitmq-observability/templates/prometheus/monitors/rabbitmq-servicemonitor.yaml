@@ -1,4 +1,3 @@
----
 {{- if and ( .Values.prometheus.monitors.serviceMonitor ) ( .Values.prometheus.monitors.serviceMonitor.enabled ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor

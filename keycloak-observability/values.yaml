@@ -1,43 +1,54 @@
-# Default values for keycloak-observability.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
+# Dashboard name
 global:
-  namespace:
+  name: rhsso
+  namespace: keycloak
 
-#Please enable if kube-state-metrics is available. More info: https://github.com/kubernetes/kube-state-metrics
-ksm:
-  enabled: true
-  
-#Grafana dashboard configuration
+# Grafana instance selector
 grafana:
-  labels: {}
-  realm: "realm"
-  client_id: "client_id"
-  code: "code"
-  keycloak:
-    enabled: true
+  folder: # Keycloak
+  matchLabels:
+    app: "grafana"
 
-#Prometheus configuration
-prometheus:
-  alertmanager:
-    labels: {}
-    slack:
-      enabled: true
-      name: slack-config
-      channel: keycloak
-      apiSecret:
-        key: api_url
-        name: kaycloak-slack-webhook
-  monitors:
-    podMonitor:
-      enabled: false
-    serviceMonitor:
-      enabled: false
-      name: keycloak
-      #namespace: sso
-  rules:
-    labels: {}
-    keycloak:
-      containerRestarts:
-        enabled: true
+# Default data sources
+dashboard:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
+
+# Pod Monitor specs
+podMonitor:
+  enabled: true
+  specs:
+    selector:
+      matchLabels:
+        app: keycloak
+    podMetricsEndpoints:
+      - targetPort: 9990
+
+# Service Monitor specs
+serviceMonitor:
+  enabled: true
+  specs:
+    endpoints:
+      - bearerTokenSecret:
+          key: ''
+        path: /auth/realms/master/metrics
+        port: keycloak
+        scheme: https
+        tlsConfig:
+          ca: { }
+          cert: { }
+          insecureSkipVerify: true
+      - bearerTokenSecret:
+          key: ''
+        path: /metrics
+        port: keycloak-monitoring
+        scheme: http
+        tlsConfig:
+          ca: { }
+          cert: { }
+          insecureSkipVerify: true
+    namespaceSelector: { }
+    selector:
+      matchLabels:
+        app: keycloak

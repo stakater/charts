@@ -1,10 +1,10 @@
 {{- if and ( .Values.prometheus.rules.postgreMaxConnectionsReached ) ( .Values.prometheus.rules.postgreMaxConnectionsReached.enabled ) }}
----
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   labels:
     role: alert-rules
+    {{- include "postgres-observability.labels" . | nindent 4 }}
 {{- if .Values.prometheus.rules.labels }}
 {{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
 {{- end }}
