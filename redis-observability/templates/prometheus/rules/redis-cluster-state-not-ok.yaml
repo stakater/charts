@@ -1,5 +1,4 @@
 {{- if and ( .Values.prometheus.rules.redisClusterStateNotOk ) ( .Values.prometheus.rules.redisClusterStateNotOk.enabled ) }}
----
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

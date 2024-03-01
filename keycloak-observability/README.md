@@ -1,6 +1,5 @@
 # Helm chart for Keycloak dashboard
 
-
 ## Dependencies
 
 1. ???

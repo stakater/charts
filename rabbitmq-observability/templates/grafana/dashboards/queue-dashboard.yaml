@@ -1,0 +1,19 @@
+{{- if and ( .Values.grafana.rabbitmqQueue ) ( .Values.grafana.rabbitmqQueue.enabled ) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: rabbitmq-queue-dashboard
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "rabbitmq-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{- toYaml .Values.grafana.dashboard.datasources | nindent 3 }}
+  configMapRef:
+    name: rabbitmq-queue-dashboard-definition
+    key: json
+{{- end }}

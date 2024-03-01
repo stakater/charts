@@ -1,0 +1,22 @@
+{{- if and ( .Values.grafana.erlangDistribution ) ( .Values.grafana.erlangDistribution.enabled ) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: erlang-dashboard
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "rabbitmq-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  plugins:
+    - name: flant-statusmap-panel
+      version: 0.5.1
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{- toYaml .Values.grafana.dashboard.datasources | nindent 3 }}
+  configMapRef:
+    name: erlang-dashboard-definition
+    key: json
+{{- end }}

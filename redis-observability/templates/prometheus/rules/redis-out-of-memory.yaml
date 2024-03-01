@@ -1,5 +1,4 @@
 {{- if and ( .Values.prometheus.rules.redisOutOfMemory ) ( .Values.prometheus.rules.redisOutOfMemory.enabled ) }}
----
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
