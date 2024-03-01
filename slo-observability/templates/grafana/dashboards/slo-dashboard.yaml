@@ -2672,8 +2672,8 @@ spec:
           ]
         },
         "timezone": "",
-        "title": "Template Openshift SLO",
-        "uid": "cdebv8exnm29sc",
+        "title": "{{ .Values.cluster | title }} Openshift SLO",
+        "uid": null,
         "version": 1,
         "weekStart": ""
       },
