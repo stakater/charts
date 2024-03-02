@@ -2201,7 +2201,7 @@ spec:
                     "refId": "A"
                   }
                 ],
-                "title": "Kuberhealthy Running",
+                "title": "KubeHealth Running",
                 "type": "stat"
               },
               {
@@ -2292,7 +2292,7 @@ spec:
                     "expr": "avg(kuberhealthy_running)",
                     "format": "time_series",
                     "intervalFactor": 1,
-                    "legendFormat": "Kuberhealthy Running",
+                    "legendFormat": "KubeHealth Running",
                     "range": true,
                     "refId": "A"
                   },
@@ -2309,7 +2309,7 @@ spec:
                     "refId": "B"
                   }
                 ],
-                "title": "Kuberhealthy History",
+                "title": "KubeHealth History",
                 "type": "timeseries"
               },
               {
@@ -2492,7 +2492,7 @@ spec:
                   }
                 ],
                 "timeFrom": "14s",
-                "title": "Kuberhealthy Check Status",
+                "title": "KubeHealth Check Status",
                 "transformations": [
                   {
                     "id": "merge",
@@ -2592,7 +2592,7 @@ spec:
                     "refId": "A"
                   }
                 ],
-                "title": "Kuberhealthy Check History",
+                "title": "KubeHealth Check History",
                 "type": "timeseries"
               }
             ],
