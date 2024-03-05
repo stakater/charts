@@ -6,3 +6,15 @@ fullnameOverride: ""
 
 # -- Same as nameOverride but for the namespace.
 namespaceOverride: ""
+
+grafana:
+  folder: "Storage Observability"
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+
+  # Default datasources for the dashboard
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: Prometheus
