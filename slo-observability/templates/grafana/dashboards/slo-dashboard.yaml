@@ -2194,7 +2194,7 @@ spec:
                       "uid": "Prometheus"
                     },
                     "editorMode": "code",
-                    "expr": "avg(kuberhealthy_running)",
+                    "expr": "avg(kuberhealthy_running{cluster=\"{{ .Values.cluster }}\"})",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "range": true,
@@ -2289,7 +2289,7 @@ spec:
                       "uid": "Prometheus"
                     },
                     "editorMode": "code",
-                    "expr": "avg(kuberhealthy_running)",
+                    "expr": "avg(kuberhealthy_running{cluster=\"{{ .Values.cluster }}\"})",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "KubeHealth Running",
@@ -2301,7 +2301,7 @@ spec:
                       "uid": "Prometheus"
                     },
                     "editorMode": "code",
-                    "expr": "avg(kuberhealthy_cluster_state)",
+                    "expr": "avg(kuberhealthy_cluster_state{cluster=\"{{ .Values.cluster }}\"})",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "Cluster State",
@@ -2395,7 +2395,7 @@ spec:
                       "uid": "Prometheus"
                     },
                     "editorMode": "code",
-                    "expr": "avg(kuberhealthy_cluster_state)",
+                    "expr": "avg(kuberhealthy_cluster_state{cluster=\"{{ .Values.cluster }}\"})",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "range": true,
@@ -2484,7 +2484,7 @@ spec:
                       "uid": "Prometheus"
                     },
                     "editorMode": "code",
-                    "expr": "avg(kuberhealthy_check) by(check)",
+                    "expr": "avg(kuberhealthy_check{cluster=\"{{ .Values.cluster }}\"}) by(check)",
                     "format": "table",
                     "intervalFactor": 1,
                     "range": true,
@@ -2585,7 +2585,7 @@ spec:
                       "uid": "Prometheus"
                     },
                     "editorMode": "code",
-                    "expr": "avg(kuberhealthy_check) by(check)",
+                    "expr": "avg(kuberhealthy_check{cluster=\"{{ .Values.cluster }}\"}) by(check)",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "range": true,
