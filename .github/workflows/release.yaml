@@ -1,23 +1,24 @@
-name: SLO Observability Helm Chart
+name: Release Helm Chart
 on:
-  pull_request:
-    branches:
-    - main
-    paths:
-    - 'slo-observability/**'
+  workflow_call:
+    inputs:
+      component:
+        required: true
+        type: string
+    secrets:
+      REGISTRY_USERNAME:
+        description: "Username for container registry to login"
+        required: true
 
-  push:
-    branches:
-    - main
-    paths:
-    - 'slo-observability/**'
-    - '.github/workflows/slo-observability.yaml'
+      REGISTRY_PASSWORD:
+        description: "Password for container registry to login"
+        required: true
 
 jobs:
   next-version:
     uses: stakater/charts/.github/workflows/next_version.yaml@main
     with:
-      component: slo-observability
+      component: ${{ inputs.component }}
 
   pull-request:
     uses: stakater/charts/.github/workflows/pull_request.yaml@main
@@ -25,13 +26,11 @@ jobs:
     if: ${{ github.ref != 'refs/heads/main' }}
     needs:
     - next-version
-    secrets:
-      REGISTRY_USERNAME: ${{ github.actor }}
-      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    secrets: inherit
     with:
       CONTAINER_REGISTRY_URL: ghcr.io/stakater
       HELM_REGISTRY_URL: oci://ghcr.io/stakater/charts
-      SUBPATH: slo-observability
+      SUBPATH: ${{ inputs.component }}
       NEXT_VERSION: ${{ needs.next-version.outputs.version }}
 
   push-and-release:
@@ -40,11 +39,9 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs:
     - next-version
-    secrets:
-      REGISTRY_USERNAME: ${{ github.actor }}
-      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    secrets: inherit
     with:
       CONTAINER_REGISTRY_URL: ghcr.io/stakater
       HELM_REGISTRY_URL: oci://ghcr.io/stakater/charts
-      SUBPATH: slo-observability
+      SUBPATH: ${{ inputs.component }}
       NEXT_VERSION: ${{ needs.next-version.outputs.version }}
