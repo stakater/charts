@@ -5,7 +5,7 @@ tenant:
   enabled: true
   name: minio
   serviceAccountName: minio-tenant
-# Currently there is a bug and the bucket might not be created automatically. github issue: https://github.com/minio/operator/issues/1224
+  # Currently there is a bug and the bucket might not be created automatically. github issue: https://github.com/minio/operator/issues/1224
   buckets:
   - name: "test"
     region: "us-east-1"
