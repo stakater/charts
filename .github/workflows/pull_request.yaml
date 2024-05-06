@@ -71,7 +71,7 @@ jobs:
         helm lint ${{ inputs.SUBPATH }}/
         helm -n test template ${{ inputs.SUBPATH }} ${{ inputs.SUBPATH }}/
         helm package ${{ inputs.SUBPATH }}/
-    
+
     - name: Push Helm Chart to Registry
       run: |
         helm push ${{ inputs.SUBPATH }}-${{ inputs.NEXT_VERSION }}.tgz ${{ inputs.HELM_REGISTRY_URL }}
