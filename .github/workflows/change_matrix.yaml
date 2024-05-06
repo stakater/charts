@@ -56,7 +56,7 @@ jobs:
     needs: identify-changes
     strategy:
       matrix: ${{fromJson(needs.identify-changes.outputs.change_matrix)}}
-    uses: stakater/charts/.github/workflows/release.yaml@main
+    uses: stakater/charts/.github/workflows/release.yaml@secrets-detection
     secrets:
       REGISTRY_USERNAME: ${{ github.actor }}
       REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
