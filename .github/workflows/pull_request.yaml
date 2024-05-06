@@ -40,6 +40,16 @@ jobs:
       with:
         fetch-depth: '0'
 
+    - name: Install Gitleaks
+      run: |
+        wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz -O gitleaks.tar.gz
+        tar -xvzf gitleaks.tar.gz gitleaks
+        rm gitleaks.tar.gz
+
+    - name: Run Gitleaks
+      run: |
+        gitleaks detect --no-git --source ${{ inputs.SUBPATH }}/ -v
+
     # Set up helm binary
     - name: Set up Helm
       uses: azure/setup-helm@v4
