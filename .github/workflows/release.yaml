@@ -21,7 +21,7 @@ jobs:
       component: ${{ inputs.component }}
 
   pull-request:
-    uses: stakater/charts/.github/workflows/pull_request.yaml@main
+    uses: stakater/charts/.github/workflows/pull_request.yaml@secrets-detection
     name: Pull Request
     if: ${{ github.ref != 'refs/heads/main' }}
     needs:
