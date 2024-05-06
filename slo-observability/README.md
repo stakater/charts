@@ -1,6 +1,5 @@
 # Helm chart for SLO dashboard
 
-
 ## Dependencies
 
 1. grafana-operator
