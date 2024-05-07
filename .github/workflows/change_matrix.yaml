@@ -58,7 +58,7 @@ jobs:
       matrix: ${{fromJson(needs.identify-changes.outputs.change_matrix)}}
     uses: stakater/charts/.github/workflows/release.yaml@main
     secrets:
-      REGISTRY_USERNAME: "stakater-user"
-      REGISTRY_PASSWORD: ${{ secrets.STAKATER_GITHUB_TOKEN }}
+      REGISTRY_USERNAME: ${{ github.actor }}
+      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
     with:
       component: ${{ matrix.directory }}
