@@ -424,7 +424,6 @@ data:
                                     "editorMode": "code",
                                     "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.cluster }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[30s])",
                                     "instant": false,
-                                    "key": "Q-cad6bda7-6a69-451e-8414-270ccb89157d-0",
                                     "legendFormat": "p99",
                                     "range": true,
                                     "refId": "A"
@@ -941,7 +940,6 @@ data:
                                     "fullMetaSearch": false,
                                     "includeNullMetadata": true,
                                     "instant": false,
-                                    "key": "Q-cad6bda7-6a69-451e-8414-270ccb89157d-0",
                                     "legendFormat": "p99",
                                     "range": true,
                                     "refId": "A",
@@ -1459,7 +1457,6 @@ data:
                                     "editorMode": "code",
                                     "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.cluster }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[30s])",
                                     "instant": false,
-                                    "key": "Q-cad6bda7-6a69-451e-8414-270ccb89157d-0",
                                     "legendFormat": "p99",
                                     "range": true,
                                     "refId": "A"
@@ -1979,7 +1976,6 @@ data:
                                     "editorMode": "code",
                                     "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.cluster }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[30s])",
                                     "instant": false,
-                                    "key": "Q-cad6bda7-6a69-451e-8414-270ccb89157d-0",
                                     "legendFormat": "p99",
                                     "range": true,
                                     "refId": "A"
