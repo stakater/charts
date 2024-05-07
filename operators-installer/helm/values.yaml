@@ -1,0 +1,57 @@
+# `true` to create (and clean up) manual InstallPlan approval resources as part of post-install,post-upgrade helm hook
+# `false` to create  manual InstallPlan approval resources as part of normal install
+#
+# The hook method is nice to not have lingering resources needed for the manual InstallPlan approval but has the downside
+# that no CustomResources using CustomResourceDefinitions installed by the operator can be used in the same chart because
+# the operator InstallPlan wont be approved, and therefor the operator wont be installed, until the post-install,post-upgrade phase
+# which means you will never get to that phase because your CustomResources wont be able to apply because the Operator isn't installed.
+# This is is ultimately a trade off between cleaning up these resources or being able to install and configure the operator in the same
+# helm chart that has a dependency on this helm chart.
+approveManualInstallPlanViaHook: true
+
+# Image to use for the InstallPlan Approver and Verify Jobs
+installPlanApproverAndVerifyJobsImage: registry.redhat.io/openshift4/ose-cli:v4.10
+
+annotations:
+  argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  argocd.argoproj.io/hook: Sync
+
+## Both Helm are argo hooks are defined . as per docs . If you define some Argo CD hooks in addition to the Helm ones, the Helm hooks will be ignored.
+## https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
+
+# EXAMPLE: declaratively controlled operator version
+operators:
+# - channel: stable
+#   installPlanApproval: Manual
+#   name: external-secrets-operator
+#   source: community-operators
+#   sourceNamespace: openshift-marketplace
+#   csv: external-secrets-operator.v0.8.2
+# - channel: gitops-1.10
+#   installPlanApproval: Manual
+#   name: openshift-gitops-operator
+#   source: redhat-operators
+#   sourceNamespace: openshift-marketplace
+#   csv: openshift-gitops-operator.v1.10.1
+#   namespace: openshift-gitops-operator
+#   config:
+#     env:
+#     - name: DISABLE_DEFAULT_ARGOCD_INSTANCE
+#       value: "true"
+
+# configuration for control of OperatorGroups
+operatorGroups:
+# EXAMPLE: adding OperatorGroup to named namespace
+# - name:
+#   createNamespace:
+#   targetOwnNamespace:
+#   otherTargetNamespaces:
+
+# EXAMPLE: adding OperatorGroup to Helm .Release.Namespace
+# - createNamespace:
+#   targetOwnNamespace:
+#   otherTargetNamespaces:
+
+# Common labels to add to all chart created resources.
+# Implements the same idea from Kustomize for this chart.
+commonLabels:
