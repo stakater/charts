@@ -1,0 +1,21 @@
+# EXAMPLE: declaratively controlled operator version
+operators:
+  - channel: alpha
+    installPlanApproval: Manual
+    name: patch-operator
+    source: community-operators
+    sourceNamespace: openshift-marketplace
+    csv: patch-operator.v0.1.9
+    config:
+      resources:
+        limits:
+          memory: 2000Mi
+        requests:
+          cpu: 100m
+          memory: 500Mi
+
+operatorGroups:
+  - name: rh-patch-operator
+    createNamespace: false
+    targetOwnNamespace: false
+    otherTargetNamespaces: []
