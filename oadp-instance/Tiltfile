@@ -13,7 +13,7 @@ if settings.get("allow_k8s_contexts"):
 namespace_create(namespace)
 
 yaml=helm(
-         './helm',
+         '.',
          name='oadp-instance',
          namespace=namespace,
          values=['values-local.yaml'])
