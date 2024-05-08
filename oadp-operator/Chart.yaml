@@ -3,8 +3,8 @@ name: oadp-operator
 description: A Helm chart for oadp-operator
 type: application
 dependencies:
-  - name: stakater-operators-installer
-    repository: oci://ghcr.io/stakater/saap-catalog/charts
+  - name: operators-installer
+    repository: oci://ghcr.io/stakater/charts
     version: 1.0.0
 version: 1.0.0
 
