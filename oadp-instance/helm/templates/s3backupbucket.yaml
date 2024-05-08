@@ -1,0 +1,15 @@
+{{- if .Values.clusterBackup.enabled }}
+{{- if eq .Values.clusterBackup.bucketType "s3" }}
+apiVersion: crossplane.stakater.io/v1
+kind: AwsVeleroBackupBucket
+metadata:
+  name: {{ .Values.clusterBackup.awsBucketName }}
+  namespace:  {{ include "oadp-instance.namespace" . }}
+spec:
+  parameters:
+    bucketName: {{ .Values.clusterBackup.awsBucketName }}
+    writeSecretsToNamespace:  {{ include "oadp-instance.namespace" . }}
+    forceDestroy: {{ .Values.clusterBackup.forceDestroy }}
+    deletionPolicy: {{ .Values.clusterBackup.deletionPolicy }}
+{{- end }}
+{{- end }}

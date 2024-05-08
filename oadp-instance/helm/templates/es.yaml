@@ -1,0 +1,34 @@
+{{- if and (.Values.externalSecrets).enabled (.Capabilities.APIVersions.Has "external-secrets.io/v1beta1") }}
+{{- $top := . }}
+{{- range $backuplocation := .Values.backupLocations }}
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: {{ $backuplocation.velero.credential.name }}
+  namespace:  {{ include "oadp-instance.namespace" $ }}
+spec:
+  secretStoreRef:
+    name: stakater-cluster-secret-store
+    kind: ClusterSecretStore
+  refreshInterval: 1m0s
+  target:
+    name: {{ $backuplocation.velero.credential.name }}
+    creationPolicy: 'Owner'
+    template:
+      type: Opaque
+  dataFrom:
+    - extract:
+        key: stakater/oadp/{{ $backuplocation.velero.provider }}/cloud-credentials
+{{- end }}
+  {{- end }}
+{{- if .Values.developmentMode.enabled -}}
+kind: Secret
+metadata:
+  name: cloud-credentials
+  namespace:  {{ include "oadp-instance.namespace" $ }}
+apiVersion: v1
+data:
+  cloud: {{ .Values.developmentMode.aws_secret_access_key_encoded }}
+type: Opaque
+{{- end }}

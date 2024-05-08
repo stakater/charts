@@ -1,0 +1,15 @@
+operators-installer:
+  operators:
+    - channel: stable
+      installPlanApproval: Manual
+      name: redhat-oadp-operator
+      source: redhat-operators
+      sourceNamespace: openshift-marketplace
+      csv: oadp-operator.v1.1.7
+      namespace: openshift-adp
+
+  operatorGroups:
+    - createNamespace: true
+      name: openshift-adp
+      targetOwnNamespace: true
+      otherTargetNamespaces: []
