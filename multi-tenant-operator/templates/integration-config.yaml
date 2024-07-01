@@ -1,0 +1,47 @@
+{{- if .Values.integrationConfig.create -}}
+apiVersion: tenantoperator.stakater.com/v1beta1
+kind: IntegrationConfig
+metadata:
+  name: tenant-operator-config
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{ if .Values.integrationConfig.accessControl }}
+  accessControl:
+    {{- if .Values.integrationConfig.accessControl.privileged}}
+    privileged:
+      {{- if .Values.integrationConfig.accessControl.privileged.namespaces}}
+      namespaces:
+        {{- range $value:= .Values.integrationConfig.accessControl.privileged.namespaces}}
+        - {{ $value }}
+        {{- end}}
+      {{- end}}
+      {{- if .Values.integrationConfig.accessControl.privileged.serviceAccounts}}
+      ServiceAccounts:
+        {{- range $value:= .Values.integrationConfig.accessControl.privileged.serviceAccounts}}
+        - {{ $value }}
+        {{- end}}
+      {{- end}}
+      {{- if .Values.integrationConfig.accessControl.privileged.groups}}
+      groups:
+        {{- range $value:= .Values.integrationConfig.accessControl.privileged.groups}}
+          - {{ $value }}
+        {{- end}}
+      {{- end}}
+    {{- end}}
+  {{- end}}
+  components:
+    console: {{ .Values.integrationConfig.components.console }}
+    showback: {{ .Values.integrationConfig.components.showback }}
+    {{- if .Values.integrationConfig.components.ingress}}
+    {{- range $key, $value := .Values.integrationConfig.components.ingress}}
+    {{ $key }}:
+      host: {{ $value.host }}
+      {{- if $value.tlsSecretName}}
+      tlsSecretName: {{ $value.tlsSecretName }}
+      {{- end}}
+      {{- if $value.ingressClassName}}
+      ingressClassName: {{ $value.ingressClassName }}
+      {{- end}}
+    {{- end}}
+    {{- end}}
+{{- end -}}

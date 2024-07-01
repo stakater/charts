@@ -1,0 +1,191 @@
+{{- if .Values.webhook.enabled -}}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    service.beta.openshift.io/inject-cabundle: 'true'
+  creationTimestamp: null
+  name: validation.{{ include "tenant-operator.fullname" . }}
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-tenantoperator-stakater-com-v1beta3-tenant
+  failurePolicy: Fail
+  name: vtenant.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1beta3
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - tenants
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-tenantoperator-stakater-com-v1beta1-integrationconfig
+  failurePolicy: Fail
+  name: vintegrationconfig.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - integrationconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-tenantoperator-stakater-com-v1alpha1-template
+  failurePolicy: Fail
+  name: vtemplate.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - DELETE
+    resources:
+    - templates
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-tenantoperator-stakater-com-v1alpha1-templategroupinstance
+  failurePolicy: Fail
+  name: vtemplategroupinstance.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - templategroupinstances
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-tenantoperator-stakater-com-v1alpha1-templateinstance
+  failurePolicy: Fail
+  name: vtemplateinstance.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - templateinstances
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-tenantoperator-stakater-com-v1beta1-quota
+  failurePolicy: Fail
+  name: vquota.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1beta1
+    operations:
+    - DELETE
+    resources:
+    - quotas
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-tenantoperator-stakater-com-v1beta1-resourcesupervisor
+  failurePolicy: Fail
+  name: vresourcesupervisor.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - resourcesupervisors
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-v1-namespace
+  failurePolicy: Ignore
+  name: vnamespace.kb.io
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - namespaces
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "tenant-operator.fullname" . }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-v1-rolebinding
+  failurePolicy: Ignore
+  name: vrolebinding.kb.io
+  rules:
+  - apiGroups:
+    - rbac.authorization.k8s.io
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - rolebindings
+  sideEffects: None
+{{- end  -}}

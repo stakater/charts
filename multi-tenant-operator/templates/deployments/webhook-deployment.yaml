@@ -1,0 +1,118 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-operator-webhook
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager-webhook
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+  {{- if .Values.deployment.annotations }}
+  annotations:
+    {{- range $key, $value := .Values.deployment.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      control-plane: controller-manager-webhook
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager-webhook
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "tenant-operator.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - args:
+          - --health-probe-bind-address=:8081
+          - --metrics-bind-address=127.0.0.1:8080
+          - --leader-elect
+          command:
+          - /manager
+          env:
+          - name: OPERATOR_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: ENABLE_ADMISSION_WEBHOOKS
+            value: "{{ default true .Values.webhook.enabled }}"
+          - name: ENABLE_WEBHOOKS
+            value: "{{ default true .Values.webhook.enabled }}"
+          - name: OPERATOR_NAME_PREFIX
+            value: {{ include "tenant-operator.fullname" . }}
+          - name: LEADER_ELECTION_ID
+            value: c54f40h1.stakater.com
+          - name: PLATFORM_TYPE
+            value: {{ .Values.platform | default "OpenShift"}}
+          - name: BYPASSED_GROUPS
+            value: {{ .Values.bypassedGroups }}
+          image: "{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          name: manager
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            timeoutSeconds: 15
+            periodSeconds: 10
+          ports:
+          - containerPort: 9443
+            name: webhook-server
+            protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - mountPath: /tmp/k8s-webhook-server/serving-certs
+            name: cert
+            readOnly: true
+        - args:
+          - --secure-listen-address=0.0.0.0:8443
+          - --upstream=http://127.0.0.1:8080/
+          - --logtostderr=true
+          - --v=10
+          # Issue: https://github.com/operator-framework/operator-sdk/issues/4813
+          image: gcr.io/kubebuilder/kube-rbac-proxy:v0.11.0
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
+          name: kube-rbac-proxy
+          ports:
+          - containerPort: 8443
+            name: https
+            protocol: TCP
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: webhook-server-cert
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

@@ -1,0 +1,779 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-manager-role
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - replicasets
+  - daemonsets
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - argoproj.io
+  resources:
+  - appprojects
+  - appprojects/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - limitranges
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - resourcequotas
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - resourcequotas/status
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - create
+  - delete
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kubernetes-client.io
+  resources:
+  - externalsecrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - catalogsources
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - installplans
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - operatorgroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - subscriptions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+{{- if (eq .Values.platform "OpenShift") }}
+- apiGroups:
+  - quota.openshift.io
+  resources:
+  - clusterresourcequotas
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - watch
+  - delete
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - users
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - groups
+  verbs:
+  - create
+  - update
+  - get
+  - list
+  - patch
+  - watch
+  - delete
+{{- end }}
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+  - update
+  - patch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - integrationconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - integrationconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - integrationconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - quotas
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - quotas/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - resourcesupervisors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - resourcesupervisors/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - resourcesupervisors/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templategroupinstances
+  - templateinstances
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templategroupinstances/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templategroupinstances/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templateinstances
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templateinstances/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templateinstances/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templates/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - tenants
+  - tenants/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - tenants/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - extensions
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+  - update
+  - patch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - extensions/status
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+  - update
+  - patch
+
+{{- if .Values.managerRoleExtendedRules }}
+{{ toYaml .Values.managerRoleExtendedRules }}
+{{- end }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-metrics-reader
+rules:
+- nonResourceURLs:
+  - "/metrics"
+  verbs:
+  - get
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-proxy-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-gateway
+rules:
+  - resources:
+      - tenants
+    apiGroups:
+      - tenantoperator.stakater.com
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - integrationconfigs
+    apiGroups:
+      - tenantoperator.stakater.com
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - templates
+    apiGroups:
+      - tenantoperator.stakater.com
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - templateinstances
+    apiGroups:
+      - tenantoperator.stakater.com
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - templategroupinstances
+    apiGroups:
+      - tenantoperator.stakater.com
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - quotas
+    apiGroups:
+      - tenantoperator.stakater.com
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - resourcesupervisors
+    apiGroups:
+      - tenantoperator.stakater.com
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - namespaces
+    apiGroups:
+      - ""
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - groups
+    apiGroups:
+      - user.openshift.io
+    verbs:
+      - get
+      - list
+      - watch
+  - resources:
+      - routes
+    apiGroups:
+      - route.openshift.io
+    verbs:
+      - get
+      - list
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-role-prometheus
+rules:
+  - nonResourceURLs:
+    - "/metrics"
+    verbs:
+    - get
+  - apiGroups:
+    - ""
+    resources:
+    - nodes
+    - persistentvolumes
+    - persistentvolumeclaims
+    - nodes/metrics
+    - nodes/proxy
+    - ingresses
+    - endpoints
+    - replicationcontrollers
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - "admissionregistration.k8s.io"
+    resources:
+    - mutatingwebhookconfigurations
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - "certificates.k8s.io"
+    resources:
+    - certificatesigningrequests
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - "storage.k8s.io"
+    resources:
+    - storageclasses
+    - volumeattachments
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - "policy"
+    resources:
+    - poddisruptionbudgets
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - "autoscaling"
+    resources:
+    - horizontalpodautoscalers
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - "batch"
+    resources:
+    - cronjobs
+    - jobs
+    verbs:
+    - get
+    - list
+    - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tenant-operator-opencost-gateway
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+      - deployments
+      - nodes
+      - pods
+      - services
+      - resourcequotas
+      - replicationcontrollers
+      - limitranges
+      - persistentvolumeclaims
+      - persistentvolumes
+      - namespaces
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+      - deployments
+      - daemonsets
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tenant-operator-showback
+rules:
+  - apiGroups:
+      - tenantoperator.stakater.com
+    resources:
+      - tenants
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ''
+    resources:
+      - namespaces
+      - pods
+    verbs:
+      - get
+      - list
