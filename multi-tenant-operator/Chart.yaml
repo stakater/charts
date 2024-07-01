@@ -1,0 +1,26 @@
+apiVersion: v2
+type: application
+
+name: multi-tenant-operator
+description: A Helm chart for Tenant-Operator
+
+sources:
+  - https://github.com/stakater-ab/tenant-operator
+
+# Helm chart Version
+version: 0.12.28
+
+# Application version to be deployed
+appVersion: 0.12.28
+
+keywords:
+  - stakater
+  - sro
+  - tenant-operator
+
+# Maintainers
+maintainers:
+  - name: stakater
+    email: hello@stakater.com
+
+icon: https://avatars1.githubusercontent.com/u/15930712?s=280&v=4

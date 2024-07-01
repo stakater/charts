@@ -1,0 +1,9 @@
+{{- if and (.Values.webhook.certificates.create) ( eq .Values.platform "Kubernetes") }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: multi-tenant-operator-issuer
+  namespace: {{ .Release.Namespace }}
+spec:
+  selfSigned: {}
+{{- end -}}

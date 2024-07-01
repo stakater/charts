@@ -1,0 +1,255 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-quota-template-metrics-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager-quota-template
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager-quota-template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-webhook-metrics-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager-webhook
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager-webhook
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-tenant-metrics-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager-tenant
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager-tenant
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-extensions-argocd-metrics-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager-extensions-argocd
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager-extensions-argocd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-resourcesupervisor-metrics-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager-resourcesupervisor
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager-resourcesupervisor
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-template-instance-metrics-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager-template-instance
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager-template-instance
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-template-group-metrics-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager-template-group-instance
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager-template-group-instance
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-webhook-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+{{- if ( eq .Values.platform "OpenShift") }}
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: webhook-server-cert
+{{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 9443
+  selector:
+    control-plane: controller-manager-webhook
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-tenant-webhook-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 9443
+  selector:
+    control-plane: controller-manager-tenant
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-pilot-webhook-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 9443
+  selector:
+    control-plane: controller-manager-pilot
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-resourcesupervisor-webhook-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 9443
+  selector:
+    control-plane: controller-manager-resourcesupervisor
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-quota-template-intconfig-webhook-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 9443
+  selector:
+    control-plane: controller-manager-quota-template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-template-instance-webhook-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 9443
+  selector:
+    control-plane: controller-manager-template-instance
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tenant-operator.fullname" . }}-template-group-webhook-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tenant-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 9443
+  selector:
+    control-plane: controller-manager-template-group-instance
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-operator-gateway
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 4200
+  selector:
+    control-plane: controller-manager-gateway
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: tenant-operator-console
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    control-plane: controller-manager-console
+  type: ClusterIP
+status:
+  loadBalancer: {}

@@ -1,0 +1,35 @@
+{{- if and (.Values.webhook.certificates.create) (eq .Values.platform "Kubernetes")}}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: webhook-tls-cert
+  namespace: {{ .Release.Namespace }}
+spec:
+  dnsNames:
+  - 'multi-tenant-operator-webhook-service.{{ .Release.Namespace }}.svc'
+  - 'multi-tenant-operator-webhook-service.{{ .Release.Namespace }}.svc.cluster.local'
+  duration: 2160h0m0s
+  renewBefore: 720h0m0s
+  issuerRef:
+    kind: Issuer
+    name: multi-tenant-operator-issuer
+  secretName: webhook-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: quota-tls-cert
+  namespace: {{ .Release.Namespace }}
+spec:
+  dnsNames:
+  - 'multi-tenant-operator-quota-template-intconfig-webhook-service.{{ .Release.Namespace }}.svc'
+  - 'multi-tenant-operator-quota-template-intconfig-webhook-service.{{ .Release.Namespace }}.svc.cluster.local'
+  duration: 2160h0m0s
+  renewBefore: 720h0m0s
+  issuerRef:
+    kind: Issuer
+    name: multi-tenant-operator-issuer
+  secretName: quota-template-intconfig-server-cert
+---
+{{- end -}}
