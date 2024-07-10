@@ -26,10 +26,16 @@ spec:
           - -c
           - |
             export HOME=/tmp/approver
-
             echo
-            echo "Get Subscription (${SUBSCRIPTION}) UID"
-            subscriptionUID=$(oc get subscriptions.operators.coreos.com --field-selector metadata.name=${SUBSCRIPTION} -o=jsonpath="{.items[0].metadata.uid}")
+            subscriptionUID=""
+            while [ -z "${subscriptionUID}" ]; do
+              echo "Get Subscription (${SUBSCRIPTION}) UID"
+              subscriptionUID=$(oc get subscriptions.operators.coreos.com --field-selector metadata.name=${SUBSCRIPTION} -o=jsonpath="{.items[0].metadata.uid}")
+              if [ -z "${subscriptionUID}" ]; then
+                echo "Subscription UID not found, retrying in 5 seconds..."
+                sleep 5
+              fi
+            done
             echo "Subscription (${SUBSCRIPTION}) UID: ${subscriptionUID}"
             if [ ! -z "subscriptionUID" ]; then
               # this complicated go-template finds an InstallPlan where both the .spec.clusterServiceVersionNames contains the expected CSV
@@ -57,7 +63,15 @@ spec:
 
               echo
               echo "Get InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner"
-              installPlan=$(oc get installplan -o=go-template="${installPlanGoTemplate}")
+              installPlan=""
+              while [ -z "${installPlan}" ]; do
+                echo "Get InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner"
+                installPlan=$(oc get installplan -o=go-template="${installPlanGoTemplate}")
+                if [ -z "${installPlan}" ]; then
+                  echo "InstallPlan not found, retrying in 5 seconds..."
+                  sleep 5
+                fi
+              done
               echo "InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner: ${installPlan}"
               if [ ! -z "${installPlan}" ]; then
                 echo
