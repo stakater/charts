@@ -1,0 +1,27 @@
+# Default values for java-observability.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Put here the new name if you want to override the release name.
+nameOverride: ""
+
+# -- Same as nameOverride but for the fullname.
+fullnameOverride: ""
+
+# -- Same as nameOverride but for the namespace.
+namespaceOverride: ""
+
+tektonObservability:
+  enabled: true
+
+grafana:
+  folder: # "Tekton overview"
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+
+  # Default datasources for the dashboard
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: Prometheus
