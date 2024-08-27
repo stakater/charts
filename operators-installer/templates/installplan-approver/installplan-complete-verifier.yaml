@@ -38,6 +38,11 @@ spec:
             done
             echo "Subscription (${SUBSCRIPTION}) UID: ${subscriptionUID}"
             if [ ! -z "subscriptionUID" ]; then
+              # this complicated go-template finds an InstallPlan where both the .spec.clusterServiceVersionNames contains the expected CSV
+              # and .metadata.ownerReferences contains the expected Subscription owner. JsonPath doesn't let you do and statements and go-templates
+              # done seem to have a function for checking if a value is in an array without iterating. so here we are.
+              # NOTE 1: if for whatever reason multiple InstallPlans are found that are associated with the Subscription for the correct CSV, only the first will be approved
+              # NOTE 2: this is nested in {{` `}} so that helm doesn't try to interpret the go template
               {{`installPlanGoTemplate=$(cat << EOF
               {{- \$installPlanName := "" -}}
               {{- range .items -}}
