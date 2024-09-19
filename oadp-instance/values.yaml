@@ -25,3 +25,13 @@ backupLocations:
       credential:
         name: cloud-credentials
         key: cloud
+
+snapshotLocations:
+  - velero:
+      config:
+        profile: volumeSnapshot
+        region: eu-north-1
+      credential:
+        key: cloud
+        name: cloud-credentials
+      provider: aws

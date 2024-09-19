@@ -10,9 +10,23 @@ spec:
       - openshift
       - aws
       - csi
+      featureFlags:
+        - EnableCSI
     nodeAgent:
       enable: true
       uploaderType: kopia
+  {{- $top := . }}
+  {{- range $snapshotLocations := .Values.snapshotLocations }}
+  snapshotLocations:
+    - velero:
+        config:
+          profile: {{ $snapshotLocations.velero.config.profile }}
+          region: {{ $snapshotLocations.velero.config.region }}
+        credential:
+          key: {{ $snapshotLocations.velero.credential.key }}
+          name: {{ $snapshotLocations.velero.credential.name }}
+        provider: {{ $snapshotLocations.velero.provider }}
+  {{- end }}
   backupLocations:
   {{- $top := . }}
   {{- range $backuplocation := .Values.backupLocations }}
