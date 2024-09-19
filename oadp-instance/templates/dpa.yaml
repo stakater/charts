@@ -27,7 +27,6 @@ spec:
           name: {{ $snapshotLocations.velero.credential.name }}
         provider: {{ $snapshotLocations.velero.provider }}
   {{- end }}
-
   backupLocations:
   {{- $top := . }}
   {{- range $backuplocation := .Values.backupLocations }}
