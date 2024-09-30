@@ -51,8 +51,7 @@ spec:
                   {{- if and (eq . "${SUBSCRIPTION_CSV}") (not \$installPlanName) -}}
                     {{- range \$installPlanItem.metadata.ownerReferences -}}
                       {{- if eq .uid "${subscriptionUID}" -}}
-                        {{- \$requiresApproval := \$installPlanItem.status.phase.RequiresApproval -}}
-                        {{- if eq \$requiresApproval true -}}
+                        {{- if eq $installPlanItem.status.phase "RequiresApproval" -}}
                           {{- \$installPlanName = \$installPlanItem.metadata.name -}}
                         {{- end -}}
                       {{- end -}}
