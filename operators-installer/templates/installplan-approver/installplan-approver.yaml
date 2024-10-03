@@ -49,9 +49,9 @@ spec:
                 {{- \$installPlanItem := . -}}
                 {{- range .spec.clusterServiceVersionNames -}}
                   {{- if and (eq . "${SUBSCRIPTION_CSV}") (not \$installPlanName) -}}
-                    {{- range \$installPlanItem.metadata.ownerReferences -}}
-                      {{- if eq .uid "${subscriptionUID}" -}}
-                        {{- if eq $installPlanItem.status.phase "RequiresApproval" -}}
+                    {{- if or (eq \$installPlanItem.status.phase "RequiresApproval") (eq \$installPlanItem.status.phase "Complete") -}}
+                      {{- range \$installPlanItem.metadata.ownerReferences -}}
+                        {{- if eq .uid "${subscriptionUID}" -}}
                           {{- \$installPlanName = \$installPlanItem.metadata.name -}}
                         {{- end -}}
                       {{- end -}}
