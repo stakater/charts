@@ -10,7 +10,7 @@
 approveManualInstallPlanViaHook: true
 
 # Image to use for the InstallPlan Approver and Verify Jobs
-installPlanApproverAndVerifyJobsImage: registry.redhat.io/openshift4/ose-cli:v4.10
+installPlanApproverAndVerifyJobsImage: registry.redhat.io/openshift4/ose-cli:v4.12
 
 annotations:
   argocd.argoproj.io/hook-delete-policy: HookSucceeded
