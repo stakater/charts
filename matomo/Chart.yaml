@@ -3,7 +3,7 @@ name: matomo
 description: A Helm chart for Kubernetes
 dependencies:
   - name: matomo
-    version: 8.0.13
+    version: 8.0.14
     repository: https://charts.bitnami.com/bitnami
 # A chart can be either an 'application' or a 'library' chart.
 #
