@@ -27,9 +27,7 @@ prometheus:
           scrapeTimeout: 5s
           path: /metrics
       selector:
-        matchLabels:
-          app.kubernetes.io/name: redis
-          app.kubernetes.io/instance: bitnami-redis
+        matchLabels: {}
       namespaceSelector:
         any: true
   rules:
