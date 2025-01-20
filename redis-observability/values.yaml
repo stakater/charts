@@ -28,9 +28,8 @@ prometheus:
           path: /metrics
       selector:
         matchLabels:
-          app: redis
-          redis_setup_type: standalone
-          role: standalone
+          app.kubernetes.io/name: redis
+          app.kubernetes.io/instance: bitnami-redis
       namespaceSelector:
         any: true
   rules:
