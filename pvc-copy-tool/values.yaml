@@ -1,0 +1,7 @@
+
+oldPvName: "old-pvc"
+
+newPvcName: "pvc-copy"
+newPvcStorageClass: '""'
+newPvcSize: "100Gi"
+
