@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: reclaimer
 spec:
-  volumeName:  {{ .Values.oldPvName }}
+  volumeName: {{ .Values.oldPvName }}
   storageClassName: {{ .Values.oldStorageClass }}
   accessModes:
     - ReadWriteOnce

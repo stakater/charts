@@ -10,6 +10,10 @@ spec:
         image: busybox:1.36-glibc
         command: ["/bin/sh", "-c", "--"]
         args: ["cp -a /old-pv/* /new-pv/"] # Note that this has the limitation of not copying hidden folders/files. Busybox does not support trailing slash syntax to copy the contents of a folder.
+        resources:
+          requests:
+            cpu: 5m
+            memory: 50Mi
         volumeMounts:
           - name: old-pv
             mountPath: /old-pv
