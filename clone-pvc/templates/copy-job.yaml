@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: pvc-copy-tool
+  name: clone-pvc
 spec:
   template:
     spec:
