@@ -1,7 +1,7 @@
 
-oldPvName: "old-pvc"
-
-newPvcName: "pvc-copy"
-newPvcStorageClass: '""'
+oldPvName: "old-pv"
+# oldStorageClass: ""
+newPvcName: "clone-pvc"
+# newPvcStorageClass: ""
 newPvcSize: "100Gi"
 
