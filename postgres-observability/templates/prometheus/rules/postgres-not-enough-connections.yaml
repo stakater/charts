@@ -15,7 +15,7 @@ spec:
   - name: postgres
     rules:
     - alert: PostgresNotEnoughConnections
-      expr: sum by (datname) (pg_stat_activity_count{datname!~"template.*|postgres"}) < 5
+      expr: sum by (datname) (pg_stat_activity_count{datname!~"template.*|postgres"}) < {{ .Values.prometheus.rules.postgresNotEnoughConnections.postgresConnectionsThreshold }}
       for: 5m
       labels:
         severity: warning
