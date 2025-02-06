@@ -53,6 +53,7 @@ prometheus:
       enabled: true
     postgresNotEnoughConnections:
       enabled: true
+      postgresConnectionsThreshold: 5
     postgresTooManyConnections:
       enabled: true
     postgresTooManyDeadTuples:
