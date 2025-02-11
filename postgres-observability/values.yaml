@@ -31,9 +31,7 @@ prometheus:
           scrapeTimeout: 5s
           path: /metrics
       selector:
-        matchLabels:
-          postgres-operator.crunchydata.com/crunchy-postgres-exporter: 'true'
-          postgres-operator.crunchydata.com/cluster: postgres
+        matchLabels: {}
       namespaceSelector:
           any: true
 
