@@ -1,0 +1,15 @@
+{{- $alert := "CNPGClusterBackupFailedCritical" -}}
+{{- if not (has $alert .excludeRules) -}}
+alert: {{ $alert }}
+annotations:
+  summary: The last available backup is older than {{ .Values.prometheus.rules.CNPGClusterBackupFailedCritical }} hours.
+  description: |-
+    CloudNativePG Cluster Last available backup in {{ .namespace }} is older than {{ .Values.prometheus.rules.CNPGClusterBackupFailedCritical }} hours: {{ .value }} hours
+expr: |
+  (time() - sum by (namespace) (cnpg_collector_last_available_backup_timestamp{pod=~"{{ .podSelector }}"})) / 3600 > {{ .Values.prometheus.rules.CNPGClusterBackupFailedCritical }}
+for: 5m
+labels:
+  severity: critical
+  namespace: {{ .namespace }}
+  cnpg_cluster: {{ .cluster }}
+{{- end -}}

@@ -1,0 +1,13 @@
+{{- $alert := "CNPGClusterDatabaseDeadlockConflictsCritical" -}}
+{{- if not (has $alert .excludeRules) -}}
+alert: {{ $alert }}
+annotations:
+  summary: Checks the number of database conflicts
+  description: There are over {{ .Values.prometheus.rules.CNPGClusterDatabaseDeadlockConflictsCritical }} deadlock conflicts in {{ .labels.pod }}
+expr: cnpg_pg_stat_database_deadlocks > {{ .Values.prometheus.rules.CNPGClusterDatabaseDeadlockConflictsCritical }}
+for: 5m
+labels:
+  severity: critical
+  namespace: {{ .namespace }}
+  cnpg_cluster: {{ .cluster }}
+{{- end -}}

@@ -1,0 +1,49 @@
+grafana:
+  folder: # PostgreSQL
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      app: grafana
+  dashboard:
+    datasources:
+      - inputName: "DS_PROMETHEUS"
+        datasourceName: Prometheus
+    cloudnativePGDashboard:
+      enabled: true
+
+prometheus:
+  serviceMonitor:
+    enabled: true
+    spec:
+      endpoints:
+        - port: exporter
+          scheme: http
+          interval: 10s
+          scrapeTimeout: 5s
+          path: /metrics
+      selector:
+        matchLabels: {}
+      namespaceSelector:
+          any: true
+
+# Sample rules are taken from below sources
+# https://github.com/cloudnative-pg/cloudnative-pg/blob/main/docs/src/samples/monitoring/prometheusrule.yaml
+# https://github.com/cloudnative-pg/charts/issues/331
+
+  rules:
+    enabled: true
+    CNPGClusterName: cloudnative-postgres
+    CNPGClusterBackendsWaitingCritical: 300 # 5 minutes
+    CNPGClusterBackupFailedCritical: 24 # 24 hours
+    CNPGClusterDatabaseDeadlockConflictsCritical: 10 # 10 conflicts
+    CNPGClusterLongRunningTransactionWarning: 300 # 5 minutes
+    CNPGClusterPGReplicationWarning: 300 # 5 minutes
+    excludeRules: []
+    # - CNPGClusterBackendsWaitingCritical
+    # - CNPGClusterBackupFailedCritical
+    # - CNPGClusterDatabaseDeadlockConflictsCritical
+    # - CNPGClusterLastFailedArchiveTimeCritical
+    # - CNPGClusterLongRunningTransactionWarning
+    # - CNPGClusterPGDatabaseXidAgeWarning
+    # - CNPGClusterPGReplicationWarning
+    # - CNPGClusterReplicaFailingReplicationCritical
