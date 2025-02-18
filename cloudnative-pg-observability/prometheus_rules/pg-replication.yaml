@@ -1,0 +1,13 @@
+{{- $alert := "CNPGClusterPGReplicationWarning" -}}
+{{- if not (has $alert .excludeRules) -}}
+alert: {{ $alert }}
+annotations:
+  summary: The standby is lagging behind the primary by over {{ div .Values.prometheus.rules.CNPGClusterPGReplicationWarning 60 }} minutes
+  description: Standby is lagging behind by over {{ div .Values.prometheus.rules.CNPGClusterPGReplicationWarning 60 }} minutes
+expr: cnpg_pg_replication_lag > {{ .Values.prometheus.rules.CNPGClusterPGReplicationWarning }}
+for: 5m
+labels:
+  severity: warning
+  namespace: {{ .namespace }}
+  cnpg_cluster: {{ .cluster }}
+{{- end -}}

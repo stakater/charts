@@ -1,0 +1,14 @@
+{{- $alert := "CNPGClusterLastFailedArchiveTimeCritical" -}}
+{{- if not (has $alert .excludeRules) -}}
+alert: {{ $alert }}
+annotations:
+  summary: Checks the last time archiving failed. Will be < 0 when it has not failed.
+  description: Archiving failed for {{ .labels.pod }}
+expr: |-
+  (cnpg_pg_stat_archiver_last_failed_time - cnpg_pg_stat_archiver_last_archived_time) > 1
+for: 5m
+labels:
+  severity: critical
+  namespace: {{ .namespace }}
+  cnpg_cluster: {{ .cluster }}
+{{- end -}}

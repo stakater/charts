@@ -1,0 +1,13 @@
+{{- $alert := "CNPGClusterLongRunningTransactionWarning" -}}
+{{- if not (has $alert .excludeRules) -}}
+alert: {{ $alert }}
+annotations:
+  summary: A query is taking longer than {{ div .Values.prometheus.rules.CNPGClusterLongRunningTransactionWarning 60 }} minutes.
+  description: Pod {{ .labels.pod }} is taking more than {{ div .Values.prometheus.rules.CNPGClusterLongRunningTransactionWarning 60 }} minutes for a query.
+expr: cnpg_backends_max_tx_duration_seconds > {{ .Values.prometheus.rules.CNPGClusterLongRunningTransactionWarning }}
+for: 5m
+labels:
+  severity: warning
+  namespace: {{ .namespace }}
+  cnpg_cluster: {{ .cluster }}
+{{- end -}}

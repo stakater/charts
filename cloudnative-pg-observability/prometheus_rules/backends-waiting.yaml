@@ -1,0 +1,13 @@
+{{- $alert := "CNPGClusterBackendsWaitingCritical" -}}
+{{- if not (has $alert .excludeRules) -}}
+alert: {{ $alert }}
+annotations:
+  summary: If a backend is waiting for longer than {{ div .Values.prometheus.rules.CNPGClusterBackendsWaitingCritical 60 }} minutes
+  description: Pod {{ .labels.pod }} has been waiting for longer than {{ div .Values.prometheus.rules.CNPGClusterBackendsWaitingCritical 60 }} minutes
+expr: cnpg_backends_waiting_total > {{ .Values.prometheus.rules.CNPGClusterBackendsWaitingCritical }}
+for: 5m
+labels:
+  severity: critical
+  namespace: {{ .namespace }}
+  cnpg_cluster: {{ .cluster }}
+{{- end -}}
