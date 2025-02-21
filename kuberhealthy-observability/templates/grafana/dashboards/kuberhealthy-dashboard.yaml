@@ -1,0 +1,19 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: kuberhealthy-dashboard
+  namespace: {{ include "kuberhealthy-observability.namespace" . }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "kuberhealthy-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{ toYaml .Values.grafana.datasources | nindent 3 }}
+  configMapRef:
+    name: {{- include "kuberhealthy-observability.name" . | indent 1 }}-definition
+    key: json
