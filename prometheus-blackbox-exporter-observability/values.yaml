@@ -1,0 +1,13 @@
+grafana:
+  folder: # PrometheusBlackboxExporter
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      app: grafana
+  dashboard:
+    datasources:
+      - inputName: "DS_PROMETHEUS"
+        datasourceName: Prometheus
+    prometheusBlackboxExporterDashboard:
+      enabled: true
+
