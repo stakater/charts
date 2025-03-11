@@ -60,7 +60,7 @@ data:
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
             "name": "Annotations & Alerts",
-            "target": {
+            "instance": {
               "limit": 100,
               "matchAny": false,
               "tags": [
@@ -169,11 +169,11 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "probe_http_status_code{target=~\"$target\"}",
+              "expr": "probe_http_status_code{instance=~\"$instance\"}",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "B"
             }
           ],
@@ -235,7 +235,7 @@ data:
           },
           "gridPos": {
             "h": 6,
-            "w": 4,
+            "w": 6,
             "x": 12,
             "y": 0
           },
@@ -267,11 +267,11 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "probe_success{target=~\"$target\"}",
+              "expr": "probe_success{instance=~\"$instance\"}",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
@@ -332,8 +332,8 @@ data:
           },
           "gridPos": {
             "h": 6,
-            "w": 4,
-            "x": 16,
+            "w": 6,
+            "x": 18,
             "y": 0
           },
           "id": 20,
@@ -364,95 +364,15 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "probe_http_status_code{target=~\"$target\"}",
+              "expr": "probe_http_status_code{instance=~\"$instance\"}",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "title": "HTTP Status Code",
-          "type": "stat"
-        },
-        {
-          "cacheTimeout": null,
-          "datasource": "${DS_PROMETHEUS}",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [
-                {
-                  "options": {
-                    "match": "null",
-                    "result": {
-                      "text": "N/A"
-                    }
-                  },
-                  "type": "special"
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 20,
-            "y": 0
-          },
-          "id": 27,
-          "interval": null,
-          "links": [],
-          "maxDataPoints": 100,
-          "options": {
-            "colorMode": "none",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {
-              "titleSize": 12,
-              "valueSize": 12
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.1.0",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "probe_http_version{target=~\"$target\"}",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
-              "refId": "A"
-            }
-          ],
-          "title": "HTTP Version",
-          "transformations": [],
           "type": "stat"
         },
         {
@@ -537,11 +457,11 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "probe_duration_seconds{target=~\"$target\"}",
+              "expr": "probe_duration_seconds{instance=~\"$instance\"}",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
@@ -592,7 +512,7 @@ data:
           },
           "gridPos": {
             "h": 6,
-            "w": 4,
+            "w": 6,
             "x": 12,
             "y": 6
           },
@@ -623,11 +543,11 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "avg(probe_duration_seconds{target=~\"$target\"}) by (target)",
+              "expr": "avg(probe_duration_seconds{instance=~\"$instance\"}) by (instance)",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
@@ -677,8 +597,8 @@ data:
           },
           "gridPos": {
             "h": 6,
-            "w": 4,
-            "x": 16,
+            "w": 6,
+            "x": 18,
             "y": 6
           },
           "id": 24,
@@ -709,94 +629,15 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "avg(probe_dns_lookup_time_seconds{target=~\"$target\"}) by (target)",
+              "expr": "avg(probe_dns_lookup_time_seconds{instance=~\"$instance\"}) by (instance)",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "title": "Average DNS Lookup",
-          "type": "stat"
-        },
-        {
-          "cacheTimeout": null,
-          "datasource": "${DS_PROMETHEUS}",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [
-                {
-                  "options": {
-                    "match": "null",
-                    "result": {
-                      "text": "N/A"
-                    }
-                  },
-                  "type": "special"
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 20,
-            "y": 6
-          },
-          "id": 28,
-          "interval": null,
-          "links": [],
-          "maxDataPoints": 100,
-          "options": {
-            "colorMode": "none",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {
-              "titleSize": 12,
-              "valueSize": 12
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.1.0",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "probe_ip_protocol{target=~\"$target\"}",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
-              "refId": "A"
-            }
-          ],
-          "title": "IP protocol",
           "type": "stat"
         },
         {
@@ -876,11 +717,11 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "probe_http_duration_seconds{target=~\"$target\", phase=~\"$phase\"}",
+              "expr": "probe_http_duration_seconds{instance=~\"$instance\", phase=~\"$phase\"}",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }} - {{ `{{` }} phase {{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }} - {{ `{{` }} phase {{ `}}` }}",
               "refId": "B"
             }
           ],
@@ -943,7 +784,7 @@ data:
           },
           "gridPos": {
             "h": 6,
-            "w": 4,
+            "w": 6,
             "x": 12,
             "y": 12
           },
@@ -975,11 +816,11 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "probe_ssl_earliest_cert_expiry{target=~\"$target\"} - time()",
+              "expr": "probe_ssl_earliest_cert_expiry{instance=~\"$instance\"} - time()",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
@@ -1040,8 +881,8 @@ data:
           },
           "gridPos": {
             "h": 6,
-            "w": 4,
-            "x": 16,
+            "w": 6,
+            "x": 18,
             "y": 12
           },
           "id": 18,
@@ -1072,112 +913,16 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "probe_http_ssl{target=~\"$target\"}",
+              "expr": "probe_http_ssl{instance=~\"$instance\"}",
               "format": "time_series",
               "interval": "$interval",
               "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}target{{ `}}` }}",
+              "legendFormat": "{{ `{{` }}instance{{ `}}` }}",
               "refId": "A"
             }
           ],
           "title": "SSL",
           "type": "stat"
-        },
-        {
-          "cacheTimeout": null,
-          "datasource": "${DS_PROMETHEUS}",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "custom": {
-                "align": "auto",
-                "displayMode": "auto",
-                "filterable": false
-              },
-              "mappings": [
-                {
-                  "options": {
-                    "match": "null",
-                    "result": {
-                      "text": "N/A"
-                    }
-                  },
-                  "type": "special"
-                }
-              ],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 20,
-            "y": 12
-          },
-          "id": 29,
-          "interval": null,
-          "links": [],
-          "maxDataPoints": 100,
-          "options": {
-            "showHeader": false,
-            "sortBy": [
-              {
-                "desc": false,
-                "displayName": "job"
-              }
-            ]
-          },
-          "pluginVersion": "8.1.0",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "probe_tls_version_info{target=~\"$target\"}",
-              "format": "table",
-              "instant": true,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{ `{{` }}version{{ `}}` }}",
-              "refId": "A"
-            }
-          ],
-          "title": "TLS version",
-          "transformations": [
-            {
-              "id": "organize",
-              "options": {
-                "excludeByName": {
-                  "Time": true,
-                  "Value": true,
-                  "Value #A": true,
-                  "__name__": true,
-                  "instance": true,
-                  "job": true,
-                  "version": false
-                },
-                "indexByName": {},
-                "renameByName": {
-                  "__name__": ""
-                }
-              }
-            }
-          ],
-          "type": "table"
         }
       ],
       "refresh": false,
@@ -1285,17 +1030,17 @@ data:
             "allValue": null,
             "current": {},
             "datasource": "${DS_PROMETHEUS}",
-            "definition": "label_values(probe_success, target)",
+            "definition": "label_values(probe_success, instance)",
             "description": null,
             "error": null,
             "hide": 0,
             "includeAll": true,
             "label": null,
             "multi": true,
-            "name": "target",
+            "name": "instance",
             "options": [],
             "query": {
-              "query": "label_values(probe_success, target)",
+              "query": "label_values(probe_success, instance)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 1,
