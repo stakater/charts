@@ -10,7 +10,14 @@ ksm:
   enabled: true
 #Grafana dashboard configuration
 grafana:
-  labels: {}
+  folder: # RabbitMQ
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  dashboard:
+    datasources:
+      - inputName: "DS_PROMETHEUS"
+        datasourceName: "Prometheus"
   erlangDistribution:
     enabled: true
   erlangDistributionCompare:

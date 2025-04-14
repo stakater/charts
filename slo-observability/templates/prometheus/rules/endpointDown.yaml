@@ -1,0 +1,31 @@
+{{- if and ( .Values.prometheus.rules.endpointDown ) ( .Values.prometheus.rules.endpointDown.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: endpoint-down
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alertmanager-rules
+    namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: EndpointDown
+    rules:
+{{- range .Values.prometheus.endpoints }}
+    - alert: EndpointDown
+      expr: probe_success{instance="https://{{ . }}"} == 0
+      for: 10m
+      annotations:
+        description: |
+          Endpoint {{ . | splitList "."  | first | title | quote }} has been in a non-ready state for longer than 10 minutes.
+        summary: |
+          The endpoint has been down for more than 10 minutes. Please check the state of the endpoint.
+      labels:
+        severity: critical
+{{- end }}
+{{- end }}

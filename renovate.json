@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "customManagers": [
+    {
+        "customType": "regex",
+        "fileMatch": [
+            ".github/workflows/pull_request.yaml"
+        ],
+        "matchStrings": [
+            "https:\/\/github\\.com\/gitleaks\/(?<depName>.*)\/releases\/download\/(?<currentValue>.*)\/.*_linux_x64\\.tar\\.gz"
+        ],
+        "datasourceTemplate": "github-releases"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{{- range .Values.operators }}
+{{- if eq .installPlanApproval "Manual" }}
+---
+# create one installplan-complete-verifier job per manual operator
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-%s" .csv "csv-verifier" | trunc -63 | trimAll "-" }}
+  namespace: {{ .namespace | default $.Release.Namespace }}
+  labels:
+    {{- include "operators-installer.labels" $ | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: {{ .installPlanVerifierRetries | default 10 }}
+  activeDeadlineSeconds: {{ .installPlanVerifierActiveDeadlineSeconds | default 600 }}
+  template:
+    spec:
+      containers:
+      - name: csv-installed-verifier
+        image: {{ $.Values.installPlanApproverAndVerifyJobsImage }}
+        command:
+          - /bin/bash
+          - -c
+          - |
+            counter=0
+            SLEEPER_TMP=0
+            get_status=`oc get clusterserviceversion -n ${Namespace} ${SUBSCRIPTION_CSV} -o jsonpath={.status.phase}`
+            until [ "$get_status" != "" ]; do
+              # do not wait forever
+              let "counter=counter+1"
+              echo "Attempt $counter of $max_timer"
+
+              if [[ $counter -eq $max_timer ]]
+              then
+                echo "Giving up. Operator installation failed"
+                exit 3
+              fi
+
+              echo "Operator not yet ready ... Waiting $sleep_timer seconds"
+              while [[ $SLEEPER_TMP -le "$sleep_timer" ]]; do
+                echo -n "."
+                sleep 1
+                SLEEPER_TMP=$(($SLEEPER_TMP+1))
+              done
+              get_status=`oc get clusterserviceversion -n ${Namespace} ${SUBSCRIPTION_CSV} -o jsonpath={.status.phase}`
+            done
+
+            echo "Checking status of ${SUBSCRIPTION_CSV}. Current status: $get_status"
+            # Wait until operator is ready
+            counter=0
+            SLEEPER_TMP=0
+            until [ "$get_status" == "Succeeded" ]; do
+            let "counter=counter+1"
+              echo "Attempt $counter of $max_timer"
+               if [[ $counter -eq $max_timer ]]
+              then
+                echo "Giving up. Operator installation failed"
+                exit 3
+              fi
+              echo "Operator deployment is ongoing. Current status: $get_status"
+              #sleep $sleep_timer
+              while [[ $SLEEPER_TMP -le "$sleep_timer" ]]; do
+                echo -n "."
+                sleep 1
+                SLEEPER_TMP=$(($SLEEPER_TMP+1))
+              done
+              if [ "$get_status" == "Succeeded" ];
+              then
+                status=$?
+              fi
+              get_status=`oc get clusterserviceversion -n ${Namespace} ${SUBSCRIPTION_CSV} -o jsonpath={.status.phase}`
+            done
+            oc get clusterserviceversion -n ${Namespace} ${SUBSCRIPTION_CSV}
+            echo "Falling to sleep"
+
+            SLEEPER_TMP=0
+
+            while [[ $SLEEPER_TMP -le "10" ]]; do
+                echo -n "."
+                sleep 1
+                SLEEPER_TMP=$(($SLEEPER_TMP+1))
+            done
+        imagePullPolicy: Always
+        env:
+        - name: SUBSCRIPTION_CSV
+          value: {{ .csv }}
+        - name: Namespace
+          value: {{ .namespace | default $.Release.Namespace }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      serviceAccount: {{ include "operators-installer.approverName" . }}
+      serviceAccountName: {{ include "operators-installer.approverName" . }}
+      terminationGracePeriodSeconds: 30
+{{- end }}
+{{- end }}

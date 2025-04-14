@@ -1,0 +1,20 @@
+{{- if and ( .Values.grafana.kubePodOverview ) ( .Values.grafana.kubePodOverview.enabled ) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{- include "signport-observability.name" . | nindent 4 }}-dashboard
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "signport-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+  datasources:
+    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+  resyncPeriod: 30s
+  configMapRef:
+    name: {{- include "signport-observability.name" . | nindent 5 }}-dashboard-definition
+    key: json
+{{- end }}

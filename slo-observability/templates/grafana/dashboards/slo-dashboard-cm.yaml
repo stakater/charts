@@ -1,0 +1,2674 @@
+apiVersion: v1
+data:
+  slo.json: |-
+    {
+        "dashboard": {
+            "annotations": {
+                "list": [
+                    {
+                        "builtIn": 1,
+                        "datasource": {
+                            "type": "datasource",
+                            "uid": "grafana"
+                        },
+                        "enable": true,
+                        "hide": true,
+                        "iconColor": "rgba(0, 211, 255, 1)",
+                        "name": "Annotations & Alerts",
+                        "type": "dashboard"
+                    }
+                ]
+            },
+            "description": "Tracks service's SLO and error budget consumption.",
+            "editable": true,
+            "fiscalYearStartMonth": 0,
+            "gnetId": 11222,
+            "graphTooltip": 0,
+            "id": null,
+            "links": [],
+            "liveNow": false,
+            "panels": [
+                {
+                    "collapsed": true,
+                    "gridPos": {
+                        "h": 1,
+                        "w": 24,
+                        "x": 0,
+                        "y": 0
+                    },
+                    "id": 54,
+                    "panels": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "decimals": 3,
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "#d44a3a"
+                                            },
+                                            {
+                                                "color": "rgba(237, 129, 40, 0.89)",
+                                                "value": 0.95
+                                            },
+                                            {
+                                                "color": "#299c46",
+                                                "value": 0.97
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percentunit"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 4,
+                                "x": 0,
+                                "y": 41
+                            },
+                            "id": 30,
+                            "maxDataPoints": 1470,
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "11.0.0-67348",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "builder",
+                                    "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval]))",
+                                    "format": "time_series",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "Uptime",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "decimals": 3,
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "min": 0,
+                                    "thresholds": {
+                                        "mode": "percentage",
+                                        "steps": [
+                                            {
+                                                "color": "dark-green"
+                                            },
+                                            {
+                                                "color": "dark-red",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "orange",
+                                                "value": 50
+                                            },
+                                            {
+                                                "color": "dark-green",
+                                                "value": 100
+                                            }
+                                        ]
+                                    },
+                                    "unit": "h"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 4,
+                                "x": 4,
+                                "y": 41
+                            },
+                            "id": 32,
+                            "maxDataPoints": 1470,
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "11.0.0-67348",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "Error Budget Left",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "max": 100,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percent"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 16,
+                                "x": 8,
+                                "y": 41
+                            },
+                            "id": 22,
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "right",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "$service_slo_target",
+                                    "format": "time_series",
+                                    "hide": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "target",
+                                    "range": true,
+                                    "refId": "B"
+                                },
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "builder",
+                                    "exemplar": false,
+                                    "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval])) * 100",
+                                    "format": "time_series",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "instant": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "real",
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "7-days Window SLO (Success Rate)",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "auto",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "s"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 12,
+                                "x": 0,
+                                "y": 49
+                            },
+                            "id": 31,
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "single",
+                                    "sort": "none"
+                                }
+                            },
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.cluster }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[30s])",
+                                    "instant": false,
+                                    "legendFormat": "p99",
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "99th percentile latency",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "max": 100,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percent"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 12,
+                                "x": 12,
+                                "y": 49
+                            },
+                            "id": 41,
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "exemplar": false,
+                                    "expr": "sum(rate(apiserver_request_total{job=\"openshift-apiserver\",code=~\"5..|429\"}[5m]))*100 or vector(0)/sum(rate(apiserver_request_total{job=\"openshift-apiserver\"}[5m])) ",
+                                    "format": "time_series",
+                                    "instant": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "Error",
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "(5xx | 429) Rate",
+                            "type": "timeseries"
+                        }
+                    ],
+                    "title": "OpenShift API",
+                    "type": "row"
+                },
+                {
+                    "collapsed": true,
+                    "gridPos": {
+                        "h": 1,
+                        "w": 24,
+                        "x": 0,
+                        "y": 1
+                    },
+                    "id": 55,
+                    "panels": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "decimals": 3,
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "#d44a3a"
+                                            },
+                                            {
+                                                "color": "rgba(237, 129, 40, 0.89)",
+                                                "value": 0.95
+                                            },
+                                            {
+                                                "color": "#299c46",
+                                                "value": 0.97
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percentunit",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 4,
+                                "x": 0,
+                                "y": 42
+                            },
+                            "id": 45,
+                            "links": [],
+                            "maxDataPoints": 1470,
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "builder",
+                                    "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval]))",
+                                    "format": "time_series",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "Uptime",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "decimals": 3,
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "min": 0,
+                                    "thresholds": {
+                                        "mode": "percentage",
+                                        "steps": [
+                                            {
+                                                "color": "#d44a3a"
+                                            },
+                                            {
+                                                "color": "orange",
+                                                "value": 50
+                                            },
+                                            {
+                                                "color": "dark-green",
+                                                "value": 100
+                                            }
+                                        ]
+                                    },
+                                    "unit": "h",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 4,
+                                "x": 4,
+                                "y": 42
+                            },
+                            "id": 36,
+                            "links": [],
+                            "maxDataPoints": 1470,
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval])))) * $__range_s / 100 / 3600",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "Error Budget Left",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "max": 100,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percent",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 16,
+                                "x": 8,
+                                "y": 42
+                            },
+                            "id": 34,
+                            "links": [],
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "right",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "$service_slo_target",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "legendFormat": "target",
+                                    "range": true,
+                                    "refId": "B"
+                                },
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "builder",
+                                    "exemplar": false,
+                                    "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval])) * 100",
+                                    "format": "time_series",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "instant": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "real",
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "7-days Window SLO (Success Rate)",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "auto",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "s",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 12,
+                                "x": 0,
+                                "y": 50
+                            },
+                            "id": 38,
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "single",
+                                    "sort": "none"
+                                }
+                            },
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "code",
+                                    "exemplar": false,
+                                    "expr": "quantile_over_time(0.99, probe_duration_seconds{instance=\"https://console.openshift-console.svc.cluster.local\", cluster=\"{{ .Values.cluster }}\"}[30s])",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "instant": false,
+                                    "legendFormat": "p99",
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "99th percentile latency",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "description": "",
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "max": 100,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percent",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 12,
+                                "x": 12,
+                                "y": 50
+                            },
+                            "id": 40,
+                            "links": [],
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "exemplar": false,
+                                    "expr": "sum(rate(promhttp_metric_handler_requests_total{job=\"openshift-console\", code=~\"5..|429\"}[5m])) * 100 / sum(rate(promhttp_metric_handler_requests_total{job=\"openshift-console\"}[5m]))",
+                                    "format": "time_series",
+                                    "instant": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "Error",
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "(5xx | 429) Rate",
+                            "type": "timeseries"
+                        }
+                    ],
+                    "title": "OpenShift Console",
+                    "type": "row"
+                },
+                {
+                    "collapsed": true,
+                    "gridPos": {
+                        "h": 1,
+                        "w": 24,
+                        "x": 0,
+                        "y": 2
+                    },
+                    "id": 57,
+                    "panels": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "decimals": 3,
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "#d44a3a"
+                                            },
+                                            {
+                                                "color": "rgba(237, 129, 40, 0.89)",
+                                                "value": 0.95
+                                            },
+                                            {
+                                                "color": "#299c46",
+                                                "value": 0.97
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percentunit",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 4,
+                                "x": 0,
+                                "y": 41
+                            },
+                            "id": 48,
+                            "links": [],
+                            "maxDataPoints": 1470,
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "builder",
+                                    "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval]))",
+                                    "format": "time_series",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "Uptime",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "decimals": 3,
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "min": 0,
+                                    "thresholds": {
+                                        "mode": "percentage",
+                                        "steps": [
+                                            {
+                                                "color": "#d44a3a"
+                                            },
+                                            {
+                                                "color": "orange",
+                                                "value": 50
+                                            },
+                                            {
+                                                "color": "dark-green",
+                                                "value": 100
+                                            }
+                                        ]
+                                    },
+                                    "unit": "h",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 4,
+                                "x": 4,
+                                "y": 41
+                            },
+                            "id": 49,
+                            "links": [],
+                            "maxDataPoints": 1470,
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "Error Budget Left",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "max": 100,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percent",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 16,
+                                "x": 8,
+                                "y": 41
+                            },
+                            "id": 51,
+                            "links": [],
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "right",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "$service_slo_target",
+                                    "format": "time_series",
+                                    "hide": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "target",
+                                    "range": true,
+                                    "refId": "B"
+                                },
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "builder",
+                                    "exemplar": false,
+                                    "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval])) * 100",
+                                    "format": "time_series",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "instant": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "real",
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "7-days Window SLO (Success Rate)",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "auto",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "s",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 12,
+                                "x": 0,
+                                "y": 49
+                            },
+                            "id": 53,
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "single",
+                                    "sort": "none"
+                                }
+                            },
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.cluster }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[30s])",
+                                    "instant": false,
+                                    "legendFormat": "p99",
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "99th percentile latency",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "max": 100,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percent",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 12,
+                                "x": 12,
+                                "y": 49
+                            },
+                            "id": 44,
+                            "links": [],
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "exemplar": false,
+                                    "expr": "sum(rate(apiserver_request_total{job=\"openshift-oauth\",code=~\"5..|429\"}[5m])) or vector(0) *100/sum(rate(apiserver_request_total{job=\"openshift-oauth\"}[5m]))",
+                                    "format": "time_series",
+                                    "instant": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "Error",
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "(5xx | 429) Rate",
+                            "type": "timeseries"
+                        }
+                    ],
+                    "title": "OpenShift OAuth",
+                    "type": "row"
+                },
+                {
+                    "collapsed": true,
+                    "gridPos": {
+                        "h": 1,
+                        "w": 24,
+                        "x": 0,
+                        "y": 3
+                    },
+                    "id": 56,
+                    "panels": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "decimals": 3,
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "#d44a3a"
+                                            },
+                                            {
+                                                "color": "rgba(237, 129, 40, 0.89)",
+                                                "value": 0.95
+                                            },
+                                            {
+                                                "color": "#299c46",
+                                                "value": 0.97
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percentunit",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 4,
+                                "x": 0,
+                                "y": 41
+                            },
+                            "id": 46,
+                            "links": [],
+                            "maxDataPoints": 1470,
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "builder",
+                                    "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval]))",
+                                    "format": "time_series",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "Uptime",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "decimals": 3,
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "min": 0,
+                                    "thresholds": {
+                                        "mode": "percentage",
+                                        "steps": [
+                                            {
+                                                "color": "dark-green"
+                                            },
+                                            {
+                                                "color": "dark-red",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "orange",
+                                                "value": 50
+                                            },
+                                            {
+                                                "color": "dark-green",
+                                                "value": 100
+                                            }
+                                        ]
+                                    },
+                                    "unit": "h",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 4,
+                                "x": 4,
+                                "y": 41
+                            },
+                            "id": 47,
+                            "links": [],
+                            "maxDataPoints": 1470,
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "Error Budget Left",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "max": 100,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percent",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 8,
+                                "w": 16,
+                                "x": 8,
+                                "y": 41
+                            },
+                            "id": 50,
+                            "links": [],
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "right",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "$service_slo_target",
+                                    "format": "time_series",
+                                    "hide": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "target",
+                                    "range": true,
+                                    "refId": "B"
+                                },
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "disableTextWrap": false,
+                                    "editorMode": "builder",
+                                    "exemplar": false,
+                                    "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.cluster }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval])) * 100",
+                                    "format": "time_series",
+                                    "fullMetaSearch": false,
+                                    "includeNullMetadata": true,
+                                    "instant": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "real",
+                                    "range": true,
+                                    "refId": "A",
+                                    "useBackend": false
+                                }
+                            ],
+                            "title": "7-days Window SLO (Success Rate)",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "auto",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "s",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 12,
+                                "x": 0,
+                                "y": 49
+                            },
+                            "id": 52,
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "single",
+                                    "sort": "none"
+                                }
+                            },
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.cluster }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[30s])",
+                                    "instant": false,
+                                    "legendFormat": "p99",
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "99th percentile latency",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 0,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "max": 100,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "percent",
+                                    "unitScale": true
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 12,
+                                "x": 12,
+                                "y": 49
+                            },
+                            "id": 43,
+                            "links": [],
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "10.4.0-65875",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "type": "prometheus",
+                                        "uid": "grafanacloud-prom"
+                                    },
+                                    "editorMode": "code",
+                                    "exemplar": false,
+                                    "expr": "sum(rate(promhttp_metric_handler_requests_total{job=\"openshift-router\", code=~\"5..|429\"}[5m])) * 100 / sum(rate(promhttp_metric_handler_requests_total{job=\"openshift-router\"}[5m]))",
+                                    "format": "time_series",
+                                    "instant": false,
+                                    "intervalFactor": 1,
+                                    "legendFormat": "Error",
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "(5xx | 429) Rate",
+                            "type": "timeseries"
+                        }
+                    ],
+                    "title": "OpenShift Router",
+                    "type": "row"
+                },
+                {
+                    "collapsed": true,
+                    "gridPos": {
+                        "h": 1,
+                        "w": 24,
+                        "x": 0,
+                        "y": 4
+                    },
+                    "id": 58,
+                    "panels": [
+                        {
+                            "datasource": {},
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "0": {
+                                                    "text": "Not Running"
+                                                },
+                                                "1": {
+                                                    "text": "Running"
+                                                }
+                                            },
+                                            "type": "value"
+                                        },
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "#d44a3a"
+                                            },
+                                            {
+                                                "color": "#d44a3a",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "#299c46",
+                                                "value": 1
+                                            }
+                                        ]
+                                    },
+                                    "unit": "none"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 6,
+                                "x": 0,
+                                "y": 5
+                            },
+                            "id": 59,
+                            "maxDataPoints": 100,
+                            "options": {
+                                "colorMode": "background",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "11.0.0-67429",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "uid": "Prometheus"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "avg(kuberhealthy_running)",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "KubeHealth Running",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 10,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "short"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 18,
+                                "w": 18,
+                                "x": 6,
+                                "y": 5
+                            },
+                            "id": 60,
+                            "options": {
+                                "legend": {
+                                    "calcs": [],
+                                    "displayMode": "table",
+                                    "placement": "right",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "11.0.0-67348",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "uid": "Prometheus"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "avg(kuberhealthy_running)",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "legendFormat": "KubeHealth Running",
+                                    "range": true,
+                                    "refId": "A"
+                                },
+                                {
+                                    "datasource": {
+                                        "uid": "Prometheus"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "avg(kuberhealthy_cluster_state)",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "legendFormat": "Cluster State",
+                                    "range": true,
+                                    "refId": "B"
+                                }
+                            ],
+                            "title": "KubeHealth History",
+                            "type": "timeseries"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "grafanacloud-prom"
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "mappings": [
+                                        {
+                                            "options": {
+                                                "0": {
+                                                    "text": "Unhealthy"
+                                                },
+                                                "1": {
+                                                    "text": "Healthy"
+                                                }
+                                            },
+                                            "type": "value"
+                                        },
+                                        {
+                                            "options": {
+                                                "match": "null",
+                                                "result": {
+                                                    "text": "N/A"
+                                                }
+                                            },
+                                            "type": "special"
+                                        }
+                                    ],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "#d44a3a"
+                                            },
+                                            {
+                                                "color": "#d44a3a",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "#299c46",
+                                                "value": 1
+                                            }
+                                        ]
+                                    },
+                                    "unit": "none"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 9,
+                                "w": 6,
+                                "x": 0,
+                                "y": 14
+                            },
+                            "id": 61,
+                            "maxDataPoints": 100,
+                            "options": {
+                                "colorMode": "background",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "horizontal",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "mean"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "pluginVersion": "11.0.0-67429",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "uid": "Prometheus"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "avg(kuberhealthy_cluster_state)",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "Cluster Health",
+                            "type": "stat"
+                        },
+                        {
+                            "datasource": {},
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "custom": {
+                                        "align": "auto",
+                                        "cellOptions": {
+                                            "type": "auto"
+                                        },
+                                        "inspect": false
+                                    },
+                                    "decimals": 2,
+                                    "displayName": "",
+                                    "mappings": [],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "short"
+                                },
+                                "overrides": [
+                                    {
+                                        "matcher": {
+                                            "id": "byName",
+                                            "options": "Time"
+                                        },
+                                        "properties": [
+                                            {
+                                                "id": "displayName",
+                                                "value": "Time"
+                                            },
+                                            {
+                                                "id": "unit",
+                                                "value": "time: YYYY-MM-DD HH:mm:ss"
+                                            },
+                                            {
+                                                "id": "custom.align"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "gridPos": {
+                                "h": 6,
+                                "w": 24,
+                                "x": 0,
+                                "y": 23
+                            },
+                            "id": 62,
+                            "options": {
+                                "cellHeight": "sm",
+                                "footer": {
+                                    "countRows": false,
+                                    "fields": "",
+                                    "reducer": [
+                                        "sum"
+                                    ],
+                                    "show": false
+                                },
+                                "showHeader": true
+                            },
+                            "pluginVersion": "11.0.0-67429",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "uid": "Prometheus"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "avg(kuberhealthy_check) by(check)",
+                                    "format": "table",
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "timeFrom": "14s",
+                            "title": "KubeHealth Check Status",
+                            "transformations": [
+                                {
+                                    "id": "merge",
+                                    "options": {
+                                        "reducers": []
+                                    }
+                                }
+                            ],
+                            "type": "table"
+                        },
+                        {
+                            "datasource": {},
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 10,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "mappings": [],
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green"
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 80
+                                            }
+                                        ]
+                                    },
+                                    "unit": "short"
+                                },
+                                "overrides": []
+                            },
+                            "gridPos": {
+                                "h": 14,
+                                "w": 24,
+                                "x": 0,
+                                "y": 29
+                            },
+                            "id": 63,
+                            "options": {
+                                "legend": {
+                                    "calcs": [],
+                                    "displayMode": "table",
+                                    "placement": "right",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "none"
+                                }
+                            },
+                            "pluginVersion": "11.0.0-67348",
+                            "targets": [
+                                {
+                                    "datasource": {
+                                        "uid": "Prometheus"
+                                    },
+                                    "editorMode": "code",
+                                    "expr": "avg(kuberhealthy_check) by(check)",
+                                    "format": "time_series",
+                                    "intervalFactor": 1,
+                                    "range": true,
+                                    "refId": "A"
+                                }
+                            ],
+                            "title": "KubeHealth Check History",
+                            "type": "timeseries"
+                        }
+                    ],
+                    "title": "Synthetic Monitoring",
+                    "type": "row"
+                }
+            ],
+            "refresh": "15s",
+            "schemaVersion": 39,
+            "tags": [],
+            "templating": {
+                "list": [
+                    {
+                        "hide": 2,
+                        "label": "",
+                        "name": "service_requests_error_count",
+                        "query": "probe_http_status_code{instance=\"https://10.0.1.18:6443\"} != 200",
+                        "skipUrlSync": false,
+                        "type": "constant"
+                    },
+                    {
+                        "hide": 2,
+                        "name": "service_requests_total_count",
+                        "query": "promhttp_metric_handler_requests_total{instance=\"10.0.1.18:31786\"}",
+                        "skipUrlSync": false,
+                        "type": "constant"
+                    },
+                    {
+                        "hide": 2,
+                        "name": "alerts_filter_criteria",
+                        "query": "service=\"upcloud-api-server\"",
+                        "skipUrlSync": false,
+                        "type": "constant"
+                    },
+                    {
+                        "hide": 2,
+                        "name": "service_slo_target",
+                        "query": "99.5",
+                        "skipUrlSync": false,
+                        "type": "constant"
+                    },
+                    {
+                        "hide": 2,
+                        "name": "error_budget",
+                        "query": "0.5",
+                        "skipUrlSync": false,
+                        "type": "constant"
+                    }
+                ]
+            },
+            "time": {
+                "from": "now-7d",
+                "to": "now"
+            },
+            "timepicker": {
+                "refresh_intervals": [
+                    "15s",
+                    "30s",
+                    "1m",
+                    "5m",
+                    "15m",
+                    "30m",
+                    "1h",
+                    "2h",
+                    "1d"
+                ],
+                "time_options": [
+                    "5m",
+                    "15m",
+                    "1h",
+                    "6h",
+                    "12h",
+                    "24h",
+                    "2d",
+                    "7d",
+                    "28d"
+                ]
+            },
+            "timezone": "",
+            "title": "{{ .Values.cluster | title }} Openshift SLO",
+            "uid": null,
+            "version": null,
+            "weekStart": ""
+        },
+        "folderUid": "{{ .Values.folderUid }}",
+        "overwrite":true
+    }
+kind: ConfigMap
+metadata:
+  name: slo-observability-dashboard
+  namespace: {{ include "slo-observability.namespace" . }}

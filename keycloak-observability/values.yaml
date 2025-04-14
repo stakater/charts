@@ -1,0 +1,54 @@
+# Dashboard name
+global:
+  name: rhsso
+  namespace: keycloak
+
+# Grafana instance selector
+grafana:
+  folder: # Keycloak
+  matchLabels:
+    app: "grafana"
+
+# Default data sources
+dashboard:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
+
+# Pod Monitor specs
+podMonitor:
+  enabled: true
+  specs:
+    selector:
+      matchLabels:
+        app: keycloak
+    podMetricsEndpoints:
+      - targetPort: 9990
+
+# Service Monitor specs
+serviceMonitor:
+  enabled: true
+  specs:
+    endpoints:
+      - bearerTokenSecret:
+          key: ''
+        path: /auth/realms/master/metrics
+        port: keycloak
+        scheme: https
+        tlsConfig:
+          ca: { }
+          cert: { }
+          insecureSkipVerify: true
+      - bearerTokenSecret:
+          key: ''
+        path: /metrics
+        port: keycloak-monitoring
+        scheme: http
+        tlsConfig:
+          ca: { }
+          cert: { }
+          insecureSkipVerify: true
+    namespaceSelector: { }
+    selector:
+      matchLabels:
+        app: keycloak

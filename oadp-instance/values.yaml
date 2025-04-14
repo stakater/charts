@@ -1,0 +1,37 @@
+clusterBackup:
+  enabled: true
+  # This Policy is set to Delete when you want the Bucket CR to wait for the contents in S3 to delete. It is set to Orphan when you want to delete the Bucket CR and leave the data in S3.
+  deletionPolicy: "Orphan" # Option for Delete or Orphan
+  # This option if set to true ensure that when the bucket CR deletes, it will delete the bucket in S3 as well despite it having data in it or not.
+  forceDestroy: false
+  awsBucketName: <organization>-<clustername>-cluster-backup
+  bucketType: s3
+externalSecrets:
+  enabled: true
+developmentMode:
+  enabled: false
+  aws_secret_access_key_encoded: WFhYWFg= # XXXXX
+backupLocations:
+  - velero:
+      provider: aws
+      default: true
+      objectStorage:
+        bucket: <organization>-<clustername>-cluster-backup
+        prefix: dpa/
+      config:
+        region: us-west-2
+        s3Url: https://s3.us-west-2.amazonaws.com/
+        profile: default
+      credential:
+        name: cloud-credentials
+        key: cloud
+
+snapshotLocations:
+  - velero:
+      config:
+        profile: volumeSnapshot
+        region: eu-north-1
+      credential:
+        key: cloud
+        name: cloud-credentials
+      provider: aws

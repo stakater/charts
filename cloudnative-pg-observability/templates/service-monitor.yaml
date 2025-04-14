@@ -1,0 +1,12 @@
+{{- if and ( .Values.prometheus.serviceMonitor ) ( .Values.prometheus.serviceMonitor.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cloudnative-pg-svc-monitor
+  namespace: {{ include "cloudnative-pg-observability.namespace" . }}
+  labels:
+    {{- include "cloudnative-pg-observability.labels" . | nindent 4 }}
+  # If labels are defined in spec.serviceMonitorSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+spec:
+  {{- toYaml .Values.prometheus.serviceMonitor.spec | nindent 2 }}
+{{- end }}

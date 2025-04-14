@@ -1,0 +1,11 @@
+{{- range $operatorGroup := .Values.operatorGroups }}
+{{- if $operatorGroup.createNamespace }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .name | default $.Release.Namespace }}
+  labels:
+    {{- include "operators-installer.labels" $ | nindent 4 }}
+{{- end }}
+{{- end }}

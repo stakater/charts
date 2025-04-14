@@ -5,27 +5,35 @@ global:
   namespace:
 
 grafana:
-  labels:
-    grafanaDashboard: grafana-operator
-  databaseDashboard:
-    enabled: true
-  overviewDashboard:
-    enabled: true
+  folder: # PostgreSQL
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      app: grafana
+  dashboard:
+    datasources:
+      - inputName: "DS_PROMETHEUS"
+        datasourceName: Prometheus
+    databaseDashboard:
+      enabled: true
+    overviewDashboard:
+      enabled: true
 
 prometheus:
   serviceMonitor:
     enabled: true
     name: posgtres-exporter
-    port: exporter
-    scheme: http
-    interval: 10s
-    scrapeTimeout: 5s
-    path: /metrics
-    matchLabels: 
-      postgres-operator.crunchydata.com/crunchy-postgres-exporter: 'true'
-      postgres-operator.crunchydata.com/cluster: postgres
-    namespaceSelector:
-      any: true
+    specs:
+      endpoints:
+        - port: exporter
+          scheme: http
+          interval: 10s
+          scrapeTimeout: 5s
+          path: /metrics
+      selector:
+        matchLabels: {}
+      namespaceSelector:
+          any: true
 
 # Sample rules are taken from below sources
 # https://github.com/fi-ts/postgreslet/issues/10
@@ -43,6 +51,7 @@ prometheus:
       enabled: true
     postgresNotEnoughConnections:
       enabled: true
+      postgresConnectionsThreshold: 5
     postgresTooManyConnections:
       enabled: true
     postgresTooManyDeadTuples:

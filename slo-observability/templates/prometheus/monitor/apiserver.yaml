@@ -1,0 +1,28 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.global.namespace | default .Release.Namespace }}-apiserver
+  namespace:  {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    servicemonitor: {{ .Values.cluster }}
+    {{- include "slo-observability.labels" . | nindent 4 }}
+spec:
+  endpoints:
+  - port: https
+    scheme: https
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true
+    path: /metrics
+    interval: 15s
+    metricRelabelings:
+      - sourceLabels: [__name__]
+        regex: "apiserver_request_total"
+        action: "keep"
+  namespaceSelector:
+    matchNames:
+    - openshift-apiserver
+  selector:
+    matchLabels:
+      prometheus: openshift-apiserver

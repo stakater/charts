@@ -1,0 +1,19 @@
+{{- if and ( .Values.grafana.dashboard.cloudnativePGDashboard ) ( .Values.grafana.dashboard.cloudnativePGDashboard.enabled ) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: cloudnative-pg-dashboard
+  namespace: {{ include "cloudnative-pg-observability.namespace" . }}
+  labels:
+    {{- include "cloudnative-pg-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{ toYaml .Values.grafana.dashboard.datasources | nindent 3 }}
+  configMapRef:
+    name: cloudnative-pg-dashboard-definition
+    key: json
+{{- end }}

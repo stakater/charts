@@ -1,0 +1,75 @@
+{{- if and ( .Values.prometheus.rules.errorCode ) ( .Values.prometheus.rules.errorCode.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: error-code
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prom5etheus object, make sure to include them here.
+  labels:
+    role: alertmanager-rules
+    namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: ErrorCode
+    rules:
+    - alert: ApiErrorCode
+      expr: sum(apiserver_request_total{job="api", code=~"5..|429"})/sum(apiserver_request_total{job="api"})*100 > 10
+      for: 10m
+      annotations:
+        description: |
+          More than 10 percent of the requests to the Openshift API Server for 10 minutes are returning 429 and 5xx status codes
+        summary: |
+          This error occurs when the service is not functioning correctly or when it receives an excessive number of requests. 
+          Please review the service and ensure that the service's pods are operating smoothly.
+      labels:
+        namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+        severity: critical
+    - alert: ConsoleErrorCode
+      expr: |
+        sum(promhttp_metric_handler_requests_total{code=~"5..|429",namespace="openshift-console"})
+        /
+        sum(promhttp_metric_handler_requests_total{namespace="openshift-console"})*100 
+        > 10
+      for: 10m
+      annotations:
+        message: |
+          More than 10 percent of the requests to the Openshift Console for 10 minutes are returning 429 and 5xx status codes
+        summary: |
+          This error occurs when the service is not functioning correctly or when it receives an excessive number of requests. 
+          Please review the service and ensure that the service's pods are operating smoothly.
+      labels:
+        namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+        severity: critical
+    - alert: HAProxyErrorCode
+      expr: |
+        sum(promhttp_metric_handler_requests_total{code=~"5..|429",namespace="openshift-ingress"})
+        /
+        sum(promhttp_metric_handler_requests_total{namespace="openshift-ingress"})*100 
+        > 10
+      for: 10m
+      annotations:
+        message: |
+          More than 10 percent of the requests to the Openshift HAProxy for 10 minutes are returning 429 and 5xx status codes
+        summary: |
+          This error occurs when the service is not functioning correctly or when it receives an excessive number of requests. 
+          Please review the service and ensure that the service's pods are operating smoothly.
+      labels:
+        namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+        severity: critical
+    - alert: OpenshiftAuthenticationErrorCode
+      expr: sum(apiserver_request_total{job="oauth-openshift", code=~"5..|429"})/sum(apiserver_request_total{job="oauth-openshift"})*100 > 10
+      for: 10m
+      annotations:
+        description: |
+          More than 10 percent of the requests to the Openshift Authentication for 10 minutes are returning 429 and 5xx status codes
+        summary: |
+          This error occurs when the service is not functioning correctly or when it receives an excessive number of requests. 
+          Please review the service and ensure that the service's pods are operating smoothly.
+      labels:
+        namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+        severity: critical
+{{- end }}

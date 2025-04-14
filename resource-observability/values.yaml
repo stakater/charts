@@ -1,9 +1,30 @@
+# a comment
 global:
   namespace:
 
+# Grafana instance selector
 grafana:
-  labels:
-    grafanaDashboard: grafana-operator
+  folder: "Resource Utilization"
   resourceUtilization:
     enabled: true
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
 
+# Default data sources
+dashboard:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
+
+prometheus:
+  rules:
+    resource:
+      requestMemoryUnderCommited:
+        enabled: true
+        # threshold in Mb 
+        threshold: 500
+      requestMemoryOverCommited:
+        enabled: true
+        # threshold in Mb 
+        threshold: 500

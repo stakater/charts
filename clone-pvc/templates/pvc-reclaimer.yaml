@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: reclaimer
+spec:
+  volumeName: {{ .Values.oldPvName }}
+  storageClassName: {{ .Values.oldStorageClass }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

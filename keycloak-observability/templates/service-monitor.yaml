@@ -1,0 +1,11 @@
+{{- if and ( .Values.serviceMonitor ) ( .Values.serviceMonitor.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{- include "keycloak-observability.name" . | indent 1 }}-svc-monitor
+  namespace: {{- include "keycloak-observability.namespace" . | indent 1 }}
+  labels:
+    {{- include "keycloak-observability.labels" . | nindent 4 }}
+spec:
+  {{- toYaml .Values.serviceMonitor.specs | nindent 2 }}
+{{- end }}

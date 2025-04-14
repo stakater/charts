@@ -1,0 +1,13 @@
+{{- $alert := "CNPGClusterReplicaFailingReplicationCritical" -}}
+{{- if not (has $alert .excludeRules) -}}
+alert: {{ $alert }}
+annotations:
+  summary: Checks if the replica is failing to replicate
+  description: Replica {{ .labels.pod }} is failing to replicate
+expr: cnpg_pg_replication_in_recovery > cnpg_pg_replication_is_wal_receiver_up
+for: 5m
+labels:
+  severity: critical
+  namespace: {{ .namespace }}
+  cnpg_cluster: {{ .cluster }}
+{{- end -}}

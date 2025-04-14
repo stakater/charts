@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: clone-pvc
+spec:
+  template:
+    spec:
+      containers:
+      - name: cp
+        image: busybox:1.36-glibc
+        command: ["/bin/sh", "-c", "--"]
+        args: ["cp -a /old-pv/* /new-pv/"] # Note that this has the limitation of not copying hidden folders/files. Busybox does not support trailing slash syntax to copy the contents of a folder.
+        resources:
+          requests:
+            cpu: 5m
+            memory: 50Mi
+        volumeMounts:
+          - name: old-pv
+            mountPath: /old-pv
+          - name: new-pv
+            mountPath: /new-pv
+      volumes:
+        - name: old-pv
+          persistentVolumeClaim:
+            claimName: reclaimer
+        - name: new-pv
+          persistentVolumeClaim:
+            claimName: {{ .Values.newPvcName }}
+      restartPolicy: OnFailure
+  backoffLimit: 4

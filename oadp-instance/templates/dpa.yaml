@@ -1,0 +1,48 @@
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: dpa
+  namespace:  {{ include "oadp-instance.namespace" . }}
+spec:
+  configuration:
+    velero:
+      defaultPlugins:
+      - openshift
+      - aws
+      - csi
+      - kubevirt
+      featureFlags:
+        - EnableCSI
+    nodeAgent:
+      enable: true
+      uploaderType: kopia
+  {{- $top := . }}
+  {{- range $snapshotLocations := .Values.snapshotLocations }}
+  snapshotLocations:
+    - velero:
+        config:
+          profile: {{ $snapshotLocations.velero.config.profile }}
+          region: {{ $snapshotLocations.velero.config.region }}
+        credential:
+          key: {{ $snapshotLocations.velero.credential.key }}
+          name: {{ $snapshotLocations.velero.credential.name }}
+        provider: {{ $snapshotLocations.velero.provider }}
+  {{- end }}
+  backupLocations:
+  {{- $top := . }}
+  {{- range $backuplocation := .Values.backupLocations }}
+    - velero:
+        provider: {{ $backuplocation.velero.provider }}
+        default: {{ $backuplocation.velero.default }}
+        objectStorage:
+          bucket: {{ $backuplocation.velero.objectStorage.bucket }}
+          prefix: {{ $backuplocation.velero.objectStorage.prefix }}
+        config:
+          region: {{ $backuplocation.velero.config.region }}
+          s3ForcePathStyle: 'true'
+          s3Url: {{ $backuplocation.velero.config.s3Url }}
+          profile: {{ $backuplocation.velero.config.profile }}
+        credential:
+          name: {{ $backuplocation.velero.credential.name }}
+          key: {{ $backuplocation.velero.credential.key }}
+  {{- end }}

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: oadp-instance
+
+description: A Helm chart for oadp-instance
+
+type: application
+version: 1.0.0
+
+appVersion: "0.0.0"

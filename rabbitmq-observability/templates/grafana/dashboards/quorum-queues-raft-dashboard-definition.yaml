@@ -1,0 +1,864 @@
+{{- if and ( .Values.grafana.rabbitmqQuorumQueues ) ( .Values.grafana.rabbitmqQuorumQueues.enabled ) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-quorum-qs-raft-dashboard-definition
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "rabbitmq-observability.labels" . | nindent 4 }}
+data:
+  # https://grafana.com/grafana/dashboards/11340
+  json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "Raft state for all Quorum Queues running in a RabbitMQ cluster",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "gnetId": 11340,
+      "graphTooltip": 1,
+      "id": 36,
+      "links": [
+        {
+          "icon": "doc",
+          "tags": [],
+          "targetBlank": true,
+          "title": "Quorum Queues Documentation",
+          "tooltip": "",
+          "type": "link",
+          "url": "https://www.rabbitmq.com/quorum-queues.html"
+        }
+      ],
+      "liveNow": false,
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Datasource}"
+          },
+          "description": "##### Rate of Raft log operations committed\n\nThis includes all queue operations, including publishes & consumer acknowledgements.\n\nThis tracks the progress of the Raft commit index on all members, including followers.\n\nIf a RabbitMQ node does not run a Raft member, it will not report any entries committed.",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 0,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "hiddenSeries": false,
+          "id": 64,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": true,
+            "max": true,
+            "min": false,
+            "show": true,
+            "sort": "current",
+            "sortDesc": true,
+            "total": true,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.1.6",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?0(\\b|\\.)/",
+              "color": "#56A64B"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?1(\\b|\\.)/",
+              "color": "#F2CC0C"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?2(\\b|\\.)/",
+              "color": "#3274D9"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?3(\\b|\\.)/",
+              "color": "#A352CC"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?4(\\b|\\.)/",
+              "color": "#FF780A"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?5(\\b|\\.)/",
+              "color": "#96D98D"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?6(\\b|\\.)/",
+              "color": "#FFEE52"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?7(\\b|\\.)/",
+              "color": "#8AB8FF"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?8(\\b|\\.)/",
+              "color": "#CA95E5"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?9(\\b|\\.)/",
+              "color": "#FFB357"
+            }
+          ],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${Datasource}"
+              },
+              "expr": "sum(rate(rabbitmq_raft_log_commit_index[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) by(rabbitmq_node)",
+              "format": "time_series",
+              "instant": false,
+              "intervalFactor": 1,
+              "legendFormat": "{{ `{{` }}rabbitmq_node{{ `}}` }}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Log entries committed / s",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "logBase": 1,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "cards": {},
+          "color": {
+            "cardColor": "rgb(255, 255, 255)",
+            "colorScale": "sqrt",
+            "colorScheme": "interpolateCool",
+            "exponent": 0.4,
+            "mode": "opacity"
+          },
+          "dataFormat": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Datasource}"
+          },
+          "description": "##### Time for a log entry to be committed\n\nThis is an indicator of Raft operational overhead. Values will increase with increased load as the system trades latency for throughput.\n\nThis metric samples  the time it takes for a log entry to be written to a Raft log and that entry being committed.\n\nBecause quorum queues fsync all operations to disk before committing them, they are not suitable for low-latency workloads.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "scaleDistribution": {
+                  "type": "linear"
+                }
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 0
+          },
+          "heatmap": {},
+          "hideZeroBuckets": false,
+          "highlightCards": true,
+          "id": 65,
+          "legend": {
+            "show": true
+          },
+          "links": [],
+          "options": {
+            "calculate": true,
+            "calculation": {},
+            "cellGap": 2,
+            "cellValues": {},
+            "color": {
+              "exponent": 0.5,
+              "fill": "rgb(255, 255, 255)",
+              "mode": "opacity",
+              "reverse": false,
+              "scale": "exponential",
+              "scheme": "Oranges",
+              "steps": 128
+            },
+            "exemplars": {
+              "color": "rgba(255,0,255,0.7)"
+            },
+            "filterValues": {
+              "le": 1e-9
+            },
+            "legend": {
+              "show": true
+            },
+            "rowsFrame": {
+              "layout": "le"
+            },
+            "showValue": "never",
+            "tooltip": {
+              "show": true,
+              "yHistogram": true
+            },
+            "yAxis": {
+              "axisPlacement": "left",
+              "min": "0",
+              "reverse": false,
+              "unit": "s"
+            }
+          },
+          "pluginVersion": "9.1.6",
+          "reverseYBuckets": false,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${Datasource}"
+              },
+              "expr": "rabbitmq_raft_entry_commit_latency_seconds * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}",
+              "format": "time_series",
+              "instant": false,
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Log entry commit latency",
+          "tooltip": {
+            "show": true,
+            "showHistogram": true
+          },
+          "type": "heatmap",
+          "xAxis": {
+            "show": true
+          },
+          "yAxis": {
+            "format": "s",
+            "logBase": 1,
+            "min": "0",
+            "show": true
+          },
+          "yBucketBound": "lower"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Datasource}"
+          },
+          "description": "##### Pending Raft log entries\n\nTracks the number of Raft log entries that have been written but not yet committed.\n\nHigh & growing values may be indicative of a quorum of members not being available so that a queue can make progress.",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 0,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 9
+          },
+          "hiddenSeries": false,
+          "id": 62,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": true,
+            "max": true,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sort": "total",
+            "sortDesc": true,
+            "total": true,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.1.6",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?0(\\b|\\.)/",
+              "color": "#56A64B"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?1(\\b|\\.)/",
+              "color": "#F2CC0C"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?2(\\b|\\.)/",
+              "color": "#3274D9"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?3(\\b|\\.)/",
+              "color": "#A352CC"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?4(\\b|\\.)/",
+              "color": "#FF780A"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?5(\\b|\\.)/",
+              "color": "#96D98D"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?6(\\b|\\.)/",
+              "color": "#FFEE52"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?7(\\b|\\.)/",
+              "color": "#8AB8FF"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?8(\\b|\\.)/",
+              "color": "#CA95E5"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?9(\\b|\\.)/",
+              "color": "#FFB357"
+            }
+          ],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${Datasource}"
+              },
+              "expr": "sum(\n  (rabbitmq_raft_log_last_written_index * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) -\n  (rabbitmq_raft_log_commit_index * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})\n) by(rabbitmq_node)",
+              "format": "time_series",
+              "instant": false,
+              "intervalFactor": 1,
+              "legendFormat": "{{ `{{` }}rabbitmq_node{{ `}}` }}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Uncommitted log entries",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Datasource}"
+          },
+          "description": "##### Rate of Raft leader elections\n\nTracks the increments of the Raft term.\n\nSustained non-zero rates are indicative of network and/or availability issues, or queue churn. The other reason may be quorum queue declarations.\n\nValues above 0 are normal, some leader elections are expected. Sustained high values may be of concern.",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 0,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 9
+          },
+          "hiddenSeries": false,
+          "id": 63,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": true,
+            "max": true,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sort": "total",
+            "sortDesc": true,
+            "total": true,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.1.6",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?0(\\b|\\.)/",
+              "color": "#56A64B"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?1(\\b|\\.)/",
+              "color": "#F2CC0C"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?2(\\b|\\.)/",
+              "color": "#3274D9"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?3(\\b|\\.)/",
+              "color": "#A352CC"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?4(\\b|\\.)/",
+              "color": "#FF780A"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?5(\\b|\\.)/",
+              "color": "#96D98D"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?6(\\b|\\.)/",
+              "color": "#FFEE52"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?7(\\b|\\.)/",
+              "color": "#8AB8FF"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?8(\\b|\\.)/",
+              "color": "#CA95E5"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?9(\\b|\\.)/",
+              "color": "#FFB357"
+            }
+          ],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${Datasource}"
+              },
+              "expr": "sum(rate(rabbitmq_raft_term_total[60s]) * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) by(rabbitmq_node)",
+              "format": "time_series",
+              "instant": false,
+              "intervalFactor": 1,
+              "legendFormat": "{{ `{{` }}rabbitmq_node{{ `}}` }}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [
+            {
+              "colorMode": "warning",
+              "fill": true,
+              "line": true,
+              "op": "gt",
+              "value": 3,
+              "yaxis": "left"
+            }
+          ],
+          "timeRegions": [],
+          "title": "Leader elections / s",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "",
+              "logBase": 1,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Datasource}"
+          },
+          "description": "##### Number of entries in the Raft log\n\nTracks the number of Raft log entries since the last snapshot.\n\nLarge values can either be indicative of large quorum queue backlogs or availability problems. If the uncommitted entries metric is large as well, there is a genuine availability problem in the system.",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 0,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 13,
+            "w": 24,
+            "x": 0,
+            "y": 18
+          },
+          "hiddenSeries": false,
+          "id": 18,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": true,
+            "max": true,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sort": "current",
+            "sortDesc": true,
+            "total": true,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null as zero",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.1.6",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?0(\\b|\\.)/",
+              "color": "#56A64B"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?1(\\b|\\.)/",
+              "color": "#F2CC0C"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?2(\\b|\\.)/",
+              "color": "#3274D9"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?3(\\b|\\.)/",
+              "color": "#A352CC"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?4(\\b|\\.)/",
+              "color": "#FF780A"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?5(\\b|\\.)/",
+              "color": "#96D98D"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?6(\\b|\\.)/",
+              "color": "#FFEE52"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?7(\\b|\\.)/",
+              "color": "#8AB8FF"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?8(\\b|\\.)/",
+              "color": "#CA95E5"
+            },
+            {
+              "alias": "/^rabbit@[a-zA-Z\\.\\-]*?9(\\b|\\.)/",
+              "color": "#FFB357"
+            }
+          ],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${Datasource}"
+              },
+              "expr": "sum(\n  (rabbitmq_raft_log_last_written_index * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"}) - \n  (rabbitmq_raft_log_snapshot_index * on(instance) group_left(rabbitmq_cluster, rabbitmq_node) rabbitmq_identity_info{rabbitmq_cluster=\"$rabbitmq_cluster\", namespace=\"$namespace\"})\n) by(queue, rabbitmq_node) > 5000",
+              "hide": false,
+              "legendFormat": "{{ `{{` }}rabbitmq_node}} {{ `{{` }}queue{{ `}}` }}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Raft members with >5k entries in the log",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "",
+              "logBase": 1,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        }
+      ],
+      "refresh": "15s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [
+        "rabbitmq-prometheus"
+      ],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "default",
+              "value": "default"
+            },
+            "datasource": "Prometheus",
+            "hide": 2,
+            "includeAll": false,
+            "label": "datasource",
+            "multi": false,
+            "name": "Datasource",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
+            "definition": "label_values(rabbitmq_identity_info, namespace)",
+            "hide": 0,
+            "includeAll": false,
+            "label": "Namespace",
+            "multi": false,
+            "name": "namespace",
+            "options": [],
+            "query": {
+              "query": "label_values(rabbitmq_identity_info, namespace)",
+              "refId": "Prometheus-namespace-Variable-Query"
+            },
+            "refresh": 2,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
+            "definition": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
+            "hide": 0,
+            "includeAll": false,
+            "label": "RabbitMQ Cluster",
+            "multi": false,
+            "name": "rabbitmq_cluster",
+            "options": [],
+            "query": {
+              "query": "label_values(rabbitmq_identity_info{namespace=\"$namespace\"}, rabbitmq_cluster)",
+              "refId": "Prometheus-rabbitmq_cluster-Variable-Query"
+            },
+            "refresh": 2,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": [
+          "15s",
+          "30s",
+          "1m",
+          "5m",
+          "10m"
+        ],
+        "time_options": [
+          "5m",
+          "15m",
+          "1h",
+          "6h",
+          "12h",
+          "24h",
+          "2d",
+          "7d",
+          "30d"
+        ]
+      },
+      "timezone": "",
+      "title": "RabbitMQ-Quorum-Queues-Raft",
+      "version": 1,
+      "weekStart": ""
+    }
+{{- end }}

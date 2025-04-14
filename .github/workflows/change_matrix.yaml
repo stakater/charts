@@ -1,0 +1,64 @@
+name: Identify changes and take action
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  identify-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      change_matrix: ${{ steps.change-matrix.outputs.change_matrix }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Determine changed directories
+      id: change-matrix
+      env:
+        GITHUB_REF: ${{ github.ref }}
+        PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        PR_BASE: ${{ github.event.pull_request.base.sha }}
+        BEFORE: ${{ github.event.before }}
+      run: |
+        # Add all directories you want to check
+        DIRECTORIES=$(find * -maxdepth 0 -type d -not -name '\.*')
+        # To compare which files have changed, we need a git ref base
+        # If current ref is 'main', we should compare the previous SHA on main(event.before) otherwise
+        # SHA for the common ancestors of base and branch
+        if [[ "${GITHUB_REF}" == 'refs/heads/main' ]]; then
+          echo "Gihub ref is main"
+          BASE="${BEFORE}"
+        else
+          # Find good common ancestor. This makes diff show only changes on current branch and not upstream changes
+          echo "Github ref is not main. Finding ancestor for base(${PR_BASE}) and head(${PR_HEAD})"
+          BASE="$(git merge-base ${PR_BASE} ${PR_HEAD} )"
+        fi
+        echo "SHA for base: ${BASE}, head ${PR_HEAD}, pr base: ${PR_BASE}"
+
+        CHANGED_DIRS=""
+        for DIR in $DIRECTORIES; do
+          if git diff --name-only $BASE ${PR_HEAD} | grep -q "^$DIR/"; then
+            CHANGED_DIRS="$DIR;$CHANGED_DIRS"
+          fi
+        done
+        CHANGE_MATRIX="[$(echo $CHANGED_DIRS | sed -r 's/([^;.]*);/{\"directory\": \"\1\"},/g' | sed 's/,$//g' )]"
+        echo Changed dirs matrix: $CHANGE_MATRIX
+        echo "change_matrix={\"include\": $CHANGE_MATRIX}" >> $GITHUB_OUTPUT
+
+  release:
+    needs: identify-changes
+    strategy:
+      matrix: ${{fromJson(needs.identify-changes.outputs.change_matrix)}}
+    uses: stakater/charts/.github/workflows/release.yaml@main
+    secrets:
+      REGISTRY_USERNAME: ${{ github.actor }}
+      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      component: ${{ matrix.directory }}

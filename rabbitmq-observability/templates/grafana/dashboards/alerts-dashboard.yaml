@@ -1,0 +1,22 @@
+{{- if and ( .Values.grafana.rabbitmqAlerts ) ( .Values.grafana.rabbitmqAlerts.enabled ) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: rabbitmq-alerts-dashboard
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "rabbitmq-observability.labels" . | nindent 4}}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  plugins:
+    - name: flant-statusmap-panel
+      version: 0.5.1
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{- toYaml .Values.grafana.dashboard.datasources | nindent 3 }}
+  configMapRef:
+    name: rabbitmq-alerts-dashboard-definition
+    key: json
+{{- end }}

@@ -2,7 +2,7 @@
 Expand the name of the chart.
 */}}
 {{- define "jvm-observability.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- default .Values.nameOverride .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*

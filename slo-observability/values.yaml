@@ -1,0 +1,24 @@
+# -- Put here the new name if you want to override the release name.
+nameOverride: ""
+
+# -- Same as nameOverride but for the fullname.
+fullnameOverride: ""
+
+# -- Same as nameOverride but for the namespace.
+namespaceOverride: ""
+
+cluster: ""
+global:
+  namespace: ""
+
+prometheus:
+  rules:
+    endpointDown:
+      enabled: true
+    slowQuery:
+      enabled: true
+    errorCode:
+      enabled: true
+  slack:
+    channel: slo-observability
+    token: api_token

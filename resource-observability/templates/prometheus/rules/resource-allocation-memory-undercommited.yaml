@@ -1,0 +1,44 @@
+{{- if and ( .Values.prometheus.rules.resource.requestMemoryUnderCommited ) ( .Values.prometheus.rules.resource.requestMemoryUnderCommited.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: resource-request-memory-undercommited
+{{- if .Values.prometheus.rules.resource.requestMemoryUnderCommited.namespace  }}
+  namespace: {{ .Values.prometheus.rules.resource.requestMemoryUnderCommited.namespace }}
+{{- else }}
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+{{- end }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alert-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: resource-allocation
+    rules:
+    - alert: ResourceRequestMemoryUndercommited
+      expr: |
+        (
+          sum(
+            cluster:namespace:pod_memory:active:kube_pod_container_resource_requests{container_name!="POD",resource="memory", namespace!~"openshift.*"} > 0
+          ) by (container, pod, namespace)  -
+          max(
+            max_over_time(
+              container_memory_working_set_bytes{image!="", container_name!="POD", namespace!~"openshift.*"}[1d:1h]
+            )
+          ) by (container, pod, namespace)
+        ) / 1000 / 1000
+        >=
+        {{ .Values.prometheus.rules.resource.requestMemoryUnderCommited.threshold }}
+      for: 5m
+      annotations:
+        description: |
+          Pod`{{`{{ $labels.pod }}`}}` requests `{{`{{ $value | printf "%.0f" }}`}}` more memory than it uses.
+        summary: ""
+          
+      labels:
+        rulesgroup: resource-allocation
+        severity: warning
+{{- end }}

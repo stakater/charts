@@ -1,5 +1,4 @@
 {{- if and ( .Values.prometheus.rules.signportPvcAlerts ) ( .Values.prometheus.rules.signportPvcAlerts.enabled ) }}
----
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -8,9 +7,10 @@ metadata:
   # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
   labels:
     role: alert-rules
-{{- if .Values.prometheus.rules.labels }}
-{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
-{{- end }}
+    {{- include "signport-observability.labels" . | nindent 4 }}
+    {{- if .Values.prometheus.rules.labels }}
+    {{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+    {{- end }}
 spec:
   groups:
   - name: signport

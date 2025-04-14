@@ -1,0 +1,7 @@
+
+oldPvName: "old-pv"
+# oldStorageClass: ""
+newPvcName: "clone-pvc"
+# newPvcStorageClass: ""
+newPvcSize: "100Gi"
+

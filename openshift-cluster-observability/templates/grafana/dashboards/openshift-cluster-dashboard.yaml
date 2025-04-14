@@ -1,0 +1,12 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: openshift-cluster-dashboard
+  namespace: {{ include "openshift-cluster-observability.namespace" . }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "openshift-cluster-observability.labels" . | nindent 4 }}
+spec:
+  json: |-
+{{ .Files.Get "files/openshift-cluster-overview.json" | indent 4 }}

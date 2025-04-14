@@ -1,0 +1,19 @@
+{{- if and ( .Values.grafana.dashboard.databaseDashboard ) ( .Values.grafana.dashboard.databaseDashboard.enabled ) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: postgresql-database-dashboard
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "postgres-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{ toYaml .Values.grafana.dashboard.datasources | nindent 3 }}
+  configMapRef:
+    name: postgresql-database-dashboard-definition
+    key: json
+{{- end }}

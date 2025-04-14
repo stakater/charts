@@ -1,0 +1,19 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+  name: velero-aggregate-to-edit
+rules:
+  - apiGroups:
+      - velero.io
+    attributeRestrictions: null
+    resources:
+      - schedules
+      - backups
+      - restores
+      - podvolumebackups
+      - podvolumerestores
+    verbs:
+      - "*"

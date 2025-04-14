@@ -1,0 +1,9 @@
+include('Tiltfile')
+
+def delete_crds():
+    print('Deleting crds')
+    local('oc get crds -o name | grep \'.patches\\.redhatcop\\.*\' | xargs -r -n 1 oc delete')
+
+# delete CRD - patches.redhatcop.redhat.io
+
+delete_crds()

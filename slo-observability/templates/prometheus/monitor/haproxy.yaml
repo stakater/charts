@@ -1,0 +1,35 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.global.namespace | default .Release.Namespace }}-router
+  namespace:  {{ .Values.global.namespace | default .Release.Namespace }}
+  labels:
+    servicemonitor: {{ .Values.cluster }}
+    {{- include "slo-observability.labels" . | nindent 4 }}
+spec:
+  endpoints:
+  - port: metrics
+    basicAuth:
+        password:
+          name: {{ .Values.prometheus.secretOveride }}
+          key: statsPassword
+        username:
+          name: {{ .Values.prometheus.secretOveride }}
+          key: statsUsername
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+    path: /metrics
+    interval: 15s
+    metricRelabelings:
+      - sourceLabels: [__name__]
+        regex: "promhttp_metric_handler_requests_total"
+        action: "keep"
+  namespaceSelector:
+    matchNames:
+    - openshift-ingress
+  selector:
+    matchLabels:
+      ingresscontroller.operator.openshift.io/owning-ingresscontroller: default
+

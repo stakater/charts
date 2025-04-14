@@ -1,0 +1,28 @@
+{{- /*
+Create one Role per operator that needs to be approved.
+NOTE: used to do this one per namespace, but that has issues if using this chart as dependency in multiple parent charts that are all
+installing into the same namespace. So while this creates more resources, it allows for more robust use.
+*/}}
+{{- range .Values.operators }}
+{{- if eq .installPlanApproval "Manual" }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "operators-installer.approverName" . }}
+  namespace: {{ .namespace | default $.Release.Namespace }}
+  labels:
+    {{- include "operators-installer.labels" $ | nindent 4 }}
+rules:
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
+  - installplans
+  - subscriptions
+  verbs:
+  - get
+  - list
+  - patch
+{{- end }}
+{{- end }}

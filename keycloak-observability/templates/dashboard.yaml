@@ -1,0 +1,18 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{- include "keycloak-observability.name" . | indent 1 }}-dashboard
+  namespace: {{- include "keycloak-observability.namespace" . | indent 1 }}
+  labels:
+    {{- include "keycloak-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{ toYaml .Values.grafana | nindent 3 }}
+  datasources:
+    {{ toYaml .Values.dashboard.datasources | nindent 3 }}
+  resyncPeriod: 5s
+  configMapRef:
+    name: {{- include "keycloak-observability.name" . | indent 1 }}-dashboard-definition
+    key: json

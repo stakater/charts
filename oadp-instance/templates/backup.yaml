@@ -1,0 +1,27 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: default-object-schedule
+  namespace: {{ include "oadp-instance.namespace" . }}
+spec:
+  schedule: 0 1 * * *
+  template:
+    snapshotVolumes: false   # Only take object backups
+    includedNamespaces:
+      - "*"
+    excludedResources:
+      - imagetags
+      - images
+      - templateinstances
+      - clusterserviceversions
+      - packagemanifests
+      - subscriptions
+      - servicebrokers
+      - servicebindings
+      - serviceclasses
+      - serviceinstances
+      - serviceplans
+      - operatorgroups
+      - events
+      - secrets
+    ttl: 24h0m0s # 24 backups present at once for the last day

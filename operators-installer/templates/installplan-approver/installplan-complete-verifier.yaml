@@ -1,0 +1,104 @@
+{{- range .Values.operators }}
+{{- if eq .installPlanApproval "Manual" }}
+---
+# create one installplan-complete-verifier job per manual operator
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-%s" .csv "verifier" | trunc -63 | trimAll "-" }}
+  namespace: {{ .namespace | default $.Release.Namespace }}
+  labels:
+    {{- include "operators-installer.labels" $ | nindent 4 }}
+  annotations:
+    {{- include "operators-installer.annotations" $ | nindent 4 }}
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: {{ .installPlanVerifierRetries | default 10 }}
+  activeDeadlineSeconds: {{ .installPlanVerifierActiveDeadlineSeconds | default 600 }}
+  template:
+    spec:
+      containers:
+      - name: installplan-complete-verifier
+        image: {{ $.Values.installPlanApproverAndVerifyJobsImage }}
+        command:
+          - /bin/bash
+          - -c
+          - |
+            export HOME=/tmp/approver
+            echo
+            subscriptionUID=""
+            while [ -z "${subscriptionUID}" ]; do
+              echo "Get Subscription (${SUBSCRIPTION}) UID"
+              subscriptionUID=$(oc get subscriptions.operators.coreos.com --field-selector metadata.name=${SUBSCRIPTION} -o=jsonpath="{.items[0].metadata.uid}")
+              if [ -z "${subscriptionUID}" ]; then
+                echo "Subscription UID not found, retrying in 5 seconds..."
+                sleep 5
+              fi
+            done
+            echo "Subscription (${SUBSCRIPTION}) UID: ${subscriptionUID}"
+            if [ ! -z "subscriptionUID" ]; then
+              # this complicated go-template finds an InstallPlan where both the .spec.clusterServiceVersionNames contains the expected CSV
+              # and .metadata.ownerReferences contains the expected Subscription owner. JsonPath doesn't let you do and statements and go-templates
+              # done seem to have a function for checking if a value is in an array without iterating. so here we are.
+              # NOTE 1: if for whatever reason multiple InstallPlans are found that are associated with the Subscription for the correct CSV, only the first will be approved
+              # NOTE 2: this is nested in {{` `}} so that helm doesn't try to interpret the go template
+              {{`installPlanGoTemplate=$(cat << EOF
+              {{- \$installPlanName := "" -}}
+              {{- range .items -}}
+                {{- \$installPlanItem := . -}}
+                {{- range .spec.clusterServiceVersionNames -}}
+                  {{- if and (eq . "${SUBSCRIPTION_CSV}") (not \$installPlanName) -}}
+                    {{- range \$installPlanItem.metadata.ownerReferences -}}
+                      {{- if eq .uid "${subscriptionUID}" -}}
+                        {{- \$installPlanName = \$installPlanItem.metadata.name -}}
+                      {{- end -}}
+                    {{- end -}}
+                  {{- end -}}
+                {{- end -}}
+              {{- end -}}
+              {{ \$installPlanName }}
+            EOF
+              )`}}
+              echo
+              installPlan=""
+              while [ -z "${installPlan}" ]; do
+                echo "Get InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner"
+                installPlan=$(oc get installplan -o=go-template="${installPlanGoTemplate}")
+                if [ -z "${installPlan}" ]; then
+                  echo "InstallPlan not found, retrying in 5 seconds..."
+                  sleep 5
+                fi
+              done
+              echo "InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner: ${installPlan}"
+              
+              installPlanPhase=""
+              while [ "${installPlanPhase}" != "Complete" ]; do
+                echo "Checking InstallPlan (${installPlan}) phase"
+                installPlanPhase=$(oc get installplan ${installPlan} -o=jsonpath="{.status.phase}")
+                if [ "${installPlanPhase}" == "Complete" ]; then
+                  echo "InstallPlan (${installPlan}) is complete"
+                else
+                  echo "InstallPlan (${installPlan}) not yet complete: ${installPlanPhase}, retrying in 5 seconds..."
+                  sleep 5
+                fi
+              done
+              exit 0
+            else
+              echo
+              echo "Failed to get Subscription ($SUBSCRIPTION) UID. This really shouldn't happen."
+              exit 1
+            fi
+        imagePullPolicy: Always
+        env:
+        - name: SUBSCRIPTION_CSV
+          value: {{ .csv }}
+        - name: SUBSCRIPTION
+          value: {{ .name }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      serviceAccount: {{ include "operators-installer.approverName" . }}
+      serviceAccountName: {{ include "operators-installer.approverName" . }}
+      terminationGracePeriodSeconds: 30
+{{- end }}
+{{- end }}
