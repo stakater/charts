@@ -1,0 +1,25 @@
+{{- if .Values.configUpdater.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: config-updater
+  namespace: {{ .Values.namespace }}
+spec:
+  schedule: "{{ .Values.configUpdater.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: updater
+          containers:
+            - name: updater
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  TS=$(date '+%Y-%m-%d %H:%M:%S')
+                  echo "Patching ConfigMap with $TS"
+                  kubectl patch configmap demo-config -n {{ .Values.namespace }} --type merge -p "{\"data\":{\"timestamp\":\"$TS\"}}"
+          restartPolicy: OnFailure
+{{- end }}

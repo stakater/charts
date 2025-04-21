@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: demo-statefulset
+  namespace: {{ .Values.namespace }}
+spec:
+  serviceName: "demo"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-statefulset
+  template:
+    metadata:
+      labels:
+        app: demo-statefulset
+      annotations:
+        configmap.reloader.stakater.com/reload: "demo-config"
+    spec:
+      containers:
+        - name: echo
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - 'echo "Stateful Config: $RELOADED_AT"; tail -f /dev/null'
+          env:
+            - name: RELOADED_AT
+              valueFrom:
+                configMapKeyRef:
+                  name: demo-config
+                  key: timestamp

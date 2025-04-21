@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-deployment-configmap
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-deployment-configmap
+  template:
+    metadata:
+      labels:
+        app: demo-deployment-configmap
+      annotations:
+        configmap.reloader.stakater.com/reload: "demo-config"
+    spec:
+      containers:
+        - name: echo
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - 'echo "ConfigMap: $RELOADED_AT"; tail -f /dev/null'
+          env:
+            - name: RELOADED_AT
+              valueFrom:
+                configMapKeyRef:
+                  name: demo-config
+                  key: timestamp

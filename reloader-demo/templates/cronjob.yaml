@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: demo-cronjob
+  namespace: {{ .Values.namespace }}
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            configmap.reloader.stakater.com/reload: "demo-config"
+        spec:
+          containers:
+            - name: echo
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              command: ["/bin/sh", "-c"]
+              args:
+                - 'echo "Cron Config: $RELOADED_AT"; sleep 10'
+              env:
+                - name: RELOADED_AT
+                  valueFrom:
+                    configMapKeyRef:
+                      name: demo-config
+                      key: timestamp
+          restartPolicy: OnFailure
