@@ -1,0 +1,5 @@
+apiVersion: v2
+name: workload-demo
+description: A Helm chart to demo Reloader Enterprise with configmap and secret reloading workloads
+version: 1.0.0
+appVersion: "1.0"

@@ -1,0 +1,150 @@
+{{- if .Values.workloadGenerator.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: workload-generator
+  namespace: {{ .Values.namespace }}
+spec:
+  schedule: "{{ .Values.workloadGenerator.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: updater
+          containers:
+            - name: creator
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  TS=$(date '+%Y%m%d-%H%M%S')
+                  echo "Generating workloads with TS=$TS"
+
+                  kubectl create configmap cm-$TS -n {{ .Values.namespace }} --from-literal=timestamp="$TS"
+
+                  cat <<EOF | kubectl apply -n {{ .Values.namespace }} -f -
+                  apiVersion: apps/v1
+                  kind: Deployment
+                  metadata:
+                    name: demo-deploy-$TS
+                  spec:
+                    replicas: 1
+                    selector:
+                      matchLabels:
+                        app: demo-deploy-$TS
+                    template:
+                      metadata:
+                        labels:
+                          app: demo-deploy-$TS
+                        annotations:
+                          configmap.reloader.stakater.com/reload: "cm-$TS"
+                      spec:
+                        containers:
+                          - name: echo
+                            image: alpine
+                            command: ["/bin/sh", "-c"]
+                            args:
+                              - 'echo "Generated at $TS"; tail -f /dev/null'
+                            env:
+                              - name: RELOADED_AT
+                                valueFrom:
+                                  configMapKeyRef:
+                                    name: cm-$TS
+                                    key: timestamp
+                  ---
+                  apiVersion: apps/v1
+                  kind: StatefulSet
+                  metadata:
+                    name: demo-ss-$TS
+                  spec:
+                    serviceName: "demo-ss-$TS"
+                    replicas: 1
+                    selector:
+                      matchLabels:
+                        app: demo-ss-$TS
+                    template:
+                      metadata:
+                        labels:
+                          app: demo-ss-$TS
+                        annotations:
+                          configmap.reloader.stakater.com/reload: "cm-$TS"
+                      spec:
+                        containers:
+                          - name: echo
+                            image: alpine
+                            command: ["/bin/sh", "-c"]
+                            args:
+                              - 'echo "SS $TS"; tail -f /dev/null'
+                            env:
+                              - name: RELOADED_AT
+                                valueFrom:
+                                  configMapKeyRef:
+                                    name: cm-$TS
+                                    key: timestamp
+                  ---
+                  apiVersion: apps/v1
+                  kind: DaemonSet
+                  metadata:
+                    name: demo-ds-$TS
+                  spec:
+                    selector:
+                      matchLabels:
+                        app: demo-ds-$TS
+                    template:
+                      metadata:
+                        labels:
+                          app: demo-ds-$TS
+                        annotations:
+                          configmap.reloader.stakater.com/reload: "cm-$TS"
+                      spec:
+                        containers:
+                          - name: echo
+                            image: alpine
+                            command: ["/bin/sh", "-c"]
+                            args:
+                              - 'echo "DS $TS"; tail -f /dev/null'
+                            env:
+                              - name: RELOADED_AT
+                                valueFrom:
+                                  configMapKeyRef:
+                                    name: cm-$TS
+                                    key: timestamp
+                  ---
+                  apiVersion: batch/v1
+                  kind: CronJob
+                  metadata:
+                    name: demo-cj-$TS
+                  spec:
+                    schedule: "*/10 * * * *"
+                    jobTemplate:
+                      spec:
+                        template:
+                          metadata:
+                            annotations:
+                              configmap.reloader.stakater.com/reload: "cm-$TS"
+                          spec:
+                            containers:
+                              - name: echo
+                                image: alpine
+                                command: ["/bin/sh", "-c"]
+                                args:
+                                  - 'echo "CJ $TS"; sleep 5'
+                                env:
+                                  - name: RELOADED_AT
+                                    valueFrom:
+                                      configMapKeyRef:
+                                        name: cm-$TS
+                                        key: timestamp
+                            restartPolicy: OnFailure
+                  EOF
+
+                  echo "Sleeping for cleanup"
+                  sleep 180
+                  kubectl delete deployment demo-deploy-$TS -n {{ .Values.namespace }}
+                  kubectl delete statefulset demo-ss-$TS -n {{ .Values.namespace }}
+                  kubectl delete daemonset demo-ds-$TS -n {{ .Values.namespace }}
+                  kubectl delete cronjob demo-cj-$TS -n {{ .Values.namespace }}
+                  kubectl delete configmap cm-$TS -n {{ .Values.namespace }}
+          restartPolicy: OnFailure
+{{- end }}

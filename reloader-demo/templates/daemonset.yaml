@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: demo-daemonset
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: demo-daemonset
+  template:
+    metadata:
+      labels:
+        app: demo-daemonset
+      annotations:
+        configmap.reloader.stakater.com/reload: "demo-config"
+    spec:
+      containers:
+        - name: echo
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - 'echo "Daemon Config: $RELOADED_AT"; tail -f /dev/null'
+          env:
+            - name: RELOADED_AT
+              valueFrom:
+                configMapKeyRef:
+                  name: demo-config
+                  key: timestamp

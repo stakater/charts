@@ -1,0 +1,18 @@
+namespace: reloader-demo
+
+image:
+  repository: alpine
+  tag: latest
+  pullPolicy: IfNotPresent
+
+configUpdater:
+  enabled: true
+  schedule: "*/2 * * * *"
+
+secretUpdater:
+  enabled: true
+  schedule: "*/3 * * * *"
+
+workloadGenerator:
+  enabled: true
+  schedule: "*/1 * * * *"
