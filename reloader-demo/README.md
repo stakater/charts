@@ -70,7 +70,7 @@ Manually patch values during test:
 
 ```bash
 kubectl patch configmap demo-config -n reloader-demo --type merge -p '{"data":{"timestamp":"2025-04-21 10:00:00"}}'
-kubectl patch secret demo-secret -n reloader-demo --type merge -p '{"data":{"password":"U0VDUkVU" }}'
+kubectl patch secret demo-secret -n reloader-demo --type merge -p '{"data":{"password":"U0VDUkVU" }}' # gitleaks:allow
 ```
 
 Use Playwright or API assertions to verify that reloads occurred.
