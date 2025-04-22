@@ -8,7 +8,7 @@ rules:
     resources: ["configmaps", "secrets"]
     verbs: ["get", "patch", "create", "delete"]
   - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets"]
+    resources: ["deployments", "statefulsets", "daemonsets"]
     verbs: ["get", "create", "delete"]
   - apiGroups: ["batch"]
     resources: ["cronjobs"]
