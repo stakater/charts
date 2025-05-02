@@ -1,8 +1,8 @@
 namespace: reloader-demo
 
 image:
-  repository: alpine
-  tag: latest
+  repository: ghcr.io/linuxcontainers/alpine
+  tag: "3.20"
   pullPolicy: IfNotPresent
 
 configUpdater:
