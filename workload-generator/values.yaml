@@ -15,4 +15,4 @@ secretUpdater:
 
 workloadGenerator:
   enabled: true
-  schedule: "*/1 * * * *"
+  schedule: "*/10 * * * *"
