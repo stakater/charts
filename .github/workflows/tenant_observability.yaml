@@ -1,4 +1,7 @@
 name: Tenant Observability Helm Chart
+permissions:
+  contents: read
+  packages: write
 on:
   pull_request:
     branches:
@@ -35,6 +38,9 @@ jobs:
       NEXT_VERSION: ${{ needs.next-version.outputs.version }}
 
   push-and-release:
+    permissions:
+      contents: read
+      packages: write
     uses: stakater/charts/.github/workflows/push.yaml@main
     name: Push and Release
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
