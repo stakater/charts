@@ -11,7 +11,7 @@ spec:
   instanceSelector:
     {{ toYaml .Values.grafana | nindent 3 }}
   datasources:
-    {{ toYaml .Values.dashboard.datasources | nindent 3 }}
+    {{ toYaml .Values.grafana.datasources | nindent 3 }}
   resyncPeriod: 5s
   configMapRef:
     name: {{- include "tenant-observability.name" . | indent 1 }}-dashboard-definition
