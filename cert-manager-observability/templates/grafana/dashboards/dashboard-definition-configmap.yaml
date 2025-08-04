@@ -180,7 +180,7 @@ data:
                 "includeNullMetadata": true,
                 "instant": true,
                 "interval": "",
-                "legendFormat": "{{exported_namespace}}/{{name}}",
+                "legendFormat": "{{` {{exported_namespace}} `}}/{{` {{name}} `}}",
                 "range": false,
                 "refId": "A",
                 "useBackend": false
@@ -340,7 +340,7 @@ data:
                 "format": "time_series",
                 "instant": true,
                 "interval": "",
-                "legendFormat": "{{cluster}} - {{exported_namespace}} - {{name}}",
+                "legendFormat": "{{` {{cluster}} - {{` {{exported_namespace}} `}} - {{` {{name}} `}}",
                 "range": false,
                 "refId": "A"
                 }
@@ -413,7 +413,7 @@ data:
                 "format": "time_series",
                 "instant": true,
                 "interval": "",
-                "legendFormat": "{{cluster}} - {{exported_namespace}} - {{name}}",
+                "legendFormat": "{{` {{cluster}} `}} - {{` {{exported_namespace}} `}} - {{` {{name}} `}}",
                 "range": false,
                 "refId": "A"
                 }
@@ -509,7 +509,7 @@ data:
                 "expr": "(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$namespace\"} - time())/(24*3600)",
                 "instant": false,
                 "interval": "",
-                "legendFormat": "{{cluster}} - {{exported_namespace}} - {{name}}",
+                "legendFormat": "{{` {{cluster}} `}} - {{` {{exported_namespace}} `}} - {{` {{name}} `}}",
                 "range": true,
                 "refId": "A"
                 }
@@ -609,7 +609,7 @@ data:
                 "format": "time_series",
                 "instant": false,
                 "interval": "",
-                "legendFormat": "{{cluster}} - {{exported_namespace}} - {{name}}",
+                "legendFormat": "{{` {{cluster}} `}} - {{` {{exported_namespace}} `}} - {{` {{name}} `}}",
                 "range": false,
                 "refId": "A"
                 }
@@ -708,7 +708,7 @@ data:
                 "includeNullMetadata": true,
                 "instant": true,
                 "interval": "",
-                "legendFormat": "{{cluster}}",
+                "legendFormat": "{{` {{cluster}} `}}",
                 "range": false,
                 "refId": "A",
                 "useBackend": false

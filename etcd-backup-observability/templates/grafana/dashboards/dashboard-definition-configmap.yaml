@@ -489,7 +489,7 @@ data:
                 "hide": false,
                 "instant": false,
                 "interval": "",
-                "legendFormat": "{{label_cronjob_owner}}",
+                "legendFormat": "{{` {{label_cronjob_owner}} ",
                 "refId": "Failed"
                 },
                 {
@@ -503,7 +503,7 @@ data:
                 "hide": false,
                 "instant": false,
                 "interval": "",
-                "legendFormat": "{{﻿label_cronjob_owner}}",
+                "legendFormat": "{{` {{label_cronjob_owner}} ",
                 "refId": "Succeeded"
                 }
             ],
@@ -675,7 +675,7 @@ data:
                 "hide": false,
                 "instant": true,
                 "interval": "",
-                "legendFormat": "{{﻿label_cronjob_owner}}",
+                "legendFormat": "{{` {{label_cronjob_owner}} ",
                 "refId": "Running"
                 }
             ],
@@ -910,7 +910,7 @@ data:
                 "hide": false,
                 "instant": false,
                 "interval": "",
-                "legendFormat": "{{﻿label_cronjob_owner}}",
+                "legendFormat": "{{` {{label_cronjob_owner}} ",
                 "refId": "Succeeded"
                 },
                 {
@@ -924,7 +924,7 @@ data:
                 "hide": false,
                 "instant": false,
                 "interval": "",
-                "legendFormat": "{{﻿label_cronjob_owner}}",
+                "legendFormat": "{{` {{label_cronjob_owner}} ",
                 "refId": "Failed"
                 }
             ],
@@ -1090,7 +1090,7 @@ data:
                 "hide": false,
                 "instant": false,
                 "interval": "",
-                "legendFormat": "{{﻿label_cronjob_owner}}",
+                "legendFormat": "{{` {{label_cronjob_owner}} ",
                 "refId": "Running"
                 }
             ],
@@ -1321,7 +1321,7 @@ data:
                 "hide": false,
                 "instant": false,
                 "interval": "",
-                "legendFormat": "{{﻿label_cronjob_owner}}",
+                "legendFormat": "{{` {{label_cronjob_owner}} ",
                 "refId": "Running"
                 }
             ],
