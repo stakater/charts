@@ -489,7 +489,7 @@ data:
             "hide": false,
             "instant": false,
             "interval": "",
-            "legendFormat": "{{﻿label_cronjob_owner}}",
+            "legendFormat": "{{label_cronjob_owner}}",
             "refId": "Failed"
             },
             {
