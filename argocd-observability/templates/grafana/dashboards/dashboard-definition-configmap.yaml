@@ -1244,7 +1244,7 @@ data:
                     "format": "time_series",
                     "instant": false,
                     "intervalFactor": 1,
-                    "legendFormat": "{{` {{verb}} `}}{{` {{resource_kind}} ",
+                    "legendFormat": "{{` {{verb}} `}}{{` {{resource_kind}}  `}}",
                     "refId": "A"
                     }
                 ],

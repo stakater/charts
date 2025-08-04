@@ -340,7 +340,7 @@ data:
                 "format": "time_series",
                 "instant": true,
                 "interval": "",
-                "legendFormat": "{{` {{cluster}} - {{` {{exported_namespace}} `}} - {{` {{name}} `}}",
+                "legendFormat": "{{` {{cluster}} `}} - {{` {{exported_namespace}} `}} - {{` {{name}} `}}",
                 "range": false,
                 "refId": "A"
                 }
