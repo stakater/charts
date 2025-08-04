@@ -1359,13 +1359,13 @@ data:
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
                 },
-                "definition": "label_values(kube_cronjob_info{type=\"backup\"},exported_namespace)",
+                "definition": "label_values(kube_cronjob_info{type=\"etcd-backup\"},exported_namespace)",
                 "includeAll": false,
                 "name": "namespace",
                 "options": [],
                 "query": {
                 "qryType": 1,
-                "query": "label_values(kube_cronjob_info{type=\"backup\"},exported_namespace)",
+                "query": "label_values(kube_cronjob_info{type=\"etcd-backup\"},exported_namespace)",
                 "refId": "PrometheusVariableQueryEditor-VariableQuery"
                 },
                 "refresh": 1,
