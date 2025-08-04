@@ -780,14 +780,14 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
             },
-            "definition": "label_values(certmanager_certificate_ready_status{cluster=~\"$cluster\"}, exported_namespace)",
+            "definition": "label_values(certmanager_certificate_ready_status{cluster=~\"$cluster\"},exported_namespace)",
             "hide": 0,
             "includeAll": true,
             "multi": false,
             "name": "namespace",
             "options": [],
             "query": {
-            "query": "label_values(certmanager_certificate_ready_status{cluster=~\"$cluster\"}, exported_namespace)",
+            "query": "label_values(certmanager_certificate_ready_status{cluster=~\"$cluster\"},exported_namespace)",
             "refId": "StandardVariableQuery"
             },
             "refresh": 1,
