@@ -17,4 +17,4 @@ grafana:
   # Default datasources for the dashboard
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: Prometheus
+      datasourceName: prometheus
