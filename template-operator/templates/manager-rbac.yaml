@@ -1,0 +1,110 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "template-operator.fullname" . }}-manager-role
+  labels:
+  {{- include "template-operator.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - limitranges
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kubernetes-client.io
+  resources:
+  - externalsecrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - templates.stakater.com
+  resources:
+  - clustertemplateinstances
+  - templateinstances
+  - templates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - templates.stakater.com
+  resources:
+  - clustertemplateinstances/finalizers
+  - templateinstances/finalizers
+  - templates/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - templates.stakater.com
+  resources:
+  - clustertemplateinstances/status
+  - templateinstances/status
+  - templates/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templategroupinstances
+  - templateinstances
+  - templates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templategroupinstances/finalizers
+  - templateinstances/finalizers
+  - templates/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tenantoperator.stakater.com
+  resources:
+  - templategroupinstances/status
+  - templateinstances/status
+  - templates/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "template-operator.fullname" . }}-manager-rolebinding
+  labels:
+  {{- include "template-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ include "template-operator.fullname" . }}-manager-role'
+subjects:
+- kind: ServiceAccount
+  name: '{{ include "template-operator.fullname" . }}-controller-manager'
+  namespace: '{{ .Release.Namespace }}'

@@ -1,0 +1,127 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ include "template-operator.fullname" . }}-validating-webhook-configuration
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "template-operator.fullname" . }}-
+  labels:
+  {{- include "template-operator.labels" . | nindent 4 }}
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: '{{ include "template-operator.fullname" . }}-webhook-service'
+      namespace: '{{ .Release.Namespace }}'
+      path: /validate-templates-stakater-com-v1alpha1-clustertemplateinstance
+  failurePolicy: Fail
+  name: vclustertemplateinstance.to.kb.io
+  rules:
+  - apiGroups:
+    - templates.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clustertemplateinstances
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: '{{ include "template-operator.fullname" . }}-webhook-service'
+      namespace: '{{ .Release.Namespace }}'
+      path: /validate-templates-stakater-com-v1alpha1-template
+  failurePolicy: Fail
+  name: vtemplate.to.kb.io
+  rules:
+  - apiGroups:
+    - templates.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - DELETE
+    resources:
+    - templates
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: '{{ include "template-operator.fullname" . }}-webhook-service'
+      namespace: '{{ .Release.Namespace }}'
+      path: /validate-templates-stakater-com-v1alpha1-templateinstance
+  failurePolicy: Fail
+  name: vtemplateinstance.to.kb.io
+  rules:
+  - apiGroups:
+    - templates.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - templateinstances
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: '{{ include "template-operator.fullname" . }}-webhook-service'
+      namespace: '{{ .Release.Namespace }}'
+      path: /validate-tenantoperator-stakater-com-v1alpha1-template
+  failurePolicy: Fail
+  name: vtemplate.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - DELETE
+    resources:
+    - templates
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: '{{ include "template-operator.fullname" . }}-webhook-service'
+      namespace: '{{ .Release.Namespace }}'
+      path: /validate-tenantoperator-stakater-com-v1alpha1-templategroupinstance
+  failurePolicy: Fail
+  name: vtemplategroupinstance.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - templategroupinstances
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: '{{ include "template-operator.fullname" . }}-webhook-service'
+      namespace: '{{ .Release.Namespace }}'
+      path: /validate-tenantoperator-stakater-com-v1alpha1-templateinstance
+  failurePolicy: Fail
+  name: vtemplateinstance.kb.io
+  rules:
+  - apiGroups:
+    - tenantoperator.stakater.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - templateinstances
+  sideEffects: None
