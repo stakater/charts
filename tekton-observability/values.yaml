@@ -15,7 +15,7 @@ tektonObservability:
   enabled: true
 
 grafana:
-  folder: # "Tekton overview"
+  folder: "Tekton Observability"
   # Grafana instance selector
   instanceSelector:
     matchLabels:

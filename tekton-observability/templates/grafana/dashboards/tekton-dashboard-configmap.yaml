@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{- include "tkn-observability.name" . | indent 1 }}-definition
-  namespace: {{- include "tkn-observability.namespace" . | indent 1 }}
+  name: {{- include "tekton-observability.name" . | indent 1 }}-definition
+  namespace: {{- include "tekton-observability.namespace" . | indent 1 }}
   labels:
-    {{- include "tkn-observability.labels" . | nindent 4 }}
+    {{- include "tekton-observability.labels" . | nindent 4 }}
 data:
   json: |-
         {

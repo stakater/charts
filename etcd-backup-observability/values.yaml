@@ -8,7 +8,7 @@ fullnameOverride: ""
 namespaceOverride: ""
 
 grafana:
-  folder: "etcd Backup Observability"
+  folder: "ETCD Backup Observability"
   # Grafana instance selector
   instanceSelector:
     matchLabels:

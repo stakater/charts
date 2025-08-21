@@ -9,7 +9,7 @@ if settings.get("allow_k8s_contexts"):
 
 yaml=helm(
          '.',
-         name='tkn-observability',
+         name='tekton-observability',
          namespace=namespace,
          values=['values-local.yaml'])
 

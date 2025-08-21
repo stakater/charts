@@ -5,7 +5,7 @@ fullnameOverride: ""
 namespaceOverride: ""
 
 grafana:
-  folder: "Vault dashboard"
+  folder: "Vault Observability"
   instanceSelector:
     matchLabels:
       app: "grafana"
