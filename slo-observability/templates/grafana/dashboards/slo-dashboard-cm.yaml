@@ -2187,7 +2187,7 @@ data:
               "datasource": "$datasource",
               "expr": "count_values(\"result\", khi_probe_last_result)",
               "format": "time_series",
-              "legendFormat": "{{result}}",
+              "legendFormat": "{{`{{result}}`}}",
               "refId": "A"
             }
           ],
