@@ -2220,4 +2220,4 @@ data:
 kind: ConfigMap
 metadata:
   name: {{ .Values.childshiftname }}-slo-observability-dashboard
-  namespace: {{ include "slo-observability.namespace" . }}
+  namespace: {{ include "childshitf-slo-observability.namespace" . }}
