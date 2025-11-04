@@ -1,0 +1,29 @@
+{{- if and ( .Values.prometheus.rules.slowQuery ) ( .Values.prometheus.rules.slowQuery.enabled ) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slow-query
+  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  # If labels are defined in spec.ruleSelector.matchLabels of your deployed Prometheus object, make sure to include them here.
+  labels:
+    role: alertmanager-rules
+{{- if .Values.prometheus.rules.labels }}
+{{- toYaml .Values.prometheus.rules.labels | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: SlowQuery
+    rules:
+{{- range .Values.prometheus.endpoints }}
+    - alert: SlowQuery
+      expr: probe_duration_seconds{instance="https://{{ . }}"} > 3
+      for: 10m
+      annotations:
+        message: It took over 3 seconds to access the {{ . | splitList "."  | first | title | quote }} endpoint.
+        summary: |
+          The endpoint will take more than 3 seconds within 10 minutes.
+      labels:
+        severity: warning
+{{- end }}
+{{- end }}

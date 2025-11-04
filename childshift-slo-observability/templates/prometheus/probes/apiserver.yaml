@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  namespace: openshift-monitoring
+  name: {{ .Values.childshiftname }}-openshift-apiserver-healthz
+spec:
+  interval: 5s
+  jobName: blackbox-exporter
+  module: http_2xx
+  prober:
+    scheme: http
+    url: prometheus-blackbox-exporter.openshift-monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - https://openshift-apiserver.cluster-{{ .Values.childshiftname }}.svc.cluster.local
+      labels:
+        app: openshift-apiserver
+        health: healthz
+        cluster: {{ .Values.childshiftnameName }}
+  tlsConfig:
+    insecureSkipVerify: true

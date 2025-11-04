@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  namespace: openshift-monitoring
+  name: {{ .Values.childshiftname }}-openshift-router-internal-healthz
+spec:
+  interval: 5s
+  jobName: blackbox-exporter
+  module: http_2xx
+  prober:
+    scheme: http
+    url: prometheus-blackbox-exporter.openshift-monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - https://openshift-route-controller-manager.cluster-{{ .Values.childshiftname }}.svc.cluster.local:8443
+      labels:
+        app: openshift-router-internal
+        health: healthz
+        cluster: {{ .Values.childshiftnameName }}
+  tlsConfig:
+    insecureSkipVerify: true

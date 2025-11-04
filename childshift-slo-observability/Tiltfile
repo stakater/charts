@@ -1,0 +1,16 @@
+load('ext://namespace', 'namespace_create', 'namespace_inject')
+
+settings = read_json('../tilt-settings.json', default={})
+
+namespace= "grafana-operator"
+
+if settings.get("allow_k8s_contexts"):
+  allow_k8s_contexts(settings.get("allow_k8s_contexts").format(namespace))
+
+yaml=helm(
+         '.',
+         name='slo-dashboard',
+         namespace=namespace,
+         values=['values-local.yaml'])
+
+k8s_yaml(yaml)
