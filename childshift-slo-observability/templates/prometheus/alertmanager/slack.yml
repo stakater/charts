@@ -8,7 +8,7 @@ metadata:
   namespace: {{ .Values.global.namespace | default .Release.Namespace }}
   labels:
     alert_manager: "true"
-    {{- include "slo-observability.labels" . | nindent 4 }}
+    {{- include "childshift-slo-observability.labels" . | nindent 4 }}
 type: Opaque
 stringData:
   alertmanager.yaml: |-
