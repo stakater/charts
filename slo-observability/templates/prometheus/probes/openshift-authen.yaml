@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  namespace: openshift-monitoring
+  name: openshift-oauth-healthz
+spec:
+  interval: 5s
+  jobName: blackbox-exporter
+  module: http_2xx
+  prober:
+    scheme: http
+    url: prometheus-blackbox-exporter.openshift-monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz
+      labels:
+        app: openshift-oauth
+        health: healthz
+        cluster: {{ .Values.cluster }}
+  tlsConfig:
+    insecureSkipVerify: true
