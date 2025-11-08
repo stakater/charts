@@ -13,10 +13,10 @@ spec:
   targets:
     staticConfig:
       static:
-        - https://openshift-oauth-apiserver.cluster-{{ .Values.childshiftname }}.svc.cluster.local
+        - https://openshift-oauth-apiserver.default-{{ .Values.childshiftname }}.svc.cluster.local
       labels:
         app: openshift-oauth
         health: healthz
-        cluster: {{ .Values.childshiftnameName }}
+        cluster: {{ .Values.childshiftname }}
   tlsConfig:
     insecureSkipVerify: true

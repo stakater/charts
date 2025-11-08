@@ -1,0 +1,19 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{ .Values.childshiftname }}-slo-observability-dashboard-definition
+  namespace: {{ include "childshift-slo-observability.namespace" . }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "childshift-slo-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+  datasources:
+    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+  configMapRef:
+    name: {{ .Values.childshiftname }}-slo-observability-dashboard-definition
+    key: json

@@ -16,7 +16,7 @@ spec:
         - https://console-openshift-console.apps.{{ .Values.childshiftname }}.apps.{{ .Values.domain }}
       labels:
         app: openshift-console
-        cluster: {{ .Values.childshiftnameName }}
+        cluster: {{ .Values.childshiftname }}
         health: root
   tlsConfig:
     insecureSkipVerify: true
