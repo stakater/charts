@@ -14,16 +14,16 @@ global:
   namespace: "stakater-grafana-operator"
 
 prometheus:
-  rules:
-    endpointDown:
-      enabled: true
-    slowQuery:
-      enabled: true
-    errorCode:
-      enabled: true
-  slack:
-    channel: childshift-slo-observability
-    token: api_token
+  #  rules:
+  #    endpointDown:
+  #      enabled: true
+  #    slowQuery:
+  #      enabled: true
+  #    errorCode:
+  #      enabled: true
+  #  slack:
+  #    channel: childshift-slo-observability
+  #    token: api_token
 
 grafana:
   folder: "SLO childshift Observability"
