@@ -13,7 +13,7 @@ spec:
   targets:
     staticConfig:
       static:
-        - https://console-openshift-console.apps.{{ .Values.childshiftname }}.apps.{{ .Values.domain }}
+        - {{ .Values.consoleurl }}
       labels:
         app: openshift-console
         cluster: {{ .Values.childshiftname }}

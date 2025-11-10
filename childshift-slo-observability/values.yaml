@@ -9,7 +9,7 @@ namespaceOverride: ""
 
 childshiftname: "" #example the childshiftname is hc-okd-1 and namespace deploy resource is clusters-hc-okd-1
 childshiftnamespaceresource: ""  #example cluster-childshiftname or default-childshiftname where deploy all po for childshift
-domain: "" #example us-1.8aeyw69n.stakater.cloud
+consoleurl: "" #example https://console-openshift-console.apps.hc-okd-1.apps.us-1.8aeyw69n.stakater.cloud
 global:
   namespace: "stakater-grafana-operator"
 
