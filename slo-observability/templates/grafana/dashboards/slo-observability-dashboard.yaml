@@ -11,9 +11,9 @@ spec:
   folder: {{ .Values.grafana.folder }}
   allowCrossNamespaceImport: true
   instanceSelector:
-    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+    {{ toYaml .Values.grafana.instanceSelector | nindent 4 }}
   datasources:
-    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+    {{ toYaml .Values.grafana.datasources | nindent 4 }}
   configMapRef:
-    name: {{ include "slo-observability.name" . }}-definition
+    name: slo-observability-definition
     key: json

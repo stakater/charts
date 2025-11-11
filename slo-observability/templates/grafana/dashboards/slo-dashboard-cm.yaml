@@ -2,6 +2,7 @@ apiVersion: v1
 data:
   json: |-
     {
+      "__inputs": [],
       "annotations": {
         "list": [
           {
@@ -2140,6 +2141,23 @@ data:
         "list": [
           {
             "current": {
+              "text": "prometheus",
+              "value": "prometheus"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "current": {
               "text": "probe_http_status_code{instance=\"https://10.0.1.18:6443\"} != 200",
               "value": "probe_http_status_code{instance=\"https://10.0.1.18:6443\"} != 200"
             },
@@ -2219,7 +2237,7 @@ data:
     }
 kind: ConfigMap
 metadata:
-  name: slo-observability-dashboard-definition
+  name: slo-observability-definition
   namespace: {{ include "slo-observability.namespace" . }}
   labels:
     {{- include "slo-observability.labels" . | nindent 4 }}

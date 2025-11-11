@@ -25,11 +25,9 @@ prometheus:
 
 grafana:
   folder: "SLO Observability"
-  # Grafana instance selector
   instanceSelector:
     matchLabels:
-      app: "grafana"
-
+      app: "grafana"           # ĐÚNG 100% VỚI CLUSTER CỦA BẠN
   datasources:
     - inputName: "datasource"
       datasourceName: prometheus
