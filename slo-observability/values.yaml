@@ -7,9 +7,9 @@ fullnameOverride: ""
 # -- Same as nameOverride but for the namespace.
 namespaceOverride: ""
 
-cluster: ""
+cluster: "mothershift"
 global:
-  namespace: ""
+  namespace: "stakater-grafana-operator"
 
 prometheus:
   rules:
@@ -22,3 +22,14 @@ prometheus:
   slack:
     channel: slo-observability
     token: api_token
+
+grafana:
+  folder: "SLO Observability"
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+
+  datasources:
+    - inputName: "datasource"
+      datasourceName: prometheus
