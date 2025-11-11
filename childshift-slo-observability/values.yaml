@@ -7,19 +7,32 @@ fullnameOverride: ""
 # -- Same as nameOverride but for the namespace.
 namespaceOverride: ""
 
-childshiftname: ""
-domain: "" #example us-1.8aeyw69n.stakater.cloud
+childshiftname: "" #example the childshiftname is hc-okd-1 and namespace deploy resource is clusters-hc-okd-1
+childshiftnamespaceresource: ""  #example cluster-childshiftname or default-childshiftname where deploy all po for childshift
+consoleurl: "" #example https://console-openshift-console.apps.hc-okd-1.apps.us-1.8aeyw69n.stakater.cloud
 global:
-  namespace: ""
+  namespace: "stakater-grafana-operator"
 
 prometheus:
-  rules:
-    endpointDown:
-      enabled: true
-    slowQuery:
-      enabled: true
-    errorCode:
-      enabled: true
-  slack:
-    channel: childshift-slo-observability
-    token: api_token
+  #  rules:
+  #    endpointDown:
+  #      enabled: true
+  #    slowQuery:
+  #      enabled: true
+  #    errorCode:
+  #      enabled: true
+  #  slack:
+  #    channel: childshift-slo-observability
+  #    token: api_token
+
+grafana:
+  folder: "SLO childshift Observability"
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+
+  datasources:
+    - inputName: "datasource"
+      datasourceName: prometheus
+
