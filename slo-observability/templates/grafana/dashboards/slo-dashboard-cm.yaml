@@ -2078,7 +2078,7 @@ data:
           "targets": [
             {
               "expr": "max by (probe_name) (khi_probe_last_result)",
-              "legendFormat": "{{probe_name}}",
+              "legendFormat": "{{` {{probe_name}} `}}",
               "refId": "A"
             }
           ],
