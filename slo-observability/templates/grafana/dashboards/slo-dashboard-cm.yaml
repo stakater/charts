@@ -2272,14 +2272,14 @@ data:
       ],
       "preload": false,
       "refresh": "15s",
-      "schemaVersion": 40,
+      "schemaVersion": 41,
       "tags": [],
       "templating": {
         "list": [
           {
             "current": {
               "text": "prometheus",
-              "value": "189a7f02-2190-48ff-917c-dba73209cfd8"
+              "value": "prometheus"
             },
             "includeAll": false,
             "name": "datasource",
@@ -2364,10 +2364,9 @@ data:
         ]
       },
       "timezone": "",
-      "title": "Openshift SLO Copy",
-      "uid": "cf418s6kvfda8e",
-      "version": 6,
-      "weekStart": ""
+      "title": "Openshift SLO",
+      "uid": "fd42a85e-6df8-4f10-beed-0a81d3c5befa",
+      "version": 66
     }
 kind: ConfigMap
 metadata:
