@@ -17,7 +17,6 @@ spec:
       labels:
         app: openshift-console
         cluster: {{ .Values.childshiftname }}
-
         health: root
   tlsConfig:
     insecureSkipVerify: true
