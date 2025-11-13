@@ -2,6 +2,7 @@ apiVersion: v1
 data:
   json: |-
     {
+      "__inputs": [],
       "annotations": {
         "list": [
           {
