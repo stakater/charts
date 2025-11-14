@@ -2230,8 +2230,8 @@ data:
         ]
       },
       "timezone": "",
-      "title": "Childshift SLO",
-      "uid": "fd42a85e-6df8-4f10-beed-0a81d3c5befa",
+      "title": "{{ .Values.childshiftname }}-Childshift SLO",
+      "uid": "{{ .Values.childshiftname }}-beed-0a81d3c5befa",
       "version": 66
     }
 kind: ConfigMap

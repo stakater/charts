@@ -13,7 +13,7 @@ spec:
   targets:
     staticConfig:
       static:
-        - https://openshift-route-controller-manager.default-{{ .Values.childshiftname }}.svc.cluster.local:8443
+        - https://openshift-route-controller-manager.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local:8443/healthz
       labels:
         app: openshift-router-internal
         health: healthz

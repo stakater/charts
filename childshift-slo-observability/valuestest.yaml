@@ -1,0 +1,38 @@
+# -- Put here the new name if you want to override the release name.
+nameOverride: ""
+
+# -- Same as nameOverride but for the fullname.
+fullnameOverride: ""
+
+# -- Same as nameOverride but for the namespace.
+namespaceOverride: ""
+
+childshiftname: "pova9szlw" #example the childshiftname is hc-okd-1 and namespace deploy resource is clusters-hc-okd-1
+childshiftnamespaceresource: "hypershift-pova9szlw-pova9szlw"  #example cluster-childshiftname or default-childshiftname where deploy all po for childshift
+consoleurl: "https://console-openshift-console.apps.pova9szlw.stakater.cloud/" #example https://console-openshift-console.apps.hc-okd-1.apps.us-1.8aeyw69n.stakater.cloud
+global:
+  namespace: "stakater-grafana-operator"
+
+prometheus:
+  #  rules:
+  #    endpointDown:
+  #      enabled: true
+  #    slowQuery:
+  #      enabled: true
+  #    errorCode:
+  #      enabled: true
+  #  slack:
+  #    channel: childshift-slo-observability
+  #    token: api_token
+
+grafana:
+  folder: "SLO childshift Observability"
+  # Grafana instance selector
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+
+  datasources:
+    - inputName: "datasource"
+      datasourceName: prometheus
+

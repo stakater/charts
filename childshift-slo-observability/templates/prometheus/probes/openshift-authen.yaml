@@ -13,7 +13,7 @@ spec:
   targets:
     staticConfig:
       static:
-        - https://openshift-oauth-apiserver.default-{{ .Values.childshiftname }}.svc.cluster.local
+        - https://openshift-oauth-apiserver.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local/healthz
       labels:
         app: openshift-oauth
         health: healthz

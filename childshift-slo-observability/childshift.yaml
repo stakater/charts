@@ -1,0 +1,29 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: pova9szlw-slo-observability-dashboard-definition
+  namespace: stakater-grafana-operator 
+  labels:
+    app.kubernetes.io/instance: grafana-dashboards
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: childshift-slo-observability
+    app.kubernetes.io/version: 0.0.1
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    helm.sh/chart: childshift-slo-observability-0.0.13
+    release: grafana-dashboards
+  annotations:
+    argocd.argoproj.io/tracking-id: grafana-dashboards:grafana.integreatly.org/GrafanaDashboard:stakater-grafana-operator/pova9szlw-slo-observability-dashboard-definition
+spec:
+  folder: "SLO childshift Observability"
+  allowCrossNamespaceImport: true
+  configMapRef:
+    name: pova9szlw-slo-observability-dashboard-definition
+    key: json
+  datasources:
+    - datasourceName: prometheus
+      inputName: datasource
+  instanceSelector:
+    matchLabels:
+      app: grafana
+  resyncPeriod: 10m0s
