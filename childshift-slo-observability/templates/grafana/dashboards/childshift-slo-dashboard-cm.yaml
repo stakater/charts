@@ -2231,7 +2231,6 @@ data:
       },
       "timezone": "",
       "title": "{{ .Values.childshiftname }} Childshift SLO",
-      "uid": "{{ .Values.childshiftname }}-beed-0a81d3c5befa",
       "version": 66
     }
 kind: ConfigMap
@@ -2240,4 +2239,3 @@ metadata:
   namespace: {{ include "childshift-slo-observability.namespace" . }}
   labels:
     {{- include "childshift-slo-observability.labels" . | nindent 4 }}
-
