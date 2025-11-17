@@ -17,6 +17,6 @@ spec:
       labels:
         app: openshift-apiserver
         health: healthz
-        cluster: {{ .Values.childshiftnameName }}
+        cluster: {{ .Values.childshiftname }}
   tlsConfig:
     insecureSkipVerify: true

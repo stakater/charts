@@ -17,6 +17,6 @@ spec:
       labels:
         app: openshift-router-internal
         health: healthz
-        cluster: {{ .Values.childshiftnameName }}
+        cluster: {{ .Values.childshiftname }}
   tlsConfig:
     insecureSkipVerify: true
