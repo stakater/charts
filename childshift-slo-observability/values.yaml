@@ -26,7 +26,7 @@ prometheus:
   #    token: api_token
 
 grafana:
-  folder: "SLO childshift Observability"
+  folder: "SLO HostedCluster Observability"
   # Grafana instance selector
   instanceSelector:
     matchLabels:
