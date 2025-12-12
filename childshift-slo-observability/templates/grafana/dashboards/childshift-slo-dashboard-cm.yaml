@@ -2076,7 +2076,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "expr": "max by (probe_name) (khi_probe_last_result)",
+              "expr": "max by (probe_name) (khi_probe_last_result{cluster=\"{{ .Values.childshiftname }}\"})",
               "legendFormat": "{{` {{probe_name}} `}}",
               "refId": "A"
             }
@@ -2168,7 +2168,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "expr": "count(khi_probe_last_result == 0)",
+              "expr": "count(khi_probe_last_result{cluster=\"{{ .Values.childshiftname }}\"} == 0)",
               "legendFormat": "Failures",
               "refId": "A"
             }
@@ -2260,7 +2260,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "expr": "count(khi_probe_last_result == 1)",
+              "expr": "count(khi_probe_last_result{cluster=\"{{ .Values.childshiftname }}\"} == 1)",
               "legendFormat": "Success",
               "refId": "A"
             }
