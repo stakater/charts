@@ -39,7 +39,7 @@ data:
           "type": "row"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -106,7 +106,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
               "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-apiserver.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local/healthz\"}[$__interval]))",
@@ -123,7 +123,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -195,7 +195,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-apiserver.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
               "format": "time_series",
@@ -208,7 +208,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -291,7 +291,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "$service_slo_target",
               "format": "time_series",
@@ -302,7 +302,7 @@ data:
               "refId": "B"
             },
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
@@ -322,7 +322,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -404,7 +404,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-apiserver.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local/healthz\"}[30s])",
               "instant": false,
@@ -417,7 +417,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -500,7 +500,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "exemplar": false,
               "expr": "sum(rate(apiserver_request_total{job=\"openshift-apiserver\",code=~\"5..|429\"}[5m]))*100 or vector(0)/sum(rate(apiserver_request_total{job=\"openshift-apiserver\"}[5m])) ",
@@ -529,7 +529,7 @@ data:
           "type": "row"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -596,7 +596,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
               "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.childshiftname }}\", instance=\"{{ .Values.consoleurl }}\"}[$__interval]))",
@@ -613,7 +613,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -681,7 +681,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster=\"{{ .Values.childshiftname }}\", instance=\"{{ .Values.consoleurl }}\"}[$__interval])))) * $__range_s / 100 / 3600",
               "format": "time_series",
@@ -694,7 +694,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -777,7 +777,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "$service_slo_target",
               "format": "time_series",
@@ -787,7 +787,7 @@ data:
               "refId": "B"
             },
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
@@ -807,7 +807,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -889,7 +889,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "code",
               "exemplar": false,
@@ -907,7 +907,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -991,7 +991,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "exemplar": false,
               "expr": "sum(rate(promhttp_metric_handler_requests_total{job=\"console\", code=~\"5..|429\"}[5m])) * 100 / sum(rate(promhttp_metric_handler_requests_total{job=\"console\"}[5m]))",
@@ -1020,7 +1020,7 @@ data:
           "type": "row"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1087,7 +1087,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
               "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-oauth-apiserver.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local/healthz\"}[$__interval]))",
@@ -1104,7 +1104,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1172,7 +1172,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-oauth-apiserver.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
               "format": "time_series",
@@ -1185,7 +1185,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1268,7 +1268,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "$service_slo_target",
               "format": "time_series",
@@ -1279,7 +1279,7 @@ data:
               "refId": "B"
             },
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
@@ -1299,7 +1299,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1381,7 +1381,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-oauth-apiserver.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local/healthz\"}[30s])",
               "instant": false,
@@ -1394,7 +1394,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1477,7 +1477,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "exemplar": false,
               "expr": "sum(rate(apiserver_request_total{job=\"oauth-openshift\",code=~\"5..|429\"}[5m])) or vector(0) *100/sum(rate(apiserver_request_total{job=\"oauth-openshift\"}[5m]))",
@@ -1506,7 +1506,7 @@ data:
           "type": "row"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1573,7 +1573,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
               "expr": "sum(avg_over_time(probe_success{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-route-controller-manager.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local:8443/healthz\"}[$__interval]))",
@@ -1590,7 +1590,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1662,7 +1662,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-route-controller-manager.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local:8443/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
               "format": "time_series",
@@ -1675,7 +1675,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1758,7 +1758,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "$service_slo_target",
               "format": "time_series",
@@ -1769,7 +1769,7 @@ data:
               "refId": "B"
             },
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
@@ -1789,7 +1789,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1871,7 +1871,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster=\"{{ .Values.childshiftname }}\", instance=\"https://openshift-route-controller-manager.{{ .Values.childshiftnamespaceresource }}.svc.cluster.local:8443/healthz\"}[30s])",
               "instant": false,
@@ -1884,7 +1884,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": "prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1967,7 +1967,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "editorMode": "code",
               "exemplar": false,
               "expr": "sum(rate(promhttp_metric_handler_requests_total{job=\"router-internal-default\", code=~\"5..|429\"}[5m])) * 100 / sum(rate(promhttp_metric_handler_requests_total{job=\"router-internal-default\"}[5m]))",
@@ -1979,7 +1979,7 @@ data:
               "refId": "A"
             },
             {
-              "datasource": "$datasource",
+              "datasource": "prometheus",
               "expr": "",
               "hide": false,
               "instant": false,
@@ -2006,7 +2006,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": ""
+            "uid": "mco-prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -2055,10 +2055,10 @@ data:
               "calcs": [],
               "displayMode": "list",
               "placement": "bottom",
-              "showLegend": false
+              "showLegend": true
             },
-            "maxVizHeight": 91,
-            "minVizHeight": 16,
+            "maxVizHeight": 83,
+            "minVizHeight": 0,
             "minVizWidth": 8,
             "namePlacement": "auto",
             "orientation": "horizontal",
@@ -2069,7 +2069,7 @@ data:
               "fields": "",
               "values": false
             },
-            "showUnfilled": false,
+            "showUnfilled": true,
             "sizing": "auto",
             "valueMode": "color"
           },
@@ -2087,7 +2087,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "mco-prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -2179,7 +2179,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "mco-prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -2276,20 +2276,12 @@ data:
       "templating": {
         "list": [
           {
-            "current": {
-              "text": "prometheus",
-              "value": "prometheus"
-            },
-            "hide": 0,
             "includeAll": false,
-            "label": null,
-            "multi": false,
             "name": "datasource",
             "options": [],
             "query": "prometheus",
             "refresh": 1,
             "regex": "",
-            "skipUrlSync": false,
             "type": "datasource"
           },
           {
