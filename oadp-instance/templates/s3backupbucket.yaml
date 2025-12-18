@@ -1,6 +1,6 @@
 {{- if .Values.clusterBackup.enabled }}
 {{- if eq .Values.clusterBackup.bucketType "s3" }}
-apiVersion: crossplane.stakater.io/v1
+apiVersion: infrastructure.stakater.com/v1
 kind: AwsVeleroBackupBucket
 metadata:
   name: {{ .Values.clusterBackup.awsBucketName }}
