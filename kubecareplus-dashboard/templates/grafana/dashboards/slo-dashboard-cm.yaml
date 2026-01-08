@@ -1,4 +1,12 @@
+{{- range .Values.clusterName }}
+---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ . }}-observability
+  namespace: {{ include "kubecareplus-dashboard.namespace" $ }}
+  labels:
+    {{- include "kubecareplus-dashboard.labels" $ | nindent 4 }}
 data:
   json: |-
     {
@@ -109,7 +117,7 @@ data:
               "datasource": "mco-prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval]))",
+              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval]))",
               "format": "time_series",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -197,7 +205,7 @@ data:
             {
               "datasource": "mco-prometheus",
               "editorMode": "code",
-              "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
+              "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
               "format": "time_series",
               "intervalFactor": 1,
               "range": true,
@@ -306,7 +314,7 @@ data:
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
-              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval])) * 100",
+              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[$__interval])) * 100",
               "format": "time_series",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -406,7 +414,7 @@ data:
             {
               "datasource": "mco-prometheus",
               "editorMode": "code",
-              "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[30s])",
+              "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster_name=\"{{ . }}\", instance=\"https://apiserver.openshift-kube-apiserver.svc.cluster.local/healthz\"}[30s])",
               "instant": false,
               "legendFormat": "p99",
               "range": true,
@@ -599,7 +607,7 @@ data:
               "datasource": "mco-prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval]))",
+              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval]))",
               "format": "time_series",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -683,7 +691,7 @@ data:
             {
               "datasource": "mco-prometheus",
               "editorMode": "code",
-              "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval])))) * $__range_s / 100 / 3600",
+              "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval])))) * $__range_s / 100 / 3600",
               "format": "time_series",
               "intervalFactor": 1,
               "range": true,
@@ -791,7 +799,7 @@ data:
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
-              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval])) * 100",
+              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://console.openshift-console.svc.cluster.local\"}[$__interval])) * 100",
               "format": "time_series",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -893,7 +901,7 @@ data:
               "disableTextWrap": false,
               "editorMode": "code",
               "exemplar": false,
-              "expr": "quantile_over_time(0.99, probe_duration_seconds{instance=\"https://console.openshift-console.svc.cluster.local\", cluster=\"{{ .Values.clusterName }}\"}[30s])",
+              "expr": "quantile_over_time(0.99, probe_duration_seconds{instance=\"https://console.openshift-console.svc.cluster.local\", cluster=\"{{ . }}\"}[30s])",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1090,7 +1098,7 @@ data:
               "datasource": "mco-prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval]))",
+              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval]))",
               "format": "time_series",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -1174,7 +1182,7 @@ data:
             {
               "datasource": "mco-prometheus",
               "editorMode": "code",
-              "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
+              "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
               "format": "time_series",
               "intervalFactor": 1,
               "range": true,
@@ -1283,7 +1291,7 @@ data:
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
-              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval])) * 100",
+              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[$__interval])) * 100",
               "format": "time_series",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -1383,7 +1391,7 @@ data:
             {
               "datasource": "mco-prometheus",
               "editorMode": "code",
-              "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster_name=\"{{ .Values.clusterName }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[30s])",
+              "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster_name=\"{{ . }}\", instance=\"https://oauth-openshift.openshift-authentication.svc.cluster.local/healthz\"}[30s])",
               "instant": false,
               "legendFormat": "p99",
               "range": true,
@@ -1576,7 +1584,7 @@ data:
               "datasource": "mco-prometheus",
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval]))",
+              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval]))",
               "format": "time_series",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -1664,7 +1672,7 @@ data:
             {
               "datasource": "mco-prometheus",
               "editorMode": "code",
-              "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
+              "expr": "($error_budget - (1 - sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval])))) * $__range_s / 100 / 3600",
               "format": "time_series",
               "intervalFactor": 1,
               "range": true,
@@ -1773,7 +1781,7 @@ data:
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
-              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ .Values.clusterName }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval])) * 100",
+              "expr": "sum(avg_over_time(probe_success{cluster_name=\"{{ . }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[$__interval])) * 100",
               "format": "time_series",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -1873,7 +1881,7 @@ data:
             {
               "datasource": "mco-prometheus",
               "editorMode": "code",
-              "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster_name=\"{{ .Values.clusterName }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[30s])",
+              "expr": "quantile_over_time(0.99, probe_duration_seconds{cluster_name=\"{{ . }}\", instance=\"http://router-internal-default.openshift-ingress.svc.cluster.local:1936/healthz\"}[30s])",
               "instant": false,
               "legendFormat": "p99",
               "range": true,
@@ -2076,7 +2084,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "expr": "max by (probe_name) (khi_probe_last_result{cluster_name=\"{{ .Values.clusterName }}\"})",
+              "expr": "max by (probe_name) (khi_probe_last_result{cluster_name=\"{{ . }}\"})",
               "legendFormat": "{{` {{probe_name}} `}}",
               "refId": "A"
             }
@@ -2168,7 +2176,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "expr": "count(khi_probe_last_result{cluster_name=\"{{ .Values.clusterName }}\"} == 0)",
+              "expr": "count(khi_probe_last_result{cluster_name=\"{{ . }}\"} == 0)",
               "legendFormat": "Failures",
               "refId": "A"
             }
@@ -2260,7 +2268,7 @@ data:
           "pluginVersion": "12.1.0",
           "targets": [
             {
-              "expr": "count(khi_probe_last_result{cluster_name=\"{{ .Values.clusterName }}\"} == 1)",
+              "expr": "count(khi_probe_last_result{cluster_name=\"{{ . }}\"} == 1)",
               "legendFormat": "Success",
               "refId": "A"
             }
@@ -2359,12 +2367,6 @@ data:
         ]
       },
       "timezone": "",
-      "title": "{{ .Values.clusterName }} SLO",
+      "title": "{{ . }} SLO",
       "version": 66
     }
-kind: ConfigMap
-metadata:
-  name: {{ .Values.clusterName }}-observability
-  namespace: {{ include "kubecareplus-dashboard.namespace" . }}
-  labels:
-    {{- include "kubecareplus-dashboard.labels" . | nindent 4 }}

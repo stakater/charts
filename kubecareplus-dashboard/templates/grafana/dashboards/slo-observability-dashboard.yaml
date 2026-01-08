@@ -1,19 +1,22 @@
+{{- range .Values.clusterName }}
+---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: {{ .Values.clusterName }}-observability
-  namespace: {{ include "kubecareplus-dashboard.namespace" . }}
+  name: {{ . }}-observability
+  namespace: {{ include "kubecareplus-dashboard.namespace" $ }}
   labels:
     grafana_dashboard: "true"
     grafanaDashboard: grafana-operator
-    {{- include "kubecareplus-dashboard.labels" . | nindent 4 }}
+    {{- include "kubecareplus-dashboard.labels" $ | nindent 4 }}
 spec:
-  folder: {{ .Values.grafana.folder }}
+  folder: {{ $.Values.grafana.folder }}
   allowCrossNamespaceImport: true
   instanceSelector:
-    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+    {{- toYaml $.Values.grafana.instanceSelector | nindent 4 }}
   datasources:
-    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+    {{- toYaml $.Values.grafana.datasources | nindent 4 }}
   configMapRef:
-    name: {{ .Values.clusterName }}-observability
+    name: {{ . }}-observability
     key: json
+{{- end }}
