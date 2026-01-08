@@ -9,16 +9,17 @@ metadata:
   labels:
     {{- include "operators-installer.labels" $ | nindent 4 }}
 spec:
-  {{- if or .targetOwnNamespace (gt (len .otherTargetNamespaces) 0) }}
+  {{- $hasOtherTargetNamespaces := and .otherTargetNamespaces (gt (len .otherTargetNamespaces) 0) }}
+  {{- if or .targetOwnNamespace $hasOtherTargetNamespaces }}
   targetNamespaces:
   {{- if .targetOwnNamespace }}
   - {{ .name |  default $.Release.Namespace }}
   {{- end }}
+  {{- if .otherTargetNamespaces }}
   {{- range $otherTargetNamespace := .otherTargetNamespaces }}
   - {{ $otherTargetNamespace }}
   {{- end }}
   {{- end }}
-  {{- if .upgradeStrategy }}
-  upgradeStrategy: {{ .upgradeStrategy }}
   {{- end }}
+  upgradeStrategy: {{ .upgradeStrategy | default "Default" }}
 {{- end }}
