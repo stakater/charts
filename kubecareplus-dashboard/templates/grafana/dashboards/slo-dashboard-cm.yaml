@@ -2370,3 +2370,4 @@ data:
       "title": "{{ . }} SLO",
       "version": 66
     }
+{{- end }}
