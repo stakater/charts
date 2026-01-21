@@ -1,0 +1,381 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "template-operator.fullname" . }}-old-template-controller
+  labels:
+    control-plane: old-controller-manager-template
+  {{- include "template-operator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.oldTemplateController.replicas }}
+  selector:
+    matchLabels:
+      control-plane: old-controller-manager-template
+    {{- include "template-operator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        control-plane: old-controller-manager-template
+      {{- include "template-operator.selectorLabels" . | nindent 8 }}
+      annotations:
+        kubectl.kubernetes.io/default-container: template-controller
+    spec:
+      containers:
+      - args: {{- toYaml .Values.oldTemplateController.templateController.args | nindent
+          8 }}
+        command:
+        - /manager
+        env:
+        - name: OLD_TEMPLATES_OPERATOR
+          value: {{ quote .Values.oldTemplateController.templateController.env.oldTemplatesOperator
+            }}
+        - name: TEMPLATE_CONTROLLER
+          value: {{ quote .Values.oldTemplateController.templateController.env.templateController
+            }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: '{{ .Values.oldTemplateController.templateController.image.repository }}:{{
+          .Values.oldTemplateController.templateController.image.tag | default .Chart.AppVersion
+          }}'
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 15
+        name: template-controller
+        ports:
+        - containerPort: 6443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 15
+        resources: {{- toYaml .Values.oldTemplateController.templateController.resources
+          | nindent 10 }}
+        securityContext: {{- toYaml .Values.oldTemplateController.templateController.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /secrets/tls/metrics
+          name: metrics-tls
+      - args: {{- toYaml .Values.oldTemplateController.templateinstanceController.args
+          | nindent 8 }}
+        command:
+        - /manager
+        env:
+        - name: OLD_TEMPLATES_OPERATOR
+          value: {{ quote .Values.oldTemplateController.templateinstanceController.env.oldTemplatesOperator
+            }}
+        - name: TEMPLATEINSTANCE_CONTROLLER
+          value: {{ quote .Values.oldTemplateController.templateinstanceController.env.templateinstanceController
+            }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: '{{ .Values.oldTemplateController.templateinstanceController.image.repository
+          }}:{{ .Values.oldTemplateController.templateinstanceController.image.tag | default
+          .Chart.AppVersion }}'
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8082
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 15
+        name: templateinstance-controller
+        ports:
+        - containerPort: 6444
+          name: https
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 15
+        resources: {{- toYaml .Values.oldTemplateController.templateinstanceController.resources
+          | nindent 10 }}
+        securityContext: {{- toYaml .Values.oldTemplateController.templateinstanceController.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /secrets/tls/metrics
+          name: metrics-tls
+      - args: {{- toYaml .Values.oldTemplateController.templategroupinstanceController.args
+          | nindent 8 }}
+        command:
+        - /manager
+        env:
+        - name: OLD_TEMPLATES_OPERATOR
+          value: {{ quote .Values.oldTemplateController.templategroupinstanceController.env.oldTemplatesOperator
+            }}
+        - name: TEMPLATEGROUPINSTANCE_CONTROLLER
+          value: {{ quote .Values.oldTemplateController.templategroupinstanceController.env.templategroupinstanceController
+            }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: '{{ .Values.oldTemplateController.templategroupinstanceController.image.repository
+          }}:{{ .Values.oldTemplateController.templategroupinstanceController.image.tag
+          | default .Chart.AppVersion }}'
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8083
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 15
+        name: templategroupinstance-controller
+        ports:
+        - containerPort: 6445
+          name: https
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8083
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 15
+        resources: {{- toYaml .Values.oldTemplateController.templategroupinstanceController.resources
+          | nindent 10 }}
+        securityContext: {{- toYaml .Values.oldTemplateController.templategroupinstanceController.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /secrets/tls/metrics
+          name: metrics-tls
+      imagePullSecrets:
+      - name: saap-dockerconfigjson
+      securityContext: {{- toYaml .Values.oldTemplateController.podSecurityContext | nindent
+        8 }}
+      serviceAccountName: {{ include "template-operator.fullname" . }}-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: metrics-tls
+        secret:
+          defaultMode: 420
+          secretName: controller-manager-metrics-tls
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "template-operator.fullname" . }}-template-controller
+  labels:
+    control-plane: controller-manager-template
+  {{- include "template-operator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.templateController.replicas }}
+  selector:
+    matchLabels:
+      control-plane: controller-manager-template
+    {{- include "template-operator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager-template
+      {{- include "template-operator.selectorLabels" . | nindent 8 }}
+      annotations:
+        kubectl.kubernetes.io/default-container: template-controller
+    spec:
+      containers:
+      - args: {{- toYaml .Values.templateController.templateController.args | nindent 8
+          }}
+        command:
+        - /manager
+        env:
+        - name: TEMPLATE_CONTROLLER
+          value: {{ quote .Values.templateController.templateController.env.templateController
+            }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: '{{ .Values.templateController.templateController.image.repository }}:{{
+          .Values.templateController.templateController.image.tag | default .Chart.AppVersion
+          }}'
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 15
+        name: template-controller
+        ports:
+        - containerPort: 6443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 15
+        resources: {{- toYaml .Values.templateController.templateController.resources |
+          nindent 10 }}
+        securityContext: {{- toYaml .Values.templateController.templateController.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /secrets/tls/metrics
+          name: metrics-tls
+      - args: {{- toYaml .Values.templateController.templateinstanceController.args | nindent
+          8 }}
+        command:
+        - /manager
+        env:
+        - name: TEMPLATEINSTANCE_CONTROLLER
+          value: {{ quote .Values.templateController.templateinstanceController.env.templateinstanceController
+            }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: '{{ .Values.templateController.templateinstanceController.image.repository
+          }}:{{ .Values.templateController.templateinstanceController.image.tag | default
+          .Chart.AppVersion }}'
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8082
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 15
+        name: templateinstance-controller
+        ports:
+        - containerPort: 6444
+          name: https
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 15
+        resources: {{- toYaml .Values.templateController.templateinstanceController.resources
+          | nindent 10 }}
+        securityContext: {{- toYaml .Values.templateController.templateinstanceController.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /secrets/tls/metrics
+          name: metrics-tls
+      - args: {{- toYaml .Values.templateController.clustertemplateinstanceController.args
+          | nindent 8 }}
+        command:
+        - /manager
+        env:
+        - name: CLUSTERTEMPLATEINSTANCE_CONTROLLER
+          value: {{ quote .Values.templateController.clustertemplateinstanceController.env.clustertemplateinstanceController
+            }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: '{{ .Values.templateController.clustertemplateinstanceController.image.repository
+          }}:{{ .Values.templateController.clustertemplateinstanceController.image.tag |
+          default .Chart.AppVersion }}'
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8083
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 15
+        name: clustertemplateinstance-controller
+        ports:
+        - containerPort: 6445
+          name: https
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8083
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 15
+        resources: {{- toYaml .Values.templateController.clustertemplateinstanceController.resources
+          | nindent 10 }}
+        securityContext: {{- toYaml .Values.templateController.clustertemplateinstanceController.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /secrets/tls/metrics
+          name: metrics-tls
+      imagePullSecrets:
+      - name: saap-dockerconfigjson
+      securityContext: {{- toYaml .Values.templateController.podSecurityContext | nindent
+        8 }}
+      serviceAccountName: {{ include "template-operator.fullname" . }}-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: metrics-tls
+        secret:
+          defaultMode: 420
+          secretName: controller-manager-metrics-tls
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "template-operator.fullname" . }}-webhook
+  labels:
+    control-plane: controller-manager-webhook
+  {{- include "template-operator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.webhook.replicas }}
+  selector:
+    matchLabels:
+      control-plane: controller-manager-webhook
+    {{- include "template-operator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager-webhook
+      {{- include "template-operator.selectorLabels" . | nindent 8 }}
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+    spec:
+      containers:
+      - args: {{- toYaml .Values.webhook.webhookManager.args | nindent 8 }}
+        command:
+        - /manager
+        env:
+        - name: ENABLE_ADMISSION_WEBHOOKS
+          value: {{ quote .Values.webhook.webhookManager.env.enableAdmissionWebhooks }}
+        - name: ENABLE_WEBHOOKS
+          value: {{ quote .Values.webhook.webhookManager.env.enableWebhooks }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.webhook.webhookManager.image.repository }}:{{ .Values.webhook.webhookManager.image.tag
+          | default .Chart.AppVersion }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8082
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 15
+        name: webhook-manager
+        ports:
+        - containerPort: 9443
+          name: webhook-server
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 15
+        resources: {{- toYaml .Values.webhook.webhookManager.resources | nindent 10 }}
+        securityContext: {{- toYaml .Values.webhook.webhookManager.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: cert
+          readOnly: true
+      imagePullSecrets:
+      - name: saap-dockerconfigjson
+      securityContext: {{- toYaml .Values.webhook.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ include "template-operator.fullname" . }}-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: webhook-server-cert

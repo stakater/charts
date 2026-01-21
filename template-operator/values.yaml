@@ -1,0 +1,179 @@
+controllerManager:
+  serviceAccount:
+    annotations: {}
+kubernetesClusterDomain: cluster.local
+managerConfig:
+  controllerManagerConfigYaml: |-
+    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8081
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    webhook:
+      port: 9443
+    leaderElection:
+      leaderElect: true
+      resourceName: c59a40c1.stakater.com
+oldTemplateController:
+  podSecurityContext:
+    runAsNonRoot: true
+  replicas: 1
+  templateController:
+    args:
+    - --health-probe-bind-address=:8081
+    - --metrics-bind-address=:6443
+    - --metrics-tls-cert-dir=/secrets/tls/metrics
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+    env:
+      oldTemplatesOperator: "true"
+      templateController: "true"
+    image:
+      repository: ghcr.io/stakater/public/template-operator
+      tag: v0.0.1
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 20Mi
+  templategroupinstanceController:
+    args:
+    - --health-probe-bind-address=:8083
+    - --metrics-bind-address=:6445
+    - --metrics-tls-cert-dir=/secrets/tls/metrics
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+    env:
+      oldTemplatesOperator: "true"
+      templategroupinstanceController: "true"
+    image:
+      repository: ghcr.io/stakater/public/template-operator
+      tag: v0.0.1
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 20Mi
+  templateinstanceController:
+    args:
+    - --health-probe-bind-address=:8082
+    - --metrics-bind-address=:6444
+    - --metrics-tls-cert-dir=/secrets/tls/metrics
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+    env:
+      oldTemplatesOperator: "true"
+      templateinstanceController: "true"
+    image:
+      repository: ghcr.io/stakater/public/template-operator
+      tag: v0.0.1
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 20Mi
+templateController:
+  clustertemplateinstanceController:
+    args:
+    - --metrics-bind-address=:8443
+    - --health-probe-bind-address=:8083
+    - --metrics-bind-address=:6445
+    - --metrics-tls-cert-dir=/secrets/tls/metrics
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+    env:
+      clustertemplateinstanceController: "true"
+    image:
+      repository: ghcr.io/stakater/public/template-operator
+      tag: v0.0.1
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 20Mi
+  podSecurityContext:
+    runAsNonRoot: true
+  replicas: 1
+  templateController:
+    args:
+    - --metrics-bind-address=:8443
+    - --health-probe-bind-address=:8081
+    - --metrics-bind-address=:6443
+    - --metrics-tls-cert-dir=/secrets/tls/metrics
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+    env:
+      templateController: "true"
+    image:
+      repository: ghcr.io/stakater/public/template-operator
+      tag: v0.0.1
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 20Mi
+  templateinstanceController:
+    args:
+    - --metrics-bind-address=:8443
+    - --health-probe-bind-address=:8082
+    - --metrics-bind-address=:6444
+    - --metrics-tls-cert-dir=/secrets/tls/metrics
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+    env:
+      templateinstanceController: "true"
+    image:
+      repository: ghcr.io/stakater/public/template-operator
+      tag: v0.0.1
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 20Mi
+templateMetricsService:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: https
+  type: ClusterIP
+webhook:
+  podSecurityContext:
+    runAsNonRoot: true
+  replicas: 1
+  webhookManager:
+    args:
+    - --health-probe-bind-address=:8082
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+    env:
+      enableAdmissionWebhooks: "true"
+      enableWebhooks: "true"
+    image:
+      repository: ghcr.io/stakater/public/template-operator
+      tag: v0.0.1
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 20Mi
+webhookService:
+  ports:
+  - port: 443
+    targetPort: 9443
+  type: ClusterIP

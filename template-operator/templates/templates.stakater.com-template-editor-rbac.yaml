@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "template-operator.fullname" . }}-templates.stakater.com-template-editor-role
+  labels:
+  {{- include "template-operator.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - templates.stakater.com
+  resources:
+  - templates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - templates.stakater.com
+  resources:
+  - templates/status
+  verbs:
+  - get
