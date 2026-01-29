@@ -10,7 +10,7 @@
 approveManualInstallPlanViaHook: true
 
 # Image to use for the InstallPlan Approver and Verify Jobs
-installPlanApproverAndVerifyJobsImage: quay.io/openshift/origin-cli:4.20.0
+installPlanApproverAndVerifyJobsImage: quay.io/openshift/origin-cli:4.22.0
 
 annotations:
   argocd.argoproj.io/hook-delete-policy: HookSucceeded
