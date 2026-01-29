@@ -8,18 +8,26 @@ metadata:
   namespace: {{ .name | default $.Release.Namespace }}
   labels:
     {{- include "operators-installer.labels" $ | nindent 4 }}
+{{- $hasOtherTargetNamespaces := and .otherTargetNamespaces (gt (len .otherTargetNamespaces) 0) }}
+{{- $hasTargetNamespaces := or .targetOwnNamespace $hasOtherTargetNamespaces }}
+{{- $hasUpgradeStrategy := .upgradeStrategy }}
+{{- if or $hasTargetNamespaces $hasUpgradeStrategy }}
 spec:
-  {{- $hasOtherTargetNamespaces := and .otherTargetNamespaces (gt (len .otherTargetNamespaces) 0) }}
-  {{- if or .targetOwnNamespace $hasOtherTargetNamespaces }}
+  {{- if $hasTargetNamespaces }}
   targetNamespaces:
-  {{- if .targetOwnNamespace }}
-  - {{ .name |  default $.Release.Namespace }}
+    {{- if .targetOwnNamespace }}
+    - {{ .name | default $.Release.Namespace }}
+    {{- end }}
+    {{- if $hasOtherTargetNamespaces }}
+    {{- range .otherTargetNamespaces }}
+    - {{ . }}
+    {{- end }}
+    {{- end }}
   {{- end }}
-  {{- if .otherTargetNamespaces }}
-  {{- range $otherTargetNamespace := .otherTargetNamespaces }}
-  - {{ $otherTargetNamespace }}
+  {{- if $hasUpgradeStrategy }}
+  upgradeStrategy: {{ .upgradeStrategy }}
   {{- end }}
-  {{- end }}
-  {{- end }}
-  upgradeStrategy: {{ .upgradeStrategy | default "Default" }}
+{{- else }}
+spec: {}
+{{- end }}
 {{- end }}
