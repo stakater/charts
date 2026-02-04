@@ -7,11 +7,11 @@ dependencies:
   version: 12.1.15
   repository: "https://raw.githubusercontent.com/bitnami/charts/defb094c658024e4aa8245622dab202874880cbc/bitnami"
 - name: application
-  version: 2.3.4
+  version: 6.16.1
   repository: https://stakater.github.io/stakater-charts
   alias: nordmartReviewApi
 - name: application
-  version: 2.3.4
+  version: 6.16.1
   repository: https://stakater.github.io/stakater-charts
   alias: nordmartReviewUi
 
