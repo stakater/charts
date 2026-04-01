@@ -8,7 +8,7 @@ clusterBackup:
   bucketType: s3
 externalSecrets:
   enabled: true
-PushSecret:
+pushSecret:
   enabled: true
 developmentMode:
   enabled: false
