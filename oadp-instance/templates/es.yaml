@@ -29,8 +29,6 @@ metadata:
   namespace:  {{ include "oadp-instance.namespace" $ }}
 apiVersion: v1
 data:
-  cloud: {{ .Values.dev{{- $top := . }}
-{{- range $backuplocation := .Values.backupLocations }}
----elopmentMode.aws_secret_access_key_encoded }}
+  cloud: {{ .Values.developmentMode.aws_secret_access_key_encoded }}
 type: Opaque
 {{- end }}
