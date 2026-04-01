@@ -8,6 +8,8 @@ clusterBackup:
   bucketType: s3
 externalSecrets:
   enabled: true
+PushSecret:
+  enabled: true
 developmentMode:
   enabled: false
   aws_secret_access_key_encoded: WFhYWFg= # XXXXX
