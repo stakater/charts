@@ -6,6 +6,7 @@ clusterBackup:
   forceDestroy: false
   awsBucketName: <organization>-<clustername>-cluster-backup
   bucketType: s3
+  crossplaneNamespace: crossplane-system
 externalSecrets:
   enabled: true
 pushSecret:
@@ -13,6 +14,22 @@ pushSecret:
 developmentMode:
   enabled: false
   aws_secret_access_key_encoded: WFhYWFg= # XXXXX
+backupSchedule:
+  includedNamespaces:
+    - "*"
+  excludedResources:
+    - imagetags
+    - images
+    - templateinstances
+    - clusterserviceversions
+    - packagemanifests
+    - servicebrokers
+    - servicebindings
+    - serviceclasses
+    - serviceinstances
+    - serviceplans
+    - events
+    - secrets
 backupLocations:
   - velero:
       provider: aws
@@ -25,7 +42,7 @@ backupLocations:
         s3Url: https://s3.us-west-2.amazonaws.com/
         profile: default
       credential:
-        name: cloud-credentials
+        name: <organization>-<clustername>-cluster-backup
         key: cloud
 
 snapshotLocations:
@@ -35,5 +52,5 @@ snapshotLocations:
         region: eu-north-1
       credential:
         key: cloud
-        name: cloud-credentials
+        name: <organization>-<clustername>-cluster-backup
       provider: aws
