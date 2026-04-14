@@ -4,11 +4,11 @@ metadata:
   name: default-object-schedule
   namespace: {{ include "oadp-instance.namespace" . }}
 spec:
-  schedule: {{ .Values.clusterBackup.schedule | default "@hourly" }} # Default to hourly
+  schedule: {{ .Values.clusterBackup.schedule | default "@hourly" | quote }} # Default to hourly
   template:
     snapshotVolumes: false   # Only take object backups
     includedNamespaces:
-{{- toYaml .Values.backupSchedule.includedNamespaces | nindent 6 }}
+{{ toYaml .Values.backupSchedule.includedNamespaces | nindent 6 }}
     excludedResources:
-{{- toYaml .Values.backupSchedule.excludedResources | nindent 6 }}
+{{ toYaml .Values.backupSchedule.excludedResources | nindent 6 }}
     ttl: {{ .Values.clusterBackup.ttl | default "48h0m0s" }} # 48 backups present at once for the last day
