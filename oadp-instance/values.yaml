@@ -4,7 +4,7 @@ clusterBackup:
   deletionPolicy: "Orphan" # Option for Delete or Orphan
   # This option if set to true ensure that when the bucket CR deletes, it will delete the bucket in S3 as well despite it having data in it or not.
   forceDestroy: false
-  awsBucketName: <organization>-<clustername>-cluster-backup
+  awsBucketName: organization-clustername-cluster-backup
   bucketType: s3
   crossplaneNamespace: crossplane-system
   schedule: "@hourly"
@@ -37,14 +37,14 @@ backupLocations:
       provider: aws
       default: true
       objectStorage:
-        bucket: <organization>-<clustername>-cluster-backup
+        bucket: organization-clustername-cluster-backup
         prefix: dpa/
       config:
         region: us-west-2
         s3Url: https://s3.us-west-2.amazonaws.com/
         profile: default
       credential:
-        name: <organization>-<clustername>-cluster-backup
+        name: organization-clustername-cluster-backup
         key: cloud
 
 snapshotLocations:
@@ -54,5 +54,5 @@ snapshotLocations:
         region: eu-north-1
       credential:
         key: cloud
-        name: <organization>-<clustername>-cluster-backup
+        name: organization-clustername-cluster-backup
       provider: aws
