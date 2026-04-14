@@ -4,7 +4,7 @@ metadata:
   name: default-object-schedule
   namespace: {{ include "oadp-instance.namespace" . }}
 spec:
-  schedule: "@hourly"
+  schedule: {{ .Values.clusterBackup.schedule | default "@hourly" }} # Default to hourly
   template:
     snapshotVolumes: false   # Only take object backups
     includedNamespaces:

@@ -7,6 +7,8 @@ clusterBackup:
   awsBucketName: <organization>-<clustername>-cluster-backup
   bucketType: s3
   crossplaneNamespace: crossplane-system
+  schedule: "@hourly"
+  ttl: "48h0m0s"
 externalSecrets:
   enabled: true
 pushSecret:
