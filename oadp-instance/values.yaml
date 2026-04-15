@@ -4,8 +4,11 @@ clusterBackup:
   deletionPolicy: "Orphan" # Option for Delete or Orphan
   # This option if set to true ensure that when the bucket CR deletes, it will delete the bucket in S3 as well despite it having data in it or not.
   forceDestroy: false
-  awsBucketName: <organization>-<clustername>-cluster-backup
+  awsBucketName: organization-clustername-cluster-backup
   bucketType: s3
+  crossplaneNamespace: crossplane-system
+  schedule: "@hourly"
+  ttl: "48h0m0s"
 externalSecrets:
   enabled: true
 pushSecret:
@@ -13,19 +16,35 @@ pushSecret:
 developmentMode:
   enabled: false
   aws_secret_access_key_encoded: WFhYWFg= # XXXXX
+backupSchedule:
+  includedNamespaces:
+    - "*"
+  excludedResources:
+    - imagetags
+    - images
+    - templateinstances
+    - clusterserviceversions
+    - packagemanifests
+    - servicebrokers
+    - servicebindings
+    - serviceclasses
+    - serviceinstances
+    - serviceplans
+    - events
+    - secrets
 backupLocations:
   - velero:
       provider: aws
       default: true
       objectStorage:
-        bucket: <organization>-<clustername>-cluster-backup
+        bucket: organization-clustername-cluster-backup
         prefix: dpa/
       config:
         region: us-west-2
         s3Url: https://s3.us-west-2.amazonaws.com/
         profile: default
       credential:
-        name: cloud-credentials
+        name: organization-clustername-cluster-backup
         key: cloud
 
 snapshotLocations:
@@ -35,5 +54,5 @@ snapshotLocations:
         region: eu-north-1
       credential:
         key: cloud
-        name: cloud-credentials
+        name: organization-clustername-cluster-backup
       provider: aws

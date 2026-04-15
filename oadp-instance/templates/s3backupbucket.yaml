@@ -11,5 +11,6 @@ spec:
     writeSecretsToNamespace:  {{ include "oadp-instance.namespace" . }}
     forceDestroy: {{ .Values.clusterBackup.forceDestroy }}
     deletionPolicy: {{ .Values.clusterBackup.deletionPolicy }}
+    crossplaneNamespace: {{ .Values.clusterBackup.crossplaneNamespace }}
 {{- end }}
 {{- end }}
