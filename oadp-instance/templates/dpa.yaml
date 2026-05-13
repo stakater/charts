@@ -13,9 +13,17 @@ spec:
       - kubevirt
       featureFlags:
         - EnableCSI
+      {{- with (((.Values.configuration).velero).podConfig) }}
+      podConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     nodeAgent:
       enable: true
       uploaderType: kopia
+      {{- with (((.Values.configuration).nodeAgent).podConfig) }}
+      podConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   {{- $top := . }}
   {{- range $snapshotLocations := .Values.snapshotLocations }}
   snapshotLocations:

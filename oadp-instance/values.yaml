@@ -56,3 +56,23 @@ snapshotLocations:
         key: cloud
         name: organization-clustername-cluster-backup
       provider: aws
+
+configuration:
+  velero:
+    podConfig:
+      resourceAllocations:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
+  nodeAgent:
+    podConfig:
+      resourceAllocations:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
