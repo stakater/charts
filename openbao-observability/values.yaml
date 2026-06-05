@@ -10,6 +10,24 @@ global:
 nameOverride: ""
 fullnameOverride: ""
 
+# Grafana dashboard (managed via grafana-operator GrafanaDashboard CR).
+# OpenBao keeps Vault's vault_* telemetry, so the dashboard reuses the Vault panels.
+grafana:
+  folder: "OpenBao Observability"
+  # Let a Grafana instance in another namespace import this dashboard.
+  allowCrossNamespaceImport: true
+  # Selects the target Grafana instance. Default matches the SAAP convention
+  # (app: grafana); override per-cluster if the live instance is labelled
+  # differently (e.g. dashboards: crossplane).
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
+  dashboard:
+    enabled: true
+
 # Identity of the OpenBao installation being monitored.
 openbao:
   # Release/fullname of the OpenBao install (upstream openbao chart fullname).

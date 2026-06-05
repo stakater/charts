@@ -1,0 +1,20 @@
+{{- if and ( .Values.grafana.dashboard ) ( .Values.grafana.dashboard.enabled ) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: openbao-dashboard
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{ toYaml .Values.grafana.datasources | nindent 3 }}
+  json: |-
+{{ .Files.Get "files/openbao_grafana_dashboard.json" | indent 4 }}
+{{- end }}
