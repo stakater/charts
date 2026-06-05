@@ -3,7 +3,7 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: openbao-dashboard
-  namespace: {{ include "openbao-observability.namespace" . }}
+  namespace: {{ .Values.grafana.namespace | default (include "openbao-observability.namespace" .) }}
   labels:
     grafana_dashboard: "true"
     grafanaDashboard: grafana-operator

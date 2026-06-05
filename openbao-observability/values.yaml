@@ -13,6 +13,10 @@ fullnameOverride: ""
 # Grafana dashboard (managed via grafana-operator GrafanaDashboard CR).
 # OpenBao keeps Vault's vault_* telemetry, so the dashboard reuses the Vault panels.
 grafana:
+  # Namespace to create the GrafanaDashboard in. Defaults to the release
+  # namespace. Set this to the Grafana instance's namespace when the
+  # grafana-operator does not honour allowCrossNamespaceImport.
+  namespace: ""
   folder: "OpenBao Observability"
   # Let a Grafana instance in another namespace import this dashboard.
   allowCrossNamespaceImport: true
