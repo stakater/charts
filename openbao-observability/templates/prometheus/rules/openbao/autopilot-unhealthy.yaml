@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.openbao.autopilotUnhealthy ) ( .Values.prometheus.rules.openbao.autopilotUnhealthy.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.autopilotUnhealthy }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-autopilot-unhealthy
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.raft
+      rules:
+        - alert: OpenBaoAutopilotUnhealthy
+          expr: vault_autopilot_healthy{service="{{ .Values.openbao.service }}"} == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao raft autopilot reports unhealthy"
+            description: "Raft autopilot considers at least one node unhealthy (vault_autopilot_healthy=0)."
+{{- end }}

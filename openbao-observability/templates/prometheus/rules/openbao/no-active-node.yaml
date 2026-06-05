@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.openbao.noActiveNode ) ( .Values.prometheus.rules.openbao.noActiveNode.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.noActiveNode }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-no-active-node
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.seal-and-leadership
+      rules:
+        - alert: OpenBaoNoActiveNode
+          expr: absent(vault_core_active{service="{{ .Values.openbao.service }}"} == 1)
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao has no active (leader) node"
+            description: "No OpenBao node reports as active. The cluster has no leader and cannot serve writes."
+{{- end }}

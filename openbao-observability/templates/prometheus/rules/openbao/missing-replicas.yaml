@@ -1,0 +1,29 @@
+{{- if and ( .Values.prometheus.rules.openbao.missingReplicas ) ( .Values.prometheus.rules.openbao.missingReplicas.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.missingReplicas }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-missing-replicas
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.availability
+      rules:
+        # Fewer healthy server pods than expected — the case that previously
+        # went unalerted when a pod sat at 0/1.
+        - alert: OpenBaoMissingReplicas
+          expr: count(up{service="{{ .Values.openbao.service }}"} == 1) < {{ .Values.openbao.replicas }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao has fewer than {{ .Values.openbao.replicas }} healthy pods"
+            description: "Only {{`{{ $value }}`}} of {{ .Values.openbao.replicas }} OpenBao server pods are scrapeable and healthy. The HA cluster is degraded."
+{{- end }}

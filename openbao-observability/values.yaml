@@ -1,0 +1,97 @@
+# Default values for openbao-observability.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  # Namespace the monitoring objects are created in. Defaults to the release
+  # namespace, which must be the namespace OpenBao runs in.
+  namespace:
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Identity of the OpenBao installation being monitored.
+openbao:
+  # Release/fullname of the OpenBao install (upstream openbao chart fullname).
+  # Used to build the ServiceMonitor selector.
+  name: openbao
+  # Headless service that fronts every server pod. It sets
+  # publishNotReadyAddresses: true, so not-ready (e.g. 0/1) pods remain scrape
+  # targets — this is what lets `up`-based alerts fire on a degraded pod.
+  service: openbao-internal
+  # Expected number of HA server replicas. Drives the replica/peer alerts.
+  replicas: 3
+
+# Prometheus configuration
+prometheus:
+  monitors:
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+      # TLS verification for the scrape. OpenBao serves the metrics endpoint with
+      # the cert-manager-issued `openbao-server-tls` cert; its issuing CA is
+      # shipped in the same secret under ca.crt. serverName must be a cert SAN.
+      tls:
+        caSecretName: openbao-server-tls
+        caSecretKey: ca.crt
+        serverName: openbao
+  rules:
+    # Extra labels added to every PrometheusRule (e.g. for Alertmanager routing,
+    # or to match your Prometheus ruleSelector).
+    labels: {}
+    openbao:
+      podDown:
+        enabled: true
+        for: 10m
+        severity: warning
+      missingReplicas:
+        enabled: true
+        for: 15m
+        severity: warning
+      allDown:
+        enabled: true
+        for: 5m
+        severity: critical
+      sealed:
+        enabled: true
+        for: 5m
+        severity: critical
+      noActiveNode:
+        enabled: true
+        for: 5m
+        severity: critical
+      leadershipChurn:
+        enabled: true
+        window: 15m
+        threshold: 3
+        severity: warning
+      autopilotUnhealthy:
+        enabled: true
+        for: 10m
+        severity: warning
+      quorumRisk:
+        enabled: true
+        for: 5m
+        severity: critical
+      raftPeersLow:
+        enabled: true
+        for: 15m
+        severity: warning
+      standbyLagging:
+        enabled: true
+        # 99th percentile raft follower last-contact-with-leader, milliseconds.
+        thresholdMs: 200
+        for: 10m
+        severity: warning
+      highRequestLatency:
+        enabled: true
+        # 99th percentile request handling time, milliseconds.
+        thresholdMs: 1000
+        for: 15m
+        severity: warning
+      auditLogFailure:
+        enabled: true
+        window: 5m
+        for: 5m
+        severity: critical

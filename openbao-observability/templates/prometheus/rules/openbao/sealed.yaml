@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.openbao.sealed ) ( .Values.prometheus.rules.openbao.sealed.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.sealed }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-sealed
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.seal-and-leadership
+      rules:
+        - alert: OpenBaoSealed
+          expr: vault_core_unsealed{service="{{ .Values.openbao.service }}"} == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao pod {{`{{ $labels.pod }}`}} is sealed"
+            description: "OpenBao pod {{`{{ $labels.pod }}`}} reports sealed (vault_core_unsealed=0). Clients on this node cannot read or write secrets until it is unsealed."
+{{- end }}

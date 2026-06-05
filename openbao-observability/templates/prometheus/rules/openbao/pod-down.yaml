@@ -1,0 +1,29 @@
+{{- if and ( .Values.prometheus.rules.openbao.podDown ) ( .Values.prometheus.rules.openbao.podDown.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.podDown }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-pod-down
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.availability
+      rules:
+        # A discovered server pod is failing to scrape. Because -internal
+        # publishes not-ready addresses, a 0/1 pod stays a target and trips this.
+        - alert: OpenBaoPodDown
+          expr: up{service="{{ .Values.openbao.service }}"} == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao pod {{`{{ $labels.pod }}`}} is not responding"
+            description: "Prometheus cannot scrape OpenBao pod {{`{{ $labels.pod }}`}} in {{`{{ $labels.namespace }}`}} (metrics endpoint unreachable or erroring). The pod is likely not Ready (e.g. 0/1)."
+{{- end }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: openbao-observability
+description: A Helm chart for SAAP OpenBao observability (ServiceMonitor + PrometheusRule), integrated with OpenShift user-workload monitoring.
+type: application
+version: 0.0.1
+appVersion: "0.0.1"

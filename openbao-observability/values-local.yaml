@@ -1,0 +1,5 @@
+# Values for local deployment of the chart when using Tilt
+prometheus:
+  monitors:
+    serviceMonitor:
+      enabled: true
