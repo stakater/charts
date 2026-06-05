@@ -1,0 +1,29 @@
+{{- if and ( .Values.prometheus.rules.openbao.auditLogFailure ) ( .Values.prometheus.rules.openbao.auditLogFailure.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.auditLogFailure }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-audit-log-failure
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.requests-and-audit
+      rules:
+        # Audit failures are serious: OpenBao blocks requests if it cannot write
+        # to a configured audit device. Only fires when an audit device exists.
+        - alert: OpenBaoAuditLogFailure
+          expr: sum(increase(vault_audit_log_request_failure{service="{{ .Values.openbao.service }}"}[{{ $r.window }}])) > 0 or sum(increase(vault_audit_log_response_failure{service="{{ .Values.openbao.service }}"}[{{ $r.window }}])) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao audit log writes are failing"
+            description: "OpenBao reported audit log write failures in the last {{ $r.window }}. If all audit devices fail, OpenBao stops serving requests."
+{{- end }}

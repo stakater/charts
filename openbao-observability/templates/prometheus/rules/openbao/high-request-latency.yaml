@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.openbao.highRequestLatency ) ( .Values.prometheus.rules.openbao.highRequestLatency.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.highRequestLatency }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-high-request-latency
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.requests-and-audit
+      rules:
+        - alert: OpenBaoHighRequestLatency
+          expr: vault_core_handle_request{service="{{ .Values.openbao.service }}",quantile="0.99"} > {{ $r.thresholdMs }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao request latency is high"
+            description: "p99 request handling time on {{`{{ $labels.pod }}`}} exceeds {{ $r.thresholdMs }}ms."
+{{- end }}

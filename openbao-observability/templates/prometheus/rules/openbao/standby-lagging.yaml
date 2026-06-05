@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.openbao.standbyLagging ) ( .Values.prometheus.rules.openbao.standbyLagging.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.standbyLagging }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-standby-lagging
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.raft
+      rules:
+        - alert: OpenBaoStandbyLagging
+          expr: vault_raft_leader_lastContact{service="{{ .Values.openbao.service }}",quantile="0.99"} > {{ $r.thresholdMs }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao raft follower is lagging the leader"
+            description: "p99 raft leader last-contact on {{`{{ $labels.pod }}`}} exceeds {{ $r.thresholdMs }}ms, indicating replication lag."
+{{- end }}

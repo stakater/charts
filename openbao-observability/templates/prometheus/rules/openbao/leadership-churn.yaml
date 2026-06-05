@@ -1,0 +1,26 @@
+{{- if and ( .Values.prometheus.rules.openbao.leadershipChurn ) ( .Values.prometheus.rules.openbao.leadershipChurn.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.leadershipChurn }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-leadership-churn
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.seal-and-leadership
+      rules:
+        - alert: OpenBaoLeadershipChurn
+          expr: increase(vault_core_leadership_lost_count{service="{{ .Values.openbao.service }}"}[{{ $r.window }}]) > {{ $r.threshold }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao leadership is flapping"
+            description: "OpenBao lost leadership more than {{ $r.threshold }} times in {{ $r.window }}, indicating instability or repeated failovers."
+{{- end }}

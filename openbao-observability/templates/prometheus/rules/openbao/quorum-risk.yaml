@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.openbao.quorumRisk ) ( .Values.prometheus.rules.openbao.quorumRisk.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.quorumRisk }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-raft-quorum-risk
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.raft
+      rules:
+        - alert: OpenBaoRaftQuorumRisk
+          expr: vault_autopilot_failure_tolerance{service="{{ .Values.openbao.service }}"} == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao raft has zero failure tolerance"
+            description: "Raft failure tolerance is 0 — losing one more node would break quorum and make OpenBao unavailable."
+{{- end }}

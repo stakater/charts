@@ -1,0 +1,36 @@
+{{- if and ( .Values.prometheus.monitors.serviceMonitor ) ( .Values.prometheus.monitors.serviceMonitor.enabled ) }}
+{{- $sm := .Values.prometheus.monitors.serviceMonitor }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "openbao-observability.fullname" . }}
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+spec:
+  # Target the headless -internal service: it publishes not-ready addresses,
+  # so every server pod (including a degraded 0/1 one) stays a scrape target.
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openbao
+      app.kubernetes.io/instance: {{ .Values.openbao.name }}
+      {{ .Values.openbao.service }}: "true"
+  namespaceSelector:
+    matchNames:
+      - {{ include "openbao-observability.namespace" . }}
+  endpoints:
+    - port: https
+      scheme: https
+      path: /v1/sys/metrics
+      params:
+        format:
+          - prometheus
+      interval: {{ $sm.interval }}
+      scrapeTimeout: {{ $sm.scrapeTimeout }}
+      tlsConfig:
+        ca:
+          secret:
+            name: {{ $sm.tls.caSecretName }}
+            key: {{ $sm.tls.caSecretKey }}
+        serverName: {{ $sm.tls.serverName }}
+{{- end }}

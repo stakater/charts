@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.openbao.allDown ) ( .Values.prometheus.rules.openbao.allDown.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.allDown }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-all-down
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.availability
+      rules:
+        - alert: OpenBaoAllDown
+          expr: absent(up{service="{{ .Values.openbao.service }}"} == 1)
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao is completely unavailable"
+            description: "No OpenBao server pod is reporting healthy. The service is down."
+{{- end }}

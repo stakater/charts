@@ -1,0 +1,27 @@
+{{- if and ( .Values.prometheus.rules.openbao.raftPeersLow ) ( .Values.prometheus.rules.openbao.raftPeersLow.enabled ) }}
+{{- $r := .Values.prometheus.rules.openbao.raftPeersLow }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: openbao-raft-peers-low
+  namespace: {{ include "openbao-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "openbao-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.raft
+      rules:
+        - alert: OpenBaoRaftPeersLow
+          expr: vault_raft_peers{service="{{ .Values.openbao.service }}"} < {{ .Values.openbao.replicas }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: openbao
+          annotations:
+            summary: "OpenBao raft has fewer than {{ .Values.openbao.replicas }} peers"
+            description: "The raft cluster reports {{`{{ $value }}`}} voting peers, fewer than the expected {{ .Values.openbao.replicas }}."
+{{- end }}
