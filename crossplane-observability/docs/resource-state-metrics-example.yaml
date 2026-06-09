@@ -1,0 +1,58 @@
+# Example: getting Claim/Composite inventory metrics with resource-state-metrics (RSM).
+#
+# The chart's leaf-MR metrics (crossplane_managed_resource_*) are per-GVK counts and do NOT
+# cover Claims/Composites or carry a namespace label. Deploy an exporter to get that layer.
+# This is "Decision 1" in docs/roadmap.md; RSM (crossplane-contrib/resource-state-metrics,
+# v0.4.0+) is the recommended option. KSM CustomResourceState is the alternative if you
+# already run kube-state-metrics — it produces the same kube_customresource_<family> names.
+#
+# Steps:
+#   1. Install RSM (see its repo: https://github.com/crossplane-contrib/resource-state-metrics).
+#   2. Apply ResourceMetricsMonitor(s) like the ones below, with YOUR claim/XR group/kind.
+#   3. Scrape the RSM pod (a ServiceMonitor/PodMonitor; its `job` label -> crossplane.inventory.job).
+#   4. In values.yaml: set crossplane.inventory.enabled=true and claimReadyMetric to the
+#      kube_customresource_<family> name you defined, and enable prometheus.rules.fleet.claimNotReady.
+#   5. Verify it exists in your cluster with tests/fetch-cluster-metrics.sh + verify-fetched.py.
+#
+# Resulting metric: kube_customresource_claim_ready{group,version,kind,name,namespace} = 1|0
+# (per-claim, per-tenant — exactly the Story 4.1 / 1.3 signal).
+---
+apiVersion: resource-state-metrics.instrumentation.k8s-sigs.io/v1alpha1
+kind: ResourceMetricsMonitor
+metadata:
+  name: claim-ready
+  namespace: resource-state-metrics
+spec:
+  configuration:
+    stores:
+      # Repeat a block per Claim API you expose (one per XRD's claimNames).
+      - group: "platform.acme.io"      # <-- your XRD's claim group
+        version: "v1alpha1"            # <-- your XRD version
+        kind: "AppClaim"               # <-- your XRD claimNames.kind
+        resource: "appclaims"          # <-- plural
+        resolver: "cel"
+        families:
+          - name: "claim_ready"        # -> kube_customresource_claim_ready
+            help: "Crossplane Claim Ready=True (1) / not (0), per claim"
+            metrics:
+              - value: "o.status.conditions.exists(c, c.type == 'Ready' && c.status == 'True') ? 1 : 0"
+---
+# Optional: the same for Composite Resources (XRs), if you want the composite layer too.
+apiVersion: resource-state-metrics.instrumentation.k8s-sigs.io/v1alpha1
+kind: ResourceMetricsMonitor
+metadata:
+  name: xr-ready
+  namespace: resource-state-metrics
+spec:
+  configuration:
+    stores:
+      - group: "platform.acme.io"
+        version: "v1alpha1"
+        kind: "XApp"                   # <-- your XRD's kind (the composite)
+        resource: "xapps"
+        resolver: "cel"
+        families:
+          - name: "xr_ready"           # -> kube_customresource_xr_ready
+            help: "Crossplane Composite (XR) Ready=True (1) / not (0)"
+            metrics:
+              - value: "o.status.conditions.exists(c, c.type == 'Ready' && c.status == 'True') ? 1 : 0"

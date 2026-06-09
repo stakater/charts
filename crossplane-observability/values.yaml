@@ -40,6 +40,20 @@ crossplane:
         pkg.crossplane.io/provider: ""
     # The `job` label provider metrics land under once scraped.
     job: crossplane-providers
+  # Story 4.1 — Claim / Composite inventory & readiness. The leaf-MR metrics above are
+  # per-GVK counts (labelled only `gvk`) and do NOT cover Claims/XRs or carry a namespace
+  # (tenant) label. That layer needs an exporter — resource-state-metrics (recommended) or
+  # kube-state-metrics CustomResourceState. Both emit metrics prefixed `kube_customresource_`
+  # with group/version/kind/name/namespace labels, so this gives per-claim AND per-tenant
+  # signal. Deploy one (see docs/resource-state-metrics-example.yaml), set the metric name
+  # you defined below, and enable inventory + the claimNotReady rule.
+  inventory:
+    enabled: false
+    # The per-claim Ready gauge (1/0) your exporter produces. Default follows the
+    # kube_customresource_<family> convention shared by RSM and KSM-CRS.
+    claimReadyMetric: kube_customresource_claim_ready
+    # The `job` label the exporter's metrics land under once scraped.
+    job: resource-state-metrics
 
 # Upjet providers (provider-upjet-aws, -gcp, -azure, …). Gates the Upjet-only
 # diagnostics (Story 6.1) and the more-accurate Upjet TTR signal (Story 1.2).

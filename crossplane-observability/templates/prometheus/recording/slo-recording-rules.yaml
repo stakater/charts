@@ -62,4 +62,16 @@ spec:
             histogram_quantile(0.99, sum by (le, controller) (
               rate(controller_runtime_reconcile_time_seconds_bucket{job="{{ $core }}"}[5m])
             ))
+{{- if .Values.crossplane.inventory.enabled }}
+    # Story 4.1 SLI — per-tenant Claim ready ratio. Available only with the inventory
+    # exporter, whose per-claim metric carries a `namespace` (tenant) label — the dimension
+    # the provider leaf-MR metrics lack.
+    - name: crossplane.slo.inventory
+      rules:
+        - record: crossplane:claim_ready:ratio:namespace
+          expr: |
+            sum by (namespace) ({{ .Values.crossplane.inventory.claimReadyMetric }})
+            /
+            clamp_min(count by (namespace) ({{ .Values.crossplane.inventory.claimReadyMetric }}), 1)
+{{- end }}
 {{- end }}

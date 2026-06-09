@@ -78,6 +78,8 @@ prometheus:
 | `crossplane.core.job` | `crossplane` | `job` label core metrics land under (used in alert/recording expressions). |
 | `crossplane.providers.selector` | `pkg.crossplane.io/provider` | Label selector matching provider pods (PodMonitor). |
 | `crossplane.providers.job` | `crossplane-providers` | `job` label provider metrics land under. |
+| `crossplane.inventory.enabled` | `false` | Enable Claim/inventory rules (needs an exporter — see [example](docs/resource-state-metrics-example.yaml)). |
+| `crossplane.inventory.claimReadyMetric` | `kube_customresource_claim_ready` | Per-claim Ready gauge your exporter emits (Story 4.1, per-tenant). |
 | `upjet.enabled` | `false` | Upjet providers present — enables Story 6.1 and the more-accurate Upjet TTR (Story 1.2). |
 | `grafana.folder` | `Crossplane Observability` | Grafana folder for the dashboard. |
 | `grafana.dashboard.enabled` | `true` | Create the GrafanaDashboard. |
@@ -107,7 +109,7 @@ promise; the rest are internal SLIs/SLOs that exist to protect them.
 | 2.4 | `APIServiceUnavailable` | control-plane | `aggregator_unavailable_apiservice{name=~".*crossplane.*"} == 1` | ✅ | 1 |
 | 2.5 | `DetectionLagHigh` | control-plane | p95 create→first-reconcile > SLO | ❌ | 1 |
 | 3.1 | `DriftDetected` | drift | `crossplane_managed_resource_drift_seconds` > threshold | ❌ | 1 |
-| 4.1 | `ClaimNotReady` | fleet | `crossplane_claim_ready == 0` *(needs exporter)* | →1.1 | needs exporter |
+| 4.1 | `ClaimNotReady` | fleet | `kube_customresource_claim_ready == 0` *(needs inventory exporter)* | →1.1 | needs exporter |
 | 4.2 | `CircuitBreakerDropRatioHigh` | fleet | > 20% events dropped (5m) | ✅ (indirect) | 2 |
 | 4.2 | `CircuitBreakerFrequentOpens` | fleet | > 6 opens/hr (15m) | ✅ (indirect) | 2 |
 | 5.1 | `FunctionLatencyHigh` | functions | function p95 exec > SLO | ❌ | 2 |
@@ -172,7 +174,10 @@ provider-kubernetes v1.2.1**):
   - `upjet_resource_*` (1.2 Upjet path, 6.1) — need an Upjet provider.
   - `aggregator_unavailable_apiservice`, `container_*`, `kube_pod_container_*` — standard
     apiserver / cAdvisor / kube-state-metrics metrics (present on a real UWM cluster).
-  - `crossplane_claim_ready` (4.1) — the one true placeholder; exporter not yet chosen (Decision 1).
+  - `kube_customresource_claim_ready` (4.1) — from an inventory exporter
+    (resource-state-metrics or KSM-CRS); see [docs/resource-state-metrics-example.yaml](docs/resource-state-metrics-example.yaml).
+    Configurable via `crossplane.inventory.claimReadyMetric`; ships disabled. This is the
+    only per-tenant (namespace-labelled) signal — the leaf-MR metrics are per-GVK counts.
 
 These names are confirmed against the [Crossplane metrics reference](https://docs.crossplane.io/latest/guides/metrics/).
 One name that was genuinely invented (`upjet_resource_poll_interval_seconds`) was found and
