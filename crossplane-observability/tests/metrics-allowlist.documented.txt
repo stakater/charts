@@ -54,8 +54,10 @@ container_cpu_cfs_periods_total
 kube_pod_container_status_restarts_total
 kube_pod_container_status_last_terminated_reason
 
-# --- Story 4.1 inventory exporter (Decision 1: KSM-CRS or RSM) — PLACEHOLDER ---
-# This is the one name that is NOT yet documented-real: the inventory exporter is not chosen,
-# so the metric name is a placeholder and the alert ships DISABLED. Replace when Decision 1
-# is made and the exporter's real metric name is known.
-crossplane_claim_ready
+# --- Story 4.1 inventory exporter: resource-state-metrics / KSM CustomResourceState ---
+# Per-claim Ready gauge from the inventory exporter (see docs/resource-state-metrics-example.yaml).
+# The kube_customresource_ prefix + group/version/kind/name/namespace labels are the documented
+# RSM/KSM-CRS convention; the `claim_ready` family suffix is what you define in the exporter
+# config (configurable via crossplane.inventory.claimReadyMetric). Capture it once an exporter
+# is deployed in a cluster (fetch-cluster-metrics.sh against the exporter's /metrics).
+kube_customresource_claim_ready

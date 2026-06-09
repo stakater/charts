@@ -27,6 +27,7 @@ ALL_FLAGS=(
   --set prometheus.monitors.coreServiceMonitor.enabled=true
   --set prometheus.monitors.providerPodMonitor.enabled=true
   --set upjet.enabled=true
+  --set crossplane.inventory.enabled=true
   --set prometheus.rules.fleet.claimNotReady.enabled=true
   --set prometheus.rules.fleet.circuitBreakerDropRatioHigh.enabled=true
   --set prometheus.rules.fleet.circuitBreakerFrequentOpens.enabled=true

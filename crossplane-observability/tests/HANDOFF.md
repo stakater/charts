@@ -115,11 +115,17 @@ verify — especially:
 
 ## Special cases
 
-- `crossplane_claim_ready` (Story 4.1) is **not a real upstream metric** — it's a placeholder
-  for an inventory exporter not yet chosen (roadmap "Decision 1": KSM Custom Resource State vs
-  resource-state-metrics). Its alert (`fleet/claim-not-ready.yaml`) ships **disabled**. Do not
-  try to capture it. If the operator wants Story 4.1, that's a separate task: pick the exporter,
-  deploy it, find its real metric name, and update the rule. Leave it documented otherwise.
+- `kube_customresource_claim_ready` (Story 4.1) comes from an **inventory exporter**
+  (resource-state-metrics — recommended — or KSM CustomResourceState), not from Crossplane
+  itself. The chart is wired for it: `crossplane.inventory.{enabled,claimReadyMetric,job}`,
+  the `fleet/claim-not-ready.yaml` alert, and a per-tenant `crossplane:claim_ready:ratio:namespace`
+  recording rule. It ships **disabled**. To make it real: deploy RSM with the
+  `ResourceMetricsMonitor`(s) in `docs/resource-state-metrics-example.yaml` (using the
+  operator's actual Claim/XR group+kind), scrape the RSM pod, then
+  `fetch-cluster-metrics.sh` against the RSM `/metrics`, confirm
+  `kube_customresource_claim_ready{namespace=...}` exists, move it to `captured`, and enable
+  the rule. This is the highest-value item — it's the only per-tenant / per-claim signal
+  (the leaf-MR metrics are per-GVK counts with no namespace).
 - Phase-2 metrics (functions, circuit breaker) only exist on Crossplane ≥ 2.2/2.3 AND once a
   composition function actually runs. If the operator's clusters don't run functions, these stay
   documented — that's correct, the alerts ship disabled.
