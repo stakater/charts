@@ -2,6 +2,12 @@
 #
 # The chart's leaf-MR metrics (crossplane_managed_resource_*) are per-GVK counts and do NOT
 # cover Claims/Composites or carry a namespace label. Deploy an exporter to get that layer.
+#
+# IMPORTANT — this does NOT require changing your Compositions, XRDs, or Claims. The exporter
+# is a separate, read-only observer (like kube-state-metrics): it watches the API types you
+# list below and reads the Ready/Synced conditions that Crossplane already sets on every
+# Claim/XR. The "group/version/kind" fields just point it at your types — one `stores` block
+# per Claim/XR API (add one when you add an XRD; you can generate the list from `kubectl get xrd`).
 # This is "Decision 1" in docs/roadmap.md; RSM (crossplane-contrib/resource-state-metrics,
 # v0.4.0+) is the recommended option. KSM CustomResourceState is the alternative if you
 # already run kube-state-metrics — it produces the same kube_customresource_<family> names.
