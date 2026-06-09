@@ -1,0 +1,29 @@
+{{- $r := .Values.prometheus.rules.controlPlane.reconcileErrorRateHigh }}
+{{- if and $r $r.enabled }}
+# Story 2.1 — the controller's reconcile error rate is climbing. Rising errors precede
+# stalled provisioning and predict a customer-facing failure (leading indicator).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-reconcile-error-rate
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: ReconcileErrorRateHigh
+          expr: crossplane:reconcile_errors:ratio > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "High reconcile error ratio for controller {{`{{ $labels.controller }}`}}"
+            description: "Controller {{`{{ $labels.controller }}`}} reconcile error ratio is {{`{{ $value | humanizePercentage }}`}} (SLO < {{ $r.threshold }}) for more than {{ $r.for }}."
+{{- end }}

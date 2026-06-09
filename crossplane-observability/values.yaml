@@ -1,0 +1,261 @@
+# Default values for crossplane-observability.
+# This is a YAML-formatted file.
+#
+# The chart implements the Crossplane Observability Roadmap (see docs/roadmap.md).
+# Everything is organised by the roadmap's capability areas and user stories. Each
+# alert/recording rule is one file under templates/, gated by its own `enabled` flag,
+# and reads its thresholds/durations from the matching block here.
+#
+# ⚠️ Every numeric threshold below is a PLACEHOLDER. The roadmap requires 2–4 weeks of
+# real baseline before committing SLA numbers, segmented per tier and per resource class.
+
+global:
+  # Namespace the monitoring objects are created in. Defaults to the release
+  # namespace, which must be the namespace Crossplane runs in.
+  namespace:
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ---------------------------------------------------------------------------
+# Identity of the Crossplane installation being monitored.
+# ---------------------------------------------------------------------------
+crossplane:
+  # Crossplane core (the aggregated-API / controller pods).
+  core:
+    # Release/fullname of the Crossplane core install. Drives the core ServiceMonitor
+    # selector and the `job` selector used by control-plane / function alerts.
+    name: crossplane
+    # The `job` label the core metrics land under once scraped (Prometheus-operator
+    # defaults this to the ServiceMonitor name). Used in alert/recording expressions.
+    job: crossplane
+  # Crossplane providers. As of crossplane-runtime PR #683 / upjet v1.3.0 every
+  # provider emits the crossplane_managed_resource_* family natively on /metrics,
+  # so leaf-MR readiness/TTR/drift come from the provider pods (PodMonitor below).
+  providers:
+    # Label selector that matches the provider pods (DeploymentRuntimeConfig should
+    # expose a metrics port). Override to match your providers' pod labels.
+    selector:
+      matchLabels:
+        pkg.crossplane.io/provider: ""
+    # The `job` label provider metrics land under once scraped.
+    job: crossplane-providers
+
+# Upjet providers (provider-upjet-aws, -gcp, -azure, …). Gates the Upjet-only
+# diagnostics (Story 6.1) and the more-accurate Upjet TTR signal (Story 1.2).
+upjet:
+  enabled: false
+
+# ---------------------------------------------------------------------------
+# Grafana dashboard (managed via grafana-operator GrafanaDashboard CR).
+# ---------------------------------------------------------------------------
+grafana:
+  # Namespace to create the GrafanaDashboard in. Defaults to the release namespace.
+  # Set this to the Grafana instance's namespace when the grafana-operator does not
+  # honour allowCrossNamespaceImport.
+  namespace: ""
+  folder: "Crossplane Observability"
+  # Let a Grafana instance in another namespace import this dashboard.
+  allowCrossNamespaceImport: true
+  # Selects the target Grafana instance. Default matches the SAAP convention
+  # (app: grafana); override per-cluster if the live instance is labelled differently.
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
+  dashboard:
+    enabled: true
+
+# ---------------------------------------------------------------------------
+# Prometheus configuration
+# ---------------------------------------------------------------------------
+prometheus:
+  # Scrape configuration. Both default to disabled — turn them on once the matching
+  # metrics ports are confirmed exposed (see docs/roadmap.md, Decision 2).
+  monitors:
+    # Scrapes Crossplane core /metrics (controller-runtime, workqueue, circuit
+    # breaker, function-pipeline metrics).
+    coreServiceMonitor:
+      enabled: false
+      port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+    # Scrapes the provider pods (crossplane_managed_resource_* + upjet_* metrics).
+    providerPodMonitor:
+      enabled: false
+      port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+  # SLO recording rules — pre-compute the SLIs so error-budget burn is directly
+  # queryable and the headline composite SLO (Story 1.3) has a single series.
+  recordingRules:
+    enabled: true
+
+  rules:
+    # Extra labels added to every PrometheusRule (e.g. for Alertmanager routing, or
+    # to match your Prometheus ruleSelector).
+    labels: {}
+
+    # ===== Capability Area 1 — Customer-Facing Resource Health =====
+    resourceHealth:
+      # Story 1.1 — managed resources of a GVK not all healthy. The state metrics are
+      # per-GVK counts, so this is ratio-based (ready/exists) via the recording rule, with
+      # escalation by duration. ratioBelow 1.0 = any not-ready; lower = a worse fraction.
+      mrNotReady:
+        enabled: true
+        ratioBelow: 1.0
+        for: 15m
+        severity: warning
+      mrNotReadyCritical:
+        enabled: true
+        ratioBelow: 0.995
+        for: 1h
+        severity: critical
+      # Story 1.2 — provisioning too slow (time-to-readiness).
+      ttrDegraded:
+        enabled: true
+        # p95 create→Ready SLO, seconds (roadmap: 5m). Per-class calibration needed.
+        thresholdSeconds: 300
+        quantile: "0.95"
+        for: 30m
+        severity: warning
+      # Story 1.3 — headline: full Claim→XR→MR tree not ready. Uses the recording
+      # rule below; run the internal SLO tighter than the published SLA.
+      claimTreeNotReady:
+        enabled: true
+        # p95 full-tree time-to-ready SLO, seconds (internal target, publish looser).
+        thresholdSeconds: 360
+        for: 15m
+        severity: critical
+
+    # ===== Capability Area 2 — Control-Plane Health (internal, leading indicators) =====
+    controlPlane:
+      # Story 2.1 — reconcile error ratio.
+      reconcileErrorRateHigh:
+        enabled: true
+        # Error-reconcile ratio over 1h (roadmap SLO: < 1%).
+        threshold: 0.01
+        for: 10m
+        severity: warning
+      # Story 2.2 — reconcile latency.
+      reconcileLatencyHigh:
+        enabled: true
+        # p99 reconcile duration, seconds (baseline-calibrated placeholder).
+        thresholdSeconds: 30
+        quantile: "0.99"
+        for: 15m
+        severity: warning
+      # Story 2.3 — workqueue backlog growing.
+      workqueueDepthGrowing:
+        enabled: true
+        # Sustained queue depth above this is a backlog (baseline-calibrated).
+        threshold: 50
+        for: 15m
+        severity: warning
+      # Story 2.4 — Crossplane aggregated API unavailable (control-plane availability SLA).
+      apiServiceUnavailable:
+        enabled: true
+        for: 5m
+        severity: critical
+      # Story 2.5 — detection lag (create → first reconcile).
+      detectionLagHigh:
+        enabled: true
+        thresholdSeconds: 30
+        quantile: "0.95"
+        for: 15m
+        severity: warning
+
+    # ===== Capability Area 3 — Correctness & Drift =====
+    drift:
+      # Story 3.1 — managed resource drifted from desired state.
+      driftDetected:
+        enabled: true
+        # Time-out-of-sync before detection, seconds, before alerting.
+        thresholdSeconds: 600
+        for: 15m
+        severity: warning
+
+    # ===== Capability Area 4 — Fleet Inventory & Multi-Tenancy =====
+    fleet:
+      # Story 4.1 — Claim-level readiness. Needs the inventory exporter (KSM-CRS or
+      # RSM — open Decision 1 in the roadmap), so it is OFF until that is wired up.
+      claimNotReady:
+        enabled: false
+        for: 15m
+        severity: warning
+      # Story 4.2 — noisy-tenant / reconcile-thrashing protection. PHASE 2: the
+      # circuit-breaker metrics are confirm-on-build, guaranteed after the 2.2/2.3
+      # upgrade. Upstream-published thresholds, used verbatim.
+      circuitBreakerDropRatioHigh:
+        enabled: false
+        # > 20% events dropped for 5m → critical (upstream value).
+        threshold: 0.20
+        for: 5m
+        severity: critical
+      circuitBreakerFrequentOpens:
+        enabled: false
+        # > 6 opens/hr for 15m → warning (upstream value).
+        threshold: 6
+        for: 15m
+        severity: warning
+
+    # ===== Capability Area 5 — Composition / Function Pipeline (PHASE 2) =====
+    # Function-pipeline metrics arrive with the 2.2/2.3 upgrade — OFF by default.
+    functions:
+      functionLatencyHigh:
+        enabled: false
+        thresholdSeconds: 5
+        quantile: "0.95"
+        for: 15m
+        severity: warning
+      functionErrorRate:
+        enabled: false
+        # Function error ratio (roadmap SLO: < 0.5%).
+        threshold: 0.005
+        for: 15m
+        severity: warning
+      functionCacheErrorRate:
+        enabled: false
+        # Minimum acceptable cache hit ratio (roadmap SLO: ≥ 90%).
+        minHitRatio: 0.90
+        for: 15m
+        severity: warning
+
+    # ===== Capability Area 6 — Cloud Provider Interaction =====
+    cloud:
+      # Story 6.1 — cloud-API throttling. Upjet providers only; gated on upjet.enabled.
+      # Never an SLA (failure is upstream at the cloud provider).
+      cloudAPIThrottling:
+        enabled: false
+        # p95 reconcile-delay threshold, seconds. Calibrate against the providers'
+        # configured poll interval (default upjet poll is 1m / 60s).
+        thresholdSeconds: 60
+        for: 15m
+        severity: warning
+
+    # ===== Capability Area 7 — Resource Footprint =====
+    footprint:
+      # Story 7.1 — provider pod crashing / OOM.
+      providerPodRestarting:
+        enabled: true
+        # Restarts per provider over the lookback window before alerting.
+        threshold: 2
+        window: 1h
+        for: 10m
+        severity: warning
+      providerPodOOM:
+        enabled: true
+        for: 5m
+        severity: warning
+      # Story 7.2 — provider pod CPU-throttled (under-provisioned).
+      providerPodCPUThrottled:
+        enabled: true
+        # Fraction of CFS periods throttled (roadmap SLO: < 1%).
+        threshold: 0.01
+        for: 15m
+        severity: info

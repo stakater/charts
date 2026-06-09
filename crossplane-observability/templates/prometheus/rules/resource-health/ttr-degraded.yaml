@@ -1,0 +1,40 @@
+{{- $r := .Values.prometheus.rules.resourceHealth.ttrDegraded }}
+{{- if and $r $r.enabled }}
+# Story 1.2 — resources are taking too long to become ready. Slow provisioning is a
+# customer-visible SLA breach even when nothing has outright "failed". The native TTR
+# metric covers all providers; on Upjet providers upjet_resource_ttr is more accurate
+# for async resources (preferred when upjet.enabled).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-ttr-degraded
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.resource-health
+      rules:
+        - alert: TTRDegraded
+          expr: |
+            histogram_quantile({{ $r.quantile }}, sum by (le, gvk) (
+              rate(
+              {{- if .Values.upjet.enabled }}
+                upjet_resource_ttr_bucket{job="{{ .Values.crossplane.providers.job }}"}[30m]
+              {{- else }}
+                crossplane_managed_resource_first_time_to_readiness_seconds_bucket{job="{{ .Values.crossplane.providers.job }}"}[30m]
+              {{- end }}
+              )
+            )) > {{ $r.thresholdSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Slow provisioning for {{`{{ $labels.gvk }}`}} (p{{ $r.quantile | mulf 100 | int }} TTR over SLO)"
+            description: "p{{ $r.quantile | mulf 100 | int }} time-to-readiness for {{`{{ $labels.gvk }}`}} is {{`{{ $value | humanizeDuration }}`}}, above the {{ $r.thresholdSeconds }}s SLO, for more than {{ $r.for }}."
+{{- end }}

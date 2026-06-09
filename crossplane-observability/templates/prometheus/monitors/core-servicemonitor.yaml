@@ -1,0 +1,26 @@
+{{- if and ( .Values.prometheus.monitors.coreServiceMonitor ) ( .Values.prometheus.monitors.coreServiceMonitor.enabled ) }}
+{{- $sm := .Values.prometheus.monitors.coreServiceMonitor }}
+# Scrapes Crossplane core /metrics: controller-runtime (reconcile rate/latency,
+# workqueue), the aggregated-API health, and — after the 2.2/2.3 upgrade — the
+# circuit-breaker and composition/function-pipeline metrics.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "crossplane-observability.fullname" . }}-core
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: crossplane
+      app.kubernetes.io/instance: {{ .Values.crossplane.core.name }}
+  namespaceSelector:
+    matchNames:
+      - {{ include "crossplane-observability.namespace" . }}
+  endpoints:
+    - port: {{ $sm.port }}
+      path: {{ $sm.path }}
+      interval: {{ $sm.interval }}
+      scrapeTimeout: {{ $sm.scrapeTimeout }}
+{{- end }}

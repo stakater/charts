@@ -1,0 +1,37 @@
+{{- $r := .Values.prometheus.rules.cloud.cloudAPIThrottling }}
+{{- if and $r $r.enabled .Values.upjet.enabled }}
+# Story 6.1 — we are being throttled by the cloud provider. Throttling at the cloud SDK
+# is the root cause behind many latency/TTR alerts and is upstream of us. Upjet providers
+# only (gated on upjet.enabled). NEVER an SLA — the failure is upstream at the cloud provider.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-cloud-api-throttling
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.cloud
+      rules:
+        - alert: CloudAPIThrottling
+          # A high reconcile delay means the provider is falling behind its poll cadence —
+          # typically cloud-side rate limiting. Threshold is configurable (seconds); the
+          # roadmap notes it should be calibrated against the providers' configured poll
+          # interval rather than a fixed number.
+          expr: |
+            histogram_quantile(0.95, sum by (le, kind) (
+              rate(upjet_resource_reconcile_delay_seconds_bucket{job="{{ .Values.crossplane.providers.job }}"}[15m])
+            )) > {{ $r.thresholdSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Cloud-API throttling suspected for {{`{{ $labels.kind }}`}}"
+            description: "p95 reconcile delay for {{`{{ $labels.kind }}`}} is {{`{{ $value | humanizeDuration }}`}}, above the {{ $r.thresholdSeconds }}s threshold, for more than {{ $r.for }} — the provider is falling behind, typically due to cloud-provider rate limiting (upstream of Crossplane)."
+{{- end }}

@@ -1,0 +1,65 @@
+{{- if .Values.prometheus.recordingRules.enabled }}
+{{- $core := .Values.crossplane.core.job }}
+{{- $prov := .Values.crossplane.providers.job }}
+# SLO recording rules. Pre-compute the SLIs from the roadmap so error-budget burn is
+# directly queryable, alert expressions stay readable, and the headline composite SLO
+# (Story 1.3) is a single series. Recording-rule names follow the Prometheus
+# level:metric:operation convention.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "crossplane-observability.fullname" . }}-slo-recording
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: recording-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.slo.resource-health
+      rules:
+        # Story 1.1 SLI — fraction of managed resources Ready, per GVK. The state metrics
+        # are per-GVK COUNTS (labelled only `gvk`), so ready/exists is the ratio directly;
+        # `sum by (gvk)` is defensive against duplicate series.
+        - record: crossplane:managed_resource_ready:ratio
+          expr: |
+            sum by (gvk) (crossplane_managed_resource_ready{job="{{ $prov }}"})
+            /
+            clamp_min(sum by (gvk) (crossplane_managed_resource_exists{job="{{ $prov }}"}), 1)
+        # Story 1.1 SLI — fleet-wide ready ratio (rolls 4.1 up into 1.1).
+        - record: crossplane:managed_resource_ready:ratio:fleet
+          expr: |
+            sum (crossplane_managed_resource_ready{job="{{ $prov }}"})
+            /
+            clamp_min(sum (crossplane_managed_resource_exists{job="{{ $prov }}"}), 1)
+        # Story 1.2 SLI — p95 first-time-to-readiness (seconds), per GVK.
+        - record: crossplane:managed_resource_ttr_seconds:p95
+          expr: |
+            histogram_quantile(0.95, sum by (le, gvk) (
+              rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{job="{{ $prov }}"}[30m])
+            ))
+        # Story 1.3 SLI (headline) — p95 full Claim→XR→MR tree time-to-ready. Until the
+        # Story 4.1 inventory exporter lands (Decision 1), this composes the layers
+        # crossplane self-reports; add the claim layer to the union when available.
+        - record: crossplane:claim_tree_ttr_seconds:p95
+          expr: |
+            histogram_quantile(0.95, sum by (le) (
+              rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{job="{{ $prov }}"}[30m])
+            ))
+    - name: crossplane.slo.control-plane
+      rules:
+        # Story 2.1 SLI — reconcile error ratio over 1h, per controller.
+        - record: crossplane:reconcile_errors:ratio
+          expr: |
+            sum by (controller) (rate(controller_runtime_reconcile_errors_total{job="{{ $core }}"}[1h]))
+            /
+            clamp_min(sum by (controller) (rate(controller_runtime_reconcile_total{job="{{ $core }}"}[1h])), 1)
+        # Story 2.2 SLI — p99 reconcile duration (seconds), per controller.
+        - record: crossplane:reconcile_time_seconds:p99
+          expr: |
+            histogram_quantile(0.99, sum by (le, controller) (
+              rate(controller_runtime_reconcile_time_seconds_bucket{job="{{ $core }}"}[5m])
+            ))
+{{- end }}

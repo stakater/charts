@@ -1,0 +1,76 @@
+name: crossplane-observability validate
+
+# Validates the crossplane-observability chart. Path-filtered so it only runs when that
+# chart changes and does not interfere with the repo-wide chart-publish pipeline.
+on:
+  pull_request:
+    paths:
+      - "crossplane-observability/**"
+  push:
+    branches: [main]
+    paths:
+      - "crossplane-observability/**"
+  workflow_dispatch:
+  schedule:
+    # Weekly drift check — re-scrape a live Crossplane and reconcile the allowlist.
+    - cron: "0 6 * * 1"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Static gate — deterministic, no cluster. Runs on every PR.
+  #   helm lint/template · promtool check+test · metric allowlist gate · dashboard JSON
+  # ---------------------------------------------------------------------------
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pyyaml
+      - name: Install promtool
+        run: |
+          VER=2.54.1
+          curl -sSL "https://github.com/prometheus/prometheus/releases/download/v${VER}/prometheus-${VER}.linux-amd64.tar.gz" \
+            | tar xz --strip-components=1 -C /usr/local/bin "prometheus-${VER}.linux-amd64/promtool"
+      - name: Install kubeconform
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
+            | tar xz -C /usr/local/bin kubeconform
+      - name: Validate
+        run: ./tests/validate.sh
+        working-directory: crossplane-observability
+
+  # ---------------------------------------------------------------------------
+  # Integration capture — re-run the pinned ephemeral capture and fail if the committed
+  # fixtures / captured allowlist drift from reality. This is the layer that catches "a
+  # metric got renamed / never existed", and it is how a versions.env bump is regenerated.
+  # Heavier than the static gate, so it runs on demand and weekly, not on every PR.
+  # ---------------------------------------------------------------------------
+  integration-capture:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pyyaml
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - name: Capture from the pinned stack
+        working-directory: crossplane-observability
+        run: ./tests/integration.sh
+      - name: Fail if fixtures or captured allowlist drifted
+        working-directory: crossplane-observability
+        run: |
+          if ! git diff --quiet -- tests/fixtures tests/metrics-allowlist.captured.txt; then
+            echo "::error::Captured metrics differ from what is committed. The pinned stack"
+            echo "::error::emits a different metric set than tests/fixtures records. Review:"
+            git diff --stat -- tests/fixtures tests/metrics-allowlist.captured.txt
+            git diff -- tests/metrics-allowlist.captured.txt
+            exit 1
+          fi
+          echo "fixtures and captured allowlist match the live pinned capture."

@@ -1,0 +1,33 @@
+{{- $r := .Values.prometheus.rules.drift.driftDetected }}
+{{- if and $r $r.enabled }}
+# Story 3.1 — a managed resource has drifted out of sync with its desired state. Silent
+# drift means configuration we believe is enforced actually is not (correctness signal).
+# NOTE: crossplane_managed_resource_drift_seconds is documented but not yet captured (no
+# drift occurred in the capture). Its exact type (gauge vs histogram) and labels are
+# unconfirmed — verify with a real fetch (see tests/fetch-cluster-metrics.sh) and adjust
+# the expr/labels if needed; this assumes a per-GVK gauge consistent with the rest of the family.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-drift-detected
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.drift
+      rules:
+        - alert: DriftDetected
+          expr: crossplane_managed_resource_drift_seconds{job="{{ .Values.crossplane.providers.job }}"} > {{ $r.thresholdSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Drift detected for {{`{{ $labels.gvk }}`}}"
+            description: "Managed resources of {{`{{ $labels.gvk }}`}} have been out of sync with desired state for {{`{{ $value | humanizeDuration }}`}} (threshold {{ $r.thresholdSeconds }}s)."
+{{- end }}

@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.controlPlane.apiServiceUnavailable }}
+{{- if and $r $r.enabled }}
+# Story 2.4 — the Crossplane aggregated API is unavailable. If it is down, nothing in the
+# platform works. This IS the control-plane availability SLA. Sourced from kube-apiserver,
+# so it does not depend on the Crossplane /metrics endpoints being scraped.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-apiservice-unavailable
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: APIServiceUnavailable
+          expr: aggregator_unavailable_apiservice{name=~".*crossplane.*"} == 1
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane aggregated APIService {{`{{ $labels.name }}`}} unavailable"
+            description: "Aggregated APIService {{`{{ $labels.name }}`}} has been unavailable for more than {{ $r.for }}. The Crossplane control plane is down — provisioning and reconciliation are halted."
+{{- end }}

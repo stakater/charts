@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.footprint.providerPodOOM }}
+{{- if and $r $r.enabled }}
+# Story 7.1 (part 2) — a provider pod was OOM-killed. Memory pressure silently kills the
+# provider and stops its reconciles. Sourced from kube-state-metrics last-terminated reason.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-provider-pod-oom
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.footprint
+      rules:
+        - alert: ProviderPodOOM
+          expr: |
+            kube_pod_container_status_last_terminated_reason{namespace="{{ include "crossplane-observability.namespace" . }}", pod=~"provider.*", reason="OOMKilled"} == 1
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane provider pod {{`{{ $labels.pod }}`}} OOMKilled"
+            description: "Container {{`{{ $labels.container }}`}} in provider pod {{`{{ $labels.pod }}`}} was OOMKilled. Raise its memory limit or investigate the leak — reconciles stop while it is down."
+{{- end }}

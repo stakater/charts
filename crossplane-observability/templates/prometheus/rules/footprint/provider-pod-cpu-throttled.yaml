@@ -1,0 +1,33 @@
+{{- $r := .Values.prometheus.rules.footprint.providerPodCPUThrottled }}
+{{- if and $r $r.enabled }}
+# Story 7.2 — a provider pod is being CPU-throttled (under-provisioned). Under-provisioning
+# shows up as mysterious slowness rather than an outright failure. Sourced from cAdvisor.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-provider-pod-cpu-throttled
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.footprint
+      rules:
+        - alert: ProviderPodCPUThrottled
+          expr: |
+            rate(container_cpu_cfs_throttled_periods_total{namespace="{{ include "crossplane-observability.namespace" . }}", pod=~"provider.*", container!=""}[5m])
+            /
+            clamp_min(rate(container_cpu_cfs_periods_total{namespace="{{ include "crossplane-observability.namespace" . }}", pod=~"provider.*", container!=""}[5m]), 1)
+            > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane provider pod {{`{{ $labels.pod }}`}} CPU-throttled"
+            description: "Provider pod {{`{{ $labels.pod }}`}} is CPU-throttled {{`{{ $value | humanizePercentage }}`}} of the time (SLO < {{ $r.threshold }}) for more than {{ $r.for }} — consider raising its CPU limit."
+{{- end }}

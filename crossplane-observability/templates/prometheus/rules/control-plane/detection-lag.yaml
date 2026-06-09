@@ -1,0 +1,32 @@
+{{- $r := .Values.prometheus.rules.controlPlane.detectionLagHigh }}
+{{- if and $r $r.enabled }}
+# Story 2.5 — slow to even notice a new resource. Detection lag points to watch/informer
+# problems upstream of provisioning (leading indicator).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-detection-lag
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: DetectionLagHigh
+          expr: |
+            histogram_quantile({{ $r.quantile }}, sum by (le, gvk) (
+              rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{job="{{ .Values.crossplane.providers.job }}"}[15m])
+            )) > {{ $r.thresholdSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "High create→detect lag for {{`{{ $labels.gvk }}`}}"
+            description: "p{{ $r.quantile | mulf 100 | int }} time from resource creation to first reconcile for {{`{{ $labels.gvk }}`}} is {{`{{ $value | humanizeDuration }}`}}, above the {{ $r.thresholdSeconds }}s SLO, for more than {{ $r.for }} — likely a watch/informer problem."
+{{- end }}

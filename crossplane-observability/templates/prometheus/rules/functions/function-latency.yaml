@@ -1,0 +1,34 @@
+{{- $r := .Values.prometheus.rules.functions.functionLatencyHigh }}
+{{- if and $r $r.enabled }}
+# Story 5.1 (PHASE 2, part 1) — a composition function is slow. Functions run custom code
+# in the provisioning path; a hidden slowdown surfaces only as a generic reconcile error
+# with no indication of which function. Function-pipeline metrics arrive with the 2.2/2.3
+# upgrade, so this is disabled by default.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-function-latency
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.functions
+      rules:
+        - alert: FunctionLatencyHigh
+          expr: |
+            histogram_quantile({{ $r.quantile }}, sum by (le, function_name) (
+              rate(function_run_function_seconds_bucket{job="{{ .Values.crossplane.core.job }}"}[5m])
+            )) > {{ $r.thresholdSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Composition function {{`{{ $labels.function_name }}`}} slow"
+            description: "p{{ $r.quantile | mulf 100 | int }} execution time for function {{`{{ $labels.function_name }}`}} is {{`{{ $value | humanizeDuration }}`}} (SLO ≤ {{ $r.thresholdSeconds }}s) for more than {{ $r.for }}."
+{{- end }}
