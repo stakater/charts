@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.footprint.providerPodRestarting }}
+{{- if and $r $r.enabled }}
+# Story 7.1 (part 1) — a provider pod is restarting. A dead provider silently stops all of
+# its reconciles. Sourced from kube-state-metrics.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-provider-pod-restarting
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.footprint
+      rules:
+        - alert: ProviderPodRestarting
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="{{ include "crossplane-observability.namespace" . }}", pod=~"provider.*"}[{{ $r.window }}]) > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane provider pod {{`{{ $labels.pod }}`}} restarting"
+            description: "Provider pod {{`{{ $labels.pod }}`}} has restarted more than {{ $r.threshold }} times in {{ $r.window }}. While it is down its reconciles do not run."
+{{- end }}

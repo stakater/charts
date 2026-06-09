@@ -1,0 +1,396 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Crossplane observability — organised by the roadmap capability areas (docs/roadmap.md). Rows labelled (Phase 2) stay empty until the 2.2/2.3 upgrade; the Cloud row is Upjet-providers only.",
+  "editable": true,
+  "graphTooltip": 1,
+  "links": [],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "refresh": 1,
+        "regex": ""
+      },
+      {
+        "name": "gvk",
+        "label": "GVK",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values(crossplane_managed_resource_ready, gvk)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" },
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Overview / SLO (top-of-glass)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1
+    },
+    {
+      "type": "stat",
+      "title": "Fleet MR Ready ratio (Story 1.1)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 2,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "yellow", "value": 0.99 },
+            { "color": "green", "value": 0.995 }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "crossplane:managed_resource_ready:ratio:fleet" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Claim tree p95 TTR (Story 1.3 headline)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 3,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 300 },
+            { "color": "red", "value": 360 }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "crossplane:claim_tree_ttr_seconds:p95" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Crossplane API available (Story 2.4)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 4,
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "1 - max(aggregator_unavailable_apiservice{name=~\".*crossplane.*\"})" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "MRs not ready (Story 1.1)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 5,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_ready{gvk=~\"$gvk\"}) or vector(0)" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Resource Health (Stories 1.1, 1.2)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 10
+    },
+    {
+      "type": "table",
+      "title": "Not-ready / not-synced managed resources (count by GVK)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 11,
+      "options": { "showHeader": true },
+      "targets": [
+        { "refId": "A", "format": "table", "instant": true, "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_ready{gvk=~\"$gvk\"}) > 0" },
+        { "refId": "B", "format": "table", "instant": true, "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_synced{gvk=~\"$gvk\"}) > 0" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Time-to-readiness p50 / p95 / p99 by kind",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 12,
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p50 {{gvk}}", "expr": "histogram_quantile(0.50, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk=~\"$gvk\"}[30m])))" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p95 {{gvk}}", "expr": "crossplane:managed_resource_ttr_seconds:p95" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p99 {{gvk}}", "expr": "histogram_quantile(0.99, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk=~\"$gvk\"}[30m])))" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Control Plane (Stories 2.1–2.5)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 20
+    },
+    {
+      "type": "timeseries",
+      "title": "Reconcile rate & error ratio (2.1)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 15 },
+      "id": 21,
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [ { "matcher": { "id": "byName", "options": "error ratio" }, "properties": [ { "id": "unit", "value": "percentunit" } ] } ] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{controller}} reconciles/s", "expr": "sum by (controller) (rate(controller_runtime_reconcile_total[5m]))" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "error ratio", "expr": "crossplane:reconcile_errors:ratio" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Reconcile latency p50 / p95 / p99 (2.2)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 15 },
+      "id": 22,
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p50 {{controller}}", "expr": "histogram_quantile(0.50, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket[5m])))" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p99 {{controller}}", "expr": "crossplane:reconcile_time_seconds:p99" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Workqueue depth & add rate (2.3)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 22 },
+      "id": 23,
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "depth {{name}}", "expr": "workqueue_depth" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "adds/s {{name}}", "expr": "sum by (name) (rate(workqueue_adds_total[5m]))" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Detection lag p95 — create→first reconcile (2.5)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 22 },
+      "id": 24,
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p95 {{gvk}}", "expr": "histogram_quantile(0.95, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk=~\"$gvk\"}[15m])))" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Correctness & Drift (Story 3.1)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+      "id": 30
+    },
+    {
+      "type": "timeseries",
+      "title": "Time-out-of-sync (drift) by kind",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 30 },
+      "id": 31,
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{gvk}}", "expr": "crossplane_managed_resource_drift_seconds{gvk=~\"$gvk\"} > 0" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Fleet & Multi-tenancy (Stories 4.1, 4.2 — 4.2 is Phase 2)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 },
+      "id": 40
+    },
+    {
+      "type": "stat",
+      "title": "Ready ratio by GVK (4.1)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 38 },
+      "id": 41,
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{gvk}}", "expr": "crossplane:managed_resource_ready:ratio" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Circuit-breaker drop ratio (4.2 — Phase 2)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 38 },
+      "id": 42,
+      "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{controller}}", "expr": "sum by (controller) (rate(circuit_breaker_events_total{result=\"Dropped\"}[5m])) / clamp_min(sum by (controller) (rate(circuit_breaker_events_total[5m])), 1)" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Circuit-breaker opens / hr (4.2 — Phase 2)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 38 },
+      "id": 43,
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{controller}}", "expr": "sum by (controller) (increase(circuit_breaker_opens_total[1h]))" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Composition / Function Pipeline (Stories 5.1, 5.2 — Phase 2, after upgrade)",
+      "collapsed": true,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 },
+      "id": 50,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Function execution p95 (5.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 8, "x": 0, "y": 45 },
+          "id": 51,
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{function_name}}", "expr": "histogram_quantile(0.95, sum by (le, function_name) (rate(function_run_function_seconds_bucket[5m])))" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Function error ratio (5.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 8, "x": 8, "y": 45 },
+          "id": 52,
+          "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{function_name}}", "expr": "sum by (function_name) (rate(function_run_function_response_total{result=\"error\"}[5m])) / clamp_min(sum by (function_name) (rate(function_run_function_response_total[5m])), 1)" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Function cache hit ratio (5.2)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 8, "x": 16, "y": 45 },
+          "id": 53,
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "hit ratio", "expr": "sum(rate(function_run_function_response_cache_hits_total[10m])) / clamp_min(sum(rate(function_run_function_response_cache_hits_total[10m]) + rate(function_run_function_response_cache_misses_total[10m]) + rate(function_run_function_response_cache_errors_total[10m])), 1)" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Cloud Provider Interaction (Story 6.1 — Upjet providers only)",
+      "collapsed": true,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 },
+      "id": 60,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Reconcile delay p95 (6.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 24, "x": 0, "y": 46 },
+          "id": 61,
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p95 delay {{kind}}", "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(upjet_resource_reconcile_delay_seconds_bucket[15m])))" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Resource Footprint (Stories 7.1, 7.2)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 46 },
+      "id": 70
+    },
+    {
+      "type": "timeseries",
+      "title": "Provider pod restarts (7.1)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 47 },
+      "id": 71,
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{pod}}", "expr": "increase(kube_pod_container_status_restarts_total{pod=~\"provider.*\"}[1h])" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Provider memory working set (7.1)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 47 },
+      "id": 72,
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{pod}}", "expr": "sum by (pod) (container_memory_working_set_bytes{pod=~\"provider.*\", container!=\"\"})" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Provider CPU throttled % (7.2)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 47 },
+      "id": 73,
+      "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{pod}}", "expr": "rate(container_cpu_cfs_throttled_periods_total{pod=~\"provider.*\", container!=\"\"}[5m]) / clamp_min(rate(container_cpu_cfs_periods_total{pod=~\"provider.*\", container!=\"\"}[5m]), 1)" }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [ "crossplane", "observability", "stakater" ],
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Crossplane Observability",
+  "uid": "crossplane-observability",
+  "version": 1
+}

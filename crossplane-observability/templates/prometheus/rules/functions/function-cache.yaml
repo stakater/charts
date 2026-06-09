@@ -1,0 +1,38 @@
+{{- $r := .Values.prometheus.rules.functions.functionCacheErrorRate }}
+{{- if and $r $r.enabled }}
+# Story 5.2 (PHASE 2) — the function response cache is unhealthy. Cache misses and errors
+# silently inflate reconcile latency. PHASE 2 (post-upgrade) — disabled by default. Alerts
+# when the hit ratio drops below the SLO.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-function-cache
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.functions
+      rules:
+        - alert: FunctionCacheErrorRate
+          expr: |
+            sum (rate(function_run_function_response_cache_hits_total{job="{{ .Values.crossplane.core.job }}"}[10m]))
+            /
+            clamp_min(sum (
+              rate(function_run_function_response_cache_hits_total{job="{{ .Values.crossplane.core.job }}"}[10m])
+              + rate(function_run_function_response_cache_misses_total{job="{{ .Values.crossplane.core.job }}"}[10m])
+              + rate(function_run_function_response_cache_errors_total{job="{{ .Values.crossplane.core.job }}"}[10m])
+            ), 1)
+            < {{ $r.minHitRatio }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Composition function cache hit ratio low"
+            description: "Function response cache hit ratio is {{`{{ $value | humanizePercentage }}`}}, below the {{ $r.minHitRatio }} SLO, for more than {{ $r.for }} — reconcile latency is being inflated by cache misses/errors."
+{{- end }}

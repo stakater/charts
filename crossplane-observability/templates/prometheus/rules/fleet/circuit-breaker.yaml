@@ -1,0 +1,50 @@
+{{- $drop := .Values.prometheus.rules.fleet.circuitBreakerDropRatioHigh }}
+{{- $opens := .Values.prometheus.rules.fleet.circuitBreakerFrequentOpens }}
+{{- if or ( and $drop $drop.enabled ) ( and $opens $opens.enabled ) }}
+# Story 4.2 (PHASE 2) — multi-tenant protection: a single XR thrashing (reconcile storm)
+# can saturate the control plane and starve other tenants. The circuit-breaker mechanism
+# runs on 2.1.x, but its Prometheus metrics are guaranteed only after the 2.2/2.3 upgrade
+# (confirm-on-build). Thresholds are the upstream-published values, used verbatim.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-circuit-breaker
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.fleet
+      rules:
+        {{- if and $drop $drop.enabled }}
+        - alert: CircuitBreakerDropRatioHigh
+          expr: |
+            sum by (controller) (rate(circuit_breaker_events_total{job="{{ .Values.crossplane.core.job }}", result="Dropped"}[5m]))
+            /
+            clamp_min(sum by (controller) (rate(circuit_breaker_events_total{job="{{ .Values.crossplane.core.job }}"}[5m])), 1)
+            > {{ $drop.threshold }}
+          for: {{ $drop.for }}
+          labels:
+            severity: {{ $drop.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Circuit breaker dropping events for {{`{{ $labels.controller }}`}}"
+            description: "Controller {{`{{ $labels.controller }}`}} is dropping {{`{{ $value | humanizePercentage }}`}} of watch events (> {{ $drop.threshold }}) for more than {{ $drop.for }} — a thrashing XR may be starving other tenants."
+        {{- end }}
+        {{- if and $opens $opens.enabled }}
+        - alert: CircuitBreakerFrequentOpens
+          expr: |
+            sum by (controller) (increase(circuit_breaker_opens_total{job="{{ .Values.crossplane.core.job }}"}[1h])) > {{ $opens.threshold }}
+          for: {{ $opens.for }}
+          labels:
+            severity: {{ $opens.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Circuit breaker opening frequently for {{`{{ $labels.controller }}`}}"
+            description: "Controller {{`{{ $labels.controller }}`}} circuit breaker opened more than {{ $opens.threshold }} times in the last hour (sustained {{ $opens.for }}) — repeated reconcile storms."
+        {{- end }}
+{{- end }}

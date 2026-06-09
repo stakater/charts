@@ -1,0 +1,29 @@
+{{- $r := .Values.prometheus.rules.controlPlane.reconcileLatencyHigh }}
+{{- if and $r $r.enabled }}
+# Story 2.2 — reconcile latency is climbing. Signals provider or cloud-API degradation
+# before it becomes a customer-facing TTR breach (leading indicator).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-reconcile-latency
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: ReconcileLatencyHigh
+          expr: crossplane:reconcile_time_seconds:p99 > {{ $r.thresholdSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "High reconcile latency for controller {{`{{ $labels.controller }}`}}"
+            description: "Controller {{`{{ $labels.controller }}`}} p99 reconcile duration is {{`{{ $value | humanizeDuration }}`}} (SLO ≤ {{ $r.thresholdSeconds }}s) for more than {{ $r.for }}."
+{{- end }}

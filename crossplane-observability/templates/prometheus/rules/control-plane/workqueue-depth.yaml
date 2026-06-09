@@ -1,0 +1,29 @@
+{{- $r := .Values.prometheus.rules.controlPlane.workqueueDepthGrowing }}
+{{- if and $r $r.enabled }}
+# Story 2.3 — the controller work queue is growing unbounded. A sustained backlog means
+# customer requests are piling up faster than they can be serviced (capacity signal).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-workqueue-depth
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: WorkqueueDepthGrowing
+          expr: workqueue_depth{job="{{ .Values.crossplane.core.job }}"} > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane workqueue {{`{{ $labels.name }}`}} backlog growing"
+            description: "Workqueue {{`{{ $labels.name }}`}} depth has stayed above {{ $r.threshold }} (currently {{`{{ $value }}`}}) for more than {{ $r.for }} — reconciles are not keeping up with demand."
+{{- end }}

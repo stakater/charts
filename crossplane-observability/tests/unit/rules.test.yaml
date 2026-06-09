@@ -1,0 +1,95 @@
+# promtool unit tests — validate rule LOGIC against synthetic series.
+#
+# This proves the rules compute and fire as intended given known inputs (correct
+# operator, label propagation, recording-rule → alert wiring). It does NOT prove the
+# input metrics exist on the cluster — that is the job of capture-metrics.sh + the
+# metric gate. Run with:  promtool test rules tests/unit/rules.test.yaml
+#
+# rule_files is the merged, Helm-rendered rule set produced by tests/validate.sh into
+# tests/.rendered/rules.yaml (so we test exactly what the chart ships, not a copy).
+rule_files:
+  - ../.rendered/rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # --- Story 2.1: recording rule feeds the alert ---
+  - name: reconcile error ratio recording rule + alert
+    interval: 1m
+    input_series:
+      - series: 'controller_runtime_reconcile_total{job="crossplane", controller="managed"}'
+        values: '0+100x180'   # 100 reconciles/min
+      - series: 'controller_runtime_reconcile_errors_total{job="crossplane", controller="managed"}'
+        values: '0+50x180'    # 50 errors/min  -> ratio 0.5
+    promql_expr_test:
+      - expr: crossplane:reconcile_errors:ratio
+        eval_time: 120m
+        exp_samples:
+          - labels: 'crossplane:reconcile_errors:ratio{controller="managed"}'
+            value: 0.5
+    alert_rule_test:
+      - eval_time: 120m
+        alertname: ReconcileErrorRateHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              controller: managed
+              rulesgroup: crossplane
+            exp_annotations:
+              summary: "High reconcile error ratio for controller managed"
+              description: "Controller managed reconcile error ratio is 50% (SLO < 0.01) for more than 10m."
+
+  # --- Story 1.1: MR ready-ratio recording rule + escalating alerts ---
+  # State metrics are per-GVK counts labelled `gvk`: exists=total, ready=ready count.
+  # 1 of 2 ready -> ratio 0.5, which is < both thresholds, so warning fires at 15m and
+  # critical at 1h.
+  - name: managed resource ready ratio escalation
+    interval: 1m
+    input_series:
+      - series: 'crossplane_managed_resource_exists{job="crossplane-providers", gvk="example.org/v1, Kind=Thing"}'
+        values: '2x180'
+      - series: 'crossplane_managed_resource_ready{job="crossplane-providers", gvk="example.org/v1, Kind=Thing"}'
+        values: '1x180'
+    promql_expr_test:
+      - expr: crossplane:managed_resource_ready:ratio
+        eval_time: 30m
+        exp_samples:
+          - labels: 'crossplane:managed_resource_ready:ratio{gvk="example.org/v1, Kind=Thing"}'
+            value: 0.5
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MRNotReady
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              gvk: "example.org/v1, Kind=Thing"
+              rulesgroup: crossplane
+            exp_annotations:
+              summary: "Managed resources not all ready for example.org/v1, Kind=Thing"
+              description: "Only 50% of example.org/v1, Kind=Thing managed resources are Ready (SLO 1) for more than 15m. Some infrastructure may exist but be unusable."
+      - eval_time: 20m
+        alertname: MRNotReadyCritical
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: MRNotReadyCritical
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              gvk: "example.org/v1, Kind=Thing"
+              rulesgroup: crossplane
+            exp_annotations:
+              summary: "Managed resources critically degraded for example.org/v1, Kind=Thing"
+              description: "Only 50% of example.org/v1, Kind=Thing managed resources are Ready (below 0.995) for over 1h — a sustained, customer-visible failure."
+
+  # --- Story 1.1 (negative): all resources ready (ratio 1.0) must NOT alert ---
+  - name: fully ready GVK does not alert
+    interval: 1m
+    input_series:
+      - series: 'crossplane_managed_resource_exists{job="crossplane-providers", gvk="example.org/v1, Kind=Healthy"}'
+        values: '3x180'
+      - series: 'crossplane_managed_resource_ready{job="crossplane-providers", gvk="example.org/v1, Kind=Healthy"}'
+        values: '3x180'
+    alert_rule_test:
+      - eval_time: 90m
+        alertname: MRNotReady
+        exp_alerts: []

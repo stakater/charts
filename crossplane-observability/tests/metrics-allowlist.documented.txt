@@ -1,0 +1,61 @@
+# metrics-allowlist.documented.txt — metrics the chart references that are REAL (confirmed
+# in upstream documentation) but are NOT emitted by the pinned capture rig, with the reason.
+#
+# These are NOT guesses. Every name below is documented in the Crossplane / Upjet metrics
+# reference. They are absent from tests/fixtures/ only because the pinned rig (Crossplane
+# 2.3.1 + provider-kubernetes) doesn't exercise the code path that emits them, or they come
+# from a different component entirely. The gate allows them and reports them as DOCUMENTED.
+#
+# Sources:
+#   - Crossplane metrics reference: https://docs.crossplane.io/latest/guides/metrics/
+#   - Upjet metrics:                https://github.com/crossplane/upjet (runtime metrics)
+#
+# To move one to CAPTURED: exercise the path in tests/integration.sh (e.g. add an Upjet
+# provider, or a Composition+Function) and re-run, then it lands in the captured allowlist.
+
+# --- crossplane-runtime state metric: drift (Story 3.1) ---
+# Documented provider metric. Not emitted here because no drift occurred on the sample
+# Object (drift detection needs management policies + an out-of-band change).
+crossplane_managed_resource_drift_seconds
+
+# --- Crossplane core: composition functions (Stories 5.1, 5.2) ---
+# Documented core metrics. Register only once a composition Function actually runs; this
+# capture installs no Composition/Function, so they are absent here.
+function_run_function_seconds_bucket
+function_run_function_response_total
+function_run_function_response_cache_hits_total
+function_run_function_response_cache_misses_total
+function_run_function_response_cache_errors_total
+
+# --- Crossplane core: circuit breaker / realtime compositions (Story 4.2) ---
+# Documented core metrics. Register when realtime compositions / the circuit breaker engage.
+circuit_breaker_events_total
+circuit_breaker_opens_total
+
+# --- Upjet providers only (Story 1.2 Upjet path, 6.1) ---
+# Documented Upjet runtime metrics; provider-kubernetes is not an Upjet provider. Verify with
+# provider-upjet-aws/-gcp/-azure. NOTE: the docs list base names upjet_resource_ttr and
+# upjet_resource_reconcile_delay_seconds — confirm the histogram `_bucket` series when captured.
+upjet_resource_ttr_bucket
+upjet_resource_reconcile_delay_seconds_bucket
+
+# --- kube-apiserver (Story 2.4) ---
+# Standard apiserver metric, exposed by kube-apiserver /metrics (not Crossplane).
+aggregator_unavailable_apiservice
+
+# --- cAdvisor / kubelet (Stories 7.1, 7.2) ---
+# Standard cluster metrics; present on any OpenShift/UWM cluster, not from Crossplane.
+container_memory_working_set_bytes
+container_cpu_cfs_throttled_periods_total
+container_cpu_cfs_periods_total
+
+# --- kube-state-metrics (Story 7.1) ---
+# Standard KSM metrics; KSM is not installed in the capture cluster.
+kube_pod_container_status_restarts_total
+kube_pod_container_status_last_terminated_reason
+
+# --- Story 4.1 inventory exporter (Decision 1: KSM-CRS or RSM) — PLACEHOLDER ---
+# This is the one name that is NOT yet documented-real: the inventory exporter is not chosen,
+# so the metric name is a placeholder and the alert ships DISABLED. Replace when Decision 1
+# is made and the exporter's real metric name is known.
+crossplane_claim_ready

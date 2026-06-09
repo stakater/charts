@@ -1,0 +1,32 @@
+{{- $r := .Values.prometheus.rules.fleet.claimNotReady }}
+{{- if and $r $r.enabled }}
+# Story 4.1 — Claim-level readiness across the fleet, per tenant/namespace. Providers
+# self-report leaf-MR health, but the Claim/XR/Composition inventory layer needs an
+# external exporter (KSM Custom Resource State or resource-state-metrics — see Decision 1
+# in docs/roadmap.md). Disabled by default until that exporter is wired up; the metric
+# name below assumes a KSM-CRS series and will likely need adjusting to your exporter.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-claim-not-ready
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.fleet
+      rules:
+        - alert: ClaimNotReady
+          expr: crossplane_claim_ready == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Claim {{`{{ $labels.kind }}/{{ $labels.name }}`}} not ready"
+            description: "Claim {{`{{ $labels.kind }}/{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} has been not-ready for more than {{ $r.for }} — the customer's end-to-end request is not satisfied."
+{{- end }}

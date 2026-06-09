@@ -1,0 +1,25 @@
+{{- if and ( .Values.prometheus.monitors.providerPodMonitor ) ( .Values.prometheus.monitors.providerPodMonitor.enabled ) }}
+{{- $pm := .Values.prometheus.monitors.providerPodMonitor }}
+# Scrapes the provider pods. Every crossplane-runtime provider emits the
+# crossplane_managed_resource_* family (ready/synced/TTR/drift) natively, plus
+# upjet_* metrics on Upjet providers — so leaf-MR health comes from here, not an
+# external exporter.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "crossplane-observability.fullname" . }}-providers
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- toYaml .Values.crossplane.providers.selector | nindent 4 }}
+  namespaceSelector:
+    matchNames:
+      - {{ include "crossplane-observability.namespace" . }}
+  podMetricsEndpoints:
+    - port: {{ $pm.port }}
+      path: {{ $pm.path }}
+      interval: {{ $pm.interval }}
+      scrapeTimeout: {{ $pm.scrapeTimeout }}
+{{- end }}

@@ -1,0 +1,712 @@
+# HELP certwatcher_read_certificate_errors_total Total number of certificate read errors
+# TYPE certwatcher_read_certificate_errors_total counter
+certwatcher_read_certificate_errors_total 0
+# HELP certwatcher_read_certificate_total Total number of certificate reads
+# TYPE certwatcher_read_certificate_total counter
+certwatcher_read_certificate_total 1
+# HELP controller_runtime_active_workers Number of currently used workers per controller
+# TYPE controller_runtime_active_workers gauge
+controller_runtime_active_workers{controller="crd-gate"} 0
+controller_runtime_active_workers{controller="managed/object.kubernetes.crossplane.io"} 0
+controller_runtime_active_workers{controller="managed/object.kubernetes.m.crossplane.io"} 0
+controller_runtime_active_workers{controller="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+controller_runtime_active_workers{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+controller_runtime_active_workers{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+controller_runtime_active_workers{controller="providerconfig/providerconfig.kubernetes.crossplane.io"} 0
+controller_runtime_active_workers{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP controller_runtime_max_concurrent_reconciles Maximum number of concurrent reconciles per controller
+# TYPE controller_runtime_max_concurrent_reconciles gauge
+controller_runtime_max_concurrent_reconciles{controller="crd-gate"} 1
+controller_runtime_max_concurrent_reconciles{controller="managed/object.kubernetes.crossplane.io"} 100
+controller_runtime_max_concurrent_reconciles{controller="managed/object.kubernetes.m.crossplane.io"} 100
+controller_runtime_max_concurrent_reconciles{controller="managed/observedobjectcollection.kubernetes.crossplane.io"} 1
+controller_runtime_max_concurrent_reconciles{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 1
+controller_runtime_max_concurrent_reconciles{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 100
+controller_runtime_max_concurrent_reconciles{controller="providerconfig/providerconfig.kubernetes.crossplane.io"} 100
+controller_runtime_max_concurrent_reconciles{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 100
+# HELP controller_runtime_reconcile_errors_total Total number of reconciliation errors per controller
+# TYPE controller_runtime_reconcile_errors_total counter
+controller_runtime_reconcile_errors_total{controller="crd-gate"} 0
+controller_runtime_reconcile_errors_total{controller="managed/object.kubernetes.crossplane.io"} 0
+controller_runtime_reconcile_errors_total{controller="managed/object.kubernetes.m.crossplane.io"} 0
+controller_runtime_reconcile_errors_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+controller_runtime_reconcile_errors_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+controller_runtime_reconcile_errors_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+controller_runtime_reconcile_errors_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io"} 0
+controller_runtime_reconcile_errors_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP controller_runtime_reconcile_panics_total Total number of reconciliation panics per controller
+# TYPE controller_runtime_reconcile_panics_total counter
+controller_runtime_reconcile_panics_total{controller="crd-gate"} 0
+controller_runtime_reconcile_panics_total{controller="managed/object.kubernetes.crossplane.io"} 0
+controller_runtime_reconcile_panics_total{controller="managed/object.kubernetes.m.crossplane.io"} 0
+controller_runtime_reconcile_panics_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+controller_runtime_reconcile_panics_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+controller_runtime_reconcile_panics_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+controller_runtime_reconcile_panics_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io"} 0
+controller_runtime_reconcile_panics_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP controller_runtime_reconcile_time_seconds Length of time per reconciliation per controller
+# TYPE controller_runtime_reconcile_time_seconds histogram
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.005"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.01"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.025"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.05"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.1"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.15"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.2"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.25"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.3"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.35"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.4"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.45"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.5"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.6"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.7"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.8"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="0.9"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="1"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="1.25"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="1.5"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="1.75"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="2"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="2.5"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="3"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="3.5"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="4"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="4.5"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="5"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="6"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="7"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="8"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="9"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="10"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="15"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="20"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="25"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="30"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="40"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="50"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="60"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="crd-gate",le="+Inf"} 30
+controller_runtime_reconcile_time_seconds_sum{controller="crd-gate"} 0.004690042000000001
+controller_runtime_reconcile_time_seconds_count{controller="crd-gate"} 30
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.005"} 0
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.01"} 1
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.025"} 2
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.05"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.1"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.15"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.2"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.25"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.3"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.35"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.4"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.45"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.5"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.6"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.7"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.8"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="0.9"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="1"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="1.25"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="1.5"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="1.75"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="2"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="2.5"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="3"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="3.5"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="4"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="4.5"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="5"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="6"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="7"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="8"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="9"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="10"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="15"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="20"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="25"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="30"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="40"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="50"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="60"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",le="+Inf"} 3
+controller_runtime_reconcile_time_seconds_sum{controller="managed/object.kubernetes.crossplane.io"} 0.06569770899999999
+controller_runtime_reconcile_time_seconds_count{controller="managed/object.kubernetes.crossplane.io"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.005"} 3
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.01"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.025"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.05"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.1"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.15"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.2"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.25"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.3"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.35"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.4"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.45"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.5"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.6"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.7"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.8"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.9"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="1"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="1.25"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="1.5"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="1.75"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="2"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="2.5"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="3"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="3.5"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="4"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="4.5"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="5"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="6"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="7"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="8"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="9"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="10"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="15"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="20"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="25"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="30"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="40"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="50"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="60"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",le="+Inf"} 4
+controller_runtime_reconcile_time_seconds_sum{controller="providerconfig/providerconfig.kubernetes.crossplane.io"} 0.021269001000000003
+controller_runtime_reconcile_time_seconds_count{controller="providerconfig/providerconfig.kubernetes.crossplane.io"} 4
+# HELP controller_runtime_reconcile_total Total number of reconciliations per controller
+# TYPE controller_runtime_reconcile_total counter
+controller_runtime_reconcile_total{controller="crd-gate",result="error"} 0
+controller_runtime_reconcile_total{controller="crd-gate",result="requeue"} 0
+controller_runtime_reconcile_total{controller="crd-gate",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="crd-gate",result="success"} 30
+controller_runtime_reconcile_total{controller="managed/object.kubernetes.crossplane.io",result="error"} 0
+controller_runtime_reconcile_total{controller="managed/object.kubernetes.crossplane.io",result="requeue"} 1
+controller_runtime_reconcile_total{controller="managed/object.kubernetes.crossplane.io",result="requeue_after"} 2
+controller_runtime_reconcile_total{controller="managed/object.kubernetes.crossplane.io",result="success"} 0
+controller_runtime_reconcile_total{controller="managed/object.kubernetes.m.crossplane.io",result="error"} 0
+controller_runtime_reconcile_total{controller="managed/object.kubernetes.m.crossplane.io",result="requeue"} 0
+controller_runtime_reconcile_total{controller="managed/object.kubernetes.m.crossplane.io",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="managed/object.kubernetes.m.crossplane.io",result="success"} 0
+controller_runtime_reconcile_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io",result="error"} 0
+controller_runtime_reconcile_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io",result="requeue"} 0
+controller_runtime_reconcile_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io",result="success"} 0
+controller_runtime_reconcile_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",result="error"} 0
+controller_runtime_reconcile_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",result="requeue"} 0
+controller_runtime_reconcile_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",result="success"} 0
+controller_runtime_reconcile_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",result="error"} 0
+controller_runtime_reconcile_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",result="requeue"} 0
+controller_runtime_reconcile_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",result="success"} 0
+controller_runtime_reconcile_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io",result="error"} 0
+controller_runtime_reconcile_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io",result="requeue"} 0
+controller_runtime_reconcile_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io",result="success"} 4
+controller_runtime_reconcile_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",result="error"} 0
+controller_runtime_reconcile_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",result="requeue"} 0
+controller_runtime_reconcile_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",result="success"} 0
+# HELP controller_runtime_terminal_reconcile_errors_total Total number of terminal reconciliation errors per controller
+# TYPE controller_runtime_terminal_reconcile_errors_total counter
+controller_runtime_terminal_reconcile_errors_total{controller="crd-gate"} 0
+controller_runtime_terminal_reconcile_errors_total{controller="managed/object.kubernetes.crossplane.io"} 0
+controller_runtime_terminal_reconcile_errors_total{controller="managed/object.kubernetes.m.crossplane.io"} 0
+controller_runtime_terminal_reconcile_errors_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+controller_runtime_terminal_reconcile_errors_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+controller_runtime_terminal_reconcile_errors_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+controller_runtime_terminal_reconcile_errors_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io"} 0
+controller_runtime_terminal_reconcile_errors_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP controller_runtime_webhook_latency_seconds Histogram of the latency of processing admission requests
+# TYPE controller_runtime_webhook_latency_seconds histogram
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="0.005"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="0.01"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="0.025"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="0.05"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="0.1"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="0.25"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="0.5"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="1"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="2.5"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="5"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="10"} 7
+controller_runtime_webhook_latency_seconds_bucket{webhook="/convert",le="+Inf"} 7
+controller_runtime_webhook_latency_seconds_sum{webhook="/convert"} 0.0012931680000000001
+controller_runtime_webhook_latency_seconds_count{webhook="/convert"} 7
+# HELP controller_runtime_webhook_panics_total Total number of webhook panics
+# TYPE controller_runtime_webhook_panics_total counter
+controller_runtime_webhook_panics_total 0
+# HELP controller_runtime_webhook_requests_in_flight Current number of admission requests being served.
+# TYPE controller_runtime_webhook_requests_in_flight gauge
+controller_runtime_webhook_requests_in_flight{webhook="/convert"} 0
+# HELP controller_runtime_webhook_requests_total Total number of admission requests by HTTP status code.
+# TYPE controller_runtime_webhook_requests_total counter
+controller_runtime_webhook_requests_total{code="200",webhook="/convert"} 7
+controller_runtime_webhook_requests_total{code="500",webhook="/convert"} 0
+# HELP crossplane_managed_resource_exists The number of managed resources that exist
+# TYPE crossplane_managed_resource_exists gauge
+crossplane_managed_resource_exists{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 1
+crossplane_managed_resource_exists{gvk="kubernetes.m.crossplane.io/v1alpha1, Kind=Object"} 0
+# HELP crossplane_managed_resource_first_time_to_readiness_seconds The time it took for a managed resource to become ready first time after creation
+# TYPE crossplane_managed_resource_first_time_to_readiness_seconds histogram
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="5"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="10"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="15"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="30"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="60"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="120"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="300"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="600"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1800"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="3600"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="+Inf"} 1
+crossplane_managed_resource_first_time_to_readiness_seconds_sum{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 0.687957385
+crossplane_managed_resource_first_time_to_readiness_seconds_count{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 1
+# HELP crossplane_managed_resource_first_time_to_reconcile_seconds The time it took for a managed resource to be detected by the controller
+# TYPE crossplane_managed_resource_first_time_to_reconcile_seconds histogram
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1e-08"} 0
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1e-07"} 0
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1e-06"} 0
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="9.999999999999999e-06"} 0
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="9.999999999999999e-05"} 0
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="0.001"} 0
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="0.01"} 0
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="0.1"} 0
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1"} 1
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="10"} 1
+crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="+Inf"} 1
+crossplane_managed_resource_first_time_to_reconcile_seconds_sum{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 0.63255251
+crossplane_managed_resource_first_time_to_reconcile_seconds_count{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 1
+# HELP crossplane_managed_resource_ready The number of managed resources in Ready=True state
+# TYPE crossplane_managed_resource_ready gauge
+crossplane_managed_resource_ready{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 1
+crossplane_managed_resource_ready{gvk="kubernetes.m.crossplane.io/v1alpha1, Kind=Object"} 0
+# HELP crossplane_managed_resource_synced The number of managed resources in Synced=True state
+# TYPE crossplane_managed_resource_synced gauge
+crossplane_managed_resource_synced{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 1
+crossplane_managed_resource_synced{gvk="kubernetes.m.crossplane.io/v1alpha1, Kind=Object"} 0
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 1.8251e-05
+go_gc_duration_seconds{quantile="0.25"} 4.5875e-05
+go_gc_duration_seconds{quantile="0.5"} 5.975e-05
+go_gc_duration_seconds{quantile="0.75"} 0.000108458
+go_gc_duration_seconds{quantile="1"} 0.000245958
+go_gc_duration_seconds_sum 0.000626042
+go_gc_duration_seconds_count 8
+# HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent.
+# TYPE go_gc_gogc_percent gauge
+go_gc_gogc_percent 100
+# HELP go_gc_gomemlimit_bytes Go runtime memory limit configured by the user, otherwise math.MaxInt64. This value is set by the GOMEMLIMIT environment variable, and the runtime/debug.SetMemoryLimit function. Sourced from /gc/gomemlimit:bytes.
+# TYPE go_gc_gomemlimit_bytes gauge
+go_gc_gomemlimit_bytes 9.223372036854776e+18
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 677
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.24.13"} 1
+# HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 1.3950896e+07
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 4.5997312e+07
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 1.481385e+06
+# HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 124643
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 3.733008e+06
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 1.3950896e+07
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 1.1976704e+07
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 1.859584e+07
+# HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 64606
+# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
+# TYPE go_memstats_heap_released_bytes gauge
+go_memstats_heap_released_bytes 4.538368e+06
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 3.0572544e+07
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.7810021276845264e+09
+# HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 189249
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 12080
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system. Equals to /memory/classes/metadata/mcache/inuse:bytes + /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 15704
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 345920
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 489600
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 2.5180114e+07
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 1.969783e+06
+# HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 2.981888e+06
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 2.981888e+06
+# HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 4.1243912e+07
+# HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads.
+# TYPE go_sched_gomaxprocs_threads gauge
+go_sched_gomaxprocs_threads 10
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 13
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 0.14
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.073741816e+09
+# HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
+# TYPE process_network_receive_bytes_total counter
+process_network_receive_bytes_total 1.704887e+06
+# HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
+# TYPE process_network_transmit_bytes_total counter
+process_network_transmit_bytes_total 81634
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 12
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 6.9677056e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.78100212638e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 1.311547392e+09
+# HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
+# TYPE process_virtual_memory_max_bytes gauge
+process_virtual_memory_max_bytes 1.8446744073709552e+19
+# HELP rest_client_requests_total Number of HTTP requests, partitioned by status code, method, and host.
+# TYPE rest_client_requests_total counter
+rest_client_requests_total{code="200",host="10.96.0.1:443",method="GET"} 34
+rest_client_requests_total{code="200",host="10.96.0.1:443",method="PATCH"} 1
+rest_client_requests_total{code="200",host="10.96.0.1:443",method="PUT"} 15
+rest_client_requests_total{code="201",host="10.96.0.1:443",method="PATCH"} 1
+rest_client_requests_total{code="201",host="10.96.0.1:443",method="POST"} 5
+rest_client_requests_total{code="404",host="10.96.0.1:443",method="GET"} 1
+# HELP workqueue_adds_total Total number of adds handled by workqueue
+# TYPE workqueue_adds_total counter
+workqueue_adds_total{controller="crd-gate",name="crd-gate"} 30
+workqueue_adds_total{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 3
+workqueue_adds_total{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_adds_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_adds_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_adds_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_adds_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 4
+workqueue_adds_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP workqueue_depth Current depth of workqueue
+# TYPE workqueue_depth gauge
+workqueue_depth{controller="crd-gate",name="crd-gate"} 0
+workqueue_depth{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 0
+workqueue_depth{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_depth{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_depth{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_depth{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_depth{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 0
+workqueue_depth{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP workqueue_longest_running_processor_seconds How many seconds has the longest running processor for workqueue been running.
+# TYPE workqueue_longest_running_processor_seconds gauge
+workqueue_longest_running_processor_seconds{controller="crd-gate",name="crd-gate"} 0
+workqueue_longest_running_processor_seconds{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 0
+workqueue_longest_running_processor_seconds{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_longest_running_processor_seconds{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_longest_running_processor_seconds{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_longest_running_processor_seconds{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_longest_running_processor_seconds{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 0
+workqueue_longest_running_processor_seconds{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP workqueue_queue_duration_seconds How long in seconds an item stays in workqueue before being requested
+# TYPE workqueue_queue_duration_seconds histogram
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="9.999999999999999e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="9.999999999999999e-05"} 1
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="0.001"} 9
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="0.01"} 30
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="0.1"} 30
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1"} 30
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="10"} 30
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="100"} 30
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1000"} 30
+workqueue_queue_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="+Inf"} 30
+workqueue_queue_duration_seconds_sum{controller="crd-gate",name="crd-gate"} 0.051469495999999997
+workqueue_queue_duration_seconds_count{controller="crd-gate",name="crd-gate"} 30
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="9.999999999999999e-05"} 2
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="0.001"} 2
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="0.01"} 2
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="0.1"} 3
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1"} 3
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="10"} 3
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="100"} 3
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1000"} 3
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="+Inf"} 3
+workqueue_queue_duration_seconds_sum{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 0.019977166
+workqueue_queue_duration_seconds_count{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 3
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="0.001"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="0.01"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="0.1"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="10"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="100"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1000"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="+Inf"} 0
+workqueue_queue_duration_seconds_sum{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_queue_duration_seconds_count{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="0.001"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="0.01"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="0.1"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="10"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="100"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1000"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="+Inf"} 0
+workqueue_queue_duration_seconds_sum{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_queue_duration_seconds_count{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="0.001"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="0.01"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="0.1"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="10"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="100"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1000"} 0
+workqueue_queue_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="+Inf"} 0
+workqueue_queue_duration_seconds_sum{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_queue_duration_seconds_count{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="0.001"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="0.01"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="0.1"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="10"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="100"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1000"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="+Inf"} 0
+workqueue_queue_duration_seconds_sum{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_queue_duration_seconds_count{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="9.999999999999999e-06"} 1
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="9.999999999999999e-05"} 3
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.001"} 3
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.01"} 4
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.1"} 4
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1"} 4
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="10"} 4
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="100"} 4
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1000"} 4
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="+Inf"} 4
+workqueue_queue_duration_seconds_sum{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 0.0023420840000000004
+workqueue_queue_duration_seconds_count{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 4
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="0.001"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="0.01"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="0.1"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="10"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="100"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1000"} 0
+workqueue_queue_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="+Inf"} 0
+workqueue_queue_duration_seconds_sum{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+workqueue_queue_duration_seconds_count{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP workqueue_retries_total Total number of retries handled by workqueue
+# TYPE workqueue_retries_total counter
+workqueue_retries_total{controller="crd-gate",name="crd-gate"} 0
+workqueue_retries_total{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 3
+workqueue_retries_total{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_retries_total{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_retries_total{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_retries_total{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_retries_total{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 0
+workqueue_retries_total{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP workqueue_unfinished_work_seconds How many seconds of work has been done that is in progress and hasn't been observed by work_duration. Large values indicate stuck threads. One can deduce the number of stuck threads by observing the rate at which this increases.
+# TYPE workqueue_unfinished_work_seconds gauge
+workqueue_unfinished_work_seconds{controller="crd-gate",name="crd-gate"} 0
+workqueue_unfinished_work_seconds{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 0
+workqueue_unfinished_work_seconds{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_unfinished_work_seconds{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_unfinished_work_seconds{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_unfinished_work_seconds{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_unfinished_work_seconds{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 0
+workqueue_unfinished_work_seconds{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+# HELP workqueue_work_duration_seconds How long in seconds processing an item from workqueue takes.
+# TYPE workqueue_work_duration_seconds histogram
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="9.999999999999999e-05"} 19
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="0.001"} 30
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="0.01"} 30
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="0.1"} 30
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1"} 30
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="10"} 30
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="100"} 30
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="1000"} 30
+workqueue_work_duration_seconds_bucket{controller="crd-gate",name="crd-gate",le="+Inf"} 30
+workqueue_work_duration_seconds_sum{controller="crd-gate",name="crd-gate"} 0.004735125999999999
+workqueue_work_duration_seconds_count{controller="crd-gate",name="crd-gate"} 30
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="0.001"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="0.01"} 1
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="0.1"} 3
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1"} 3
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="10"} 3
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="100"} 3
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="1000"} 3
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io",le="+Inf"} 3
+workqueue_work_duration_seconds_sum{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 0.065727583
+workqueue_work_duration_seconds_count{controller="managed/object.kubernetes.crossplane.io",name="managed/object.kubernetes.crossplane.io"} 3
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="0.001"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="0.01"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="0.1"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="10"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="100"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="1000"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io",le="+Inf"} 0
+workqueue_work_duration_seconds_sum{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_work_duration_seconds_count{controller="managed/object.kubernetes.m.crossplane.io",name="managed/object.kubernetes.m.crossplane.io"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="0.001"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="0.01"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="0.1"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="10"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="100"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="1000"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io",le="+Inf"} 0
+workqueue_work_duration_seconds_sum{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_work_duration_seconds_count{controller="managed/observedobjectcollection.kubernetes.crossplane.io",name="managed/observedobjectcollection.kubernetes.crossplane.io"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="0.001"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="0.01"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="0.1"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="10"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="100"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="1000"} 0
+workqueue_work_duration_seconds_bucket{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io",le="+Inf"} 0
+workqueue_work_duration_seconds_sum{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_work_duration_seconds_count{controller="managed/observedobjectcollection.kubernetes.m.crossplane.io",name="managed/observedobjectcollection.kubernetes.m.crossplane.io"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="0.001"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="0.01"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="0.1"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="10"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="100"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="1000"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",le="+Inf"} 0
+workqueue_work_duration_seconds_sum{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_work_duration_seconds_count{controller="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io",name="providerconfig/clusterproviderconfig.kubernetes.m.crossplane.io"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.001"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.01"} 4
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="0.1"} 4
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1"} 4
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="10"} 4
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="100"} 4
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="1000"} 4
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io",le="+Inf"} 4
+workqueue_work_duration_seconds_sum{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 0.021306375
+workqueue_work_duration_seconds_count{controller="providerconfig/providerconfig.kubernetes.crossplane.io",name="providerconfig/providerconfig.kubernetes.crossplane.io"} 4
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="9.999999999999999e-05"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="0.001"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="0.01"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="0.1"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="10"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="100"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="1000"} 0
+workqueue_work_duration_seconds_bucket{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io",le="+Inf"} 0
+workqueue_work_duration_seconds_sum{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0
+workqueue_work_duration_seconds_count{controller="providerconfig/providerconfig.kubernetes.m.crossplane.io",name="providerconfig/providerconfig.kubernetes.m.crossplane.io"} 0

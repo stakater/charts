@@ -1,0 +1,31 @@
+{{- $r := .Values.prometheus.rules.resourceHealth.claimTreeNotReady }}
+{{- if and $r $r.enabled .Values.prometheus.recordingRules.enabled }}
+# Story 1.3 (HEADLINE) — the full Claim→XR→MR tree the customer asked for is not ready
+# within the SLO. This end-to-end state is what the customer actually experiences. Run
+# this internal SLO meaningfully tighter than the published SLA so error budget burns
+# before a contractual breach. Uses the crossplane:claim_tree_ttr_seconds:p95 recording rule.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-claim-tree-not-ready
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.resource-health
+      rules:
+        - alert: ClaimTreeNotReady
+          expr: crossplane:claim_tree_ttr_seconds:p95 > {{ $r.thresholdSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "End-to-end Claim→XR→MR provisioning over SLO"
+            description: "p95 time for the full Claim→XR→MR tree to become ready is {{`{{ $value | humanizeDuration }}`}}, above the internal {{ $r.thresholdSeconds }}s SLO, for more than {{ $r.for }}. This is the headline customer-experience signal."
+{{- end }}

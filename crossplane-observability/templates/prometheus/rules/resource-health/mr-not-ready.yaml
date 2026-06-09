@@ -1,0 +1,44 @@
+{{- $rh := .Values.prometheus.rules.resourceHealth }}
+{{- if and .Values.prometheus.recordingRules.enabled ( or ( and $rh.mrNotReady $rh.mrNotReady.enabled ) ( and $rh.mrNotReadyCritical $rh.mrNotReadyCritical.enabled ) ) }}
+# Story 1.1 — managed resources of a GVK are provisioned but not all healthy. A customer's
+# infrastructure can exist while being unusable. The crossplane_managed_resource_* state
+# metrics are per-GVK counts (labelled `gvk`), so this is the ready/exists ratio from the
+# recording rule; warning escalates to critical the longer it stays degraded.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-mr-not-ready
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.resource-health
+      rules:
+        {{- if and $rh.mrNotReady $rh.mrNotReady.enabled }}
+        - alert: MRNotReady
+          expr: crossplane:managed_resource_ready:ratio < {{ $rh.mrNotReady.ratioBelow }}
+          for: {{ $rh.mrNotReady.for }}
+          labels:
+            severity: {{ $rh.mrNotReady.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Managed resources not all ready for {{`{{ $labels.gvk }}`}}"
+            description: "Only {{`{{ $value | humanizePercentage }}`}} of {{`{{ $labels.gvk }}`}} managed resources are Ready (SLO {{ $rh.mrNotReady.ratioBelow }}) for more than {{ $rh.mrNotReady.for }}. Some infrastructure may exist but be unusable."
+        {{- end }}
+        {{- if and $rh.mrNotReadyCritical $rh.mrNotReadyCritical.enabled }}
+        - alert: MRNotReadyCritical
+          expr: crossplane:managed_resource_ready:ratio < {{ $rh.mrNotReadyCritical.ratioBelow }}
+          for: {{ $rh.mrNotReadyCritical.for }}
+          labels:
+            severity: {{ $rh.mrNotReadyCritical.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Managed resources critically degraded for {{`{{ $labels.gvk }}`}}"
+            description: "Only {{`{{ $value | humanizePercentage }}`}} of {{`{{ $labels.gvk }}`}} managed resources are Ready (below {{ $rh.mrNotReadyCritical.ratioBelow }}) for over {{ $rh.mrNotReadyCritical.for }} — a sustained, customer-visible failure."
+        {{- end }}
+{{- end }}
