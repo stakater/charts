@@ -11,6 +11,11 @@ captured from a real, version-pinned Crossplane. No persistent cluster, nothing 
 | 2 | Does the rule *logic* fire as intended? | `promtool test rules` (`unit/`) | operators, label propagation, recording→alert wiring | no (synthetic series) |
 | 3 | Do the referenced metrics *exist*? | `check_metrics.py` + allowlists | every metric is either CAPTURED in real fixtures or DOCUMENTED upstream with a citation; recording-rule refs resolve | no (uses committed fixtures) |
 | 4 | Capture the ground truth | `integration.sh` (kind + pinned Crossplane) | the fixtures themselves | yes — only when bumping versions |
+| 5 | Does it work once **deployed**? | `DEPLOY-VALIDATION.md` (agent brief) | live objects, scrape health, rule health, dashboard, calibration → a structured report | yes — operator's cluster |
+
+Two agent briefs for cluster work: **`HANDOFF.md`** (verify the documented metrics & graduate
+them to captured) and **`DEPLOY-VALIDATION.md`** (validate a real deployment and return a
+structured feedback report under `reports/`).
 
 ## How "are the metrics real?" is answered
 
