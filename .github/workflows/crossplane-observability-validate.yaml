@@ -1,4 +1,6 @@
 name: crossplane-observability validate
+permissions:
+  contents: read
 
 permissions:
   contents: read
