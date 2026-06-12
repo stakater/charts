@@ -190,6 +190,9 @@ moment you upgrade / enable Upjet, with no dashboard rework.
 The dashboard JSON lives in [files/crossplane_grafana_dashboard.json](files/crossplane_grafana_dashboard.json)
 and is inlined via `.Files.Get` (so Grafana `$variables` need no Helm escaping).
 
+For a panel-by-panel rationale — what each panel shows, why an SRE cares, and **what you'd be
+blind to without it** — see [docs/dashboard-panels.md](docs/dashboard-panels.md).
+
 ## Metric verification status
 
 Every metric the rules reference has a **provenance** — it is either captured from a real
