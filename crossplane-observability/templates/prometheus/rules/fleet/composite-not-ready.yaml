@@ -1,0 +1,48 @@
+{{- $nr := .Values.prometheus.rules.fleet.compositeNotReady }}
+{{- $ns := .Values.prometheus.rules.fleet.compositeNotSynced }}
+{{- if and .Values.crossplane.inventory.enabled ( or ( and $nr $nr.enabled ) ( and $ns $ns.enabled ) ) }}
+{{- $m := .Values.crossplane.inventory.conditionMetric }}
+# Story 4.1 — a customer's Composite (XR) is not Ready / not Synced. This is the
+# customer-experience layer the leaf-MR metrics don't cover; it comes from the inventory
+# exporter (resource-state-metrics / ksm-crossplane), which emits a one-hot condition metric
+# — one series per (resource, condition type, status), valued 1/0. We watch the True series
+# and alert when it is 0. Ready and Synced are separate because a composite can be Ready=True
+# yet Synced=False (reconcile error). Labels: crossplane_kind, name (the XR); no namespace.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-composite-not-ready
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: crossplane.fleet
+      rules:
+        {{- if and $nr $nr.enabled }}
+        - alert: CompositeNotReady
+          expr: {{ $m }}{type="{{ .Values.crossplane.inventory.readyType }}", status="True"} == 0
+          for: {{ $nr.for }}
+          labels:
+            severity: {{ $nr.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Composite {{`{{ $labels.crossplane_kind }}/{{ $labels.name }}`}} not ready"
+            description: "Composite {{`{{ $labels.crossplane_kind }}/{{ $labels.name }}`}} has Ready != True for more than {{ $nr.for }} — the customer's end-to-end request is not satisfied."
+        {{- end }}
+        {{- if and $ns $ns.enabled }}
+        - alert: CompositeNotSynced
+          expr: {{ $m }}{type="{{ .Values.crossplane.inventory.syncedType }}", status="True"} == 0
+          for: {{ $ns.for }}
+          labels:
+            severity: {{ $ns.severity }}
+            rulesgroup: crossplane
+          annotations:
+            summary: "Composite {{`{{ $labels.crossplane_kind }}/{{ $labels.name }}`}} not synced"
+            description: "Composite {{`{{ $labels.crossplane_kind }}/{{ $labels.name }}`}} has Synced != True for more than {{ $ns.for }} — Crossplane cannot reconcile its desired state (often a reconcile error)."
+        {{- end }}
+{{- end }}

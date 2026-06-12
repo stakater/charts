@@ -49,20 +49,24 @@ crossplane:
     # The `job` label provider metrics land under once scraped. On Stakater Cloud this is
     # `crossplane-system/crossplane-providers-and-functions`.
     job: crossplane-providers
-  # Story 4.1 — Claim / Composite inventory & readiness. The leaf-MR metrics above are
-  # per-GVK counts (labelled only `gvk`) and do NOT cover Claims/XRs or carry a namespace
-  # (tenant) label. That layer needs an exporter — resource-state-metrics (recommended) or
-  # kube-state-metrics CustomResourceState. Both emit metrics prefixed `kube_customresource_`
-  # with group/version/kind/name/namespace labels, so this gives per-claim AND per-tenant
-  # signal. Deploy one (see docs/resource-state-metrics-example.yaml), set the metric name
-  # you defined below, and enable inventory + the claimNotReady rule.
+  # Story 4.1 — Composite (XR) inventory & readiness. The leaf-MR metrics above are per-GVK
+  # counts that do NOT cover the Composite/Claim layer the customer experiences. That comes
+  # from an inventory exporter (resource-state-metrics / ksm-crossplane), which emits a
+  # ONE-HOT condition metric: one series per (resource, condition type, status), valued 1/0.
+  # Confirmed shape on Stakater Cloud (ksm-crossplane):
+  #   kube_customresource_crossplane_xr_xproject_condition{
+  #     crossplane_kind="XProject", name="<xr>", type="Ready", status="True"} 1|0
+  # Deploy one (see docs/resource-state-metrics-example.yaml), set conditionMetric to YOUR
+  # family name, and enable inventory + the composite rules below.
   inventory:
     enabled: false
-    # The per-claim Ready gauge (1/0) your exporter produces. Default follows the
-    # kube_customresource_<family> convention shared by RSM and KSM-CRS.
-    claimReadyMetric: kube_customresource_claim_ready
+    # The exporter's one-hot condition metric for your composites/XRs.
+    conditionMetric: kube_customresource_crossplane_xr_xproject_condition
+    # Condition `type` label values to watch.
+    readyType: "Ready"
+    syncedType: "Synced"
     # The `job` label the exporter's metrics land under once scraped.
-    job: resource-state-metrics
+    job: ksm-crossplane
 
 # Upjet providers (provider-upjet-aws, -gcp, -azure, …). Gates the Upjet-only
 # diagnostics (Story 6.1) and the more-accurate Upjet TTR signal (Story 1.2).
@@ -211,10 +215,16 @@ prometheus:
 
     # ===== Capability Area 4 — Fleet Inventory & Multi-Tenancy =====
     fleet:
-      # Story 4.1 — Claim-level readiness. Needs the inventory exporter (KSM-CRS or
-      # RSM — open Decision 1 in the roadmap), so it is OFF until that is wired up.
-      claimNotReady:
-        enabled: false
+      # Story 4.1 — Composite (XR) readiness, per resource. Needs the inventory exporter
+      # (crossplane.inventory.* above), so these only render when inventory.enabled.
+      # Ready and Synced are separate: a composite can be Ready=True yet Synced=False
+      # (reconcile error) — the e2e-hc-test case in the captured fixture.
+      compositeNotReady:
+        enabled: true
+        for: 15m
+        severity: warning
+      compositeNotSynced:
+        enabled: true
         for: 15m
         severity: warning
       # Story 4.2 — noisy-tenant / reconcile-thrashing protection. PHASE 2: the
