@@ -1,0 +1,66 @@
+# Example values for a SAAP / OpenShift-UWM cluster (modelled on the us-2 deploy validation,
+# tests/reports/validation-us-2-2026-06-12.md). Apply with:  helm ... -f values-saap-example.yaml
+#
+# Two values still need confirming against YOUR cluster before the inventory rule is trusted
+# (marked CONFIRM below) — use the discovery commands at the bottom.
+
+# The cluster already scrapes core + providers via its own ServiceMonitor/PodMonitor, so the
+# chart's monitors stay OFF; the rules just point at the existing Prometheus jobs.
+prometheus:
+  monitors:
+    coreServiceMonitor:
+      enabled: false
+    providerPodMonitor:
+      enabled: false
+
+crossplane:
+  core:
+    # Job label the cluster's existing scrape assigns to Crossplane core metrics.
+    job: crossplane-metrics
+  providers:
+    # Job label for the providers+functions scrape.
+    job: crossplane-system/crossplane-providers-and-functions
+
+  # Story 4.1 — wire the on-cluster ksm-crossplane exporter for per-claim / per-tenant signal.
+  inventory:
+    enabled: true
+    # CONFIRM: the per-claim Ready gauge family ksm-crossplane actually emits, and the job
+    # label its metrics land under. ksm-crossplane is a kube-state-metrics CustomResourceState
+    # deployment, so the names follow kube_customresource_<family> — but the exact <family>
+    # and the `ready` value mapping depend on its config. Verify before trusting the alert.
+    claimReadyMetric: kube_customresource_claim_ready   # CONFIRM (see discovery below)
+    job: ksm-crossplane                                  # CONFIRM
+
+# Grafana: target the cluster's Crossplane Grafana instance.
+grafana:
+  namespace: crossplane-observability
+  # NOTE: instanceSelector is a map and Helm DEEP-MERGES it, so a -f override that sets
+  # `dashboards: crossplane` would leave the default `app: grafana` in place. Null the default
+  # on the CLI alongside this file:
+  #   --set grafana.instanceSelector.app=null
+  # Also: spec.instanceSelector is IMMUTABLE — to change it, delete & recreate the GrafanaDashboard.
+  instanceSelector:
+    matchLabels:
+      dashboards: crossplane
+
+# Calibration: ReconcileErrorRateHigh already excludes the churny internal controllers
+# (usage / clusterusage / *compositeresourcedefinition* / configurationrevision) by default.
+# Add cluster-specific noisy controllers here if needed, e.g.:
+#   prometheus:
+#     rules:
+#       controlPlane:
+#         reconcileErrorRateHigh:
+#           excludeControllers: "usage|clusterusage|.*compositeresourcedefinition.*|configurationrevision|xproject"
+
+# --- Discovery commands to fill in the CONFIRM values ----------------------------------------
+# 1. Find the ksm-crossplane metric for claim readiness (run against the cluster):
+#      kubectl -n <ksm-crossplane-ns> port-forward deploy/ksm-crossplane 8080:8080 &
+#      curl -s localhost:8080/metrics | grep -iE 'kube_customresource_.*(claim|ready)'
+#    Pick the per-claim Ready gauge (value 1/0, labels include name+namespace) -> claimReadyMetric.
+# 2. Find the job label it lands under in Prometheus:
+#      count by (job)({__name__="<that metric name>"})        # in thanos-querier
+#    -> crossplane.inventory.job
+# 3. Then verify the chart agrees with reality:
+#      ./tests/fetch-cluster-metrics.sh -n <ns>          # also scrape the ksm pod if separate
+#      python3 tests/verify-fetched.py --dumps ./fetched-metrics-<ctx>
+#    Confirm the claim metric is PRESENT with name+namespace labels before enabling in prod.
