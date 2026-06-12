@@ -10,7 +10,7 @@
 #   4. metric gate              — every referenced metric is in the allowlist; every
 #                                 recording-rule reference resolves (check_metrics.py)
 #   5. dashboard JSON           — valid JSON, unique panel ids
-#   6. kubeconform (best-effort)— CRDs/manifests schema-check (skips unknown schemas)
+#   6. kubeconform (strict)    — every object validates against a CRD schema (vendored)
 #
 # promtool/kubeconform run from a local binary if present, else via Docker.
 set -euo pipefail
@@ -43,7 +43,7 @@ run_promtool() {
 }
 run_kubeconform() {
   if command -v kubeconform >/dev/null 2>&1; then kubeconform "$@";
-  else docker run --rm -i "$KCONF_IMAGE" "$@"; fi
+  else docker run --rm -v "${CHART}:/work" -w /work "$KCONF_IMAGE" "$@"; fi
 }
 
 mkdir -p "$RENDER_DIR"
@@ -134,13 +134,16 @@ print(f"extracted {len(exprs)} panel queries")
 PY
 run_promtool check rules "${P}/tests/.rendered/dash-exprs.yaml" >/dev/null && green "all panel queries parse"
 
-step "6. kubeconform (best-effort schema check)"
-if helm template cp "$CHART" "${ALL_FLAGS[@]}" | \
-   run_kubeconform -strict -ignore-missing-schemas \
-     -schema-location default \
-     -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
-     -summary 2>/dev/null; then green "schema check passed"; else
-   red "kubeconform unavailable or reported issues (non-fatal: CRD schemas may be missing)"; fi
+step "6. kubeconform — CRD schema validation (monitors, rules, dashboard)"
+# Strict, NO -ignore-missing-schemas: every rendered object must validate against a schema,
+# using the CRD schemas vendored under tests/schemas/ (ServiceMonitor/PodMonitor/
+# PrometheusRule/GrafanaDashboard) plus the built-in k8s schemas. A new kind without a
+# vendored schema fails here — vendor it. Fully offline; no network needed.
+run_kubeconform -strict -summary \
+  -schema-location default \
+  -schema-location "${P}/tests/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
+  "${P}/tests/.rendered/all.yaml"
+green "all rendered objects valid against their CRD schemas"
 
 echo
 green "ALL VALIDATION PASSED"
