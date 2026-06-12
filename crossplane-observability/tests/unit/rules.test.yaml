@@ -21,13 +21,23 @@ tests:
         values: '0+100x180'   # 100 reconciles/min
       - series: 'controller_runtime_reconcile_errors_total{job="crossplane", controller="managed"}'
         values: '0+50x180'    # 50 errors/min  -> ratio 0.5
+      # An excluded internal controller with an even worse ratio: it must NOT page
+      # (regression for the excludeControllers carve-out).
+      - series: 'controller_runtime_reconcile_total{job="crossplane", controller="usage"}'
+        values: '0+100x180'
+      - series: 'controller_runtime_reconcile_errors_total{job="crossplane", controller="usage"}'
+        values: '0+75x180'    # ratio 0.75, well over threshold — but excluded
     promql_expr_test:
+      # Recording rule still records BOTH (visible on the dashboard)…
       - expr: crossplane:reconcile_errors:ratio
         eval_time: 120m
         exp_samples:
           - labels: 'crossplane:reconcile_errors:ratio{controller="managed"}'
             value: 0.5
+          - labels: 'crossplane:reconcile_errors:ratio{controller="usage"}'
+            value: 0.75
     alert_rule_test:
+      # …but only the non-excluded controller pages.
       - eval_time: 120m
         alertname: ReconcileErrorRateHigh
         exp_alerts:

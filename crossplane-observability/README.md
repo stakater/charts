@@ -91,6 +91,10 @@ the default key, because Helm deep-merges maps — e.g. `--set grafana.instanceS
 --set grafana.instanceSelector.dashboards=crossplane`. And `spec.instanceSelector` is
 **immutable**: changing it requires deleting and recreating the `GrafanaDashboard`.
 
+A ready-to-edit override file for this layout (job labels, Grafana, and wiring the
+`ksm-crossplane` inventory exporter for Story 4.1) is in
+[docs/values-saap-example.yaml](docs/values-saap-example.yaml).
+
 ### 3. Verify your build before enabling Phase 2 (roadmap Decision 2)
 
 `curl` the core pod `/metrics` and grep:

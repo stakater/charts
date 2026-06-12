@@ -165,6 +165,12 @@ prometheus:
         threshold: 0.01
         for: 10m
         severity: warning
+        # Controllers excluded from this ALERT (regex, full-match on the `controller`
+        # label). The apiextensions/usage reconcilers churn with retries in steady state
+        # (deploy validation saw usage 6.8%, XRD 15.8%) and would page on internal noise,
+        # not customer impact. They remain visible on the dashboard/recording rule — only
+        # the page is suppressed. Set to "" to alert on every controller.
+        excludeControllers: "usage|clusterusage|.*compositeresourcedefinition.*|configurationrevision"
       # Story 2.2 — reconcile latency.
       reconcileLatencyHigh:
         enabled: true

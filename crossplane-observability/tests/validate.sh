@@ -113,6 +113,27 @@ jq -e . "${CHART}/files/crossplane_grafana_dashboard.json" >/dev/null
 DUP=$(jq '[.. | objects | select(has("gridPos")) | .id] | (length) as $n | (unique|length) as $u | $n-$u' "${CHART}/files/crossplane_grafana_dashboard.json")
 [ "$DUP" = "0" ] && green "valid JSON, panel ids unique" || { red "duplicate panel ids"; exit 1; }
 
+step "5b. dashboard PromQL parses"
+# Extract every panel query and check it as PromQL by wrapping each as a recording rule
+# and running promtool check rules. Catches a malformed panel expr (JSON-valid but broken
+# PromQL) — which the JSON check above cannot see. Grafana $vars sit inside string
+# literals here, so they parse fine.
+python3 - "${CHART}/files/crossplane_grafana_dashboard.json" "${RENDER_DIR}/dash-exprs.yaml" <<'PY'
+import json, sys
+dash, out = sys.argv[1], sys.argv[2]
+exprs = []
+def walk(panels):
+    for p in panels or []:
+        for t in p.get("targets", []) or []:
+            if t.get("expr"): exprs.append(t["expr"])
+        walk(p.get("panels"))
+walk(json.load(open(dash)).get("panels", []))
+rules = "\n".join(f"    - record: dash_{i}\n      expr: |\n        {e}" for i, e in enumerate(exprs))
+open(out, "w").write("groups:\n  - name: dashboard.exprs\n    rules:\n" + rules + "\n")
+print(f"extracted {len(exprs)} panel queries")
+PY
+run_promtool check rules "${P}/tests/.rendered/dash-exprs.yaml" >/dev/null && green "all panel queries parse"
+
 step "6. kubeconform (best-effort schema check)"
 if helm template cp "$CHART" "${ALL_FLAGS[@]}" | \
    run_kubeconform -strict -ignore-missing-schemas \
