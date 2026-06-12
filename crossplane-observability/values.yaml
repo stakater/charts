@@ -56,12 +56,14 @@ crossplane:
   # Confirmed shape on Stakater Cloud (ksm-crossplane):
   #   kube_customresource_crossplane_xr_xproject_condition{
   #     crossplane_kind="XProject", name="<xr>", type="Ready", status="True"} 1|0
-  # Deploy one (see docs/resource-state-metrics-example.yaml), set conditionMetric to YOUR
-  # family name, and enable inventory + the composite rules below.
+  # Deploy one (see docs/resource-state-metrics-example.yaml), point conditionMetricPattern
+  # at your exporter's family names, and enable inventory + the composite rules below.
   inventory:
     enabled: false
-    # The exporter's one-hot condition metric for your composites/XRs.
-    conditionMetric: kube_customresource_crossplane_xr_xproject_condition
+    # Regex (PromQL __name__=~, anchored) matching the exporter's per-kind one-hot condition
+    # metrics. The family name embeds the XR kind, so this covers ALL XR kinds at once; the
+    # crossplane_kind label keeps them distinct in alerts/recording rules.
+    conditionMetricPattern: "kube_customresource_crossplane_xr_.+_condition"
     # Condition `type` label values to watch.
     readyType: "Ready"
     syncedType: "Synced"
