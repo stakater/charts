@@ -65,16 +65,16 @@ prometheus:
     providerPodMonitor: { enabled: true }
 ```
 
-> **If your cluster already scrapes Crossplane** (e.g. SAAP ships its own `crossplane-core`
+> **If your cluster already scrapes Crossplane** (e.g. Stakater Cloud ships its own `crossplane-core`
 > ServiceMonitor + `crossplane-providers-and-functions` PodMonitor), leave the chart's
 > monitors **disabled** and just point the rules at the existing jobs — see below.
 
 ### Cluster-specific wiring (don't assume the defaults fit)
 
-The defaults target a generic upstream Crossplane install. On SAAP/OpenShift you typically
+The defaults target a generic upstream Crossplane install. On Stakater Cloud/OpenShift you typically
 override:
 
-| Value | Default | SAAP / typical override |
+| Value | Default | Stakater Cloud / typical override |
 | --- | --- | --- |
 | `crossplane.core.job` | `crossplane` | `crossplane-metrics` |
 | `crossplane.providers.job` | `crossplane-providers` | `crossplane-system/crossplane-providers-and-functions` |
@@ -93,7 +93,7 @@ the default key, because Helm deep-merges maps — e.g. `--set grafana.instanceS
 
 A ready-to-edit override file for this layout (job labels, Grafana, and wiring the
 `ksm-crossplane` inventory exporter for Story 4.1) is in
-[docs/values-saap-example.yaml](docs/values-saap-example.yaml).
+[docs/values-stakater-cloud-example.yaml](docs/values-stakater-cloud-example.yaml).
 
 ### 3. Verify your build before enabling Phase 2 (roadmap Decision 2)
 
@@ -110,7 +110,7 @@ A ready-to-edit override file for this layout (job labels, Grafana, and wiring t
 | `global.namespace` | release ns | Namespace the monitoring objects are created in (must be where Crossplane runs). |
 | `crossplane.core.name` | `crossplane` | Crossplane core release/fullname (core ServiceMonitor selector). |
 | `crossplane.core.job` | `crossplane` | `job` label core metrics land under (used in alert/recording expressions). |
-| `crossplane.providers.selector` | `pkg.crossplane.io/provider` | Label selector matching provider pods (PodMonitor). |
+| `crossplane.providers.selector` | `pkg.crossplane.io/revision: Exists` | Label selector matching provider pods (PodMonitor). |
 | `crossplane.providers.job` | `crossplane-providers` | `job` label provider metrics land under. |
 | `crossplane.inventory.enabled` | `false` | Enable Claim/inventory rules (needs an exporter — see [example](docs/resource-state-metrics-example.yaml)). |
 | `crossplane.inventory.claimReadyMetric` | `kube_customresource_claim_ready` | Per-claim Ready gauge your exporter emits (Story 4.1, per-tenant). |

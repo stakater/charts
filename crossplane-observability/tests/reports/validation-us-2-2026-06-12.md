@@ -58,7 +58,7 @@ Chart loads cleanly (offline `validate.sh` = ALL VALIDATION PASSED; all 19 rules
 - Likely cause: rule assumed an upstream `result="error"` label; the real error signal is `result_severity="Fatal"` (function-reported) or `grpc_code!="OK"` (transport).
 - **RESOLUTION:** fixed — alert + dashboard panel now filter `result_severity="Fatal"`. (chart-side)
 
-### [MAJOR] Out-of-the-box defaults don't match a SAAP cluster (monitors + job + grafana)
+### [MAJOR] Out-of-the-box defaults don't match a Stakater Cloud cluster (monitors + job + grafana)
 - Story/area: deployment / plumbing
 - Symptom: with chart defaults, nothing would scrape and the dashboard would not import.
 - Evidence:
@@ -68,7 +68,7 @@ Chart loads cleanly (offline `validate.sh` = ALL VALIDATION PASSED; all 19 rules
   live job labels: core => "crossplane-metrics"; providers => "crossplane-system/crossplane-providers-and-functions"
   GrafanaDashboard NoMatchingInstances=true with default instanceSelector {app: grafana}; live instance labelled {dashboards: crossplane}
   ```
-- **RESOLUTION:** fixed/documented — core SM selector now configurable (`crossplane.core.serviceMonitorSelector`, default component=metrics, no instance label); provider selector default `pkg.crossplane.io/revision: Exists`; README documents SAAP `job` values + the Grafana deep-merge/immutability gotchas. (chart-side)
+- **RESOLUTION:** fixed/documented — core SM selector now configurable (`crossplane.core.serviceMonitorSelector`, default component=metrics, no instance label); provider selector default `pkg.crossplane.io/revision: Exists`; README documents Stakater Cloud `job` values + the Grafana deep-merge/immutability gotchas. (chart-side)
 
 ### [MINOR] Phase-2 + Upjet metrics already present on Crossplane 2.1.3
 - Evidence: `circuit_breaker_*`, `function_run_*`, `upjet_resource_*` all PRESENT on 2.1.3.
