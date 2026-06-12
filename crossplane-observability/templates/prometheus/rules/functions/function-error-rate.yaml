@@ -1,8 +1,10 @@
 {{- $r := .Values.prometheus.rules.functions.functionErrorRate }}
 {{- if and $r $r.enabled }}
 # Story 5.1 (PHASE 2, part 2) — a composition function is erroring. Hidden function
-# failures surface only as generic reconcile errors. PHASE 2 (post-upgrade) — disabled by
-# default. Error vs total is split on the response-total metric's result label.
+# failures surface only as generic reconcile errors. Disabled by default. Error vs total
+# splits on `result_severity="Fatal"` — the real label confirmed on a live build (the
+# response-total metric has result_severity, not a `result="error"` label; validation
+# proved the old filter never matched — see tests/reports).
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -20,7 +22,7 @@ spec:
       rules:
         - alert: FunctionErrorRate
           expr: |
-            sum by (function_name) (rate(function_run_function_response_total{job="{{ .Values.crossplane.core.job }}", result="error"}[5m]))
+            sum by (function_name) (rate(function_run_function_response_total{job="{{ .Values.crossplane.core.job }}", result_severity="Fatal"}[5m]))
             /
             clamp_min(sum by (function_name) (rate(function_run_function_response_total{job="{{ .Values.crossplane.core.job }}"}[5m])), 1)
             > {{ $r.threshold }}

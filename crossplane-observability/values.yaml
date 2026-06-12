@@ -23,22 +23,31 @@ fullnameOverride: ""
 crossplane:
   # Crossplane core (the aggregated-API / controller pods).
   core:
-    # Release/fullname of the Crossplane core install. Drives the core ServiceMonitor
-    # selector and the `job` selector used by control-plane / function alerts.
+    # Release/fullname of the Crossplane core install.
     name: crossplane
-    # The `job` label the core metrics land under once scraped (Prometheus-operator
-    # defaults this to the ServiceMonitor name). Used in alert/recording expressions.
+    # The `job` label the core metrics land under once scraped, used in alert/recording
+    # expressions. Prometheus-operator defaults this to the (Pod|Service)Monitor name, but
+    # many installs already scrape core under a different job — set it to match. On SAAP
+    # this is `crossplane-metrics`.
     job: crossplane
+    # Label selector for the core metrics Service (used only when coreServiceMonitor is
+    # enabled). Default targets the metrics Service by component; the upstream metrics
+    # Service has no per-instance label, so don't require one.
+    serviceMonitorSelector:
+      matchLabels:
+        app.kubernetes.io/name: crossplane
+        app.kubernetes.io/component: metrics
   # Crossplane providers. As of crossplane-runtime PR #683 / upjet v1.3.0 every
   # provider emits the crossplane_managed_resource_* family natively on /metrics,
   # so leaf-MR readiness/TTR/drift come from the provider pods (PodMonitor below).
   providers:
-    # Label selector that matches the provider pods (DeploymentRuntimeConfig should
-    # expose a metrics port). Override to match your providers' pod labels.
+    # Label selector that matches the provider pods (used only when providerPodMonitor is
+    # enabled). Default matches any provider revision pod; override for your install.
     selector:
-      matchLabels:
-        pkg.crossplane.io/provider: ""
-    # The `job` label provider metrics land under once scraped.
+      matchExpressions:
+        - { key: pkg.crossplane.io/revision, operator: Exists }
+    # The `job` label provider metrics land under once scraped. On SAAP this is
+    # `crossplane-system/crossplane-providers-and-functions`.
     job: crossplane-providers
   # Story 4.1 — Claim / Composite inventory & readiness. The leaf-MR metrics above are
   # per-GVK counts (labelled only `gvk`) and do NOT cover Claims/XRs or carry a namespace

@@ -24,13 +24,17 @@ It ships into the Crossplane namespace:
 | Phase | What you get | Default | Stories |
 | --- | --- | --- | --- |
 | **Phase 1 — Now (Crossplane 2.1.3)** | ~75% coverage, everything customer-facing | **enabled** | 1.1, 1.2, 1.3, 2.1–2.5, 3.1, 6.1*, 7.1, 7.2 |
-| **Phase 2 — After upgrade (2.2/2.3)** | Function-pipeline visibility + multi-tenant thrashing protection | **disabled** | 4.2, 5.1, 5.2 |
+| **Phase 2 — confirm-on-build (2.2/2.3, often 2.1.x)** | Function-pipeline visibility + multi-tenant thrashing protection | **disabled** | 4.2, 5.1, 5.2 |
 | **Needs exporter** | Claim/XRD/Composition inventory layer | **disabled** | 4.1 |
 
 \* Story 6.1 is Phase 1 but **Upjet-providers only** — gated on `upjet.enabled`.
 
-Phase 2 and exporter-dependent rules are present but **off by default**; enable them once the
-backing metrics exist (see [Prerequisites](#prerequisites) → Decision 2 in the roadmap).
+Phase 2 and exporter-dependent rules are present but **off by default**. "Phase 2" is
+*confirm-on-build*, not strictly post-upgrade: `function_run_*` and `circuit_breaker_*` are
+already emitted on some Crossplane **2.1.x** builds (confirmed in deploy validation). Confirm
+with `tests/fetch-cluster-metrics.sh` / `verify-fetched.py`, then enable. ⚠️ Before enabling
+`FunctionErrorRate`, note the error filter is `result_severity="Fatal"` (the real label — there
+is no `result="error"`); confirm it matches your build.
 
 ## Prerequisites
 
@@ -60,6 +64,32 @@ prometheus:
     coreServiceMonitor: { enabled: true }
     providerPodMonitor: { enabled: true }
 ```
+
+> **If your cluster already scrapes Crossplane** (e.g. SAAP ships its own `crossplane-core`
+> ServiceMonitor + `crossplane-providers-and-functions` PodMonitor), leave the chart's
+> monitors **disabled** and just point the rules at the existing jobs — see below.
+
+### Cluster-specific wiring (don't assume the defaults fit)
+
+The defaults target a generic upstream Crossplane install. On SAAP/OpenShift you typically
+override:
+
+| Value | Default | SAAP / typical override |
+| --- | --- | --- |
+| `crossplane.core.job` | `crossplane` | `crossplane-metrics` |
+| `crossplane.providers.job` | `crossplane-providers` | `crossplane-system/crossplane-providers-and-functions` |
+| `crossplane.core.serviceMonitorSelector` | `{name:crossplane, component:metrics}` | match your metrics Service labels (only if you enable the chart's monitor) |
+| `crossplane.providers.selector` | `pkg.crossplane.io/revision: Exists` | match your provider pods (only if you enable the chart's monitor) |
+| `grafana.instanceSelector` | `{app: grafana}` | your instance's labels, e.g. `{dashboards: crossplane}` |
+
+The `job` values are the important ones — **the alert/recording expressions filter on them**,
+so if they don't match what your Prometheus assigns, rules evaluate to empty. Find them with
+`count by (job)({__name__=~"crossplane_managed_resource_.+"})`.
+
+**Grafana gotchas (grafana-operator):** to change `grafana.instanceSelector` you must also null
+the default key, because Helm deep-merges maps — e.g. `--set grafana.instanceSelector.app=null
+--set grafana.instanceSelector.dashboards=crossplane`. And `spec.instanceSelector` is
+**immutable**: changing it requires deleting and recreating the `GrafanaDashboard`.
 
 ### 3. Verify your build before enabling Phase 2 (roadmap Decision 2)
 
