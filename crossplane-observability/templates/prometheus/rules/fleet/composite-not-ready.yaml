@@ -1,13 +1,13 @@
 {{- $nr := .Values.prometheus.rules.fleet.compositeNotReady }}
 {{- $ns := .Values.prometheus.rules.fleet.compositeNotSynced }}
 {{- if and .Values.crossplane.inventory.enabled ( or ( and $nr $nr.enabled ) ( and $ns $ns.enabled ) ) }}
-{{- $m := .Values.crossplane.inventory.conditionMetric }}
+{{- $p := .Values.crossplane.inventory.conditionMetricPattern }}
 # Story 4.1 — a customer's Composite (XR) is not Ready / not Synced. This is the
 # customer-experience layer the leaf-MR metrics don't cover; it comes from the inventory
 # exporter (resource-state-metrics / ksm-crossplane), which emits a one-hot condition metric
-# — one series per (resource, condition type, status), valued 1/0. We watch the True series
-# and alert when it is 0. Ready and Synced are separate because a composite can be Ready=True
-# yet Synced=False (reconcile error). Labels: crossplane_kind, name (the XR); no namespace.
+# — one series per (resource, condition type, status), valued 1/0. The family name embeds the
+# XR kind, so we select all kinds via __name__=~ and keep them distinct by crossplane_kind.
+# Ready and Synced are separate because a composite can be Ready=True yet Synced=False.
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -25,7 +25,7 @@ spec:
       rules:
         {{- if and $nr $nr.enabled }}
         - alert: CompositeNotReady
-          expr: {{ $m }}{type="{{ .Values.crossplane.inventory.readyType }}", status="True"} == 0
+          expr: '{__name__=~"{{ $p }}", type="{{ .Values.crossplane.inventory.readyType }}", status="True"} == 0'
           for: {{ $nr.for }}
           labels:
             severity: {{ $nr.severity }}
@@ -36,7 +36,7 @@ spec:
         {{- end }}
         {{- if and $ns $ns.enabled }}
         - alert: CompositeNotSynced
-          expr: {{ $m }}{type="{{ .Values.crossplane.inventory.syncedType }}", status="True"} == 0
+          expr: '{__name__=~"{{ $p }}", type="{{ .Values.crossplane.inventory.syncedType }}", status="True"} == 0'
           for: {{ $ns.for }}
           labels:
             severity: {{ $ns.severity }}

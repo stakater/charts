@@ -22,10 +22,12 @@ crossplane:
     job: crossplane-system/crossplane-providers-and-functions
 
   # Story 4.1 — wire the on-cluster ksm-crossplane exporter for composite (XR) readiness.
-  # Confirmed shape on us-2: a one-hot condition metric, kind XProject.
+  # Confirmed shape on us-2: a one-hot condition metric per XR kind. The default pattern
+  # below matches every kube_customresource_crossplane_xr_<kind>_condition family (all XR
+  # kinds), so you don't enumerate kinds.
   inventory:
     enabled: true
-    conditionMetric: kube_customresource_crossplane_xr_xproject_condition
+    conditionMetricPattern: "kube_customresource_crossplane_xr_.+_condition"
     readyType: "Ready"
     syncedType: "Synced"
     # CONFIRM the job label its metrics land under (see discovery below).
@@ -56,7 +58,7 @@ grafana:
 # 1. Confirm the exporter's condition metric (and its kind/type labels):
 #      kubectl -n <ksm-crossplane-ns> port-forward deploy/ksm-crossplane 8080:8080 &
 #      curl -s localhost:8080/metrics | grep -E 'kube_customresource_crossplane_.*condition' | head
-#    Set conditionMetric to that family; confirm type="Ready"/"Synced" labels exist.
+#    Confirm the family names match conditionMetricPattern and have type="Ready"/"Synced" labels.
 #    If you have more than one XR kind, add a rule/recording per family or widen the match.
 # 2. Find the job label it lands under in Prometheus:
 #      count by (job)({__name__="<that metric name>"})        # in thanos-querier

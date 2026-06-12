@@ -72,8 +72,8 @@ spec:
       rules:
         - record: crossplane:composite_ready:ratio
           expr: |
-            sum by (crossplane_kind) ({{ .Values.crossplane.inventory.conditionMetric }}{type="{{ .Values.crossplane.inventory.readyType }}", status="True"})
+            sum by (crossplane_kind) ({__name__=~"{{ .Values.crossplane.inventory.conditionMetricPattern }}", type="{{ .Values.crossplane.inventory.readyType }}", status="True"})
             /
-            clamp_min(count by (crossplane_kind) ({{ .Values.crossplane.inventory.conditionMetric }}{type="{{ .Values.crossplane.inventory.readyType }}", status="True"}), 1)
+            clamp_min(count by (crossplane_kind) ({__name__=~"{{ .Values.crossplane.inventory.conditionMetricPattern }}", type="{{ .Values.crossplane.inventory.readyType }}", status="True"}), 1)
 {{- end }}
 {{- end }}

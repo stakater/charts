@@ -118,13 +118,14 @@ verify — especially:
 - Story 4.1 composite/XR readiness comes from an **inventory exporter** (ksm-crossplane /
   resource-state-metrics), not from Crossplane itself. It is now **captured**: the real
   one-hot condition metric `kube_customresource_crossplane_xr_xproject_condition` is in
-  `tests/fixtures/inventory-metrics.txt`, wired via `crossplane.inventory.{conditionMetric,
+  `tests/fixtures/inventory-metrics.txt`, wired via `crossplane.inventory.{conditionMetricPattern,
   readyType,syncedType,job}` with `CompositeNotReady`/`CompositeNotSynced` alerts and a
-  `crossplane:composite_ready:ratio` recording rule. It ships **disabled** (set
-  `crossplane.inventory.enabled=true` + the right `conditionMetric`/`job`). If a cluster
-  exposes a DIFFERENT XR kind (family name `kube_customresource_crossplane_xr_<kind>_condition`)
-  or a claim-level metric with a `namespace` label, capture it and adjust `conditionMetric`
-  (per-tenant grouping needs a namespace label the current XProject metric lacks).
+  `crossplane:composite_ready:ratio` recording rule. The default `conditionMetricPattern`
+  (`kube_customresource_crossplane_xr_.+_condition`) matches **all** XR kinds via `__name__=~`,
+  kept distinct by `crossplane_kind` — so new XR kinds need no chart change. It ships
+  **disabled** (set `crossplane.inventory.enabled=true` + the right `job`). Note: the XProject
+  metric carries no `namespace` label, so grouping is per-composite/per-kind, not per-tenant;
+  a claim-level metric with a namespace label would be needed for true per-tenant rollups.
 - Phase-2 metrics (functions, circuit breaker) only exist on Crossplane ≥ 2.2/2.3 AND once a
   composition function actually runs. If the operator's clusters don't run functions, these stay
   documented — that's correct, the alerts ship disabled.

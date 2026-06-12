@@ -47,6 +47,14 @@ KEYWORDS = {
 IGNORE = PROMQL_FUNCS | KEYWORDS
 
 IDENT = re.compile(r"[a-zA-Z_:][a-zA-Z0-9_:]*")
+# __name__="x" (exact) or __name__=~"regex" selectors — these reference metrics by name
+# from inside a label matcher, so they must be pulled out before clean() strips braces.
+NAME_SELECTOR = re.compile(r'__name__\s*(=~|=)\s*"([^"]+)"')
+
+
+def name_selectors(expr: str):
+    """Yield (op, value) for __name__ selectors: op is '=' (exact) or '=~' (regex)."""
+    return NAME_SELECTOR.findall(expr)
 
 
 def clean(expr: str) -> str:
@@ -127,7 +135,13 @@ def main():
     all_exprs = rule_exprs + dash_exprs
 
     external, internal, unknown_funcs = set(), set(), set()
+    regex_name_pats = set()
     for e in all_exprs:
+        for op, val in name_selectors(e):
+            if op == "=~":
+                regex_name_pats.add(val)
+            else:
+                external.add(val)  # exact __name__="x" is just a metric reference
         for kind, name in metrics_in(e):
             if kind == "func?":
                 unknown_funcs.add(name)
@@ -140,6 +154,9 @@ def main():
         print("# External metrics referenced (must exist on the cluster):")
         for m in sorted(external):
             print(m)
+        print("\n# __name__ regex patterns referenced (must match a real metric):")
+        for p in sorted(regex_name_pats):
+            print(p)
         print("\n# Internal recording-rule names referenced:")
         for m in sorted(internal):
             print(m)
@@ -170,10 +187,26 @@ def main():
     for f in sorted(unknown_funcs):
         errors.append(f"  UNRECOGNISED FUNCTION: {f}  (review: real PromQL function, or a metric typo?)")
 
+    # __name__=~ regex selectors: at least one known metric must match (anchored, like PromQL).
+    pattern_hits = []
+    for pat in sorted(regex_name_pats):
+        try:
+            rx = re.compile("^(?:" + pat + ")$")
+        except re.error as e:
+            errors.append(f"  BAD __name__ REGEX: {pat}  ({e})")
+            continue
+        matches = [m for m in known if rx.match(m)]
+        if not matches:
+            errors.append(f"  NO METRIC MATCHES __name__ pattern: {pat}  (typo, or no such metric captured/documented)")
+        else:
+            pattern_hits.append((pat, len(matches)))
+
     if doc_hits:
         print(f"DOCUMENTED (real per upstream docs, not emitted by the pinned rig): {len(doc_hits)}")
         for m in doc_hits:
             print(f"  - {m}")
+    for pat, n in pattern_hits:
+        print(f"PATTERN ok: {pat}  matches {n} known metric(s)")
 
     if errors:
         print("METRIC CHECK FAILED:")

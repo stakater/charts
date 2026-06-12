@@ -113,7 +113,7 @@ A ready-to-edit override file for this layout (job labels, Grafana, and wiring t
 | `crossplane.providers.selector` | `pkg.crossplane.io/revision: Exists` | Label selector matching provider pods (PodMonitor). |
 | `crossplane.providers.job` | `crossplane-providers` | `job` label provider metrics land under. |
 | `crossplane.inventory.enabled` | `false` | Enable Claim/inventory rules (needs an exporter — see [example](docs/resource-state-metrics-example.yaml)). |
-| `crossplane.inventory.conditionMetric` | `kube_customresource_crossplane_xr_xproject_condition` | Inventory exporter's one-hot composite/XR condition metric (Story 4.1). |
+| `crossplane.inventory.conditionMetricPattern` | `kube_customresource_crossplane_xr_.+_condition` | Regex (PromQL `__name__=~`) matching the exporter's one-hot condition metrics across **all** XR kinds (Story 4.1). |
 | `upjet.enabled` | `false` | Upjet providers present — enables Story 6.1 and the more-accurate Upjet TTR (Story 1.2). |
 | `grafana.folder` | `Crossplane Observability` | Grafana folder for the dashboard. |
 | `grafana.dashboard.enabled` | `true` | Create the GrafanaDashboard. |
