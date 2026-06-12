@@ -50,8 +50,11 @@ Every referenced metric must have a **provenance**, split across two files:
 ```
 
 helm lint + template → merge rules → `promtool check rules` → `promtool test rules` →
-captured-allowlist-in-sync check → metric gate (captured + documented) → dashboard JSON →
-kubeconform. `promtool`/`kubeconform` are used from `$PATH` if present, else via Docker.
+captured-allowlist-in-sync check → metric gate (captured + documented) → dashboard JSON +
+**every panel query parsed as PromQL** → **kubeconform strict** (ServiceMonitor / PodMonitor /
+PrometheusRule / GrafanaDashboard validated against the CRD schemas vendored in
+`tests/schemas/`, nothing skipped). `promtool`/`kubeconform` run from `$PATH` if present, else
+via Docker. Fully offline.
 
 ## Verify against YOUR running clusters
 
