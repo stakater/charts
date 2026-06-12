@@ -28,7 +28,6 @@ ALL_FLAGS=(
   --set prometheus.monitors.providerPodMonitor.enabled=true
   --set upjet.enabled=true
   --set crossplane.inventory.enabled=true
-  --set prometheus.rules.fleet.claimNotReady.enabled=true
   --set prometheus.rules.fleet.circuitBreakerDropRatioHigh.enabled=true
   --set prometheus.rules.fleet.circuitBreakerFrequentOpens.enabled=true
   --set prometheus.rules.cloud.cloudAPIThrottling.enabled=true
@@ -88,6 +87,7 @@ if ls "${T}/fixtures/"*-metrics.txt >/dev/null 2>&1; then
   "${T}/capture-metrics.sh" \
     --core "${T}/fixtures/core-metrics.txt" \
     $( [ -f "${T}/fixtures/provider-metrics.txt" ] && echo --provider "${T}/fixtures/provider-metrics.txt" ) \
+    $( [ -f "${T}/fixtures/inventory-metrics.txt" ] && echo --inventory "${T}/fixtures/inventory-metrics.txt" ) \
     -o "${RENDER_DIR}/captured.regenerated.txt" >/dev/null
   # compare metric names only (ignore the dated header)
   if ! diff <(grep -vE '^#|^$' "${T}/metrics-allowlist.captured.txt" | sort) \

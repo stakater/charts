@@ -21,14 +21,14 @@ crossplane:
     # Job label for the providers+functions scrape.
     job: crossplane-system/crossplane-providers-and-functions
 
-  # Story 4.1 — wire the on-cluster ksm-crossplane exporter for per-claim / per-tenant signal.
+  # Story 4.1 — wire the on-cluster ksm-crossplane exporter for composite (XR) readiness.
+  # Confirmed shape on us-2: a one-hot condition metric, kind XProject.
   inventory:
     enabled: true
-    # CONFIRM: the per-claim Ready gauge family ksm-crossplane actually emits, and the job
-    # label its metrics land under. ksm-crossplane is a kube-state-metrics CustomResourceState
-    # deployment, so the names follow kube_customresource_<family> — but the exact <family>
-    # and the `ready` value mapping depend on its config. Verify before trusting the alert.
-    claimReadyMetric: kube_customresource_claim_ready   # CONFIRM (see discovery below)
+    conditionMetric: kube_customresource_crossplane_xr_xproject_condition
+    readyType: "Ready"
+    syncedType: "Synced"
+    # CONFIRM the job label its metrics land under (see discovery below).
     job: ksm-crossplane                                  # CONFIRM
 
 # Grafana: target the cluster's Crossplane Grafana instance.
@@ -53,10 +53,11 @@ grafana:
 #           excludeControllers: "usage|clusterusage|.*compositeresourcedefinition.*|configurationrevision|xproject"
 
 # --- Discovery commands to fill in the CONFIRM values ----------------------------------------
-# 1. Find the ksm-crossplane metric for claim readiness (run against the cluster):
+# 1. Confirm the exporter's condition metric (and its kind/type labels):
 #      kubectl -n <ksm-crossplane-ns> port-forward deploy/ksm-crossplane 8080:8080 &
-#      curl -s localhost:8080/metrics | grep -iE 'kube_customresource_.*(claim|ready)'
-#    Pick the per-claim Ready gauge (value 1/0, labels include name+namespace) -> claimReadyMetric.
+#      curl -s localhost:8080/metrics | grep -E 'kube_customresource_crossplane_.*condition' | head
+#    Set conditionMetric to that family; confirm type="Ready"/"Synced" labels exist.
+#    If you have more than one XR kind, add a rule/recording per family or widen the match.
 # 2. Find the job label it lands under in Prometheus:
 #      count by (job)({__name__="<that metric name>"})        # in thanos-querier
 #    -> crossplane.inventory.job

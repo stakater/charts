@@ -37,7 +37,7 @@ Finish with `./tests/validate.sh` green and a commit.
 | Circuit breaker (Phase 2) | `circuit_breaker_events_total`, `circuit_breaker_opens_total` | runs realtime compositions |
 | Upjet | `upjet_resource_ttr_bucket`, `upjet_resource_reconcile_delay_seconds_bucket` | runs an **Upjet** provider (provider-upjet-aws/gcp/azure) |
 | Platform | `aggregator_unavailable_apiservice`, `container_cpu_cfs_{throttled_,}periods_total`, `container_memory_working_set_bytes`, `kube_pod_container_status_restarts_total`, `kube_pod_container_status_last_terminated_reason` | has Prometheus/Thanos (these are apiserver/cAdvisor/KSM, not Crossplane) |
-| Exporter placeholder | `crossplane_claim_ready` | N/A — see "Special cases" |
+| Inventory (Story 4.1) | `kube_customresource_crossplane_xr_xproject_condition` | runs an inventory exporter (ksm-crossplane / RSM) — already CAPTURED, see "Special cases" |
 
 ## Procedure
 
@@ -115,17 +115,16 @@ verify — especially:
 
 ## Special cases
 
-- `kube_customresource_claim_ready` (Story 4.1) comes from an **inventory exporter**
-  (resource-state-metrics — recommended — or KSM CustomResourceState), not from Crossplane
-  itself. The chart is wired for it: `crossplane.inventory.{enabled,claimReadyMetric,job}`,
-  the `fleet/claim-not-ready.yaml` alert, and a per-tenant `crossplane:claim_ready:ratio:namespace`
-  recording rule. It ships **disabled**. To make it real: deploy RSM with the
-  `ResourceMetricsMonitor`(s) in `docs/resource-state-metrics-example.yaml` (using the
-  operator's actual Claim/XR group+kind), scrape the RSM pod, then
-  `fetch-cluster-metrics.sh` against the RSM `/metrics`, confirm
-  `kube_customresource_claim_ready{namespace=...}` exists, move it to `captured`, and enable
-  the rule. This is the highest-value item — it's the only per-tenant / per-claim signal
-  (the leaf-MR metrics are per-GVK counts with no namespace).
+- Story 4.1 composite/XR readiness comes from an **inventory exporter** (ksm-crossplane /
+  resource-state-metrics), not from Crossplane itself. It is now **captured**: the real
+  one-hot condition metric `kube_customresource_crossplane_xr_xproject_condition` is in
+  `tests/fixtures/inventory-metrics.txt`, wired via `crossplane.inventory.{conditionMetric,
+  readyType,syncedType,job}` with `CompositeNotReady`/`CompositeNotSynced` alerts and a
+  `crossplane:composite_ready:ratio` recording rule. It ships **disabled** (set
+  `crossplane.inventory.enabled=true` + the right `conditionMetric`/`job`). If a cluster
+  exposes a DIFFERENT XR kind (family name `kube_customresource_crossplane_xr_<kind>_condition`)
+  or a claim-level metric with a `namespace` label, capture it and adjust `conditionMetric`
+  (per-tenant grouping needs a namespace label the current XProject metric lacks).
 - Phase-2 metrics (functions, circuit breaker) only exist on Crossplane ≥ 2.2/2.3 AND once a
   composition function actually runs. If the operator's clusters don't run functions, these stay
   documented — that's correct, the alerts ship disabled.

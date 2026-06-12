@@ -54,10 +54,7 @@ container_cpu_cfs_periods_total
 kube_pod_container_status_restarts_total
 kube_pod_container_status_last_terminated_reason
 
-# --- Story 4.1 inventory exporter: resource-state-metrics / KSM CustomResourceState ---
-# Per-claim Ready gauge from the inventory exporter (see docs/resource-state-metrics-example.yaml).
-# The kube_customresource_ prefix + group/version/kind/name/namespace labels are the documented
-# RSM/KSM-CRS convention; the `claim_ready` family suffix is what you define in the exporter
-# config (configurable via crossplane.inventory.claimReadyMetric). Capture it once an exporter
-# is deployed in a cluster (fetch-cluster-metrics.sh against the exporter's /metrics).
-kube_customresource_claim_ready
+# --- Story 4.1 inventory exporter ---
+# The composite/XR condition metric (kube_customresource_crossplane_xr_xproject_condition) is
+# now CAPTURED in tests/fixtures/inventory-metrics.txt (real ksm-crossplane output), so it
+# lives in metrics-allowlist.captured.txt, not here.

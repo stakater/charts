@@ -16,7 +16,7 @@ organised by the 17 user stories in `docs/roadmap.md`. Key facts you must hold:
 
 - Provider state metrics (`crossplane_managed_resource_*`) are **per-GVK counts labelled only
   `gvk`** — not per-resource, no namespace. Per-tenant/claim signal needs the inventory
-  exporter (`crossplane.inventory.*`, `kube_customresource_claim_ready`).
+  exporter (`crossplane.inventory.*`, one-hot `kube_customresource_crossplane_xr_*_condition`).
 - Many rules ship **disabled**: Phase-2 (functions/circuit-breaker, need Crossplane 2.2/2.3),
   Upjet (`upjet.enabled`), inventory/claim (`crossplane.inventory.enabled`). Disabled ≠ broken.
 - Dashboard/alert thresholds come from `values.yaml` and are **placeholders pending baseline

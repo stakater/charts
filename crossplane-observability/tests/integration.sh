@@ -122,9 +122,12 @@ one, so those remain in metrics-allowlist.documented.txt (confirmed in the upstr
 EOF
 
 echo ">> regenerating captured allowlist from fixtures"
+# Include the committed inventory fixture (captured separately from a real cluster's
+# ksm-crossplane exporter — kind has no exporter) so the captured allowlist stays complete.
 "${HERE}/capture-metrics.sh" \
   --core "${FIX}/core-metrics.txt" \
   $( [ -f "${FIX}/provider-metrics.txt" ] && echo --provider "${FIX}/provider-metrics.txt" ) \
+  $( [ -f "${FIX}/inventory-metrics.txt" ] && echo --inventory "${FIX}/inventory-metrics.txt" ) \
   -o "${HERE}/metrics-allowlist.captured.txt"
 
 echo ">> done. Review & commit: tests/fixtures/* and tests/metrics-allowlist.captured.txt"

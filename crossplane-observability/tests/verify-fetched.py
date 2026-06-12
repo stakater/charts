@@ -31,6 +31,8 @@ LABEL_EXPECTATIONS = {
     "circuit_breaker_events_total": ['result="Dropped"'],
     "kube_pod_container_status_last_terminated_reason": ['reason="OOMKilled"'],
     "aggregator_unavailable_apiservice": ['crossplane'],
+    # inventory exporter one-hot condition metric (Story 4.1)
+    "kube_customresource_crossplane_xr_xproject_condition": ['type="Ready"', 'status="True"'],
 }
 
 

@@ -110,3 +110,42 @@ tests:
       - eval_time: 90m
         alertname: MRNotReady
         exp_alerts: []
+
+  # --- Story 4.1: Composite (XR) readiness from the inventory exporter's one-hot metric ---
+  # alpha is fully healthy; e2e is Ready=True but Synced=False (reconcile error) — the real
+  # case from the captured fixture. So CompositeNotSynced fires for e2e only; CompositeNotReady
+  # fires for neither; the ready-ratio recording rule is still 1.0 (both Ready).
+  - name: composite readiness and sync
+    interval: 1m
+    input_series:
+      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="alpha", type="Ready", status="True"}'
+        values: '1x180'
+      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="alpha", type="Synced", status="True"}'
+        values: '1x180'
+      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="e2e", type="Ready", status="True"}'
+        values: '1x180'
+      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="e2e", type="Synced", status="True"}'
+        values: '0x180'
+    promql_expr_test:
+      - expr: crossplane:composite_ready:ratio
+        eval_time: 30m
+        exp_samples:
+          - labels: 'crossplane:composite_ready:ratio{crossplane_kind="XProject"}'
+            value: 1
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: CompositeNotReady
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: CompositeNotSynced
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: crossplane
+              crossplane_kind: XProject
+              name: e2e
+              type: Synced
+              status: "True"
+            exp_annotations:
+              summary: "Composite XProject/e2e not synced"
+              description: "Composite XProject/e2e has Synced != True for more than 15m — Crossplane cannot reconcile its desired state (often a reconcile error)."

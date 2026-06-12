@@ -1,5 +1,12 @@
 # Example: getting Claim/Composite inventory metrics with resource-state-metrics (RSM).
 #
+# ⚠️ SHAPE NOTE: the chart's inventory rules default to the ONE-HOT CONDITION shape that
+# Stakater Cloud's ksm-crossplane emits — kube_customresource_crossplane_xr_<kind>_condition
+# with type/status labels, watched as {type="Ready",status="True"}==0. The simple 1/0 CEL
+# metric below (kube_customresource_<family>) is a DIFFERENT shape; if you use it, point
+# crossplane.inventory.conditionMetric at it and adjust the rule (it has no type/status
+# labels). Prefer matching whatever your live exporter actually emits — capture & verify first.
+#
 # The chart's leaf-MR metrics (crossplane_managed_resource_*) are per-GVK counts and do NOT
 # cover Claims/Composites or carry a namespace label. Deploy an exporter to get that layer.
 #

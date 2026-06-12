@@ -29,6 +29,7 @@ CORE_SVC=crossplane
 PROVIDER_SELECTOR="pkg.crossplane.io/provider"
 CORE_FILE=""
 PROVIDER_FILE=""
+INVENTORY_FILE=""
 PORT=8080
 
 while [ $# -gt 0 ]; do
@@ -37,6 +38,7 @@ while [ $# -gt 0 ]; do
     --namespace) NS="$2"; shift 2 ;;
     --core) CORE_FILE="$2"; shift 2 ;;
     --provider) PROVIDER_FILE="$2"; shift 2 ;;
+    --inventory) INVENTORY_FILE="$2"; shift 2 ;;
     --core-svc) CORE_SVC="$2"; shift 2 ;;
     --provider-selector) PROVIDER_SELECTOR="$2"; shift 2 ;;
     --port) PORT="$2"; shift 2 ;;
@@ -65,8 +67,9 @@ if [ "$MODE" = live ]; then
 else
   [ -n "$CORE_FILE" ] && cp "$CORE_FILE" "${tmp}/core.txt"
   [ -n "$PROVIDER_FILE" ] && cp "$PROVIDER_FILE" "${tmp}/provider.txt"
-  if [ ! -f "${tmp}/core.txt" ] && [ ! -f "${tmp}/provider.txt" ]; then
-    echo "offline mode needs --core and/or --provider <dump.txt>" >&2; exit 2
+  [ -n "$INVENTORY_FILE" ] && cp "$INVENTORY_FILE" "${tmp}/inventory.txt"
+  if ! ls "${tmp}"/*.txt >/dev/null 2>&1; then
+    echo "offline mode needs --core and/or --provider and/or --inventory <dump.txt>" >&2; exit 2
   fi
 fi
 
