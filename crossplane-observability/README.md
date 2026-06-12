@@ -95,6 +95,29 @@ A ready-to-edit override file for this layout (job labels, Grafana, and wiring t
 `ksm-crossplane` inventory exporter for Story 4.1) is in
 [docs/values-stakater-cloud-example.yaml](docs/values-stakater-cloud-example.yaml).
 
+### Inventory rules on OpenShift UWM (Story 4.1) — important
+
+OpenShift **user-workload monitoring enforces namespace scoping**: it injects
+`namespace="<the PrometheusRule's namespace>"` into every user-workload rule expression. The
+control-plane and managed-resource rules are fine — those metrics originate from the
+Crossplane-namespace scrape, so the enforced label matches. **The inventory/composite rules
+are not:** the exporter emits one series per XR carrying the *tenant* namespace
+(`ws-*`, `hypershift-*`, …), so a rule deployed in `crossplane-system` matches nothing and
+`CompositeNotReady`/`CompositeNotSynced` fire **0 — silently**. **0 firing ≠ all healthy.**
+
+What works and what doesn't under UWM:
+
+- ✅ **Dashboard composite panels** — Grafana queries thanos-querier directly (not
+  namespace-enforced), so they see all tenant namespaces.
+- ❌ **Composite recording rule + alerts** as a user-workload PrometheusRule in the Crossplane
+  namespace — namespace-enforced to nothing.
+
+Options to make the composite *alerts* work: deploy the inventory PrometheusRule **per tenant
+namespace** (UWM then enforces that namespace), or evaluate these rules in the **platform**
+monitoring stack (cluster-monitoring, not namespace-enforced). The recording-rule/alert
+expressions themselves are correct (proven in `tests/unit/`); this is purely the UWM tenancy
+model. The MR/control-plane stories are unaffected.
+
 ### 3. Verify your build before enabling Phase 2 (roadmap Decision 2)
 
 `curl` the core pod `/metrics` and grep:

@@ -16,25 +16,26 @@ tests:
   # --- Story 2.1: recording rule feeds the alert ---
   - name: reconcile error ratio recording rule + alert
     interval: 1m
+    # Real `controller` label values are path-prefixed FQDNs — the test uses them verbatim so
+    # the anchored-regex exclusion (N2) is actually exercised.
     input_series:
-      - series: 'controller_runtime_reconcile_total{job="crossplane", controller="managed"}'
+      - series: 'controller_runtime_reconcile_total{job="crossplane", controller="managed/instance.ec2.aws.upbound.io"}'
         values: '0+100x180'   # 100 reconciles/min
-      - series: 'controller_runtime_reconcile_errors_total{job="crossplane", controller="managed"}'
+      - series: 'controller_runtime_reconcile_errors_total{job="crossplane", controller="managed/instance.ec2.aws.upbound.io"}'
         values: '0+50x180'    # 50 errors/min  -> ratio 0.5
-      # An excluded internal controller with an even worse ratio: it must NOT page
-      # (regression for the excludeControllers carve-out).
-      - series: 'controller_runtime_reconcile_total{job="crossplane", controller="usage"}'
+      # An excluded internal controller (path-prefixed) with a worse ratio: must NOT page.
+      - series: 'controller_runtime_reconcile_total{job="crossplane", controller="usage/clusterusage.protection.crossplane.io"}'
         values: '0+100x180'
-      - series: 'controller_runtime_reconcile_errors_total{job="crossplane", controller="usage"}'
-        values: '0+75x180'    # ratio 0.75, well over threshold — but excluded
+      - series: 'controller_runtime_reconcile_errors_total{job="crossplane", controller="usage/clusterusage.protection.crossplane.io"}'
+        values: '0+75x180'    # ratio 0.75, over threshold — but excluded by .*usage.*
     promql_expr_test:
       # Recording rule still records BOTH (visible on the dashboard)…
       - expr: crossplane:reconcile_errors:ratio
         eval_time: 120m
         exp_samples:
-          - labels: 'crossplane:reconcile_errors:ratio{controller="managed"}'
+          - labels: 'crossplane:reconcile_errors:ratio{controller="managed/instance.ec2.aws.upbound.io"}'
             value: 0.5
-          - labels: 'crossplane:reconcile_errors:ratio{controller="usage"}'
+          - labels: 'crossplane:reconcile_errors:ratio{controller="usage/clusterusage.protection.crossplane.io"}'
             value: 0.75
     alert_rule_test:
       # …but only the non-excluded controller pages.
@@ -43,11 +44,11 @@ tests:
         exp_alerts:
           - exp_labels:
               severity: warning
-              controller: managed
+              controller: managed/instance.ec2.aws.upbound.io
               rulesgroup: crossplane
             exp_annotations:
-              summary: "High reconcile error ratio for controller managed"
-              description: "Controller managed reconcile error ratio is 50% (SLO < 0.01) for more than 10m."
+              summary: "High reconcile error ratio for controller managed/instance.ec2.aws.upbound.io"
+              description: "Controller managed/instance.ec2.aws.upbound.io reconcile error ratio is 50% (SLO < 0.01) for more than 10m."
 
   # --- Story 1.1: MR ready-ratio recording rule + escalating alerts ---
   # State metrics are per-GVK counts labelled `gvk`: exists=total, ready=ready count.
@@ -117,14 +118,18 @@ tests:
   # fires for neither; the ready-ratio recording rule is still 1.0 (both Ready).
   - name: composite readiness and sync
     interval: 1m
+    # Series carry a tenant-workspace `namespace` (as the real exporter emits) — proving the
+    # rule expr matches tenant-namespaced series. NOTE: on OpenShift UWM, namespace ENFORCEMENT
+    # (injected = the rule's own namespace) is what breaks this in production (finding N1);
+    # promtool can't reproduce that injection, so this test asserts expr correctness only.
     input_series:
-      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="alpha", type="Ready", status="True"}'
+      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="alpha", namespace="ws-alpha", type="Ready", status="True"}'
         values: '1x180'
-      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="alpha", type="Synced", status="True"}'
+      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="alpha", namespace="ws-alpha", type="Synced", status="True"}'
         values: '1x180'
-      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="e2e", type="Ready", status="True"}'
+      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="e2e", namespace="ws-e2e", type="Ready", status="True"}'
         values: '1x180'
-      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="e2e", type="Synced", status="True"}'
+      - series: 'kube_customresource_crossplane_xr_xproject_condition{crossplane_kind="XProject", name="e2e", namespace="ws-e2e", type="Synced", status="True"}'
         values: '0x180'
     promql_expr_test:
       - expr: crossplane:composite_ready:ratio
@@ -144,6 +149,7 @@ tests:
               rulesgroup: crossplane
               crossplane_kind: XProject
               name: e2e
+              namespace: ws-e2e
               type: Synced
               status: "True"
             exp_annotations:

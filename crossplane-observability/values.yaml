@@ -59,6 +59,12 @@ crossplane:
   # Deploy one (see docs/resource-state-metrics-example.yaml), point conditionMetricPattern
   # at your exporter's family names, and enable inventory + the composite rules below.
   inventory:
+    # ⚠️ OpenShift UWM caveat: user-workload PrometheusRules are namespace-ENFORCED — UWM
+    # injects namespace="<this chart's namespace>" into every rule expr. The inventory series
+    # are emitted per-XR and carry the TENANT namespace, so the composite recording rule/alerts
+    # (deployed in the Crossplane namespace) match NOTHING and fire 0 — silently. 0 firing is
+    # NOT "all healthy". The dashboard panels are unaffected (Grafana queries thanos-querier
+    # directly, which is not namespace-enforced). See README "Inventory rules on OpenShift UWM".
     enabled: false
     # Regex (PromQL __name__=~, anchored) matching the exporter's per-kind one-hot condition
     # metrics. The family name embeds the XR kind, so this covers ALL XR kinds at once; the
@@ -171,12 +177,15 @@ prometheus:
         threshold: 0.01
         for: 10m
         severity: warning
-        # Controllers excluded from this ALERT (regex, full-match on the `controller`
-        # label). The apiextensions/usage reconcilers churn with retries in steady state
-        # (deploy validation saw usage 6.8%, XRD 15.8%) and would page on internal noise,
-        # not customer impact. They remain visible on the dashboard/recording rule — only
-        # the page is suppressed. Set to "" to alert on every controller.
-        excludeControllers: "usage|clusterusage|.*compositeresourcedefinition.*|configurationrevision"
+        # Controllers excluded from this ALERT. PromQL !~ is FULLY ANCHORED (^…$) and the
+        # real `controller` label values are path-prefixed FQDNs
+        # (e.g. "usage/usage.apiextensions.crossplane.io",
+        # "packages/configurationrevision.pkg.crossplane.io"), so every alternative must be
+        # wildcarded (.*….*) or it never matches. These apiextensions/usage/package
+        # reconcilers churn with retries in steady state and would page on internal noise,
+        # not customer impact; they stay visible on the dashboard/recording rule — only the
+        # page is suppressed. `.*usage.*` covers usage AND clusterusage. Set "" to alert on all.
+        excludeControllers: ".*usage.*|.*compositeresourcedefinition.*|.*configurationrevision.*"
       # Story 2.2 — reconcile latency.
       reconcileLatencyHigh:
         enabled: true

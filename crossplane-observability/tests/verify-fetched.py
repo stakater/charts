@@ -27,7 +27,7 @@ CHART = os.path.dirname(HERE)
 # Label-value assumptions the rules depend on: metric -> list of substrings that should
 # appear on at least one of its sample lines.
 LABEL_EXPECTATIONS = {
-    "function_run_function_response_total": ['result="error"'],
+    "function_run_function_response_total": ['result_severity="Fatal"'],
     "circuit_breaker_events_total": ['result="Dropped"'],
     "kube_pod_container_status_last_terminated_reason": ['reason="OOMKilled"'],
     "aggregator_unavailable_apiservice": ['crossplane'],
