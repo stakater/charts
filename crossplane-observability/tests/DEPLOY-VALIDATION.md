@@ -78,7 +78,12 @@ crossplane:managed_resource_ready:ratio
 crossplane:reconcile_errors:ratio
 crossplane:claim_tree_ttr_seconds:p95
 ```
-Empty recording-rule output while inputs exist → the recording expr is wrong.
+Empty recording-rule output while inputs exist → the recording expr is wrong **or** (on
+OpenShift UWM) namespace enforcement is filtering it out. A rule with `health=ok` that
+produces **no series** is the silent-failure case — check the live (UWM-rewritten) query for an
+injected `namespace="…"` that doesn't match where the metric's series actually live. This is
+exactly how the inventory/composite rules fail on UWM (finding N1): confirm
+`crossplane:composite_ready:ratio` actually has series, not just that the rule is healthy.
 
 ### 5. Alert sanity
 ```promql
