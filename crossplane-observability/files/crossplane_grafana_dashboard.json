@@ -1133,7 +1133,7 @@
                 "uid": "${datasource}"
               },
               "legendFormat": "{{function_name}}",
-              "expr": "sum by (function_name) (rate(function_run_function_response_total{result=\"error\"}[5m])) / clamp_min(sum by (function_name) (rate(function_run_function_response_total[5m])), 1)"
+              "expr": "sum by (function_name) (rate(function_run_function_response_total{result_severity=\"Fatal\"}[5m])) / clamp_min(sum by (function_name) (rate(function_run_function_response_total[5m])), 1)"
             }
           ]
         },

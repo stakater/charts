@@ -21,13 +21,15 @@ spec:
     - name: crossplane.slo.resource-health
       rules:
         # Story 1.1 SLI — fraction of managed resources Ready, per GVK. The state metrics
-        # are per-GVK COUNTS (labelled only `gvk`), so ready/exists is the ratio directly;
-        # `sum by (gvk)` is defensive against duplicate series.
+        # are per-GVK COUNTS (labelled only `gvk`). The denominator filters to GVKs that
+        # actually have resources (`exists > 0`); an installed-but-empty CRD reports
+        # exists=0/ready=0 and must NOT produce a 0 ratio (that manufactured ~97% false
+        # MRNotReady alerts in validation — see tests/reports). Empty GVKs → no series here.
         - record: crossplane:managed_resource_ready:ratio
           expr: |
             sum by (gvk) (crossplane_managed_resource_ready{job="{{ $prov }}"})
             /
-            clamp_min(sum by (gvk) (crossplane_managed_resource_exists{job="{{ $prov }}"}), 1)
+            sum by (gvk) (crossplane_managed_resource_exists{job="{{ $prov }}"} > 0)
         # Story 1.1 SLI — fleet-wide ready ratio (rolls 4.1 up into 1.1).
         - record: crossplane:managed_resource_ready:ratio:fleet
           expr: |

@@ -12,9 +12,7 @@ metadata:
     {{- include "crossplane-observability.labels" . | nindent 4 }}
 spec:
   selector:
-    matchLabels:
-      app.kubernetes.io/name: crossplane
-      app.kubernetes.io/instance: {{ .Values.crossplane.core.name }}
+    {{- toYaml .Values.crossplane.core.serviceMonitorSelector | nindent 4 }}
   namespaceSelector:
     matchNames:
       - {{ include "crossplane-observability.namespace" . }}

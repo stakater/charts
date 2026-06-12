@@ -50,7 +50,14 @@ tests:
         values: '2x180'
       - series: 'crossplane_managed_resource_ready{job="crossplane-providers", gvk="example.org/v1, Kind=Thing"}'
         values: '1x180'
+      # An installed-but-empty CRD: exists=0, ready=0. Must NOT produce a ratio series and
+      # must NOT fire (regression for the ~97% false-positive bug — see tests/reports).
+      - series: 'crossplane_managed_resource_exists{job="crossplane-providers", gvk="example.org/v1, Kind=Empty"}'
+        values: '0x180'
+      - series: 'crossplane_managed_resource_ready{job="crossplane-providers", gvk="example.org/v1, Kind=Empty"}'
+        values: '0x180'
     promql_expr_test:
+      # Only the non-empty GVK has a ratio series; the empty GVK is excluded.
       - expr: crossplane:managed_resource_ready:ratio
         eval_time: 30m
         exp_samples:
