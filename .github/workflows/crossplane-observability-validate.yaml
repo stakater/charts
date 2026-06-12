@@ -2,9 +2,6 @@ name: crossplane-observability validate
 permissions:
   contents: read
 
-permissions:
-  contents: read
-
 # Validates the crossplane-observability chart. Path-filtered so it only runs when that
 # chart changes and does not interfere with the repo-wide chart-publish pipeline.
 on:
