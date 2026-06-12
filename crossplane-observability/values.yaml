@@ -27,7 +27,7 @@ crossplane:
     name: crossplane
     # The `job` label the core metrics land under once scraped, used in alert/recording
     # expressions. Prometheus-operator defaults this to the (Pod|Service)Monitor name, but
-    # many installs already scrape core under a different job — set it to match. On SAAP
+    # many installs already scrape core under a different job — set it to match. On Stakater Cloud
     # this is `crossplane-metrics`.
     job: crossplane
     # Label selector for the core metrics Service (used only when coreServiceMonitor is
@@ -46,7 +46,7 @@ crossplane:
     selector:
       matchExpressions:
         - { key: pkg.crossplane.io/revision, operator: Exists }
-    # The `job` label provider metrics land under once scraped. On SAAP this is
+    # The `job` label provider metrics land under once scraped. On Stakater Cloud this is
     # `crossplane-system/crossplane-providers-and-functions`.
     job: crossplane-providers
   # Story 4.1 — Claim / Composite inventory & readiness. The leaf-MR metrics above are
@@ -80,7 +80,7 @@ grafana:
   folder: "Crossplane Observability"
   # Let a Grafana instance in another namespace import this dashboard.
   allowCrossNamespaceImport: true
-  # Selects the target Grafana instance. Default matches the SAAP convention
+  # Selects the target Grafana instance. Default matches the Stakater Cloud convention
   # (app: grafana); override per-cluster if the live instance is labelled differently.
   instanceSelector:
     matchLabels:

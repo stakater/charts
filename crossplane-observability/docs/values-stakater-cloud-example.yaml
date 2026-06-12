@@ -1,5 +1,5 @@
-# Example values for a SAAP / OpenShift-UWM cluster (modelled on the us-2 deploy validation,
-# tests/reports/validation-us-2-2026-06-12.md). Apply with:  helm ... -f values-saap-example.yaml
+# Example values for a Stakater Cloud / OpenShift-UWM cluster (modelled on the us-2 deploy validation,
+# tests/reports/validation-us-2-2026-06-12.md). Apply with:  helm ... -f values-stakater-cloud-example.yaml
 #
 # Two values still need confirming against YOUR cluster before the inventory rule is trusted
 # (marked CONFIRM below) — use the discovery commands at the bottom.
