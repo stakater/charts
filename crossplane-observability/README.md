@@ -141,6 +141,47 @@ and control-plane stories are unaffected.
 - `circuit_breaker_` → Story 4.2 available now vs post-upgrade
 - `crossplane_managed_resource_` on each provider pod → confirms 1.1–1.3, 3.1 are live
 
+## Deploying — who does what
+
+### When the deploy agent runs (automatable)
+
+1. Render + offline-validate the branch: `./tests/validate.sh` must print `ALL VALIDATION PASSED`.
+2. Install with the cluster's values (start from
+   [docs/values-stakater-cloud-example.yaml](docs/values-stakater-cloud-example.yaml)):
+   set `crossplane.core.job` / `crossplane.providers.job`, `grafana.namespace` /
+   `instanceSelector` (with `--set grafana.instanceSelector.app=null` to defeat Helm
+   deep-merge), and the inventory block if used.
+3. Pick the **composite alerting path** (Story 4.1) — they're mutually exclusive, don't enable both:
+   - **OpenShift UWM (the usual case):** `grafana.compositeAlerts.enabled=true` +
+     `grafana.compositeAlerts.datasourceUid=<thanos datasource UID>`, and **leave the
+     PrometheusRule composite alerts off** (`prometheus.rules.fleet.compositeNotReady.enabled=false`,
+     `…compositeNotSynced.enabled=false`).
+   - **Non-UWM / per-tenant-namespace:** the reverse — PrometheusRule composite alerts on,
+     `grafana.compositeAlerts.enabled=false`.
+4. Run the deploy-validation brief
+   ([tests/DEPLOY-VALIDATION.md](tests/DEPLOY-VALIDATION.md)) and return the report. Confirm the
+   things we changed: MRNotReady count is small (not hundreds), the composite panel populates,
+   and composite alerts fire only for genuinely-degraded XRs.
+
+### What the SRE must do for production (one-time, human)
+
+These need cluster/Grafana context an agent can't safely guess:
+
+1. **Enable UWM** (`enableUserWorkload: true`) and confirm Crossplane core + providers are
+   scraped (the chart's own monitors stay disabled if the cluster already scrapes them).
+2. **Find the datasource UID** of the Prometheus/Thanos datasource in *your* Grafana that can
+   read across namespaces (Grafana → Connections → Data sources → the thanos-querier /
+   cluster-monitoring one → the `uid` in its URL/JSON). Put it in
+   `grafana.compositeAlerts.datasourceUid`. Without it the chart refuses to render the alerts.
+3. **Wire Grafana → Alertmanager** so the composite alerts reach your existing on-call:
+   add an **Alertmanager contact point** (or Alertmanager data source + forwarding) in Grafana
+   pointing at your Prometheus Alertmanager, and route the `rulesgroup=crossplane` alerts to it.
+   See [docs/alerting-architecture.md](docs/alerting-architecture.md). *(Until this is done the
+   alerts evaluate in Grafana but won't notify anywhere.)*
+4. **Confirm the inventory exporter** (`crossplane.inventory.{conditionMetricPattern,job}`) by
+   scraping it (`tests/fetch-cluster-metrics.sh`) before trusting Story 4.1.
+5. **Calibrate thresholds** over 2–4 weeks of baseline before treating any SLA number as real.
+
 ## Configuration
 
 | Key | Default | Description |
@@ -155,6 +196,8 @@ and control-plane stories are unaffected.
 | `upjet.enabled` | `false` | Upjet providers present — enables Story 6.1 and the more-accurate Upjet TTR (Story 1.2). |
 | `grafana.folder` | `Crossplane Observability` | Grafana folder for the dashboard. |
 | `grafana.dashboard.enabled` | `true` | Create the GrafanaDashboard. |
+| `grafana.compositeAlerts.enabled` | `false` | Story 4.1 composite alerts as **Grafana-managed** rules (use on UWM instead of the PrometheusRule composite alerts). |
+| `grafana.compositeAlerts.datasourceUid` | `""` | **Required when enabled** — UID of the cross-namespace Prometheus/Thanos datasource in Grafana. |
 | `grafana.namespace` | release ns | Namespace to create the GrafanaDashboard in. |
 | `prometheus.monitors.coreServiceMonitor.enabled` | `false` | Scrape Crossplane core. |
 | `prometheus.monitors.providerPodMonitor.enabled` | `false` | Scrape provider pods. |
@@ -220,7 +263,7 @@ moment you upgrade / enable Upjet, with no dashboard rework.
 | Resource Health | 1.1, 1.2 | Not-ready/not-synced table · TTR p50/p95/p99 |
 | Control Plane | 2.1–2.5 | Reconcile rate+errors · latency · workqueue · detection lag |
 | Correctness & Drift | 3.1 | Time-out-of-sync by kind |
-| Fleet & Multi-tenancy | 4.1, 4.2 | Ready ratio by namespace · circuit-breaker drop/opens *(4.2 = Phase 2)* |
+| Fleet & Multi-tenancy | 4.1, 4.2 | Ready ratio by GVK · **Composite (XR) ready ratio by kind** *(raw cross-namespace query, works on UWM)* · circuit-breaker drop/opens *(4.2 = Phase 2)* |
 | Composition / Functions *(Phase 2)* | 5.1, 5.2 | Function p95 · error ratio · cache hit ratio |
 | Cloud Interaction *(Upjet only)* | 6.1 | Reconcile delay vs poll interval |
 | Resource Footprint | 7.1, 7.2 | Provider restarts · memory · CPU-throttled % |

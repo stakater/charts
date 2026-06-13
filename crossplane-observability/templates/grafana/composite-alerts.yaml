@@ -1,0 +1,112 @@
+{{- $ca := .Values.grafana.compositeAlerts }}
+{{- if and .Values.crossplane.inventory.enabled $ca $ca.enabled }}
+{{- $ds := required "grafana.compositeAlerts.datasourceUid is required when grafana.compositeAlerts.enabled (the UID of a Prometheus/Thanos datasource in Grafana that can read across namespaces)" $ca.datasourceUid }}
+{{- $pattern := .Values.crossplane.inventory.conditionMetricPattern }}
+{{- $folder := $ca.folder | default .Values.grafana.folder }}
+# Story 4.1 — Grafana-MANAGED composite alerts (see docs/alerting-architecture.md). Used on
+# OpenShift UWM, where a PrometheusRule is namespace-enforced and the composite series carry
+# tenant namespaces (so a PrometheusRule fires 0). Grafana queries thanos-querier (not
+# namespace-enforced) and forwards firing alerts to your Alertmanager via a Grafana contact
+# point. The series value is 1 (Ready/Synced=True) or 0; we alert when it is < 1.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaFolder
+metadata:
+  name: {{ include "crossplane-observability.fullname" . }}-alerts
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+spec:
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+  title: {{ $folder | quote }}
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: {{ include "crossplane-observability.fullname" . }}-composite
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    {{- include "crossplane-observability.labels" . | nindent 4 }}
+spec:
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+  folderRef: {{ include "crossplane-observability.fullname" . }}-alerts
+  interval: {{ $ca.interval }}
+  rules:
+    {{- range $r := tuple (dict "name" "CompositeNotReady" "type" .Values.crossplane.inventory.readyType "uid" "cpobscompnotready" "what" "ready") (dict "name" "CompositeNotSynced" "type" .Values.crossplane.inventory.syncedType "uid" "cpobscompnotsync" "what" "synced") }}
+    - uid: {{ $r.uid }}
+      title: {{ $r.name }}
+      condition: C
+      for: {{ $ca.for }}
+      noDataState: OK
+      execErrState: Error
+      labels:
+        severity: {{ $ca.severity }}
+        rulesgroup: crossplane
+      annotations:
+        summary: "Composite {{`{{ $labels.crossplane_kind }}/{{ $labels.name }}`}} not {{ $r.what }}"
+        description: "Composite {{`{{ $labels.crossplane_kind }}/{{ $labels.name }}`}} in {{`{{ $labels.namespace }}`}} has {{ $r.type }} != True for more than {{ $ca.for }}."
+      data:
+        - refId: A
+          relativeTimeRange:
+            from: 600
+            to: 0
+          datasourceUid: {{ $ds | quote }}
+          model:
+            datasource:
+              type: prometheus
+              uid: {{ $ds | quote }}
+            editorMode: code
+            expr: '{__name__=~"{{ $pattern }}", type="{{ $r.type }}", status="True"}'
+            instant: true
+            intervalMs: 1000
+            maxDataPoints: 43200
+            range: false
+            refId: A
+        - refId: B
+          datasourceUid: __expr__
+          model:
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: A
+            reducer: last
+            type: reduce
+            refId: B
+            conditions:
+              - evaluator:
+                  params: []
+                  type: gt
+                operator:
+                  type: and
+                query:
+                  params: [B]
+                reducer:
+                  params: []
+                  type: last
+                type: query
+        - refId: C
+          datasourceUid: __expr__
+          model:
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: B
+            type: threshold
+            refId: C
+            conditions:
+              - evaluator:
+                  params: [1]
+                  type: lt
+                operator:
+                  type: and
+                query:
+                  params: [C]
+                reducer:
+                  params: []
+                  type: last
+                type: query
+    {{- end }}
+{{- end }}

@@ -47,7 +47,7 @@ these is mostly exporter-config + a few alerts — no new moving parts.
 | **Package health** — `Provider`/`Configuration`/`Function` + `…Revision` `Healthy`/`Installed` | A provider/config package that fails to install or upgrade silently disables **everything** it manages. (us-2 already showed `configurationrevision` churn.) | exporter condition metric on pkg.crossplane.io kinds → `PackageUnhealthy` alert |
 | **XRD/MRD Established** | If an XRD isn't `Established`, its API doesn't exist — claims/XRs can't be created at all | exporter condition on `CompositeResourceDefinition` → `XRDNotEstablished` alert |
 | **Composition validity** | A broken/invalid Composition stalls provisioning; only shows as generic reconcile errors today | exporter condition on `Composition`, or function-error row |
-| **Composite (XR) dashboard panel** | Story 4.1 has alerts + a recording rule but nothing visual | add a composite-readiness row (`crossplane:composite_ready:ratio`) |
+| ~~Composite (XR) dashboard panel~~ | ✅ DONE — "Composite (XR) ready ratio by kind" panel + `CompositeNotReady`/`CompositeNotSynced` alerts (Grafana-managed on UWM) | — |
 | **Function pod footprint** | the footprint row matches `pod=~"provider.*"` — it misses **function** and **core** pod restarts/OOM | widen the regex / add function-pod selectors |
 | **Per-tenant rollups** | leaf + XProject metrics carry no `namespace` label — we answer *what kind*, not *whose* | a claim/namespace-labelled metric from the exporter |
 

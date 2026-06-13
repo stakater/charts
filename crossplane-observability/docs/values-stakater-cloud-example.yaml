@@ -12,6 +12,14 @@ prometheus:
       enabled: false
     providerPodMonitor:
       enabled: false
+  rules:
+    fleet:
+      # On UWM, keep the PrometheusRule composite alerts OFF — Grafana handles them
+      # (grafana.compositeAlerts below), because a UWM PrometheusRule is namespace-enforced.
+      compositeNotReady:
+        enabled: false
+      compositeNotSynced:
+        enabled: false
 
 crossplane:
   core:
@@ -45,6 +53,13 @@ grafana:
     matchLabels:
       dashboards: crossplane
 
+  # Story 4.1 composite alerts on UWM: use Grafana-managed alerts (a PrometheusRule is
+  # namespace-enforced and would fire 0). REQUIRES the cross-namespace datasource UID, and a
+  # Grafana contact point → Alertmanager so they reach on-call (see docs/alerting-architecture.md).
+  compositeAlerts:
+    enabled: true
+    datasourceUid: ""                                    # CONFIRM — thanos-querier datasource UID in Grafana
+
 # Calibration: ReconcileErrorRateHigh already excludes the churny internal controllers
 # (usage / clusterusage / *compositeresourcedefinition* / configurationrevision) by default.
 # Add cluster-specific noisy controllers here if needed, e.g.:
@@ -52,7 +67,7 @@ grafana:
 #     rules:
 #       controlPlane:
 #         reconcileErrorRateHigh:
-#           excludeControllers: "usage|clusterusage|.*compositeresourcedefinition.*|configurationrevision|xproject"
+#           excludeControllers: ".*usage.*|.*compositeresourcedefinition.*|.*configurationrevision.*|.*xproject.*"
 
 # --- Discovery commands to fill in the CONFIRM values ----------------------------------------
 # 1. Confirm the exporter's condition metric (and its kind/type labels):

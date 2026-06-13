@@ -54,7 +54,8 @@ These move *before* the customer-facing numbers do — they tell you *why* troub
 
 | Panel | What it shows | Why it matters / blind spot without it |
 | --- | --- | --- |
-| **Ready ratio by GVK** (red < 99.5%) | the fleet ratio broken out per kind | Shows *which* kind drags the fleet number down. **Without it:** you know the fleet dipped but not the culprit kind. |
+| **Ready ratio by GVK** (red < 99.5%) | the *leaf-MR* fleet ratio broken out per kind | Shows *which* kind drags the fleet number down. **Without it:** you know the fleet dipped but not the culprit kind. |
+| **Composite (XR) ready ratio by kind** (red < 99.5%) | per-XR-kind ready ratio (Story 4.1), via a **raw cross-namespace query** (not the recording rule, so it works under UWM) | The customer-facing composite layer — "are the things tenants asked for healthy." **Without it:** you only see leaf resources, never whether the composite the customer owns is actually up. |
 | **Circuit-breaker drop ratio** *(Phase 2, red ≥ 20%)* | % of watch events dropped per controller | Noisy-neighbour protection — a thrashing XR starving other tenants. **Without it:** one runaway tenant degrades everyone and you can't see who. *(Dark until 2.2/2.3.)* |
 | **Circuit-breaker opens / hr** *(Phase 2, red ≥ 6)* | how often the breaker trips | Repeated reconcile storms. **Without it:** intermittent control-plane saturation has no fingerprint. *(Dark until 2.2/2.3.)* |
 
@@ -88,10 +89,11 @@ Composition Functions run *custom code* in the provisioning path — a hidden fa
 
 ## Known gaps (panels we don't have yet)
 
-- **Composite/Claim (Story 4.1) has alerts and a recording rule but no dedicated panel.**
-  `crossplane:composite_ready:ratio` and the `CompositeNotReady`/`CompositeNotSynced` signals
-  aren't visualised yet. Row 5's "Ready ratio by GVK" is the **leaf-MR** ratio, not the
-  composite layer. Adding a composite-readiness panel is the most valuable next addition.
+- **Composite (Story 4.1)** now has a panel ("Composite (XR) ready ratio by kind") *and*
+  alerts (`CompositeNotReady`/`CompositeNotSynced`). On OpenShift UWM the alerts are
+  **Grafana-managed** (the PrometheusRule variant is namespace-enforced) — see
+  [alerting-architecture.md](alerting-architecture.md). The panel uses a raw cross-namespace
+  query so it works regardless.
 - **Per-tenant view.** The leaf metrics are per-GVK (no namespace) and the XProject condition
   metric has no namespace label, so the dashboard answers *what kind* is broken, not *whose*.
   True per-tenant panels need a claim/namespace-labelled metric.
