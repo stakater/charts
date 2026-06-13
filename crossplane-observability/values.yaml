@@ -103,6 +103,23 @@ grafana:
   dashboard:
     enabled: true
 
+  # Grafana-managed alerts for the cross-tenant composite/inventory signals (Story 4.1) that
+  # a UWM PrometheusRule cannot evaluate (namespace-enforced — see docs/alerting-architecture.md).
+  # Grafana queries thanos-querier (not namespace-enforced) and forwards firing alerts to your
+  # existing Alertmanager via a Grafana contact point — same routing/receivers as everything else.
+  # Use these on UWM INSTEAD of the prometheus.rules.fleet.composite* PrometheusRule alerts.
+  compositeAlerts:
+    enabled: false
+    # UID of the Prometheus/Thanos datasource in your Grafana that can read across namespaces
+    # (e.g. the thanos-querier / cluster-monitoring datasource). REQUIRED when enabled.
+    datasourceUid: ""
+    # Folder the alert group lands in (grafana-operator GrafanaFolder name). Defaults to grafana.folder.
+    folder: ""
+    # Evaluation interval and pending duration.
+    interval: 1m
+    for: 15m
+    severity: warning
+
 # ---------------------------------------------------------------------------
 # Prometheus configuration
 # ---------------------------------------------------------------------------
