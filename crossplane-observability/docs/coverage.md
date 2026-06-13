@@ -51,6 +51,13 @@ these is mostly exporter-config + a few alerts — no new moving parts.
 | **Function pod footprint** | the footprint row matches `pod=~"provider.*"` — it misses **function** and **core** pod restarts/OOM | widen the regex / add function-pod selectors |
 | **Per-tenant rollups** | leaf + XProject metrics carry no `namespace` label — we answer *what kind*, not *whose* | a claim/namespace-labelled metric from the exporter |
 
+## Inventory & billing (MRU)
+
+Live counts come from `crossplane_managed_resource_exists` (value = #MRs per gvk): total,
+per-kind, distinct kinds, billable MRUs — shipped as recording rules + an "Inventory & Billing"
+dashboard row. **Per-tenant MRU** needs the exporter to emit an MR count carrying your tenant
+label (the native metric has only `gvk`). See [billing.md](billing.md).
+
 ## See YOUR actual surface
 
 ```bash
