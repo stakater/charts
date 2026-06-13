@@ -112,11 +112,26 @@ What works and what doesn't under UWM:
 - ❌ **Composite recording rule + alerts** as a user-workload PrometheusRule in the Crossplane
   namespace — namespace-enforced to nothing.
 
-Options to make the composite *alerts* work: deploy the inventory PrometheusRule **per tenant
-namespace** (UWM then enforces that namespace), or evaluate these rules in the **platform**
-monitoring stack (cluster-monitoring, not namespace-enforced). The recording-rule/alert
-expressions themselves are correct (proven in `tests/unit/`); this is purely the UWM tenancy
-model. The MR/control-plane stories are unaffected.
+### Two alerting paths — and why
+
+Because of the constraint above, this chart uses **two alerting mechanisms on purpose**:
+
+- **Prometheus `PrometheusRule`s (UWM)** for everything whose metric originates in the
+  Crossplane namespace — control plane, providers, managed resources, footprint. These fit
+  UWM's per-namespace model and are Prometheus-native (with recording rules + unit tests).
+- **Grafana-managed alerts** for the **cross-tenant composite/inventory** signals (Story 4.1),
+  whose series carry tenant namespaces. Grafana queries `thanos-querier` (not
+  namespace-enforced), so it's the only *supported* way to alert across tenants — the OpenShift
+  **platform** stack is not an option (Red Hat reserves it and resets user objects).
+
+**This does not break your pipeline:** Grafana-managed alerts **forward to your existing
+Prometheus Alertmanager** (via an Alertmanager contact point, or Alertmanager-as-data-source
+with forwarding). Same Alertmanager, same routing, same Slack/PagerDuty receivers and silences
+— only the *evaluation engine* differs (Grafana instead of thanos-ruler).
+
+The full rationale is in **[docs/alerting-architecture.md](docs/alerting-architecture.md)**.
+The recording-rule/alert expressions themselves are correct (proven in `tests/unit/`); the MR
+and control-plane stories are unaffected.
 
 ### 3. Verify your build before enabling Phase 2 (roadmap Decision 2)
 
