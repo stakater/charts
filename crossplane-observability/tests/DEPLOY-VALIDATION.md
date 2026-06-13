@@ -94,6 +94,54 @@ the healthy state, the customer-facing alerts (MRNotReady, ClaimTreeNotReady, AP
 Unavailable) should be quiet. Note any alert that is firing without a real underlying problem
 (→ calibration finding) or that you'd expect to fire but doesn't.
 
+> **Note:** the **composite** alerts (`CompositeNotReady`/`CompositeNotSynced`) on UWM are
+> **Grafana-managed, not Prometheus rules** — they will NOT appear in `ALERTS{...}`. Their
+> absence here is expected; verify them in step 5b instead.
+
+### 5b. Grafana-managed composite alerts (Story 4.1) — VERIFY EXPLICITLY
+
+⚠️ **Do not skip this.** These alerts are evaluated by Grafana, so the offline harness
+(`promtool`) cannot test their firing — this live check is the only proof they work. Only
+applies when `grafana.compositeAlerts.enabled=true` (the UWM path).
+
+1. **CRs accepted by grafana-operator** — the `GrafanaFolder` and `GrafanaAlertRuleGroup` must
+   show a successful apply in their status (not an error/`NoMatchingInstances`):
+   ```bash
+   kubectl get grafanaalertrulegroup,grafanafolder -n <ns> -o wide
+   kubectl get grafanaalertrulegroup <release>-composite -n <ns> -o jsonpath='{.status.conditions}'; echo
+   ```
+   A failed apply / no-matching-instance → BLOCKER (wrong `instanceSelector` or datasource UID).
+2. **Rules evaluate in Grafana** (not Error/NoData) — via Grafana UI (Alerting → Alert rules →
+   the `<release>-composite` group) or the Grafana API
+   (`GET /api/v1/provisioning/alert-rules` or `/api/prometheus/grafana/api/v1/rules`). A rule
+   in `error`/`nodata` state → MAJOR (usually a bad `datasourceUid`).
+3. **It actually fires on a known-degraded composite** — confirm there *is* one to fire on:
+   ```promql
+   # against thanos-querier (cross-namespace, like Grafana queries it):
+   count({__name__=~"kube_customresource_crossplane_xr_.+_condition", type="Synced", status="True"} == 0)
+   count({__name__=~"kube_customresource_crossplane_xr_.+_condition", type="Ready",  status="True"} == 0)
+   ```
+   If those are > 0 (e.g. the `e2e-hc-test` XR was Synced=False in the 2026-06-13 report), then
+   `CompositeNotSynced`/`CompositeNotReady` should be **Firing/Pending** in Grafana. Expected
+   state, but 0 firing while the count is > 0 → MAJOR (the Grafana rule isn't matching).
+4. **Notification reaches Alertmanager / on-call** — confirm a Grafana **contact point** of
+   type Alertmanager exists and the `rulesgroup=crossplane` alerts route to it, and that a
+   firing composite alert actually lands in Alertmanager:
+   ```bash
+   # in the Alertmanager that Grafana forwards to:
+   amtool alert query rulesgroup=crossplane   # or check the Alertmanager UI
+   ```
+   If the rule fires in Grafana but nothing reaches Alertmanager → MAJOR (contact
+   point/forwarding not wired — see README "What the SRE must do for production").
+5. **Composite panel populates** — the dashboard "Composite (XR) ready ratio by kind" panel
+   should show a ratio per kind (it uses a raw cross-namespace query, so it works under UWM
+   even though `crossplane:composite_ready:ratio` the recording rule is empty). Empty panel
+   while the metric exists → MAJOR.
+
+Record results under Story 4.1 in the report (Status: OK / Misconfigured / NoData), and call
+out explicitly whether the **notify path** (Grafana → Alertmanager) is wired — that's the part
+most likely to be missed.
+
 ### 6. Dashboard
 Open the "Crossplane Observability" dashboard (folder from `grafana.folder`). For each
 populated row, confirm panels render data (not "No data"/"N/A") and the threshold colours look
