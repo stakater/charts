@@ -194,6 +194,8 @@ These need cluster/Grafana context an agent can't safely guess:
 | `crossplane.inventory.enabled` | `false` | Enable Claim/inventory rules (needs an exporter — see [example](docs/resource-state-metrics-example.yaml)). |
 | `crossplane.inventory.conditionMetricPattern` | `kube_customresource_crossplane_xr_.+_condition` | Regex (PromQL `__name__=~`) matching the exporter's one-hot condition metrics across **all** XR kinds (Story 4.1). |
 | `upjet.enabled` | `false` | Upjet providers present — enables Story 6.1 and the more-accurate Upjet TTR (Story 1.2). |
+| `billing.billableKinds` | `".+"` | Regex on `gvk` selecting billable MRU kinds (see [docs/billing.md](docs/billing.md)). |
+| `billing.perTenant.enabled` | `false` | Per-tenant MRU — needs an exporter metric carrying a tenant label (docs/billing.md). |
 | `grafana.folder` | `Crossplane Observability` | Grafana folder for the dashboard. |
 | `grafana.dashboard.enabled` | `true` | Create the GrafanaDashboard. |
 | `grafana.compositeAlerts.enabled` | `false` | Story 4.1 composite alerts as **Grafana-managed** rules (use on UWM instead of the PrometheusRule composite alerts). |
@@ -249,6 +251,8 @@ Emitted as one `PrometheusRule` (`role: recording-rules`) when
 | `crossplane:claim_tree_ttr_seconds:p95` | Story 1.3 — headline composite (add claim layer once 4.1 lands) |
 | `crossplane:reconcile_errors:ratio` | Story 2.1 — reconcile error ratio per controller |
 | `crossplane:reconcile_time_seconds:p99` | Story 2.2 — p99 reconcile duration per controller |
+| `crossplane:managed_resource:total` | Inventory — live total managed-resource count |
+| `crossplane:mru_billable:total` | Billing — total billable MRUs (`billing.billableKinds`) |
 
 ## Dashboard
 
@@ -267,6 +271,7 @@ moment you upgrade / enable Upjet, with no dashboard rework.
 | Composition / Functions *(Phase 2)* | 5.1, 5.2 | Function p95 · error ratio · cache hit ratio |
 | Cloud Interaction *(Upjet only)* | 6.1 | Reconcile delay vs poll interval |
 | Resource Footprint | 7.1, 7.2 | Provider restarts · memory · CPU-throttled % |
+| Inventory & Billing | — | Total MRs · **Billable MRUs** · distinct kinds · composites · tenants · MRs-by-kind table · growth — see [docs/billing.md](docs/billing.md) |
 
 The dashboard JSON lives in [files/crossplane_grafana_dashboard.json](files/crossplane_grafana_dashboard.json)
 and is inlined via `.Files.Get` (so Grafana `$variables` need no Helm escaping).

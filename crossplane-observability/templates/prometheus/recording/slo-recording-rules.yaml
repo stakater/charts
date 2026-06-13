@@ -64,6 +64,14 @@ spec:
             histogram_quantile(0.99, sum by (le, controller) (
               rate(controller_runtime_reconcile_time_seconds_bucket{job="{{ $core }}"}[5m])
             ))
+    # Inventory & billing — live counts from crossplane_managed_resource_exists (value = #MRs
+    # per gvk). Total fleet size and total billable MRUs (billableKinds-filtered).
+    - name: crossplane.inventory.counts
+      rules:
+        - record: crossplane:managed_resource:total
+          expr: sum(crossplane_managed_resource_exists{job="{{ $prov }}"})
+        - record: crossplane:mru_billable:total
+          expr: sum(crossplane_managed_resource_exists{job="{{ $prov }}", gvk=~"{{ .Values.billing.billableKinds }}"})
 {{- if .Values.crossplane.inventory.enabled }}
     # Story 4.1 SLI — Composite (XR) ready ratio per kind, from the inventory exporter's
     # one-hot condition metric. count(Ready/True series) = total XRs of that kind;

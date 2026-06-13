@@ -82,6 +82,25 @@ upjet:
   enabled: false
 
 # ---------------------------------------------------------------------------
+# Inventory & billing (Managed Resource Units). Counts come from the native
+# crossplane_managed_resource_exists metric (value = number of MRs per gvk).
+# ---------------------------------------------------------------------------
+billing:
+  # Regex (PromQL =~ on the `gvk` label) selecting which managed-resource kinds count as
+  # billable MRUs. Default ".+" = every kind; narrow it to the kinds you actually charge for.
+  billableKinds: ".+"
+  # Per-tenant MRU. The native exists metric carries ONLY `gvk` (no tenant), so per-tenant
+  # billing needs the inventory exporter (ksm-crossplane) to emit an MR count that carries
+  # your tenant label — see docs/billing.md for the exporter config. Capture that metric, set
+  # the two fields, and enable; until then per-tenant panels/rules are not rendered.
+  perTenant:
+    enabled: false
+    # The exporter metric whose value is an MR count and that carries the tenant label.
+    mrCountMetric: ""
+    # The label on that metric identifying the tenant / service-provider customer.
+    tenantLabel: "tenant"
+
+# ---------------------------------------------------------------------------
 # Grafana dashboard (managed via grafana-operator GrafanaDashboard CR).
 # ---------------------------------------------------------------------------
 grafana:
