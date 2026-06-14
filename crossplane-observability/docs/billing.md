@@ -1,107 +1,75 @@
 # Inventory & billing (Managed Resource Units)
 
-Simple "how much is there" numbers and the basis for billing service-provider tenants on
-**Managed Resource Units (MRU)**.
+Two different numbers, two different sources:
 
-## The metric
+- **Capacity** — how many leaf cloud resources we manage. From the provider metric
+  `crossplane_managed_resource_exists` (per `gvk`). Works as a UWM recording rule
+  (`crossplane:managed_resource:total`) + dashboard.
+- **Billing (MRU)** — the customer-facing **XR / Claim** units you charge for. From the
+  inventory exporter (`ksm-crossplane`). **This is what you bill on, confirmed.**
 
-`crossplane_managed_resource_exists{gvk}` — emitted natively by every crossplane-runtime
-provider — has a **value equal to the number of managed resources of that GVK**. So counts
-need no extra exporter:
+## What counts as a billable unit
 
-| Number | Query |
-| --- | --- |
-| Total managed resources | `sum(crossplane_managed_resource_exists)` |
-| Per kind (MRU basis) | `crossplane_managed_resource_exists > 0` (by `gvk`) |
-| Distinct kinds in use | `count(crossplane_managed_resource_exists > 0)` |
-| Total billable MRUs | `sum(crossplane_managed_resource_exists{gvk=~"<billableKinds>"})` |
-
-These ship as recording rules (`crossplane:managed_resource:total`,
-`crossplane:mru_billable:total`) and the **Inventory & Billing** dashboard row (Total MRs,
-Billable MRUs, Distinct kinds, Composites, Tenants, MRs-by-kind table, growth-over-time).
-
-## Fleet & per-kind MRU — available now
-
-Set which kinds you charge for:
-
-```yaml
-billing:
-  billableKinds: "ec2.aws.*|rds.aws.*|.*Cluster.*"   # regex on the gvk label; default ".+" = all
-```
-
-`crossplane:mru_billable:total` then tracks only those kinds, and the dashboard's **Billable
-MRUs** tile shows the live number. Per-kind counts (the MRs-by-kind table) give you the
-breakdown for invoicing. Weighting (e.g. "an RDS cluster = 5 MRU") is best applied in the
-billing system from the per-kind counts, or via a small recording rule per weight class.
-
-## Per-tenant MRU — needs one exporter step
-
-**Why it isn't automatic:** `crossplane_managed_resource_exists` carries **only `gvk`** — the
-provider does not put object labels on it. So even though your MR *objects* have a tenant
-label, the metric can't attribute counts to a tenant. You need the inventory exporter
-(ksm-crossplane / KSM CustomResourceState / RSM) to emit an MR count that **includes the
-tenant label**.
-
-### 1. Configure the exporter to expose the tenant label
-
-With KSM CustomResourceState, add an entry per billable managed-resource kind that pulls the
-tenant label off the object (`labelsFromPath`). Example for one kind:
-
-```yaml
-# ksm-crossplane CustomResourceState config (one block per billable MR kind)
-- groupVersionKind:
-    group: ec2.aws.upbound.io
-    version: v1beta1
-    kind: Instance
-  labelsFromPath:
-    name: [metadata, name]
-    tenant: [metadata, labels, "tenant.example.com/id"]   # <-- YOUR tenant label key
-  metrics:
-    - name: "crossplane_mr_info"
-      help: "Managed resource presence, labelled by tenant"
-      each:
-        type: Info
-        info: { labelsFromPath: {} }
-```
-
-This yields `kube_customresource_crossplane_mr_info{kind, tenant, name, …}` = 1 per MR. (RSM
-can do the same with a CEL resolver; pick whichever your `ksm-crossplane` already uses.)
-
-### 2. Capture it and wire the chart
-
-```bash
-# confirm the real metric name + tenant label key:
-curl -s localhost:8080/metrics | grep -E 'kube_customresource_.*(mr|managed)' | head
-```
-
-Then set:
-
-```yaml
-billing:
-  perTenant:
-    enabled: true
-    mrCountMetric: kube_customresource_crossplane_mr_info   # what your exporter actually emits
-    tenantLabel: "tenant"
-```
-
-Per-tenant MRU is then:
+The exporter emits, per Crossplane object, a one-hot **condition** metric
+(`kube_customresource_crossplane_<xr|claim>_<kind>_condition`). For every object the
+`{type="Ready", status="True"}` series exists (value 1 if ready, 0 if not), so **counting that
+series = counting objects**:
 
 ```promql
-# total MRU per tenant:
-count by (tenant) (kube_customresource_crossplane_mr_info)
-# billable MRU per tenant per kind:
-count by (tenant, kind) (kube_customresource_crossplane_mr_info{kind=~"<billable>"})
+# total billable units (XRs + Claims), narrowed by kind:
+count({__name__=~"kube_customresource_crossplane_(xr|claim)_.+_condition", type="Ready", status="True", crossplane_kind=~"$billable"})
+
+# per-kind:
+count by (crossplane_kind) ({__name__=~"kube_customresource_crossplane_(xr|claim)_.+_condition", type="Ready", status="True", crossplane_kind=~"$billable"})
 ```
 
-Following the project discipline: once you capture that metric into
-`tests/fixtures/inventory-metrics.txt`, it moves into `metrics-allowlist.captured.txt` and we
-add the per-tenant recording rule + dashboard panel (verified, not assumed) — same workflow
-that graduated the XR condition metric.
+### Per-tenant (chargeback)
 
-### What we need from you to finish per-tenant
+**Claims carry `namespace` = the tenant workspace** (`ws-…`); cluster-scoped XRs (e.g. XProject)
+do not. So per-tenant billing is done on **Claims**:
 
-1. The **tenant label key** on your MRs (e.g. `tenant.example.com/id`, a workspace label, …).
-2. Whether `ksm-crossplane` already emits an MR-level metric (run the grep above) or needs the
-   CRS entries added.
+```promql
+# MRU per tenant:
+count by (namespace) ({__name__=~"kube_customresource_crossplane_claim_.+_condition", type="Ready", status="True", crossplane_kind=~"$billable", namespace=~"$tenant"})
 
-With those, per-tenant MRU panels + recording rules land the same day.
+# MRU per tenant per kind (the invoice breakdown):
+count by (namespace, crossplane_kind) ({__name__=~"kube_customresource_crossplane_claim_.+_condition", type="Ready", status="True", crossplane_kind=~"$billable"})
+```
+
+These are the **Billing — MRU (XR / Claim)** dashboard row (total, by-kind, by-tenant,
+by-tenant-and-kind), with `$billable` (kind regex) and `$tenant` (namespace) variables.
+
+## ⚠️ Two things to get right
+
+1. **Don't double-count a Claim and the XR it creates.** A Claim (`Project/alpha` in
+   `ws-…`) produces an XR (`XProject/alpha-7rnnh`, cluster-scoped) — the **same unit**. Pick
+   one layer per kind via `$billable`. For tenant chargeback, **Claims** are the right layer
+   (namespaced, one per customer request). For cluster-scoped infra XRs with no Claim, count
+   the XR.
+2. **Billing is dashboard-only, not a UWM recording rule.** The inventory series carry tenant
+   namespaces; a UWM `PrometheusRule` would be namespace-enforced to empty (same as the
+   composite alerts — see README "Inventory rules on OpenShift UWM"). The dashboard queries
+   thanos-querier (not namespace-enforced), so the billing panels work. If you want billing
+   *recording rules* (e.g. for long-term retention / an invoice exporter), evaluate them in a
+   non-namespace-enforced context (platform monitoring or your own Prometheus).
+
+## Configuration
+
+```yaml
+billing:
+  # which condition families to count (XR/Claim). Default counts both — narrow per your model.
+  unitMetricPattern: "kube_customresource_crossplane_(xr|claim)_.+_condition"
+  tenantLabel: "namespace"   # claims + namespaced XRs carry the tenant workspace here
+```
+
+`billableKinds` is the dashboard **`$billable`** variable (regex on `crossplane_kind`, default
+`.+`) — set it to the kinds you charge for, e.g. `OpenShiftCluster|Project|Vault|VirtualMachine`.
+Weighting (e.g. "an OpenShiftCluster = 5 MRU") is best applied in the billing system from these
+per-kind counts.
+
+## Note
+
+The exporter exposes far more than billing — it also has **package health**
+(`pkg_*_condition` → `Healthy`/`Installed`) and **XRD established** (`xrd_*_condition` →
+`Established`). Those close real coverage gaps (see [coverage.md](coverage.md)) and are the
+next alerts to add now that the metrics are captured.

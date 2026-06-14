@@ -1,4 +1,4 @@
-# metrics-allowlist.txt — CAPTURED from live Crossplane metrics on 2026-06-12T13:42:45Z
+# metrics-allowlist.txt — CAPTURED from live Crossplane metrics on 2026-06-14T18:50:48Z
 # Source endpoints: core=crossplane provider-selector=pkg.crossplane.io/provider ns=crossplane-system
 # Regenerate with tests/capture-metrics.sh. check_metrics.py validates rules against this.
 #
@@ -177,7 +177,11 @@ go_sched_pauses_total_other_seconds_count
 go_sched_pauses_total_other_seconds_sum
 go_sync_mutex_wait_total_seconds_total
 go_threads
+kube_customresource_crossplane_claim_project_condition
+kube_customresource_crossplane_pkg_provider_condition
+kube_customresource_crossplane_xr_open_shift_cluster_info
 kube_customresource_crossplane_xr_xproject_condition
+kube_customresource_crossplane_xrd_composite_resource_definition_condition
 leader_election_master_status
 process_cpu_seconds_total
 process_max_fds

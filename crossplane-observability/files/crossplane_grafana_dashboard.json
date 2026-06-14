@@ -46,6 +46,43 @@
           "value": "$__all"
         },
         "sort": 1
+      },
+      {
+        "name": "billable",
+        "label": "Billable kind",
+        "type": "custom",
+        "query": ".+",
+        "current": {
+          "text": ".+",
+          "value": ".+"
+        },
+        "options": [
+          {
+            "text": ".+",
+            "value": ".+",
+            "selected": true
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "tenant",
+        "label": "Tenant (ns)",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": "label_values(kube_customresource_crossplane_claim_.+_info, namespace)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
       }
     ]
   },
@@ -1489,7 +1526,7 @@
     },
     {
       "type": "row",
-      "title": "Inventory & Billing",
+      "title": "Inventory & capacity",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1554,7 +1591,7 @@
     },
     {
       "type": "stat",
-      "title": "Billable MRUs",
+      "title": "Billable units (XR/Claim)",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -1566,7 +1603,7 @@
         "y": 55
       },
       "id": 82,
-      "description": "Total MRUs for billing.billableKinds (configurable).",
+      "description": "Count of customer-facing XR/Claim units (billing.unitMetricPattern), filtered by the $billable kind. Raw cross-namespace query (works under UWM).",
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -1601,7 +1638,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "crossplane:mru_billable:total"
+          "expr": "count({__name__=~\"kube_customresource_crossplane_(xr|claim)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
         }
       ]
     },
@@ -1829,6 +1866,111 @@
           },
           "legendFormat": "total MRs",
           "expr": "crossplane:managed_resource:total"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Billing \u2014 MRU (XR / Claim)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 67
+      },
+      "id": 90
+    },
+    {
+      "type": "table",
+      "title": "Billable units by kind",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 68
+      },
+      "id": 91,
+      "description": "Per-kind billable unit count. NOTE: counts XRs and Claims \u2014 narrow $billable and avoid counting both a Claim and the XR it creates.",
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by (crossplane_kind) ({__name__=~\"kube_customresource_crossplane_(xr|claim)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Billable claims by tenant",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 68
+      },
+      "id": 92,
+      "description": "Per-tenant chargeback from Claims (namespace = tenant workspace).",
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by (namespace) ({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\", namespace=~\"$tenant\"})"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Billable claims by tenant & kind",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 68
+      },
+      "id": 93,
+      "description": "Per-tenant, per-kind claim counts \u2014 the chargeback breakdown.",
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by (namespace, crossplane_kind) ({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\", namespace=~\"$tenant\"})"
         }
       ]
     }
