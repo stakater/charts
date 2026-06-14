@@ -83,6 +83,17 @@
           "value": "$__all"
         },
         "sort": 1
+      },
+      {
+        "name": "core_job",
+        "label": "Core job",
+        "type": "textbox",
+        "query": ".*crossplane.*",
+        "current": {
+          "text": ".*crossplane.*",
+          "value": ".*crossplane.*"
+        },
+        "hide": 0
       }
     ]
   },
@@ -386,7 +397,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_ready{gvk=~\"$gvk\"}) > 0"
+          "expr": "sum by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - sum by (gvk) (crossplane_managed_resource_ready{gvk=~\"$gvk\"}) > 0"
         },
         {
           "refId": "B",
@@ -396,7 +407,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_synced{gvk=~\"$gvk\"}) > 0"
+          "expr": "sum by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - sum by (gvk) (crossplane_managed_resource_synced{gvk=~\"$gvk\"}) > 0"
         }
       ],
       "fieldConfig": {
@@ -596,7 +607,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "{{controller}} reconciles/s",
-          "expr": "sum by (controller) (rate(controller_runtime_reconcile_total[5m]))"
+          "expr": "sum by (controller) (rate(controller_runtime_reconcile_total{job=~\"$core_job\"}[5m]))"
         },
         {
           "refId": "B",
@@ -657,7 +668,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "p50 {{controller}}",
-          "expr": "histogram_quantile(0.50, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket[5m])))"
+          "expr": "histogram_quantile(0.50, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket{job=~\"$core_job\"}[5m])))"
         },
         {
           "refId": "B",
@@ -742,7 +753,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "depth {{name}}",
-          "expr": "workqueue_depth"
+          "expr": "workqueue_depth{job=~\"$core_job\"}"
         },
         {
           "refId": "B",
@@ -751,7 +762,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "adds/s {{name}}",
-          "expr": "sum by (name) (rate(workqueue_adds_total[5m]))"
+          "expr": "sum by (name) (rate(workqueue_adds_total{job=~\"$core_job\"}[5m]))"
         }
       ]
     },
