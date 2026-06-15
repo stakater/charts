@@ -178,6 +178,11 @@ These need cluster/Grafana context an agent can't safely guess:
    pointing at your Prometheus Alertmanager, and route the `rulesgroup=crossplane` alerts to it.
    See [docs/alerting-architecture.md](docs/alerting-architecture.md). *(Until this is done the
    alerts evaluate in Grafana but won't notify anywhere.)*
+3b. **Enable "Manage alerts via Alerting UI"** on the Prometheus/Thanos data source in Grafana,
+   so the dashboard's **Alert list** panel shows the Prometheus/UWM alerts alongside the
+   Grafana-managed composite ones (one pane for both). Without it, the Alert list shows only the
+   Grafana-managed alerts; the "Alerts firing" stat (which reads the `ALERTS` metric) still works
+   regardless — a count there with an empty list means this toggle is off.
 4. **Confirm the inventory exporter** (`crossplane.inventory.{conditionMetricPattern,job}`) by
    scraping it (`tests/fetch-cluster-metrics.sh`) before trusting Story 4.1.
 5. **Calibrate thresholds** over 2–4 weeks of baseline before treating any SLA number as real.
