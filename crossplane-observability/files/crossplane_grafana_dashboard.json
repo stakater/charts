@@ -73,7 +73,7 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "query": "label_values(kube_customresource_crossplane_claim_.+_info, namespace)",
+        "query": "label_values({__name__=~\"kube_customresource_crossplane_claim_.+_condition\"}, namespace)",
         "refresh": 2,
         "includeAll": true,
         "multi": true,
@@ -82,7 +82,8 @@
           "text": "All",
           "value": "$__all"
         },
-        "sort": 1
+        "sort": 1,
+        "definition": "label_values({__name__=~\"kube_customresource_crossplane_claim_.+_condition\"}, namespace)"
       },
       {
         "name": "core_job",
@@ -98,6 +99,129 @@
     ]
   },
   "panels": [
+    {
+      "type": "row",
+      "title": "Crossplane alerts",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 100
+    },
+    {
+      "type": "stat",
+      "title": "Alerts firing",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "id": 101,
+      "description": "Crossplane Prometheus alerts currently firing (ALERTS{rulesgroup=crossplane}). Grafana-managed composite alerts show in Grafana Alerting, not here.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(ALERTS{rulesgroup=\"crossplane\", alertstate=\"firing\"}) or vector(0)"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Active Crossplane alerts (firing / pending)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 18,
+        "x": 6,
+        "y": 6
+      },
+      "id": 102,
+      "options": {
+        "showHeader": true
+      },
+      "description": "One row per firing/pending Crossplane alert. Empty = all clear. Composite (Grafana-managed) alerts appear in Grafana Alerting.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "ALERTS{rulesgroup=\"crossplane\"}"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Value": true,
+              "__name__": true,
+              "job": true,
+              "prometheus": true,
+              "rulesgroup": true
+            },
+            "indexByName": {
+              "alertname": 0,
+              "alertstate": 1,
+              "severity": 2
+            }
+          }
+        }
+      ]
+    },
     {
       "type": "row",
       "title": "Overview / SLO (top-of-glass)",
@@ -368,7 +492,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 12
       },
       "id": 10
     },
@@ -383,7 +507,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 6
+        "y": 13
       },
       "id": 11,
       "options": {
@@ -453,7 +577,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 6
+        "y": 13
       },
       "id": 12,
       "fieldConfig": {
@@ -520,13 +644,13 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 21
       },
       "id": 20
     },
     {
       "type": "timeseries",
-      "title": "Reconcile rate & error ratio",
+      "title": "Reconcile rate & error ratio \u2014 top N",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -535,7 +659,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 15
+        "y": 22
       },
       "id": 21,
       "fieldConfig": {
@@ -608,7 +732,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "{{controller}} reconciles/s",
-          "expr": "sum by (controller) (rate(controller_runtime_reconcile_total{job=~\"$core_job\"}[5m]))"
+          "expr": "topk(15, sum by (controller) (rate(controller_runtime_reconcile_total{job=~\"$core_job\"}[5m])))"
         },
         {
           "refId": "B",
@@ -617,13 +741,23 @@
             "uid": "${datasource}"
           },
           "legendFormat": "error ratio",
-          "expr": "crossplane:reconcile_errors:ratio"
+          "expr": "topk(15, crossplane:reconcile_errors:ratio)"
         }
-      ]
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
     },
     {
       "type": "timeseries",
-      "title": "Reconcile latency p50 / p95 / p99",
+      "title": "Reconcile latency p50 / p95 / p99 \u2014 top N",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -632,7 +766,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 15
+        "y": 22
       },
       "id": 22,
       "fieldConfig": {
@@ -669,7 +803,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "p50 {{controller}}",
-          "expr": "histogram_quantile(0.50, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket{job=~\"$core_job\"}[5m])))"
+          "expr": "topk(10, histogram_quantile(0.50, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket{job=~\"$core_job\"}[5m]))))"
         },
         {
           "refId": "B",
@@ -678,9 +812,19 @@
             "uid": "${datasource}"
           },
           "legendFormat": "p99 {{controller}}",
-          "expr": "crossplane:reconcile_time_seconds:p99"
+          "expr": "topk(10, crossplane:reconcile_time_seconds:p99)"
         }
-      ]
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
     },
     {
       "type": "timeseries",
@@ -693,7 +837,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 22
+        "y": 29
       },
       "id": 23,
       "fieldConfig": {
@@ -769,7 +913,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Detection lag p95 \u2014 create\u2192first reconcile",
+      "title": "Detection lag p95 \u2014 create\u2192first reconcile \u2014 top N",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -778,7 +922,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 29
       },
       "id": 24,
       "fieldConfig": {
@@ -815,9 +959,19 @@
             "uid": "${datasource}"
           },
           "legendFormat": "p95 {{gvk}}",
-          "expr": "histogram_quantile(0.95, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk=~\"$gvk\"}[15m])))"
+          "expr": "topk(10, histogram_quantile(0.95, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk=~\"$gvk\"}[15m]))))"
         }
-      ]
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
     },
     {
       "type": "row",
@@ -827,7 +981,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 29
+        "y": 36
       },
       "id": 30
     },
@@ -842,7 +996,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 37
       },
       "id": 31,
       "fieldConfig": {
@@ -891,7 +1045,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 37
+        "y": 44
       },
       "id": 40
     },
@@ -906,7 +1060,7 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 38
+        "y": 45
       },
       "id": 41,
       "fieldConfig": {
@@ -969,7 +1123,7 @@
         "h": 6,
         "w": 6,
         "x": 6,
-        "y": 38
+        "y": 45
       },
       "id": 42,
       "fieldConfig": {
@@ -1025,7 +1179,7 @@
         "h": 6,
         "w": 6,
         "x": 12,
-        "y": 38
+        "y": 45
       },
       "id": 43,
       "fieldConfig": {
@@ -1081,7 +1235,7 @@
         "h": 6,
         "w": 6,
         "x": 18,
-        "y": 38
+        "y": 45
       },
       "id": 44,
       "description": "Per-XR-kind ready ratio from the inventory exporter, queried raw (not via the recording rule) so it works under OpenShift UWM where the recording rule is namespace-enforced to empty.",
@@ -1142,7 +1296,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 51
       },
       "id": 50,
       "panels": [
@@ -1157,7 +1311,7 @@
             "h": 7,
             "w": 8,
             "x": 0,
-            "y": 45
+            "y": 52
           },
           "id": 51,
           "fieldConfig": {
@@ -1209,7 +1363,7 @@
             "h": 7,
             "w": 8,
             "x": 8,
-            "y": 45
+            "y": 52
           },
           "id": 52,
           "fieldConfig": {
@@ -1261,7 +1415,7 @@
             "h": 7,
             "w": 8,
             "x": 16,
-            "y": 45
+            "y": 52
           },
           "id": 53,
           "fieldConfig": {
@@ -1318,13 +1472,13 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 52
       },
       "id": 60,
       "panels": [
         {
           "type": "timeseries",
-          "title": "Reconcile delay p95",
+          "title": "Reconcile delay p95 \u2014 top N",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1333,7 +1487,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 46
+            "y": 53
           },
           "id": 61,
           "fieldConfig": {
@@ -1370,9 +1524,19 @@
                 "uid": "${datasource}"
               },
               "legendFormat": "p95 delay {{kind}}",
-              "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(upjet_resource_reconcile_delay_seconds_bucket[15m])))"
+              "expr": "topk(10, histogram_quantile(0.95, sum by (le, kind) (rate(upjet_resource_reconcile_delay_seconds_bucket[15m]))))"
             }
-          ]
+          ],
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            }
+          }
         }
       ]
     },
@@ -1384,7 +1548,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 53
       },
       "id": 70
     },
@@ -1399,7 +1563,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 47
+        "y": 54
       },
       "id": 71,
       "fieldConfig": {
@@ -1455,7 +1619,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 47
+        "y": 54
       },
       "id": 72,
       "fieldConfig": {
@@ -1491,7 +1655,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 47
+        "y": 54
       },
       "id": 73,
       "fieldConfig": {
@@ -1544,7 +1708,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 61
       },
       "id": 80
     },
@@ -1559,7 +1723,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 55
+        "y": 62
       },
       "id": 81,
       "description": "Live count of all managed resources (sum of crossplane_managed_resource_exists).",
@@ -1612,7 +1776,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 55
+        "y": 62
       },
       "id": 82,
       "description": "Count of customer-facing XR/Claim units (billing.unitMetricPattern), filtered by the $billable kind. Raw cross-namespace query (works under UWM).",
@@ -1665,7 +1829,7 @@
         "h": 4,
         "w": 4,
         "x": 8,
-        "y": 55
+        "y": 62
       },
       "id": 83,
       "description": "Number of managed-resource kinds that currently have at least one resource.",
@@ -1718,7 +1882,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 55
+        "y": 62
       },
       "id": 84,
       "description": "Total composite resources (needs the inventory exporter).",
@@ -1771,7 +1935,7 @@
         "h": 4,
         "w": 4,
         "x": 16,
-        "y": 55
+        "y": 62
       },
       "id": 85,
       "description": "Namespaces that own composites (needs the inventory exporter).",
@@ -1824,7 +1988,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 59
+        "y": 66
       },
       "id": 86,
       "options": {
@@ -1855,7 +2019,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 59
+        "y": 66
       },
       "id": 87,
       "fieldConfig": {
@@ -1889,7 +2053,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 67
+        "y": 74
       },
       "id": 90
     },
@@ -1904,7 +2068,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 68
+        "y": 75
       },
       "id": 91,
       "description": "Per-kind billable unit count. NOTE: counts XRs and Claims \u2014 narrow $billable and avoid counting both a Claim and the XR it creates.",
@@ -1935,7 +2099,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 68
+        "y": 75
       },
       "id": 92,
       "description": "Per-tenant chargeback from Claims (namespace = tenant workspace).",
@@ -1966,7 +2130,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 68
+        "y": 75
       },
       "id": 93,
       "description": "Per-tenant, per-kind claim counts \u2014 the chargeback breakdown.",
