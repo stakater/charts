@@ -169,12 +169,8 @@
       ]
     },
     {
-      "type": "table",
-      "title": "Active Crossplane alerts (firing / pending)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "type": "alertlist",
+      "title": "Crossplane alert rules (all states)",
       "gridPos": {
         "h": 6,
         "w": 18,
@@ -182,45 +178,25 @@
         "y": 6
       },
       "id": 102,
+      "description": "All Crossplane alert rules + states in one place \u2014 Grafana-managed (composite) AND Prometheus/UWM \u2014 filtered by rulesgroup=crossplane. NOTE: the Prometheus/Thanos alerts appear here only if that datasource has 'Manage alerts via Alerting UI' enabled in Grafana. The 'Alerts firing' stat (left) reads the ALERTS metric directly and always works \u2014 if it shows a count but this list is empty, datasource alerting isn't enabled.",
       "options": {
-        "showHeader": true
-      },
-      "description": "One row per firing/pending Crossplane alert. Empty = all clear. Composite (Grafana-managed) alerts appear in Grafana Alerting.",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "format": "table",
-          "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "expr": "ALERTS{rulesgroup=\"crossplane\"}"
+        "viewMode": "list",
+        "groupMode": "default",
+        "maxItems": 100,
+        "sortOrder": 1,
+        "dashboardAlerts": false,
+        "alertName": "",
+        "folder": null,
+        "alertInstanceLabelFilter": "{rulesgroup=\"crossplane\"}",
+        "stateFilter": {
+          "firing": true,
+          "pending": true,
+          "recovering": true,
+          "normal": true,
+          "noData": false,
+          "error": true
         }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Value": true,
-              "__name__": true,
-              "job": true,
-              "prometheus": true,
-              "rulesgroup": true
-            },
-            "indexByName": {
-              "alertname": 0,
-              "alertstate": 1,
-              "severity": 2
-            }
-          }
-        }
-      ]
+      }
     },
     {
       "type": "row",
