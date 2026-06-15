@@ -174,7 +174,7 @@
     },
     {
       "type": "stat",
-      "title": "Claim tree p95 TTR",
+      "title": "Claim tree p95 time-to-ready",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -230,7 +230,8 @@
           },
           "expr": "crossplane:claim_tree_ttr_seconds:p95"
         }
-      ]
+      ],
+      "description": "p95 time from creation to Ready for the full Claim \u2192 XR \u2192 MR tree (the headline provisioning-speed SLO)."
     },
     {
       "type": "stat",
