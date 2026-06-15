@@ -138,6 +138,29 @@ applies when `grafana.compositeAlerts.enabled=true` (the UWM path).
    even though `crossplane:composite_ready:ratio` the recording rule is empty). Empty panel
    while the metric exists → MAJOR.
 
+### 5c. Unified Alert list panel — VERIFY BOTH SOURCES SHOW
+
+The "Crossplane alerts" row has an **Alert list** panel ("Crossplane alert rules (all states)")
+that should show **both** Grafana-managed composite alerts **and** Prometheus/UWM alerts in one
+pane (filtered `{rulesgroup="crossplane"}`). This panel has no PromQL, so the offline harness
+can't test it — verify live:
+
+1. **Grafana-managed alerts appear** — `CompositeNotReady`/`CompositeNotSynced` are listed (any
+   state). If absent → the `alertlist` filter or the rule group isn't loading (BLOCKER for the
+   panel).
+2. **Prometheus/UWM alerts appear** — the rule-based alerts (e.g. `MRNotReady`,
+   `ReconcileErrorRateHigh`) are listed too. **The cross-check:** compare against the **"Alerts
+   firing"** stat (which reads the `ALERTS` metric directly and always works):
+   - stat > 0 **and** those alerts are in the list → ✅ both sources wired.
+   - stat > 0 **but** the list shows only composite/Grafana alerts → the Thanos datasource does
+     **not** have **"Manage alerts via Alerting UI"** enabled in Grafana (README SRE step 3b).
+     Report as MAJOR with the remediation, not as "no alerts."
+3. **States are right** — a known-firing alert (e.g. MRNotReady, given fleet ratio < 100%) shows
+   **Firing**; healthy ones show **Normal**. All-normal while the stat says firing → mis-wired.
+
+Record under "Alerts" in the report: does the unified list show **(a) Grafana-managed, (b)
+Prometheus** alerts, and does it agree with the firing-count stat?
+
 Record results under Story 4.1 in the report (Status: OK / Misconfigured / NoData), and call
 out explicitly whether the **notify path** (Grafana → Alertmanager) is wired — that's the part
 most likely to be missed.
