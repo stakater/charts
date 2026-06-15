@@ -39,6 +39,11 @@ circuit_breaker_opens_total
 upjet_resource_ttr_bucket
 upjet_resource_reconcile_delay_seconds_bucket
 
+# --- Prometheus built-in (synthesized by the rule engine, not scraped) ---
+# ALERTS{alertname,alertstate,...} — one series per firing/pending alert. Used by the
+# "Crossplane alerts" dashboard panel. Always present; not in /metrics fixtures by nature.
+ALERTS
+
 # --- kube-apiserver (Story 2.4) ---
 # Standard apiserver metric, exposed by kube-apiserver /metrics (not Crossplane).
 aggregator_unavailable_apiservice
