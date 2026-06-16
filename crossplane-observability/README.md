@@ -180,9 +180,19 @@ These need cluster/Grafana context an agent can't safely guess:
    alerts evaluate in Grafana but won't notify anywhere.)*
 3b. **Enable "Manage alerts via Alerting UI"** on the Prometheus/Thanos data source in Grafana,
    so the dashboard's **Alert list** panel shows the Prometheus/UWM alerts alongside the
-   Grafana-managed composite ones (one pane for both). Without it, the Alert list shows only the
-   Grafana-managed alerts; the "Alerts firing" stat (which reads the `ALERTS` metric) still works
-   regardless — a count there with an empty list means this toggle is off.
+   Grafana-managed composite ones (one pane for both). With grafana-operator, set
+   `jsonData.manageAlerts: true` on the datasource CR:
+   ```yaml
+   # GrafanaDatasource (e.g. prometheus-uwm)
+   spec:
+     datasource:
+       jsonData:
+         manageAlerts: true
+   ```
+   Verify: `kubectl get grafanadatasource <name> -o jsonpath='{.spec.datasource.jsonData.manageAlerts}'`.
+   Without it, the Alert list shows only the Grafana-managed alerts; the "Alerts firing" stat
+   (which reads the `ALERTS` metric) still works regardless — **a count there with an empty list
+   means this toggle is off** (confirmed in the 2026-06-16 deploy validation).
 4. **Confirm the inventory exporter** (`crossplane.inventory.{conditionMetricPattern,job}`) by
    scraping it (`tests/fetch-cluster-metrics.sh`) before trusting Story 4.1.
 5. **Calibrate thresholds** over 2–4 weeks of baseline before treating any SLA number as real.
