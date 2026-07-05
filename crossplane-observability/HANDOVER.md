@@ -79,6 +79,46 @@ Per-cluster, not chart code. On us-2: datasource UID set + composite alerts firi
 - Recording rules that aggregate cross-namespace are **UWM-empty**; the dashboard billing/composite
   panels use **raw cross-namespace queries** (thanos-querier isn't namespace-enforced).
 
+## Definition of Done
+
+This is done when **every box is checked with evidence** (a command's output, a screenshot, a
+report file) — not "should work". Honest-over-complete: an unchecked box with a note beats a
+checked one you didn't verify.
+
+**Chart & publish**
+- [ ] `Chart.yaml` `version` bumped to `0.1.0` (from `0.0.1`).
+- [ ] `./tests/validate.sh` exits 0 — full output seen, not assumed.
+- [ ] PR #274 rebased on `main`, CI green, **Rebase-and-Merged** (one chart per PR).
+- [ ] The published chart is installable from the registry at the new version.
+
+**Alerting pipeline proven end-to-end** (the part most likely to be faked as "done")
+- [ ] A Prometheus (UWM) alert from the chart is seen **firing in Alertmanager**.
+- [ ] A Grafana-managed composite alert is seen **firing** AND **delivered to a contact point**
+      (screenshot of the notification, or Alertmanager showing the `rulesgroup=crossplane` alert)
+      — firing alone is not done.
+- [ ] The unified Alert list panel shows **both** sources (needs `manageAlerts: true`); the
+      "Alerts firing" stat matches the list count.
+
+**Metric reality** (no invented metrics reach production)
+- [ ] Every metric the chart references is either in `metrics-allowlist.captured.txt` or in
+      `metrics-allowlist.documented.txt` with a citation — `check_metrics.py` passes.
+- [ ] On the target cluster, the "documented" metrics that were expected to appear (functions,
+      Upjet, circuit-breaker if those paths are enabled) are confirmed present, or the panels/rules
+      that depend on them are explicitly marked "awaiting workload".
+
+**Dashboard**
+- [ ] Dashboard loads with no "N/A" / "No data" on panels that should have data on the target
+      cluster; any empty panel has a known reason (feature disabled / no such workload).
+
+**Docs & thresholds**
+- [ ] Every threshold shipped is either calibrated against ≥2 weeks of baseline **or** labelled
+      in values as a provisional default.
+- [ ] `docs/coverage.md` reflects the actual shipped coverage (gaps listed honestly).
+
+**Deferred items — decision recorded, not silently dropped**
+- [ ] The 3 gap-closing alerts (package / XRD / claim), Phase-2, and Upjet are each either
+      shipped-and-validated or explicitly deferred with a reason in the PR / an issue.
+
 ## Where everything lives
 
 | Path | What |
