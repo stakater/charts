@@ -1,0 +1,56 @@
+# kcp-observability values.
+#
+# NOTE: alert thresholds and metric names are intentionally NOT finalised here yet.
+# They are being pinned against a real /metrics scrape from a live kcp control plane
+# (see tests/METRICS-CAPTURE.md). Do not add a rule that references a metric which is
+# not present in tests/fixtures/ (captured) or tests/metrics-allowlist.documented.txt
+# (documented-upstream, with citation). The offline gate (tests/validate.sh) enforces this.
+
+nameOverride: ""
+fullnameOverride: ""
+# Namespace the monitoring objects land in. Must be the namespace kcp runs in so UWM can
+# resolve the scrape targets and any TLS secret. Defaults to the release namespace.
+namespaceOverride: ""
+
+# --- What we are observing -------------------------------------------------------------
+# kcp exposes standard apiserver / etcd / workqueue / client-go metrics per component,
+# plus kcp-specific series. Job/selector values are placeholders until confirmed against
+# the live scrape and the actual ServiceMonitor/PodMonitor labels on the cluster.
+kcp:
+  # The root shard + any additional shards (each is an apiserver).
+  shards:
+    job: ".*kcp.*"            # placeholder — set to the real scrape job/pod label
+  # The single client entrypoint that routes by workspace path.
+  frontProxy:
+    job: ".*kcp-front-proxy.*"
+  # Cross-shard replication / caching server.
+  cacheServer:
+    job: ".*kcp-cache.*"
+  # etcd backing the shards.
+  etcd:
+    job: ".*etcd.*"
+
+grafana:
+  namespace: ""                          # where the Grafana CR lives; defaults per-cluster
+  folder: "kcp Observability"
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: Prometheus
+  dashboard:
+    enabled: true
+
+prometheus:
+  # ServiceMonitor/PodMonitor per component. Default OFF — the operator opts in per cluster.
+  monitors:
+    serviceMonitor:
+      enabled: false
+  recordingRules:
+    enabled: true
+  # Per-alert blocks get added here as each is built against captured metrics.
+  rules:
+    # Alertmanager routing / ruleSelector labels merged into every PrometheusRule.
+    labels: {}
