@@ -1,446 +1,361 @@
 # kcp Observability Roadmap — Stakater Cloud
 
-**Status:** Draft for review (no rules built yet — awaiting live `/metrics` capture)
-**Target:** kcp.io control plane — **confirm running version before building**
+**Status:** Revised against the live capture from us-2 (2026-07-09) — metric names below are
+**real**, from `tests/fixtures/`
+**kcp version:** v0.32.1 (root shard + front-proxy), api-syncagent v0.5.0, druid-managed etcd
 **Owner:** Platform / SRE
 
 ---
 
 ## How to read this document
 
-This roadmap is organized **by user story**. Each capability starts with what someone
-operating the kcp control plane actually needs, and *why*. Everything else — the metric that
-answers it, how we judge good-vs-bad (SLI/SLO/SLA), the alert, the dashboard — hangs off that
-need. Read each story as: **need → measurement → target → alert → dashboard → availability.**
+Organized **by user story**: need → measurement → target → alert → dashboard → availability.
 
-### ⚠️ Metric reality (read first — this is the whole discipline)
+### Metric reality (the discipline)
 
-kcp is built on the Kubernetes apiserver/controller machinery, so the **majority of what we
-need is standard**: apiserver, etcd, workqueue, and client-go (`rest_client_*`) metrics, one
-set per kcp component (each shard, front-proxy, cache server). Those we can rely on. The
-**kcp-specific** series (workspace/logicalcluster lifecycle, APIExport/APIBinding, cache
-replication) have names we have **not yet confirmed** — kcp's own metric surface must be read
-off a real scrape, not assumed. We learned this the hard way on crossplane-observability, where
-assumed labels/metric names caused most of the bugs.
+Every metric here was **confirmed against a live scrape** (`tests/fixtures/`, provenance and
+label shapes in [`../tests/fixtures/README.md`](../tests/fixtures/README.md)). Tags:
 
-Each metric below carries a confidence tag:
+- **[captured]** — present in the us-2 fixtures with the exact labels stated.
+- **[ksm]** — standard kube-state-metrics / cAdvisor series; on any OpenShift cluster,
+  documented upstream (not in our kcp fixtures by nature).
+- **[absent]** — we looked for it and it does not exist on v0.32.1; the story is deferred or
+  rebuilt on a captured proxy signal. Never faked.
 
-- **[std]** — standard apiserver / etcd / workqueue / client-go / process / go metric. High
-  confidence it exists; still confirm the exact label set (esp. whether kcp adds a
-  workspace/cluster dimension) from the dump.
-- **[kcp?]** — kcp-specific. **Name is provisional** until the live `/metrics` dump lands
-  (`tests/METRICS-CAPTURE.md`). Nothing referencing a `[kcp?]` metric gets written into a rule
-  until it appears in `tests/fixtures/`.
+Two structural facts that shape everything (details in the fixtures README):
 
-> **No rule ships against an unconfirmed metric.** A capability whose only metric is `[kcp?]`
-> and absent from the dump gets deferred (or rebuilt on a `[std]` proxy signal), never faked.
+1. **No workspace/tenant label on request metrics.** `apiserver_request_total` has no
+   `cluster`/`workspace` dimension → per-tenant *request* observability is impossible;
+   per-tenant signals live at the workspace/APIBinding layer, and those are **aggregate counts
+   by phase+shard** (like crossplane's per-GVK counts), not per-object.
+2. **The us-2 layout:** one root shard (`root-kcp`), a v0.32.1 front-proxy (already in UWM),
+   druid etcd (`root-0/1/2`), 10 api-syncagents (one per SCO service API), and a **legacy
+   v0.31.1 `root-proxy`** (lacks the proxy metrics family — flag for decommission/upgrade).
+   Cache server and virtual workspaces are embedded in the shard. Only the front-proxy is
+   scraped today — **the chart must ship ServiceMonitors for shard, etcd, and syncagents.**
 
-### The SLI / SLO / SLA distinction (read once, applies throughout)
+### The SLI / SLO / SLA distinction
 
-- **SLI** — the *measurement*: what the metric actually computes.
-- **SLO** — our *internal target* with an error budget; what pages on-call.
-- **SLA** — an *externally promised* threshold, defined for **only a few** stories and always
-  **looser than the SLO**. We do **not** turn internal control-plane health into customer SLAs;
-  the customer-facing promise lives at the front-proxy edge (Area 1) and workspace lifecycle
-  (Area 4).
+- **SLI** — the measurement. **SLO** — internal target with an error budget; pages on-call.
+- **SLA** — externally promised, only a few, always looser than the SLO. Internal control-plane
+  health never becomes a customer SLA; the customer-facing promise is the edge (Area 1) and
+  workspace/binding lifecycle (Areas 4–5).
 
-> **Calibration note:** every numeric target below is a **placeholder**. Run 2–4 weeks against
-> real baseline before committing any SLA number.
-
-### Availability legend
-
-- **🟢 Standard** — a `[std]` metric; present on any kcp/apiserver build today.
-- **🔵 kcp-specific** — a `[kcp?]` metric; confirm exact name + labels from the live dump.
-- **🟡 Conditional** — present only when a feature/component is deployed (e.g. standalone cache
-  server, virtual-workspace apiservers, audit enabled).
+> **Calibration:** every numeric target is a **placeholder** until 2–4 weeks of baseline.
 
 ---
 
 # Capability Area 1 — Front-Proxy & the Request Edge (customer-facing)
 
-The front-proxy is the single endpoint every client hits; it routes by workspace path to the
-owning shard. This is the closest thing kcp has to a customer-facing SLA — if the proxy is down
-or slow, *every* workspace is down or slow.
+The front-proxy is the single endpoint every client hits. If it's down or slow, every tenant is.
 
 ## Story 1.1 — Is the control plane reachable?
 
 > **As an SRE, I want to know the moment the front-proxy stops serving, because when it is down
 > every tenant loses access to every workspace at once.**
 
-- **Metric(s):** `up{job=front-proxy}` **[std]**; `apiserver_current_inflight_requests` **[std]**
-- **SLI:** front-proxy targets `up == 1`
-- **SLO:** ≥ 99.9% availability (edge is the tightest tier)
-- **SLA:** ✅ candidate — reachability is the baseline platform promise
-- **Alert:** `FrontProxyDown` (`up == 0` for 2m → critical)
+- **Metric(s):** `up{job="frontproxy-front-proxy"}` **[captured — already UWM-ingested]**
+- **SLI:** front-proxy targets up
+- **SLO:** ≥ 99.9%  | **SLA:** ✅ candidate
+- **Alert:** `KcpFrontProxyDown` (`up == 0` for 2m → critical); `KcpFrontProxyReplicasLow`
+  (fewer targets up than replicas → warning)
 - **Dashboard:** top-of-glass availability tile
-- **Availability:** 🟢 Standard
 
 ## Story 1.2 — Are requests through the proxy succeeding?
 
 > **As an SRE, I want the error rate at the edge, because a climbing 5xx rate at the front-proxy
 > is the earliest customer-visible sign something behind it is broken.**
 
-- **Metric(s):** `apiserver_request_total{code}` **[std]** (front-proxy job). *Confirm the
-  front-proxy exposes apiserver-style request metrics vs a proxy-specific family from the dump.*
-- **SLI:** ratio of `code=~"5.."` responses to total, at the edge
-- **SLO:** < 0.5% 5xx over 5m
-- **SLA:** ✅ candidate
-- **Alert:** `FrontProxyErrorRateHigh` (> threshold for 10m → warning)
-- **Dashboard:** edge request rate + error rate, by code class
-- **Availability:** 🟢 Standard (pending metric-shape confirmation)
+- **Metric(s):** `proxy_request_duration_seconds_count{code,method}` **[captured]** — the
+  proxy-specific family (the front-proxy does **not** expose `apiserver_request_total`)
+- **SLI:** `code=~"5.."` / total at the edge
+- **SLO:** < 0.5% 5xx over 5m  | **SLA:** ✅ candidate
+- **Alert:** `KcpFrontProxyErrorRateHigh` (warning), `…Critical`
+- **Dashboard:** edge request rate by code class
 
 ## Story 1.3 — Is the edge fast?
 
 > **As an SRE, I want request latency at the proxy, because slow is the new down — a tenant's
 > kubectl hanging is a support ticket even when nothing has "failed".**
 
-- **Metric(s):** `apiserver_request_duration_seconds_bucket` **[std]** (front-proxy job)
-- **SLI:** p95/p99 request duration at the edge, split read vs write
-- **SLO:** read p95 ≤ 1s, write p95 ≤ 1s (Kubernetes apiserver SLO convention; recalibrate)
-- **SLA:** ❌ internal (headline latency SLA, if any, belongs per-verb per-tier)
-- **Alert:** `FrontProxyLatencyHigh` (p95 above SLO for 30m → warning)
-- **Dashboard:** latency heatmap / p50-p95-p99 by verb
-- **Availability:** 🟢 Standard
+- **Metric(s):** `proxy_request_duration_seconds_bucket{code,method}` **[captured]**
+- **SLI:** p95/p99 edge latency, read (`get`) vs write (`post|put|patch|delete`) via `method`
+- **SLO:** p95 ≤ 1s  | **SLA:** ❌ internal
+- **Alert:** `KcpFrontProxyLatencyHigh` (p95 above SLO 30m → warning)
+- **Dashboard:** edge latency p50/p95/p99 by method
 
-## Story 1.4 — Is every shard reachable *through* the proxy?
+## Story 1.4 — Is every shard reachable through the proxy?
 
-> **As an SRE, I want to know when the proxy can't reach a shard, because a single unreachable
-> shard silently blackholes just the workspaces it owns — invisible in an aggregate success rate.**
-
-- **Metric(s):** front-proxy → shard connection / routing metrics **[kcp?]**; fall back to
-  per-shard `up` **[std]** correlated with proxy routing config
-- **SLI:** each configured shard reachable from the proxy
-- **SLO:** 100% of shards reachable
-- **Alert:** `ShardUnreachableFromProxy` (→ critical)
-- **Dashboard:** shard reachability matrix
-- **Availability:** 🔵 kcp-specific — confirm whether the proxy exposes per-backend health
+- **Metric(s):** per-backend proxy health **[absent]** on v0.32.1
+- **Rebuilt on:** per-shard `up` (Story 2.1) + edge 5xx (1.2) — a shard-down + edge-5xx pair is
+  the observable signature. **Deferred as its own alert.**
 
 ---
 
 # Capability Area 2 — Shard (apiserver) Health
 
-Each shard is a Kubernetes-derived apiserver serving a subset of workspaces. These are
-**leading indicators** — they should move before Area 1 does. Not SLA candidates.
+One root shard today; the rules are written per-`job`/`pod` so added shards inherit coverage.
+**Requires the chart's shard ServiceMonitor (auth via kcp-operator-generated cert/token).**
 
 ## Story 2.1 — Is each shard serving?
 
 > **As an SRE, I want per-shard availability, because losing a shard takes out exactly the
 > workspaces scheduled to it while the rest of the platform looks healthy.**
 
-- **Metric(s):** `up{job=shard}` **[std]** per shard
-- **SLI:** each shard `up == 1`
-- **SLO:** ≥ 99.9% per shard
-- **Alert:** `ShardDown` (`up == 0` 2m → critical)
+- **Metric(s):** `up{job=<shard>}` **[captured surface]**
+- **SLO:** ≥ 99.9% | **Alert:** `KcpShardDown` (critical)
 - **Dashboard:** per-shard availability row
-- **Availability:** 🟢 Standard
 
 ## Story 2.2 — Is a shard erroring or overloaded?
 
-> **As an SRE, I want each shard's request error rate and inflight saturation, because a shard
-> that starts 5xx-ing or hits its concurrency limit predicts a customer-facing failure.**
+> **As an SRE, I want each shard's request error rate and saturation, because a shard that 5xx-es
+> or exhausts its concurrency predicts a customer-facing failure.**
 
-- **Metric(s):** `apiserver_request_total{code}` **[std]**,
-  `apiserver_current_inflight_requests` **[std]**,
-  `apiserver_flowcontrol_rejected_requests_total` **[std]** (APF)
-- **SLI:** per-shard 5xx ratio; inflight vs limit; APF rejections
-- **SLO:** < 1% 5xx over 5m; zero sustained APF rejection
-- **Alert:** `ShardErrorRateHigh` (warning); `ShardAPFRejecting` (warning)
-- **Dashboard:** per-shard request/error/inflight
-- **Availability:** 🟢 Standard
+- **Metric(s):** `apiserver_request_total{code,verb,resource}` **[captured]**,
+  `apiserver_current_inflight_requests{request_kind}` **[captured]**,
+  `apiserver_flowcontrol_rejected_requests_total` **[captured]**
+- **SLO:** < 1% 5xx over 5m; no sustained APF rejection
+- **Alert:** `KcpShardErrorRateHigh`; `KcpShardAPFRejecting`
+- **Dashboard:** per-shard request/error/inflight/APF
 
-## Story 2.3 — Is a shard slow (apiserver latency SLO)?
+## Story 2.3 — Is a shard slow?
 
-> **As an SRE, I want the Kubernetes apiserver latency SLO per shard, because read/write latency
-> is the standard, well-understood health signal for an apiserver.**
+> **As an SRE, I want the standard apiserver latency SLO per shard.**
 
-- **Metric(s):** `apiserver_request_duration_seconds_bucket{verb,resource,scope}` **[std]**
-- **SLI:** p95/p99 by verb class (LIST/GET vs mutating), per shard
-- **SLO:** non-streaming read p95 ≤ 1s; mutating p95 ≤ 1s (recalibrate)
-- **Alert:** `ShardLatencyHigh` (p99 above SLO for 30m → warning)
-- **Dashboard:** apiserver latency SLO panel per shard
-- **Availability:** 🟢 Standard
+- **Metric(s):** `apiserver_request_duration_seconds_bucket{verb,resource,scope}` **[captured]**
+- **SLI:** p99 by verb class (read vs mutating), excluding long-running (`WATCH`/`CONNECT`)
+- **SLO:** read p95 ≤ 1s; mutating p95 ≤ 1s
+- **Alert:** `KcpShardLatencyHigh` (warning)
+- **Dashboard:** shard latency SLO panel
 
 ## Story 2.4 — Is a shard's storage growing unboundedly?
 
-> **As an SRE, I want object counts per shard, because unbounded growth in stored objects is a
-> slow-burn toward etcd pressure and latency.**
+> **As an SRE, I want stored-object counts, because unbounded growth is a slow-burn toward etcd
+> pressure. (us-2 today: `apibindings.apis.kcp.io` is the largest at 202 objects.)**
 
-- **Metric(s):** `apiserver_storage_objects{resource}` **[std]**
-- **SLI:** object count by resource, per shard; growth rate
-- **SLO:** no resource growing beyond capacity plan (threshold TBD)
-- **Alert:** `ShardStorageObjectsHigh` (warning)
-- **Dashboard:** top resources by object count, per shard
-- **Availability:** 🟢 Standard
+- **Metric(s):** `apiserver_storage_objects{resource}` **[captured]**
+- **Alert:** `KcpShardStorageObjectsHigh` (warning, threshold from capacity plan)
+- **Dashboard:** top stored resources per shard
 
 ---
 
 # Capability Area 3 — etcd (the storage backbone)
 
-kcp lives or dies by etcd. Highest-leverage leading indicators on the platform. Not SLA
-candidates, but the tightest early-warning margin.
+Druid-managed (`root-0/1/2`, quorate). **Requires the chart's etcd ServiceMonitor (client-cert
+scrape via `etcd-client-tls`) — nothing scrapes it today.** All series confirmed in
+`etcd-metrics.txt`.
 
 ## Story 3.1 — Does etcd have a leader and a quorum?
 
-> **As an SRE, I want to know about lost leader / churning elections, because a control plane
-> with no etcd quorum is a hard, total outage.**
-
-- **Metric(s):** `etcd_server_has_leader` **[std]**,
-  `etcd_server_leader_changes_seen_total` **[std]**
-- **SLI:** `has_leader == 1`; leader-change rate ≈ 0
-- **SLO:** leader present 100%; < N leader changes / hour
-- **Alert:** `EtcdNoLeader` (critical); `EtcdLeaderChangesHigh` (warning)
-- **Dashboard:** etcd leader status + election churn
-- **Availability:** 🟢 Standard (etcd job)
+- **Metric(s):** `etcd_server_has_leader` **[captured]**,
+  `etcd_server_leader_changes_seen_total` **[captured]**
+- **Alert:** `KcpEtcdNoLeader` (critical, 1m); `KcpEtcdLeaderChangesHigh` (warning)
 
 ## Story 3.2 — Is etcd disk keeping up?
 
-> **As an SRE, I want fsync and backend-commit latency, because rising disk latency is the
-> canonical precursor to apiserver-wide slowness.**
-
-- **Metric(s):** `etcd_disk_wal_fsync_duration_seconds_bucket` **[std]**,
-  `etcd_disk_backend_commit_duration_seconds_bucket` **[std]**
-- **SLI:** p99 fsync + backend commit
-- **SLO:** fsync p99 ≤ 10ms, backend commit p99 ≤ 25ms (etcd guidance; recalibrate)
-- **Alert:** `EtcdDiskSlow` (warning)
-- **Dashboard:** etcd disk latency
-- **Availability:** 🟢 Standard
+- **Metric(s):** `etcd_disk_wal_fsync_duration_seconds_bucket` **[captured]**,
+  `etcd_disk_backend_commit_duration_seconds_bucket` **[captured]**
+- **SLO:** fsync p99 ≤ 10ms; backend commit p99 ≤ 25ms | **Alert:** `KcpEtcdDiskSlow`
 
 ## Story 3.3 — Is etcd running out of space?
 
-> **As an SRE, I want DB size vs quota, because hitting the etcd space quota puts the cluster
-> into read-only alarm — a self-inflicted outage.**
+- **Metric(s):** `etcd_mvcc_db_total_size_in_bytes` **[captured]**,
+  `etcd_server_quota_backend_bytes` **[captured]**
+- **Alert:** `KcpEtcdDBSizeHigh` (80% warning / 95% critical)
 
-- **Metric(s):** `etcd_mvcc_db_total_size_in_bytes` **[std]**,
-  `etcd_server_quota_backend_bytes` **[std]**
-- **SLI:** DB size / quota
-- **SLO:** < 80% of quota
-- **Alert:** `EtcdDBSizeHigh` (warning at 80%, critical at 95%)
-- **Dashboard:** etcd DB size vs quota gauge
-- **Availability:** 🟢 Standard
+## Story 3.4 — Are backups happening? (druid bonus — captured, cheap, high value)
+
+> **As an SRE, I want to know when etcd snapshots stop landing, because a control plane without
+> a recent backup is one incident away from unrecoverable.**
+
+- **Metric(s):** `etcdbr_snapshot_latest_timestamp{kind="Full|Incr"}` **[captured]**,
+  `etcdbr_snapshotter_failure` **[captured]** (in `etcd-backup-restore-metrics.txt`)
+- **Alert:** `KcpEtcdBackupStale` (no full/delta snapshot within budget → critical)
+- **Dashboard:** last-backup-age tile
 
 ---
 
 # Capability Area 4 — Workspace / Logical-Cluster Lifecycle (the kcp differentiator)
 
-Workspaces (logical clusters) are what kcp actually sells to tenants. Their creation,
-scheduling, and deletion are the product's core UX — and the natural **billing/inventory unit**.
-This is the kcp analog of the crossplane "Claim tree" and the billing story.
+Native, aggregate **phase-count gauges** (us-2: 108 workspaces Ready, 136 logicalclusters Ready,
+8 Scheduling). Inventory and stuck-detection are real; **per-tenant attribution and a
+workspace-TTR histogram do not exist natively** — deferred, not faked.
 
-## Story 4.1 — How many workspaces are there, and in what state? (inventory + billing)
+## Story 4.1 — How many workspaces are there, and in what state? (inventory)
 
-> **As a platform owner, I want a live count of workspaces by phase and by tenant, because that
-> is both the health picture (how many are stuck) and the billable footprint of the platform.**
+> **As a platform owner, I want a live count of workspaces by phase, because that is the health
+> picture (how many are stuck) and the platform's footprint at a glance.**
 
-- **Metric(s):** workspace/logicalcluster phase gauge **[kcp?]** — e.g. a `_info`/phase series
-  by `Ready|Initializing|Deleting`. **Confirm from the dump**; if kcp doesn't emit it natively,
-  candidate for a `kube-state-metrics` custom-resource config (as we did for crossplane inventory).
-- **SLI:** count of workspaces by phase, by tenant/parent
-- **SLO:** n/a (inventory) — but "stuck" counts feed Story 4.3
-- **Billing:** count of `Ready` workspaces per tenant = the billable unit (mirror `docs/billing.md`)
-- **Alert:** none directly (see 4.3)
-- **Dashboard:** workspace inventory row — total, by phase, by tenant
-- **Availability:** 🔵 kcp-specific — **primary target of the metrics capture**
+- **Metric(s):** `kcp_workspace_count{phase,shard}` **[captured]**,
+  `kcp_logicalcluster_count{phase,shard}` **[captured]**,
+  `kcp_indexed_logicalclusters{shard}` **[captured]**
+- **Dashboard:** inventory row — totals, by phase, by shard; trend over time
+- **Billing note:** per-tenant billing on workspaces needs per-object data that these aggregates
+  don't carry. If billing-by-workspace becomes a requirement, the path is a small exporter
+  reading kcp's workspace API (the crossplane-inventory pattern) — **deferred, out of chart scope.**
 
-## Story 4.2 — How fast do workspaces become ready?
+## Story 4.2 — Are workspaces stuck scheduling/initializing?
 
-> **As an SRE, I want workspace provisioning time (created → Ready), because slow workspace
-> creation is the first thing a new tenant experiences.**
+> **As an SRE, I want to know when workspaces sit in a non-ready phase, because a stuck workspace
+> is a tenant who cannot work at all.**
 
-- **Metric(s):** derived from workspace phase transitions **[kcp?]**, or a lifecycle controller
-  histogram if one exists; otherwise computed from creation timestamp → Ready
-- **SLI:** p95 time created → `Ready`
-- **SLO:** p95 ≤ 30s (placeholder)
-- **Alert:** `WorkspaceProvisioningSlow` (warning)
-- **Dashboard:** workspace TTR p50/p95/p99
-- **Availability:** 🔵 kcp-specific
+- **Metric(s):** `kcp_workspace_count{phase="Scheduling|Initializing|Unavailable"}` **[captured]**,
+  same for `kcp_logicalcluster_count` (us-2 shows a standing `Scheduling=8` — calibrate the
+  baseline before alerting!)
+- **SLI:** count in non-ready phase, sustained
+- **Alert:** `KcpWorkspacesStuck` (non-ready count above baseline for 15m → warning, 1h → critical)
+- **Dashboard:** stuck-workspace count by phase
 
-## Story 4.3 — Are workspaces stuck initializing or deleting?
+## Story 4.3 — How fast do workspaces become ready?
 
-> **As an SRE, I want to know when a workspace is wedged in Initializing or Deleting, because a
-> stuck workspace is a tenant who can't work, or leaked resources that keep billing.**
-
-- **Metric(s):** workspace phase gauge **[kcp?]** with an age/duration; or a controller
-  workqueue signal (Area 6) as a proxy
-- **SLI:** count of workspaces in a non-terminal phase beyond a time budget
-- **SLO:** zero workspaces stuck > 10m
-- **Alert:** `WorkspaceStuck` (warning → critical by age)
-- **Dashboard:** stuck-workspace table
-- **Availability:** 🔵 kcp-specific
+- **Metric(s):** workspace-TTR histogram **[absent]** on v0.32.1 (only APIBindings have a
+  ready-duration histogram — Story 5.2)
+- **Rebuilt on:** phase-count deltas give a coarse in-flight view, not a latency SLI.
+  **Deferred** as an SLO; revisit on kcp upgrades.
 
 ---
 
 # Capability Area 5 — API Surface: APIExport / APIBinding
 
-kcp's multi-tenant API sharing. A tenant binds an `APIExport` into its workspace via an
-`APIBinding`; the exported API is served from a virtual workspace. Broken bindings = tenants
-silently lose APIs.
+The API-sharing machinery — and on Stakater Cloud, **the product surface**: every SCO service
+(compute, database, netbird, …) reaches tenants as an APIExport bound into their workspaces
+(808 bindings Bound on us-2). All native, all captured.
 
 ## Story 5.1 — Are APIBindings healthy?
 
-> **As an SRE, I want to know when APIBindings fail to bind (schema conflict, unmet permission
-> claim), because the tenant's API just disappears with no error on their side.**
+> **As an SRE, I want to know when APIBindings leave Bound or their conditions degrade, because
+> the tenant's API silently disappears — no error on their side, their kubectl just stops
+> listing the resource.**
 
-- **Metric(s):** APIBinding condition/phase **[kcp?]** — confirm; likely a KSM custom-resource
-  target if not native
-- **SLI:** % of APIBindings in `Bound`/healthy over total
-- **SLO:** ≥ 99.9% bound
-- **Alert:** `APIBindingNotBound` (warning)
-- **Dashboard:** APIBinding health table by workspace/export
-- **Availability:** 🔵 kcp-specific
+- **Metric(s):** `kcp_apibinding_phase{phase="Binding|Bound",shard}` **[captured]**,
+  `kcp_apibinding_condition_status{condition,status,shard}` **[captured]** (conditions:
+  `Ready`, `APIExportValid`, `BindingUpToDate`, `InitialBindingCompleted`, `PermissionClaimsValid`, …)
+- **SLI:** bindings with `condition="Ready",status="True"` / total; count not Bound
+- **SLO:** ≥ 99.9% Ready
+- **Alert:** `KcpAPIBindingNotReady` (any binding condition Ready!=True sustained → warning)
+- **Dashboard:** binding health — phase counts, condition matrix
 
-## Story 5.2 — Are APIExport virtual workspaces serving?
+## Story 5.2 — How fast do APIBindings become ready?
 
-> **As an SRE, I want the virtual-workspace apiservers backing APIExports to be up and fast,
-> because every bound tenant reads through them.**
+> **As an SRE, I want binding TTR, because binding an API into a workspace is a core tenant
+> onboarding step.**
 
-- **Metric(s):** `up` **[std]** + `apiserver_request_*` **[std]** on the virtual-workspace
-  apiservers (if served standalone); `apiserver_request_duration_seconds` **[std]**
-- **SLI:** VW availability + error/latency
-- **SLO:** ≥ 99.9% up; latency per Area 2 convention
-- **Alert:** `APIExportVWDown` (critical); `APIExportVWLatencyHigh` (warning)
-- **Dashboard:** virtual-workspace availability + latency
-- **Availability:** 🟡 Conditional — only if virtual workspaces are served as separate targets
+- **Metric(s):** `kcp_apibinding_ready_duration_ms_{bucket,sum,count}{shard}` **[captured]**
+- **SLI:** p95 binding ready-duration | **SLO:** p95 ≤ 5s (placeholder)
+- **Alert:** `KcpAPIBindingSlow` (warning)
+- **Dashboard:** binding TTR p50/p95/p99
+
+## Story 5.3 — Are APIExports valid and their virtual workspaces ready?
+
+> **As an SRE, I want APIExport condition health, because an invalid export breaks every tenant
+> bound to it at once (blast radius = all 808 bindings of that export).**
+
+- **Metric(s):** `kcp_apiexport_condition_status{condition,status,shard}` **[captured]**
+  (`IdentityValid`, `VirtualWorkspaceURLsReady`)
+- **SLO:** 100% exports valid
+- **Alert:** `KcpAPIExportNotValid` (critical — high blast radius)
+- **Dashboard:** export condition matrix
 
 ---
 
 # Capability Area 6 — kcp Controller Health
 
-The reconcilers that make workspaces schedule, bindings bind, and exports export. Standard
-controller signals — leading indicators for Areas 4 and 5.
+kcp's controllers run **inside the shard** as workqueues named `kcp-*` (~30 queues:
+`kcp-apibinding`, `kcp-logicalcluster`, `kcp-logicalcluster-deletion`, `kcp-apiexport`,
+`kcp-replication-controller`, …). All standard workqueue families, captured.
 
-## Story 6.1 — Is any controller backing up?
+## Story 6.1 — Is any kcp controller backing up?
 
-> **As an SRE, I want workqueue depth and retry rate per kcp controller, because a growing queue
-> is the earliest sign that workspace/binding reconciliation is falling behind.**
+> **As an SRE, I want queue depth and retries per kcp controller, because a growing queue is the
+> earliest sign workspace/binding reconciliation is falling behind.**
 
-- **Metric(s):** `workqueue_depth{name}` **[std]**, `workqueue_adds_total` **[std]**,
-  `workqueue_retries_total` **[std]** (per controller `name`)
-- **SLI:** queue depth; retry rate; unfinished-work age
-- **SLO:** depth ≈ 0 steady-state; no sustained growth
-- **Alert:** `ControllerQueueBacklog` (warning); `ControllerQueueGrowing` (warning)
-- **Dashboard:** workqueue depth + retries per controller
-- **Availability:** 🟢 Standard
+- **Metric(s):** `workqueue_depth{name=~"kcp-.*"}` **[captured]**,
+  `workqueue_retries_total{name=~"kcp-.*"}` **[captured]**,
+  `workqueue_unfinished_work_seconds` / `workqueue_longest_running_processor_seconds` **[captured]**
+- **Alert:** `KcpControllerQueueBacklog` (depth sustained > 0 baseline → warning);
+  `KcpControllerStalled` (longest-running processor above budget → warning)
+- **Dashboard:** workqueue depth/retries per kcp controller (topk)
 
-## Story 6.2 — Are controllers processing slowly?
+## Story 6.2 — Are kcp controllers processing slowly?
 
-> **As an SRE, I want work-duration and queue-wait per controller, because slow processing
-> stretches workspace TTR (Story 4.2) before the queue visibly backs up.**
+- **Metric(s):** `workqueue_work_duration_seconds_bucket{name=~"kcp-.*"}` **[captured]**,
+  `workqueue_queue_duration_seconds_bucket{…}` **[captured]**
+- **Alert:** `KcpControllerProcessingSlow` (warning) | **Dashboard:** p99 work/wait durations
 
-- **Metric(s):** `workqueue_work_duration_seconds_bucket` **[std]**,
-  `workqueue_queue_duration_seconds_bucket` **[std]**
-- **SLI:** p99 work + queue-wait duration per controller
-- **SLO:** placeholder pending baseline
-- **Alert:** `ControllerProcessingSlow` (warning)
-- **Dashboard:** controller processing latency
-- **Availability:** 🟢 Standard
+## Story 6.3 — Cache/replication healthy? (embedded cache server)
 
-## Story 6.3 — Are controllers erroring against the shards?
+> **As an SRE, I want the replication controller's queue health, because on this layout the
+> cache layer is embedded and its controller queue is the observable replication signal.**
 
-> **As an SRE, I want the client-go request error rate from controllers to shards, because
-> controllers that can't talk to their shard stall silently.**
-
-- **Metric(s):** `rest_client_requests_total{code}` **[std]**,
-  `rest_client_request_duration_seconds_bucket` **[std]**
-- **SLI:** controller→shard 4xx/5xx ratio
-- **SLO:** < 1% error over 10m
-- **Alert:** `ControllerClientErrors` (warning)
-- **Dashboard:** rest_client error rate by controller
-- **Availability:** 🟢 Standard
+- **Metric(s):** `workqueue_*{name="kcp-replication-controller"}` **[captured]** (+
+  `kcp_indexed_logicalclusters` as a liveness signal of the index)
+- **Alert:** covered by 6.1's per-queue alerts; called out on the dashboard
+- **Note:** a dedicated replication-lag metric is **[absent]**; revisit if a standalone
+  CacheServer is deployed.
 
 ---
 
-# Capability Area 7 — Cache Server & Cross-Shard Replication
+# Capability Area 7 — SCO Service Agents (api-syncagent)
 
-The cache server replicates a subset of resources (APIExports, schemas, shards, partitions)
-across shards so cross-workspace resolution works. If it lags, cross-shard API resolution breaks
-in ways that are hard to attribute.
+The 10 `services-*` syncagents publish each SCO service API into kcp — **they are how tenant
+intent reaches the underlying clusters**. Restarting frequently on us-2 (13–26 restarts/pod).
+Surface is thin but real: **[captured]** `rest_client_requests_total{code,method}`,
+`leader_election_master_status`, webhook/certwatcher counters. No reconcile/workqueue families.
+**Requires the chart's syncagent PodMonitor (:8085, http).**
 
-## Story 7.1 — Is the cache server up and serving?
+## Story 7.1 — Is each service agent up, leading, and talking to kcp?
 
-> **As an SRE, I want cache-server availability and request health, because when it stalls,
-> cross-shard features degrade without an obvious single failure.**
+> **As an SRE, I want per-service agent health, because a dead compute agent means every tenant's
+> compute claims silently stop syncing.**
 
-- **Metric(s):** `up{job=cache-server}` **[std]**; `apiserver_request_*` **[std]** if the cache
-  server exposes apiserver-style metrics — confirm from dump
-- **SLI:** cache-server up + error/latency
-- **SLO:** ≥ 99.9% up
-- **Alert:** `CacheServerDown` (critical); `CacheServerErrorRateHigh` (warning)
-- **Dashboard:** cache-server availability + requests
-- **Availability:** 🟡 Conditional (standalone cache server) / 🟢 for `up`
-
-## Story 7.2 — Is replication keeping up?
-
-> **As an SRE, I want cache replication freshness/lag, because stale cross-shard data causes
-> intermittent, confusing API failures for tenants spanning shards.**
-
-- **Metric(s):** cache replication lag / queue **[kcp?]** — confirm; else a workqueue proxy
-- **SLI:** replication lag / backlog
-- **SLO:** placeholder
-- **Alert:** `CacheReplicationLagging` (warning)
-- **Dashboard:** replication lag
-- **Availability:** 🔵 kcp-specific
+- **Metric(s):** `up{job=<syncagent>}` **[captured surface]**,
+  `leader_election_master_status` **[captured]**, `rest_client_requests_total{code}` **[captured]**
+- **SLI:** per service: an agent up and leading; client 5xx/401/403 ratio
+- **Alert:** `KcpSyncAgentDown` (no leader for a service → critical);
+  `KcpSyncAgentClientErrors` (warning)
+- **Dashboard:** per-service agent matrix (up / leader / client errors / restarts)
 
 ---
 
 # Capability Area 8 — Footprint (the pods)
 
-The kcp component processes themselves — same footprint discipline as crossplane-observability.
+Same discipline as crossplane-observability. **[ksm]** metrics — standard on OpenShift.
 
 ## Story 8.1 — Are kcp pods restarting / OOMing?
 
-> **As an SRE, I want restart and OOM signals for shard/proxy/cache pods, because a crash-looping
-> control-plane component is both the cause and the symptom of an outage.**
-
-- **Metric(s):** `kube_pod_container_status_restarts_total` **[std, KSM]**,
-  `kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}` **[std, KSM]**
-- **SLI:** restart rate; OOM events
-- **SLO:** zero unexpected restarts / OOMs
+- **Metric(s):** `kube_pod_container_status_restarts_total` **[ksm]**,
+  `kube_pod_container_status_last_terminated_reason` **[ksm]**
 - **Alert:** `KcpPodRestarting` (warning); `KcpPodOOMKilled` (critical)
-- **Dashboard:** footprint row — restarts, OOM
-- **Availability:** 🟢 Standard (requires KSM on the cluster)
+- **Note:** the syncagents' standing restart counts (13–26) need a calibrated baseline or the
+  restart alert will be noise — investigate the restarts themselves as platform work.
 
 ## Story 8.2 — Are kcp pods CPU-throttled or memory-pressured?
 
-> **As an SRE, I want CPU throttling and memory/goroutine growth per component, because a
-> throttled apiserver is a slow apiserver, and a goroutine leak precedes an OOM.**
-
-- **Metric(s):** `container_cpu_cfs_throttled_periods_total` / `..._periods_total` **[std,
-  cAdvisor]**, `container_memory_working_set_bytes` **[std]**, `go_goroutines` **[std]**,
-  `process_resident_memory_bytes` **[std]**
-- **SLI:** throttle ratio; working-set vs limit; goroutine trend
-- **SLO:** throttle ratio < 5%; no sustained memory/goroutine climb
-- **Alert:** `KcpPodCPUThrottled` (warning); `KcpPodMemoryHigh` (warning)
-- **Dashboard:** footprint row — CPU throttle, memory, goroutines
-- **Availability:** 🟢 Standard
+- **Metric(s):** `container_cpu_cfs_throttled_periods_total` / `container_cpu_cfs_periods_total`
+  **[ksm]**, `container_memory_working_set_bytes` **[ksm]**, `go_goroutines` **[captured]**,
+  `process_resident_memory_bytes` **[captured]**
+- **Alert:** `KcpPodCPUThrottled`; `KcpPodMemoryHigh` (warnings)
 
 ---
 
 ## Coverage summary
 
-| Area | Stories | Confidence |
+| Area | Stories | Status |
 | --- | --- | --- |
-| 1 — Front-proxy edge | 1.1–1.4 | mostly 🟢, 1.4 🔵 |
-| 2 — Shard apiserver | 2.1–2.4 | 🟢 |
-| 3 — etcd | 3.1–3.3 | 🟢 |
-| 4 — Workspace lifecycle + billing | 4.1–4.3 | 🔵 (capture target) |
-| 5 — APIExport / APIBinding | 5.1–5.2 | 🔵 / 🟡 |
-| 6 — Controllers | 6.1–6.3 | 🟢 |
-| 7 — Cache server / replication | 7.1–7.2 | 🟡 / 🔵 |
-| 8 — Footprint | 8.1–8.2 | 🟢 (needs KSM) |
+| 1 — Front-proxy edge | 1.1–1.3 ✅ captured; 1.4 deferred (no per-backend metric) | already scraped by UWM |
+| 2 — Shard apiserver | 2.1–2.4 ✅ captured | **needs shard ServiceMonitor** |
+| 3 — etcd (+backups) | 3.1–3.4 ✅ captured | **needs etcd ServiceMonitor (client cert)** |
+| 4 — Workspace lifecycle | 4.1–4.2 ✅ captured (aggregate); 4.3 deferred (no TTR histogram) | via shard scrape |
+| 5 — APIExport/APIBinding | 5.1–5.3 ✅ captured (incl. binding TTR!) | via shard scrape |
+| 6 — kcp controllers | 6.1–6.3 ✅ captured (`workqueue name=~"kcp-.*"`) | via shard scrape |
+| 7 — SCO syncagents | 7.1 ✅ captured (thin surface) | **needs syncagent PodMonitor** |
+| 8 — Footprint | 8.1–8.2 ✅ ksm-standard | cluster KSM |
 
-**Build order proposal:** the 🟢 areas (2, 3, 6, 8, most of 1) can be built and validated as
-soon as the standard-metrics scrape confirms label shapes. The 🔵 kcp-specific areas (4, 5, 7)
-are the reason for the metrics capture — they are the kcp *differentiator* and the billing story,
-so getting their real metric names is the highest-value part of the dump.
+**Build order:** monitors first (shard, etcd, syncagent — without them nothing lands in UWM),
+then recording rules + alerts per area, then the dashboard. Grafana-managed alerts are **not**
+needed here: everything is same-namespace (`kcp-config`), so UWM namespace enforcement — the
+reason crossplane needed the Grafana path — doesn't bite. PrometheusRules all the way.
 
-## Open questions for the metrics capture (see `tests/METRICS-CAPTURE.md`)
-
-1. Do kcp apiserver metrics carry a **workspace / logical-cluster label**? (Determines whether
-   per-tenant request observability is even possible, or whether that only lives at the workspace
-   inventory layer.)
-2. What is the **real metric family for workspace phase/lifecycle** (Story 4.1/4.3)? Native, or
-   do we need a KSM custom-resource config like the crossplane inventory exporter?
-3. Does the **front-proxy** expose apiserver-style request metrics, or a proxy-specific family?
-4. Are **virtual workspaces** and the **cache server** separate scrape targets with their own
-   `/metrics`, or embedded in the shards?
-5. What are the actual **`kcp_*` metric names** (if any) for bindings, exports, replication?
+**Platform follow-ups surfaced by the capture** (not chart work): decommission/upgrade the
+legacy v0.31.1 `root-proxy`; investigate syncagent restart counts; kcp-operator metrics sit
+behind kube-rbac-proxy and rejected the admin token (parked).
