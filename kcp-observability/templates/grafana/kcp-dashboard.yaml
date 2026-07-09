@@ -1,0 +1,20 @@
+{{- if .Values.grafana.dashboard.enabled }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-dashboard
+  namespace: {{ .Values.grafana.namespace | default (include "kcp-observability.namespace" .) }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder | quote }}
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+  datasources:
+    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+  json: |-
+{{ .Files.Get "files/kcp_grafana_dashboard.json" | indent 4 }}
+{{- end }}

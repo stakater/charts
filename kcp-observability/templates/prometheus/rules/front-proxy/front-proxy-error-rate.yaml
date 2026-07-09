@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.frontProxy.errorRateHigh }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-front-proxy-error-rate
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.front_proxy
+      rules:
+        - alert: KcpFrontProxyErrorRateHigh
+          expr: |
+            kcp:front_proxy_error_ratio:rate5m > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp edge 5xx ratio is {{`{{ $value | humanizePercentage }}`}}"
+            description: "5xx responses at the front-proxy are customer-visible: tenants' kubectl/API calls are failing at the edge."
+{{- end }}

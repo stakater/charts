@@ -1,37 +1,37 @@
 # kcp-observability values.
 #
-# NOTE: alert thresholds and metric names are intentionally NOT finalised here yet.
-# They are being pinned against a real /metrics scrape from a live kcp control plane
-# (see tests/METRICS-CAPTURE.md). Do not add a rule that references a metric which is
-# not present in tests/fixtures/ (captured) or tests/metrics-allowlist.documented.txt
-# (documented-upstream, with citation). The offline gate (tests/validate.sh) enforces this.
+# Metric names and label shapes are pinned against a REAL capture from us-2
+# (kcp v0.32.1) — see tests/fixtures/README.md. Do not reference a metric that is
+# not captured there or documented in tests/metrics-allowlist.documented.txt;
+# ./tests/validate.sh enforces this.
 
 nameOverride: ""
 fullnameOverride: ""
-# Namespace the monitoring objects land in. Must be the namespace kcp runs in so UWM can
-# resolve the scrape targets and any TLS secret. Defaults to the release namespace.
+# Namespace the monitoring objects land in. Must be the namespace kcp runs in
+# (kcp-config on us-2) so UWM resolves scrape targets and TLS secrets, and so the
+# namespace label UWM enforces onto rules matches the scraped series.
 namespaceOverride: ""
 
-# --- What we are observing -------------------------------------------------------------
-# kcp exposes standard apiserver / etcd / workqueue / client-go metrics per component,
-# plus kcp-specific series. Job/selector values are placeholders until confirmed against
-# the live scrape and the actual ServiceMonitor/PodMonitor labels on the cluster.
 kcp:
-  # The root shard + any additional shards (each is an apiserver).
+  # Scrape-job selectors used inside rule expressions. Defaults match what the
+  # chart's own monitors produce on the kcp-operator layout (job = Service name
+  # for ServiceMonitors, PodMonitor name for the syncagent PodMonitor).
   shards:
-    job: ".*kcp.*"            # placeholder — set to the real scrape job/pod label
-  # The single client entrypoint that routes by workspace path.
+    # Regex — a new shard's Service just has to match (kcp-operator names them <shard>-kcp).
+    job: ".*-kcp"
   frontProxy:
-    job: ".*kcp-front-proxy.*"
-  # Cross-shard replication / caching server.
-  cacheServer:
-    job: ".*kcp-cache.*"
-  # etcd backing the shards.
+    job: "frontproxy-front-proxy"
   etcd:
-    job: ".*etcd.*"
+    # druid's client Service is <etcd-name>-client.
+    job: ".*-client"
+  syncAgent:
+    job: "kcp-syncagent"
+  # Footprint (Area 8): pods covered by restart/OOM/throttle/memory alerts.
+  # All kcp-related pods in the release namespace.
+  podRegex: "(.*-kcp-.*|frontproxy-.*|root-proxy-.*|root-[0-9]+|services-.*|system-.*)"
 
 grafana:
-  namespace: ""                          # where the Grafana CR lives; defaults per-cluster
+  namespace: ""                          # where the GrafanaDashboard CR lands; default release ns
   folder: "kcp Observability"
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -44,13 +44,201 @@ grafana:
     enabled: true
 
 prometheus:
-  # ServiceMonitor/PodMonitor per component. Default OFF — the operator opts in per cluster.
+  # --- scraping --------------------------------------------------------------------
+  # All monitors default OFF (repo convention: installing the chart must not start
+  # scraping until the operator opts in). See README for the per-monitor prerequisites
+  # (shard /metrics authz, etcd client cert).
   monitors:
-    serviceMonitor:
+    # Root shard(s): selects the kcp-operator shard Services (component=rootshard).
+    # PREREQUISITE: shard /metrics returns 403 to anonymous clients by default —
+    # add extraArgs "--authorization-always-allow-paths=...,/metrics" on the
+    # RootShard/Shard CR (see README), or configure certSecret below with a client
+    # cert minted by a kubeconfigs.operator.kcp.io CR.
+    shardServiceMonitor:
       enabled: false
+      component: rootshard          # also covers additional shards: set to a regex-free
+                                    # label value per extra ServiceMonitor if needed
+      # Optional client-cert auth for /metrics (secret with tls.crt/tls.key in the
+      # release namespace). Empty = anonymous scrape (requires always-allow-paths).
+      certSecret: ""
+    # Front-proxy. NOTE: kcp-config on us-2 already carries a hand-made
+    # `kcp-front-proxy` ServiceMonitor — remove it when enabling this one, or the
+    # pods get double-scraped.
+    frontProxyServiceMonitor:
+      enabled: false
+      component: front-proxy
+    # druid etcd via the <name>-client Service; scraped with the etcd client cert.
+    etcdServiceMonitor:
+      enabled: false
+      # Secret holding tls.crt/tls.key for etcd client auth (druid creates
+      # `etcd-client-tls`) and the CA (`etcd-ca-tls`), in the release namespace.
+      clientCertSecret: "etcd-client-tls"
+      caSecret: "etcd-ca-tls"
+    # api-syncagents (SCO service agents): plain-http :8085, selected by pod label
+    # app.kubernetes.io/name=kcp-api-syncagent.
+    syncAgentPodMonitor:
+      enabled: false
+      port: 8085
+
+  # --- recording rules ---------------------------------------------------------------
   recordingRules:
     enabled: true
-  # Per-alert blocks get added here as each is built against captured metrics.
+
+  # --- alerts --------------------------------------------------------------------
   rules:
-    # Alertmanager routing / ruleSelector labels merged into every PrometheusRule.
+    # Labels merged into every PrometheusRule (Alertmanager routing / ruleSelector).
     labels: {}
+
+    # Area 1 — front-proxy edge
+    frontProxy:
+      down:
+        enabled: true
+        for: 2m
+        severity: critical
+      errorRateHigh:
+        enabled: true
+        for: 10m
+        severity: warning
+        # ratio of 5xx over all edge requests (placeholder — calibrate)
+        threshold: 0.005
+      latencyHigh:
+        enabled: true
+        for: 30m
+        severity: warning
+        # p95 seconds (placeholder — calibrate)
+        p95Seconds: 1
+    # Area 2 — shard apiserver
+    shard:
+      down:
+        enabled: true
+        for: 2m
+        severity: critical
+      errorRateHigh:
+        enabled: true
+        for: 10m
+        severity: warning
+        threshold: 0.01
+      apfRejecting:
+        enabled: true
+        for: 10m
+        severity: warning
+      latencyHigh:
+        enabled: true
+        for: 30m
+        severity: warning
+        # p99 seconds for non-longrunning read/write requests (placeholder)
+        p99Seconds: 1
+      storageObjectsHigh:
+        enabled: true
+        for: 30m
+        severity: warning
+        # per-resource stored-object count (us-2 max today: 202) — capacity placeholder
+        threshold: 10000
+    # Area 3 — etcd + backups
+    etcd:
+      noLeader:
+        enabled: true
+        for: 1m
+        severity: critical
+      leaderChangesHigh:
+        enabled: true
+        for: 15m
+        severity: warning
+        # leader changes per hour
+        threshold: 3
+      diskSlow:
+        enabled: true
+        for: 15m
+        severity: warning
+        fsyncP99Seconds: 0.01
+        commitP99Seconds: 0.025
+      dbSizeHigh:
+        enabled: true
+        for: 15m
+        severity: warning
+        # fraction of the backend quota
+        threshold: 0.80
+      dbSizeCritical:
+        enabled: true
+        for: 5m
+        severity: critical
+        threshold: 0.95
+      backupStale:
+        enabled: true
+        for: 15m
+        severity: critical
+        # max age of the last successful FULL snapshot (druid default schedule is daily;
+        # 26h leaves headroom) and of the last incremental.
+        fullMaxAgeHours: 26
+        incrMaxAgeMinutes: 60
+    # Area 4 — workspace lifecycle
+    workspaces:
+      stuck:
+        enabled: true
+        for: 15m
+        severity: warning
+        # count of workspaces/logicalclusters in a non-ready phase above baseline.
+        # us-2 runs a STANDING Scheduling=8 — calibrate before tightening.
+        baseline: 8
+    # Area 5 — APIExport / APIBinding
+    apiBindings:
+      notReady:
+        enabled: true
+        for: 15m
+        severity: warning
+      slow:
+        enabled: true
+        for: 30m
+        severity: warning
+        # binding ready-duration p95 in ms (histogram is in ms!)
+        p95Ms: 5000
+    apiExports:
+      notValid:
+        enabled: true
+        for: 10m
+        severity: critical
+    # Area 6 — kcp controllers (workqueues name=~"kcp-.*")
+    controllers:
+      queueBacklog:
+        enabled: true
+        for: 15m
+        severity: warning
+        depth: 10
+      processingSlow:
+        enabled: true
+        for: 30m
+        severity: warning
+        p99Seconds: 10
+    # Area 7 — SCO syncagents
+    syncAgents:
+      down:
+        enabled: true
+        for: 5m
+        severity: critical
+      clientErrors:
+        enabled: true
+        for: 15m
+        severity: warning
+        threshold: 0.05
+    # Area 8 — footprint
+    footprint:
+      podRestarting:
+        enabled: true
+        for: 15m
+        severity: warning
+        # restarts over the last hour
+        threshold: 3
+      podOOMKilled:
+        enabled: true
+        severity: critical
+      podCPUThrottled:
+        enabled: true
+        for: 30m
+        severity: warning
+        threshold: 0.05
+      podMemoryHigh:
+        enabled: true
+        for: 30m
+        severity: warning
+        # fraction of the container memory limit
+        threshold: 0.90

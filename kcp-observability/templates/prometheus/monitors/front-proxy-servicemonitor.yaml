@@ -1,0 +1,30 @@
+{{- if and (.Values.prometheus.monitors.frontProxyServiceMonitor) (.Values.prometheus.monitors.frontProxyServiceMonitor.enabled) }}
+{{- $m := .Values.prometheus.monitors.frontProxyServiceMonitor }}
+# Scrapes the kcp front-proxy (anonymous /metrics — verified on v0.32.1).
+# NOTE: if a hand-made `kcp-front-proxy` ServiceMonitor exists in this namespace
+# (us-2 has one), remove it when enabling this — otherwise the pods are double-scraped.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-front-proxy
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: https
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: {{ $m.component }}
+      app.kubernetes.io/managed-by: kcp-operator
+      app.kubernetes.io/name: kcp
+{{- end }}

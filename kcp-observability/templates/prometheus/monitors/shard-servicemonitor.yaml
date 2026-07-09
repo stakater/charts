@@ -1,0 +1,41 @@
+{{- if and (.Values.prometheus.monitors.shardServiceMonitor) (.Values.prometheus.monitors.shardServiceMonitor.enabled) }}
+{{- $m := .Values.prometheus.monitors.shardServiceMonitor }}
+# Scrapes the kcp shard apiservers (kcp-operator Services, component=rootshard).
+# PREREQUISITE: kcp returns 403 on /metrics for anonymous clients. Either add
+# "--authorization-always-allow-paths=/livez,/readyz,/healthz,/metrics" via extraArgs
+# on the RootShard/Shard CR, or set certSecret to a client cert kcp trusts (mint one
+# with a kubeconfigs.operator.kcp.io CR). See README.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-shard
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: https
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+        {{- if $m.certSecret }}
+        cert:
+          secret:
+            name: {{ $m.certSecret }}
+            key: tls.crt
+        keySecret:
+          name: {{ $m.certSecret }}
+          key: tls.key
+        {{- end }}
+      relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: {{ $m.component }}
+      app.kubernetes.io/managed-by: kcp-operator
+      app.kubernetes.io/name: kcp
+{{- end }}
