@@ -1,0 +1,1125 @@
+# HELP aggregator_discovery_aggregation_count_total [ALPHA] Counter of number of times discovery was aggregated
+# TYPE aggregator_discovery_aggregation_count_total counter
+aggregator_discovery_aggregation_count_total 0
+# HELP apiextensions_apiserver_validation_ratcheting_seconds [ALPHA] Time for comparison of old to new for the purposes of CRDValidationRatcheting during an UPDATE in seconds.
+# TYPE apiextensions_apiserver_validation_ratcheting_seconds histogram
+apiextensions_apiserver_validation_ratcheting_seconds_bucket{le="1e-05"} 0
+apiextensions_apiserver_validation_ratcheting_seconds_bucket{le="4e-05"} 0
+apiextensions_apiserver_validation_ratcheting_seconds_bucket{le="0.00016"} 0
+apiextensions_apiserver_validation_ratcheting_seconds_bucket{le="0.00064"} 0
+apiextensions_apiserver_validation_ratcheting_seconds_bucket{le="0.00256"} 0
+apiextensions_apiserver_validation_ratcheting_seconds_bucket{le="0.01024"} 0
+apiextensions_apiserver_validation_ratcheting_seconds_bucket{le="0.04096"} 0
+apiextensions_apiserver_validation_ratcheting_seconds_bucket{le="0.16384"} 0
+apiextensions_apiserver_validation_ratcheting_seconds_sum 0
+apiextensions_apiserver_validation_ratcheting_seconds_count 0
+# HELP apiserver_audit_event_total [ALPHA] Counter of audit events generated and sent to the audit backend.
+# TYPE apiserver_audit_event_total counter
+apiserver_audit_event_total 0
+# HELP apiserver_audit_requests_rejected_total [ALPHA] Counter of apiserver requests rejected due to an error in audit logging backend.
+# TYPE apiserver_audit_requests_rejected_total counter
+apiserver_audit_requests_rejected_total 0
+# HELP apiserver_authentication_jwt_authenticator_jwks_fetch_last_key_set_info [ALPHA] Information about the last JWKS fetched by the JWT authenticator with hash as label, split by api server identity and jwt issuer.
+# TYPE apiserver_authentication_jwt_authenticator_jwks_fetch_last_key_set_info gauge
+apiserver_authentication_jwt_authenticator_jwks_fetch_last_key_set_info{apiserver_id_hash="",hash="sha256:bf087598e815394d4025a86bbe05ff8eb4b490d2611bcdf8ced7117d32e4f7d4",jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d"} 1
+apiserver_authentication_jwt_authenticator_jwks_fetch_last_key_set_info{apiserver_id_hash="",hash="sha256:c6ef25a5cdbacd754547b5bbcbb79c0dd50b94d914f9a24e2ec962c4521c827f",jwt_issuer_hash="sha256:7b2b99c6cfc05da35b58ca2f1a275e0654d17299fa61b733a9675e4486890d0c"} 1
+# HELP apiserver_authentication_jwt_authenticator_jwks_fetch_last_timestamp_seconds [ALPHA] Timestamp of the last successful or failed JWKS fetch split by result, api server identity and jwt issuer for the JWT authenticator.
+# TYPE apiserver_authentication_jwt_authenticator_jwks_fetch_last_timestamp_seconds gauge
+apiserver_authentication_jwt_authenticator_jwks_fetch_last_timestamp_seconds{apiserver_id_hash="",jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success"} 1.7836282867406168e+09
+apiserver_authentication_jwt_authenticator_jwks_fetch_last_timestamp_seconds{apiserver_id_hash="",jwt_issuer_hash="sha256:7b2b99c6cfc05da35b58ca2f1a275e0654d17299fa61b733a9675e4486890d0c",result="success"} 1.7836005379209251e+09
+# HELP apiserver_authentication_jwt_authenticator_latency_seconds [ALPHA] Latency of jwt authentication operations in seconds. This is the time spent authenticating a token for cache miss only (i.e. when the token is not found in the cache).
+# TYPE apiserver_authentication_jwt_authenticator_latency_seconds histogram
+apiserver_authentication_jwt_authenticator_latency_seconds_bucket{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success",le="0.001"} 3741
+apiserver_authentication_jwt_authenticator_latency_seconds_bucket{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success",le="0.005"} 4042
+apiserver_authentication_jwt_authenticator_latency_seconds_bucket{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success",le="0.01"} 4082
+apiserver_authentication_jwt_authenticator_latency_seconds_bucket{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success",le="0.025"} 4097
+apiserver_authentication_jwt_authenticator_latency_seconds_bucket{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success",le="0.05"} 4103
+apiserver_authentication_jwt_authenticator_latency_seconds_bucket{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success",le="0.1"} 4125
+apiserver_authentication_jwt_authenticator_latency_seconds_bucket{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success",le="0.25"} 4148
+apiserver_authentication_jwt_authenticator_latency_seconds_bucket{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success",le="0.5"} 4154
+apiserver_authentication_jwt_authenticator_latency_seconds_sum{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success"} 10.811003928999966
+apiserver_authentication_jwt_authenticator_latency_seconds_count{jwt_issuer_hash="sha256:5e09b00f024960d2b77f41732524f58cd50dff1242052b16b7c75d68cca8ed5d",result="success"} 4155
+apiserver_authentication_jwt_authenticator_latency_seconds_sum{jwt_issuer_hash="sha256:7b2b99c6cfc05da35b58ca2f1a275e0654d17299fa61b733a9675e4486890d0c",result="success"} 89.49841888899961
+apiserver_authentication_jwt_authenticator_latency_seconds_count{jwt_issuer_hash="sha256:7b2b99c6cfc05da35b58ca2f1a275e0654d17299fa61b733a9675e4486890d0c",result="success"} 29286
+# HELP apiserver_cel_compilation_duration_seconds [BETA] CEL compilation time in seconds.
+# TYPE apiserver_cel_compilation_duration_seconds histogram
+apiserver_cel_compilation_duration_seconds_bucket{le="0.005"} 0
+apiserver_cel_compilation_duration_seconds_bucket{le="0.01"} 0
+apiserver_cel_compilation_duration_seconds_bucket{le="0.025"} 0
+apiserver_cel_compilation_duration_seconds_bucket{le="0.05"} 0
+apiserver_cel_compilation_duration_seconds_bucket{le="0.1"} 0
+apiserver_cel_compilation_duration_seconds_bucket{le="0.25"} 0
+apiserver_cel_compilation_duration_seconds_bucket{le="0.5"} 0
+apiserver_cel_compilation_duration_seconds_bucket{le="1"} 0
+apiserver_cel_compilation_duration_seconds_sum 0
+apiserver_cel_compilation_duration_seconds_count 0
+# HELP apiserver_cel_evaluation_duration_seconds [BETA] CEL evaluation time in seconds.
+# TYPE apiserver_cel_evaluation_duration_seconds histogram
+apiserver_cel_evaluation_duration_seconds_bucket{le="0.005"} 0
+apiserver_cel_evaluation_duration_seconds_bucket{le="0.01"} 0
+apiserver_cel_evaluation_duration_seconds_bucket{le="0.025"} 0
+apiserver_cel_evaluation_duration_seconds_bucket{le="0.05"} 0
+apiserver_cel_evaluation_duration_seconds_bucket{le="0.1"} 0
+apiserver_cel_evaluation_duration_seconds_bucket{le="0.25"} 0
+apiserver_cel_evaluation_duration_seconds_bucket{le="0.5"} 0
+apiserver_cel_evaluation_duration_seconds_bucket{le="1"} 0
+apiserver_cel_evaluation_duration_seconds_sum 0
+apiserver_cel_evaluation_duration_seconds_count 0
+# HELP apiserver_client_certificate_expiration_seconds [ALPHA] Distribution of the remaining lifetime on the certificate used to authenticate a request.
+# TYPE apiserver_client_certificate_expiration_seconds histogram
+apiserver_client_certificate_expiration_seconds_bucket{le="0"} 0
+apiserver_client_certificate_expiration_seconds_bucket{le="1800"} 0
+apiserver_client_certificate_expiration_seconds_bucket{le="3600"} 0
+apiserver_client_certificate_expiration_seconds_bucket{le="7200"} 0
+apiserver_client_certificate_expiration_seconds_bucket{le="21600"} 0
+apiserver_client_certificate_expiration_seconds_bucket{le="43200"} 0
+apiserver_client_certificate_expiration_seconds_bucket{le="86400"} 0
+apiserver_client_certificate_expiration_seconds_bucket{le="172800"} 0
+apiserver_client_certificate_expiration_seconds_sum 1.035387512188827e+13
+apiserver_client_certificate_expiration_seconds_count 1.690983e+06
+# HELP apiserver_envelope_encryption_dek_cache_fill_percent [ALPHA] Percent of the cache slots currently occupied by cached DEKs.
+# TYPE apiserver_envelope_encryption_dek_cache_fill_percent gauge
+apiserver_envelope_encryption_dek_cache_fill_percent 0
+# HELP apiserver_kube_aggregator_x509_insecure_sha1_total [ALPHA] Counts the number of requests to servers with insecure SHA1 signatures in their serving certificate OR the number of connection failures due to the insecure SHA1 signatures (either/or, based on the runtime environment)
+# TYPE apiserver_kube_aggregator_x509_insecure_sha1_total counter
+apiserver_kube_aggregator_x509_insecure_sha1_total 0
+# HELP apiserver_kube_aggregator_x509_missing_san_total [ALPHA] Counts the number of requests to servers missing SAN extension in their serving certificate OR the number of connection failures due to the lack of x509 certificate SAN extension missing (either/or, based on the runtime environment)
+# TYPE apiserver_kube_aggregator_x509_missing_san_total counter
+apiserver_kube_aggregator_x509_missing_san_total 0
+# HELP apiserver_storage_data_key_generation_duration_seconds [ALPHA] Latencies in seconds of data encryption key(DEK) generation operations.
+# TYPE apiserver_storage_data_key_generation_duration_seconds histogram
+apiserver_storage_data_key_generation_duration_seconds_bucket{le="5e-06"} 0
+apiserver_storage_data_key_generation_duration_seconds_bucket{le="1e-05"} 0
+apiserver_storage_data_key_generation_duration_seconds_bucket{le="2e-05"} 0
+apiserver_storage_data_key_generation_duration_seconds_bucket{le="4e-05"} 0
+apiserver_storage_data_key_generation_duration_seconds_bucket{le="8e-05"} 0
+apiserver_storage_data_key_generation_duration_seconds_bucket{le="0.00016"} 0
+apiserver_storage_data_key_generation_duration_seconds_bucket{le="0.00032"} 0
+apiserver_storage_data_key_generation_duration_seconds_bucket{le="0.00064"} 0
+apiserver_storage_data_key_generation_duration_seconds_sum 0
+apiserver_storage_data_key_generation_duration_seconds_count 0
+# HELP apiserver_storage_data_key_generation_failures_total [ALPHA] Total number of failed data encryption key(DEK) generation operations.
+# TYPE apiserver_storage_data_key_generation_failures_total counter
+apiserver_storage_data_key_generation_failures_total 0
+# HELP apiserver_storage_envelope_transformation_cache_misses_total [ALPHA] Total number of cache misses while accessing key decryption key(KEK).
+# TYPE apiserver_storage_envelope_transformation_cache_misses_total counter
+apiserver_storage_envelope_transformation_cache_misses_total 0
+# HELP apiserver_validation_declarative_validation_mismatch_total [BETA] Number of times declarative validation results differed from handwritten validation results for core types.
+# TYPE apiserver_validation_declarative_validation_mismatch_total counter
+apiserver_validation_declarative_validation_mismatch_total 0
+# HELP apiserver_validation_declarative_validation_panic_total [BETA] Number of times declarative validation has panicked during validation.
+# TYPE apiserver_validation_declarative_validation_panic_total counter
+apiserver_validation_declarative_validation_panic_total 0
+# HELP apiserver_validation_duplicate_validation_error_total [INTERNAL] Number of duplicate validation errors during validation.
+# TYPE apiserver_validation_duplicate_validation_error_total counter
+apiserver_validation_duplicate_validation_error_total 0
+# HELP apiserver_webhooks_x509_insecure_sha1_total [ALPHA] Counts the number of requests to servers with insecure SHA1 signatures in their serving certificate OR the number of connection failures due to the insecure SHA1 signatures (either/or, based on the runtime environment)
+# TYPE apiserver_webhooks_x509_insecure_sha1_total counter
+apiserver_webhooks_x509_insecure_sha1_total 0
+# HELP apiserver_webhooks_x509_missing_san_total [ALPHA] Counts the number of requests to servers missing SAN extension in their serving certificate OR the number of connection failures due to the lack of x509 certificate SAN extension missing (either/or, based on the runtime environment)
+# TYPE apiserver_webhooks_x509_missing_san_total counter
+apiserver_webhooks_x509_missing_san_total 0
+# HELP authentication_token_cache_active_fetch_count [ALPHA] 
+# TYPE authentication_token_cache_active_fetch_count gauge
+authentication_token_cache_active_fetch_count{status="blocked"} 0
+authentication_token_cache_active_fetch_count{status="in_flight"} 0
+# HELP authentication_token_cache_fetch_total [ALPHA] 
+# TYPE authentication_token_cache_fetch_total counter
+authentication_token_cache_fetch_total{status="ok"} 29151
+# HELP authentication_token_cache_request_duration_seconds [ALPHA] 
+# TYPE authentication_token_cache_request_duration_seconds histogram
+authentication_token_cache_request_duration_seconds_bucket{status="miss",le="0.005"} 32755
+authentication_token_cache_request_duration_seconds_bucket{status="miss",le="0.01"} 33020
+authentication_token_cache_request_duration_seconds_bucket{status="miss",le="0.025"} 33280
+authentication_token_cache_request_duration_seconds_bucket{status="miss",le="0.05"} 33338
+authentication_token_cache_request_duration_seconds_bucket{status="miss",le="0.1"} 33425
+authentication_token_cache_request_duration_seconds_bucket{status="miss",le="0.25"} 33437
+authentication_token_cache_request_duration_seconds_bucket{status="miss",le="0.5"} 33442
+authentication_token_cache_request_duration_seconds_bucket{status="miss",le="1"} 33442
+authentication_token_cache_request_duration_seconds_sum{status="miss"} 20.284000000000074
+authentication_token_cache_request_duration_seconds_count{status="miss"} 33442
+# HELP authentication_token_cache_request_total [ALPHA] 
+# TYPE authentication_token_cache_request_total counter
+authentication_token_cache_request_total{status="miss"} 33442
+# HELP cardinality_enforcement_unexpected_categorizations_total [ALPHA] The count of unexpected categorizations during cardinality enforcement.
+# TYPE cardinality_enforcement_unexpected_categorizations_total counter
+cardinality_enforcement_unexpected_categorizations_total 0
+# HELP disabled_metrics_total [BETA] The count of disabled metrics.
+# TYPE disabled_metrics_total counter
+disabled_metrics_total 0
+# HELP go_cgo_go_to_c_calls_calls_total Count of calls made from Go to C by the current process. Sourced from /cgo/go-to-c-calls:calls.
+# TYPE go_cgo_go_to_c_calls_calls_total counter
+go_cgo_go_to_c_calls_calls_total 0
+# HELP go_cpu_classes_gc_mark_assist_cpu_seconds_total Estimated total CPU time goroutines spent performing GC tasks to assist the GC and prevent it from falling behind the application. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sourced from /cpu/classes/gc/mark/assist:cpu-seconds.
+# TYPE go_cpu_classes_gc_mark_assist_cpu_seconds_total counter
+go_cpu_classes_gc_mark_assist_cpu_seconds_total 330.458853635
+# HELP go_cpu_classes_gc_mark_dedicated_cpu_seconds_total Estimated total CPU time spent performing GC tasks on processors (as defined by GOMAXPROCS) dedicated to those tasks. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sourced from /cpu/classes/gc/mark/dedicated:cpu-seconds.
+# TYPE go_cpu_classes_gc_mark_dedicated_cpu_seconds_total counter
+go_cpu_classes_gc_mark_dedicated_cpu_seconds_total 2873.716365536
+# HELP go_cpu_classes_gc_mark_idle_cpu_seconds_total Estimated total CPU time spent performing GC tasks on spare CPU resources that the Go scheduler could not otherwise find a use for. This should be subtracted from the total GC CPU time to obtain a measure of compulsory GC CPU time. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sourced from /cpu/classes/gc/mark/idle:cpu-seconds.
+# TYPE go_cpu_classes_gc_mark_idle_cpu_seconds_total counter
+go_cpu_classes_gc_mark_idle_cpu_seconds_total 2131.981074583
+# HELP go_cpu_classes_gc_pause_cpu_seconds_total Estimated total CPU time spent with the application paused by the GC. Even if only one thread is running during the pause, this is computed as GOMAXPROCS times the pause latency because nothing else can be executing. This is the exact sum of samples in /sched/pauses/total/gc:seconds if each sample is multiplied by GOMAXPROCS at the time it is taken. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sourced from /cpu/classes/gc/pause:cpu-seconds.
+# TYPE go_cpu_classes_gc_pause_cpu_seconds_total counter
+go_cpu_classes_gc_pause_cpu_seconds_total 9565.438388255
+# HELP go_cpu_classes_gc_total_cpu_seconds_total Estimated total CPU time spent performing GC tasks. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sum of all metrics in /cpu/classes/gc. Sourced from /cpu/classes/gc/total:cpu-seconds.
+# TYPE go_cpu_classes_gc_total_cpu_seconds_total counter
+go_cpu_classes_gc_total_cpu_seconds_total 14901.594682009
+# HELP go_cpu_classes_idle_cpu_seconds_total Estimated total available CPU time not spent executing any Go or Go runtime code. In other words, the part of /cpu/classes/total:cpu-seconds that was unused. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sourced from /cpu/classes/idle:cpu-seconds.
+# TYPE go_cpu_classes_idle_cpu_seconds_total counter
+go_cpu_classes_idle_cpu_seconds_total 1.2715632752076376e+07
+# HELP go_cpu_classes_scavenge_assist_cpu_seconds_total Estimated total CPU time spent returning unused memory to the underlying platform in response eagerly to memory pressure. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sourced from /cpu/classes/scavenge/assist:cpu-seconds.
+# TYPE go_cpu_classes_scavenge_assist_cpu_seconds_total counter
+go_cpu_classes_scavenge_assist_cpu_seconds_total 1.321e-06
+# HELP go_cpu_classes_scavenge_background_cpu_seconds_total Estimated total CPU time spent performing background tasks to return unused memory to the underlying platform. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sourced from /cpu/classes/scavenge/background:cpu-seconds.
+# TYPE go_cpu_classes_scavenge_background_cpu_seconds_total counter
+go_cpu_classes_scavenge_background_cpu_seconds_total 41.605212225
+# HELP go_cpu_classes_scavenge_total_cpu_seconds_total Estimated total CPU time spent performing tasks that return unused memory to the underlying platform. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sum of all metrics in /cpu/classes/scavenge. Sourced from /cpu/classes/scavenge/total:cpu-seconds.
+# TYPE go_cpu_classes_scavenge_total_cpu_seconds_total counter
+go_cpu_classes_scavenge_total_cpu_seconds_total 41.605213546
+# HELP go_cpu_classes_total_cpu_seconds_total Estimated total available CPU time for user Go code or the Go runtime, as defined by GOMAXPROCS. In other words, GOMAXPROCS integrated over the wall-clock duration this process has been executing for. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sum of all metrics in /cpu/classes. Sourced from /cpu/classes/total:cpu-seconds.
+# TYPE go_cpu_classes_total_cpu_seconds_total counter
+go_cpu_classes_total_cpu_seconds_total 1.2869872206152512e+07
+# HELP go_cpu_classes_user_cpu_seconds_total Estimated total CPU time spent running user Go code. This may also include some small amount of time spent in the Go runtime. This metric is an overestimate, and not directly comparable to system CPU time measurements. Compare only with other /cpu/classes metrics. Sourced from /cpu/classes/user:cpu-seconds.
+# TYPE go_cpu_classes_user_cpu_seconds_total counter
+go_cpu_classes_user_cpu_seconds_total 139296.25418058
+# HELP go_gc_cleanups_executed_cleanups_total Approximate total count of cleanup functions (created by runtime.AddCleanup) executed by the runtime. Subtract /gc/cleanups/queued:cleanups to approximate cleanup queue length. Useful for detecting slow cleanups holding up the queue. Sourced from /gc/cleanups/executed:cleanups.
+# TYPE go_gc_cleanups_executed_cleanups_total counter
+go_gc_cleanups_executed_cleanups_total 3374
+# HELP go_gc_cleanups_queued_cleanups_total Approximate total count of cleanup functions (created by runtime.AddCleanup) queued by the runtime for execution. Subtract from /gc/cleanups/executed:cleanups to approximate cleanup queue length. Useful for detecting slow cleanups holding up the queue. Sourced from /gc/cleanups/queued:cleanups.
+# TYPE go_gc_cleanups_queued_cleanups_total counter
+go_gc_cleanups_queued_cleanups_total 3374
+# HELP go_gc_cycles_automatic_gc_cycles_total Count of completed GC cycles generated by the Go runtime. Sourced from /gc/cycles/automatic:gc-cycles.
+# TYPE go_gc_cycles_automatic_gc_cycles_total counter
+go_gc_cycles_automatic_gc_cycles_total 56109
+# HELP go_gc_cycles_forced_gc_cycles_total Count of completed GC cycles forced by the application. Sourced from /gc/cycles/forced:gc-cycles.
+# TYPE go_gc_cycles_forced_gc_cycles_total counter
+go_gc_cycles_forced_gc_cycles_total 0
+# HELP go_gc_cycles_total_gc_cycles_total Count of all completed GC cycles. Sourced from /gc/cycles/total:gc-cycles.
+# TYPE go_gc_cycles_total_gc_cycles_total counter
+go_gc_cycles_total_gc_cycles_total 56109
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 6.5833e-05
+go_gc_duration_seconds{quantile="0.25"} 0.000103581
+go_gc_duration_seconds{quantile="0.5"} 0.000167054
+go_gc_duration_seconds{quantile="0.75"} 0.0047968
+go_gc_duration_seconds{quantile="1"} 0.447970602
+go_gc_duration_seconds_sum 1377.647836256
+go_gc_duration_seconds_count 56109
+# HELP go_gc_finalizers_executed_finalizers_total Total count of finalizer functions (created by runtime.SetFinalizer) executed by the runtime. Subtract /gc/finalizers/queued:finalizers to approximate finalizer queue length. Useful for detecting finalizers overwhelming the queue, either by being too slow, or by there being too many of them. Sourced from /gc/finalizers/executed:finalizers.
+# TYPE go_gc_finalizers_executed_finalizers_total counter
+go_gc_finalizers_executed_finalizers_total 0
+# HELP go_gc_finalizers_queued_finalizers_total Total count of finalizer functions (created by runtime.SetFinalizer) and queued by the runtime for execution. Subtract from /gc/finalizers/executed:finalizers to approximate finalizer queue length. Useful for detecting slow finalizers holding up the queue. Sourced from /gc/finalizers/queued:finalizers.
+# TYPE go_gc_finalizers_queued_finalizers_total counter
+go_gc_finalizers_queued_finalizers_total 0
+# HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent.
+# TYPE go_gc_gogc_percent gauge
+go_gc_gogc_percent 100
+# HELP go_gc_gomemlimit_bytes Go runtime memory limit configured by the user, otherwise math.MaxInt64. This value is set by the GOMEMLIMIT environment variable, and the runtime/debug.SetMemoryLimit function. Sourced from /gc/gomemlimit:bytes.
+# TYPE go_gc_gomemlimit_bytes gauge
+go_gc_gomemlimit_bytes 9.223372036854776e+18
+# HELP go_gc_heap_allocs_by_size_bytes Distribution of heap allocations by approximate size. Bucket counts increase monotonically. Note that this does not include tiny objects as defined by /gc/heap/tiny/allocs:objects, only tiny blocks. Sourced from /gc/heap/allocs-by-size:bytes.
+# TYPE go_gc_heap_allocs_by_size_bytes histogram
+go_gc_heap_allocs_by_size_bytes_bucket{le="8.999999999999998"} 3.1089076e+07
+go_gc_heap_allocs_by_size_bytes_bucket{le="24.999999999999996"} 3.74168317e+08
+go_gc_heap_allocs_by_size_bytes_bucket{le="64.99999999999999"} 7.49748528e+08
+go_gc_heap_allocs_by_size_bytes_bucket{le="144.99999999999997"} 9.33057294e+08
+go_gc_heap_allocs_by_size_bytes_bucket{le="320.99999999999994"} 1.018433005e+09
+go_gc_heap_allocs_by_size_bytes_bucket{le="704.9999999999999"} 1.521870018e+09
+go_gc_heap_allocs_by_size_bytes_bucket{le="1536.9999999999998"} 1.709984367e+09
+go_gc_heap_allocs_by_size_bytes_bucket{le="3200.9999999999995"} 1.71346542e+09
+go_gc_heap_allocs_by_size_bytes_sum 6.520642384e+11
+go_gc_heap_allocs_by_size_bytes_count 1.719786225e+09
+# HELP go_gc_heap_allocs_bytes_total Cumulative sum of memory allocated to the heap by the application. Sourced from /gc/heap/allocs:bytes.
+# TYPE go_gc_heap_allocs_bytes_total counter
+go_gc_heap_allocs_bytes_total 6.520642384e+11
+# HELP go_gc_heap_allocs_objects_total Cumulative count of heap allocations triggered by the application. Note that this does not include tiny objects as defined by /gc/heap/tiny/allocs:objects, only tiny blocks. Sourced from /gc/heap/allocs:objects.
+# TYPE go_gc_heap_allocs_objects_total counter
+go_gc_heap_allocs_objects_total 1.719786225e+09
+# HELP go_gc_heap_frees_by_size_bytes Distribution of freed heap allocations by approximate size. Bucket counts increase monotonically. Note that this does not include tiny objects as defined by /gc/heap/tiny/allocs:objects, only tiny blocks. Sourced from /gc/heap/frees-by-size:bytes.
+# TYPE go_gc_heap_frees_by_size_bytes histogram
+go_gc_heap_frees_by_size_bytes_bucket{le="8.999999999999998"} 3.1086638e+07
+go_gc_heap_frees_by_size_bytes_bucket{le="24.999999999999996"} 3.74149362e+08
+go_gc_heap_frees_by_size_bytes_bucket{le="64.99999999999999"} 7.49707232e+08
+go_gc_heap_frees_by_size_bytes_bucket{le="144.99999999999997"} 9.33006772e+08
+go_gc_heap_frees_by_size_bytes_bucket{le="320.99999999999994"} 1.018376515e+09
+go_gc_heap_frees_by_size_bytes_bucket{le="704.9999999999999"} 1.521807714e+09
+go_gc_heap_frees_by_size_bytes_bucket{le="1536.9999999999998"} 1.709920075e+09
+go_gc_heap_frees_by_size_bytes_bucket{le="3200.9999999999995"} 1.713400818e+09
+go_gc_heap_frees_by_size_bytes_sum 6.52047684928e+11
+go_gc_heap_frees_by_size_bytes_count 1.719721013e+09
+# HELP go_gc_heap_frees_bytes_total Cumulative sum of heap memory freed by the garbage collector. Sourced from /gc/heap/frees:bytes.
+# TYPE go_gc_heap_frees_bytes_total counter
+go_gc_heap_frees_bytes_total 6.52047684928e+11
+# HELP go_gc_heap_frees_objects_total Cumulative count of heap allocations whose storage was freed by the garbage collector. Note that this does not include tiny objects as defined by /gc/heap/tiny/allocs:objects, only tiny blocks. Sourced from /gc/heap/frees:objects.
+# TYPE go_gc_heap_frees_objects_total counter
+go_gc_heap_frees_objects_total 1.719721013e+09
+# HELP go_gc_heap_goal_bytes Heap size target for the end of the GC cycle. Sourced from /gc/heap/goal:bytes.
+# TYPE go_gc_heap_goal_bytes gauge
+go_gc_heap_goal_bytes 2.8042538e+07
+# HELP go_gc_heap_live_bytes Heap memory occupied by live objects that were marked by the previous GC. Sourced from /gc/heap/live:bytes.
+# TYPE go_gc_heap_live_bytes gauge
+go_gc_heap_live_bytes 1.3398624e+07
+# HELP go_gc_heap_objects_objects Number of objects, live or unswept, occupying heap memory. Sourced from /gc/heap/objects:objects.
+# TYPE go_gc_heap_objects_objects gauge
+go_gc_heap_objects_objects 65212
+# HELP go_gc_heap_tiny_allocs_objects_total Count of small allocations that are packed together into blocks. These allocations are counted separately from other allocations because each individual allocation is not tracked by the runtime, only their block. Each block is already accounted for in allocs-by-size and frees-by-size. Sourced from /gc/heap/tiny/allocs:objects.
+# TYPE go_gc_heap_tiny_allocs_objects_total counter
+go_gc_heap_tiny_allocs_objects_total 8.3432659e+07
+# HELP go_gc_limiter_last_enabled_gc_cycle GC cycle the last time the GC CPU limiter was enabled. This metric is useful for diagnosing the root cause of an out-of-memory error, because the limiter trades memory for CPU time when the GC's CPU time gets too high. This is most likely to occur with use of SetMemoryLimit. The first GC cycle is cycle 1, so a value of 0 indicates that it was never enabled. Sourced from /gc/limiter/last-enabled:gc-cycle.
+# TYPE go_gc_limiter_last_enabled_gc_cycle gauge
+go_gc_limiter_last_enabled_gc_cycle 53536
+# HELP go_gc_pauses_seconds Deprecated. Prefer the identical /sched/pauses/total/gc:seconds. Sourced from /gc/pauses:seconds.
+# TYPE go_gc_pauses_seconds histogram
+go_gc_pauses_seconds_bucket{le="6.399999999999999e-08"} 0
+go_gc_pauses_seconds_bucket{le="6.399999999999999e-07"} 0
+go_gc_pauses_seconds_bucket{le="7.167999999999999e-06"} 1938
+go_gc_pauses_seconds_bucket{le="8.191999999999999e-05"} 61006
+go_gc_pauses_seconds_bucket{le="0.0009175039999999999"} 85842
+go_gc_pauses_seconds_bucket{le="0.010485759999999998"} 97676
+go_gc_pauses_seconds_bucket{le="0.11744051199999998"} 109162
+go_gc_pauses_seconds_bucket{le="+Inf"} 112218
+go_gc_pauses_seconds_sum 492.654591232
+go_gc_pauses_seconds_count 112218
+# HELP go_gc_scan_globals_bytes The total amount of global variable space that is scannable. Sourced from /gc/scan/globals:bytes.
+# TYPE go_gc_scan_globals_bytes gauge
+go_gc_scan_globals_bytes 582186
+# HELP go_gc_scan_heap_bytes The total amount of heap space that is scannable. Sourced from /gc/scan/heap:bytes.
+# TYPE go_gc_scan_heap_bytes gauge
+go_gc_scan_heap_bytes 7.820792e+06
+# HELP go_gc_scan_stack_bytes The number of bytes of stack that were scanned last GC cycle. Sourced from /gc/scan/stack:bytes.
+# TYPE go_gc_scan_stack_bytes gauge
+go_gc_scan_stack_bytes 663104
+# HELP go_gc_scan_total_bytes The total amount space that is scannable. Sum of all metrics in /gc/scan. Sourced from /gc/scan/total:bytes.
+# TYPE go_gc_scan_total_bytes gauge
+go_gc_scan_total_bytes 9.066082e+06
+# HELP go_gc_stack_starting_size_bytes The stack size of new goroutines. Sourced from /gc/stack/starting-size:bytes.
+# TYPE go_gc_stack_starting_size_bytes gauge
+go_gc_stack_starting_size_bytes 4096
+# HELP go_godebug_non_default_behavior_allowmultiplevcs_events_total The number of non-default behaviors executed by the cmd/go package due to a non-default GODEBUG=allowmultiplevcs=... setting. Sourced from /godebug/non-default-behavior/allowmultiplevcs:events.
+# TYPE go_godebug_non_default_behavior_allowmultiplevcs_events_total counter
+go_godebug_non_default_behavior_allowmultiplevcs_events_total 0
+# HELP go_godebug_non_default_behavior_asynctimerchan_events_total The number of non-default behaviors executed by the time package due to a non-default GODEBUG=asynctimerchan=... setting. Sourced from /godebug/non-default-behavior/asynctimerchan:events.
+# TYPE go_godebug_non_default_behavior_asynctimerchan_events_total counter
+go_godebug_non_default_behavior_asynctimerchan_events_total 0
+# HELP go_godebug_non_default_behavior_containermaxprocs_events_total The number of non-default behaviors executed by the runtime package due to a non-default GODEBUG=containermaxprocs=... setting. Sourced from /godebug/non-default-behavior/containermaxprocs:events.
+# TYPE go_godebug_non_default_behavior_containermaxprocs_events_total counter
+go_godebug_non_default_behavior_containermaxprocs_events_total 0
+# HELP go_godebug_non_default_behavior_cryptocustomrand_events_total The number of non-default behaviors executed by the crypto package due to a non-default GODEBUG=cryptocustomrand=... setting. Sourced from /godebug/non-default-behavior/cryptocustomrand:events.
+# TYPE go_godebug_non_default_behavior_cryptocustomrand_events_total counter
+go_godebug_non_default_behavior_cryptocustomrand_events_total 0
+# HELP go_godebug_non_default_behavior_embedfollowsymlinks_events_total The number of non-default behaviors executed by the cmd/go package due to a non-default GODEBUG=embedfollowsymlinks=... setting. Sourced from /godebug/non-default-behavior/embedfollowsymlinks:events.
+# TYPE go_godebug_non_default_behavior_embedfollowsymlinks_events_total counter
+go_godebug_non_default_behavior_embedfollowsymlinks_events_total 0
+# HELP go_godebug_non_default_behavior_execerrdot_events_total The number of non-default behaviors executed by the os/exec package due to a non-default GODEBUG=execerrdot=... setting. Sourced from /godebug/non-default-behavior/execerrdot:events.
+# TYPE go_godebug_non_default_behavior_execerrdot_events_total counter
+go_godebug_non_default_behavior_execerrdot_events_total 0
+# HELP go_godebug_non_default_behavior_gocachehash_events_total The number of non-default behaviors executed by the cmd/go package due to a non-default GODEBUG=gocachehash=... setting. Sourced from /godebug/non-default-behavior/gocachehash:events.
+# TYPE go_godebug_non_default_behavior_gocachehash_events_total counter
+go_godebug_non_default_behavior_gocachehash_events_total 0
+# HELP go_godebug_non_default_behavior_gocachetest_events_total The number of non-default behaviors executed by the cmd/go package due to a non-default GODEBUG=gocachetest=... setting. Sourced from /godebug/non-default-behavior/gocachetest:events.
+# TYPE go_godebug_non_default_behavior_gocachetest_events_total counter
+go_godebug_non_default_behavior_gocachetest_events_total 0
+# HELP go_godebug_non_default_behavior_gocacheverify_events_total The number of non-default behaviors executed by the cmd/go package due to a non-default GODEBUG=gocacheverify=... setting. Sourced from /godebug/non-default-behavior/gocacheverify:events.
+# TYPE go_godebug_non_default_behavior_gocacheverify_events_total counter
+go_godebug_non_default_behavior_gocacheverify_events_total 0
+# HELP go_godebug_non_default_behavior_gotestjsonbuildtext_events_total The number of non-default behaviors executed by the cmd/go package due to a non-default GODEBUG=gotestjsonbuildtext=... setting. Sourced from /godebug/non-default-behavior/gotestjsonbuildtext:events.
+# TYPE go_godebug_non_default_behavior_gotestjsonbuildtext_events_total counter
+go_godebug_non_default_behavior_gotestjsonbuildtext_events_total 0
+# HELP go_godebug_non_default_behavior_gotypesalias_events_total The number of non-default behaviors executed by the go/types package due to a non-default GODEBUG=gotypesalias=... setting. Sourced from /godebug/non-default-behavior/gotypesalias:events.
+# TYPE go_godebug_non_default_behavior_gotypesalias_events_total counter
+go_godebug_non_default_behavior_gotypesalias_events_total 0
+# HELP go_godebug_non_default_behavior_htmlmetacontenturlescape_events_total The number of non-default behaviors executed by the html/template package due to a non-default GODEBUG=htmlmetacontenturlescape=... setting. Sourced from /godebug/non-default-behavior/htmlmetacontenturlescape:events.
+# TYPE go_godebug_non_default_behavior_htmlmetacontenturlescape_events_total counter
+go_godebug_non_default_behavior_htmlmetacontenturlescape_events_total 0
+# HELP go_godebug_non_default_behavior_http2client_events_total The number of non-default behaviors executed by the net/http package due to a non-default GODEBUG=http2client=... setting. Sourced from /godebug/non-default-behavior/http2client:events.
+# TYPE go_godebug_non_default_behavior_http2client_events_total counter
+go_godebug_non_default_behavior_http2client_events_total 0
+# HELP go_godebug_non_default_behavior_http2server_events_total The number of non-default behaviors executed by the net/http package due to a non-default GODEBUG=http2server=... setting. Sourced from /godebug/non-default-behavior/http2server:events.
+# TYPE go_godebug_non_default_behavior_http2server_events_total counter
+go_godebug_non_default_behavior_http2server_events_total 0
+# HELP go_godebug_non_default_behavior_httpcookiemaxnum_events_total The number of non-default behaviors executed by the net/http package due to a non-default GODEBUG=httpcookiemaxnum=... setting. Sourced from /godebug/non-default-behavior/httpcookiemaxnum:events.
+# TYPE go_godebug_non_default_behavior_httpcookiemaxnum_events_total counter
+go_godebug_non_default_behavior_httpcookiemaxnum_events_total 0
+# HELP go_godebug_non_default_behavior_httplaxcontentlength_events_total The number of non-default behaviors executed by the net/http package due to a non-default GODEBUG=httplaxcontentlength=... setting. Sourced from /godebug/non-default-behavior/httplaxcontentlength:events.
+# TYPE go_godebug_non_default_behavior_httplaxcontentlength_events_total counter
+go_godebug_non_default_behavior_httplaxcontentlength_events_total 0
+# HELP go_godebug_non_default_behavior_httpmuxgo121_events_total The number of non-default behaviors executed by the net/http package due to a non-default GODEBUG=httpmuxgo121=... setting. Sourced from /godebug/non-default-behavior/httpmuxgo121:events.
+# TYPE go_godebug_non_default_behavior_httpmuxgo121_events_total counter
+go_godebug_non_default_behavior_httpmuxgo121_events_total 0
+# HELP go_godebug_non_default_behavior_httpservecontentkeepheaders_events_total The number of non-default behaviors executed by the net/http package due to a non-default GODEBUG=httpservecontentkeepheaders=... setting. Sourced from /godebug/non-default-behavior/httpservecontentkeepheaders:events.
+# TYPE go_godebug_non_default_behavior_httpservecontentkeepheaders_events_total counter
+go_godebug_non_default_behavior_httpservecontentkeepheaders_events_total 0
+# HELP go_godebug_non_default_behavior_installgoroot_events_total The number of non-default behaviors executed by the go/build package due to a non-default GODEBUG=installgoroot=... setting. Sourced from /godebug/non-default-behavior/installgoroot:events.
+# TYPE go_godebug_non_default_behavior_installgoroot_events_total counter
+go_godebug_non_default_behavior_installgoroot_events_total 0
+# HELP go_godebug_non_default_behavior_multipartmaxheaders_events_total The number of non-default behaviors executed by the mime/multipart package due to a non-default GODEBUG=multipartmaxheaders=... setting. Sourced from /godebug/non-default-behavior/multipartmaxheaders:events.
+# TYPE go_godebug_non_default_behavior_multipartmaxheaders_events_total counter
+go_godebug_non_default_behavior_multipartmaxheaders_events_total 0
+# HELP go_godebug_non_default_behavior_multipartmaxparts_events_total The number of non-default behaviors executed by the mime/multipart package due to a non-default GODEBUG=multipartmaxparts=... setting. Sourced from /godebug/non-default-behavior/multipartmaxparts:events.
+# TYPE go_godebug_non_default_behavior_multipartmaxparts_events_total counter
+go_godebug_non_default_behavior_multipartmaxparts_events_total 0
+# HELP go_godebug_non_default_behavior_multipathtcp_events_total The number of non-default behaviors executed by the net package due to a non-default GODEBUG=multipathtcp=... setting. Sourced from /godebug/non-default-behavior/multipathtcp:events.
+# TYPE go_godebug_non_default_behavior_multipathtcp_events_total counter
+go_godebug_non_default_behavior_multipathtcp_events_total 0
+# HELP go_godebug_non_default_behavior_netedns0_events_total The number of non-default behaviors executed by the net package due to a non-default GODEBUG=netedns0=... setting. Sourced from /godebug/non-default-behavior/netedns0:events.
+# TYPE go_godebug_non_default_behavior_netedns0_events_total counter
+go_godebug_non_default_behavior_netedns0_events_total 0
+# HELP go_godebug_non_default_behavior_panicnil_events_total The number of non-default behaviors executed by the runtime package due to a non-default GODEBUG=panicnil=... setting. Sourced from /godebug/non-default-behavior/panicnil:events.
+# TYPE go_godebug_non_default_behavior_panicnil_events_total counter
+go_godebug_non_default_behavior_panicnil_events_total 0
+# HELP go_godebug_non_default_behavior_randautoseed_events_total The number of non-default behaviors executed by the math/rand package due to a non-default GODEBUG=randautoseed=... setting. Sourced from /godebug/non-default-behavior/randautoseed:events.
+# TYPE go_godebug_non_default_behavior_randautoseed_events_total counter
+go_godebug_non_default_behavior_randautoseed_events_total 0
+# HELP go_godebug_non_default_behavior_randseednop_events_total The number of non-default behaviors executed by the math/rand package due to a non-default GODEBUG=randseednop=... setting. Sourced from /godebug/non-default-behavior/randseednop:events.
+# TYPE go_godebug_non_default_behavior_randseednop_events_total counter
+go_godebug_non_default_behavior_randseednop_events_total 0
+# HELP go_godebug_non_default_behavior_rsa1024min_events_total The number of non-default behaviors executed by the crypto/rsa package due to a non-default GODEBUG=rsa1024min=... setting. Sourced from /godebug/non-default-behavior/rsa1024min:events.
+# TYPE go_godebug_non_default_behavior_rsa1024min_events_total counter
+go_godebug_non_default_behavior_rsa1024min_events_total 0
+# HELP go_godebug_non_default_behavior_tarinsecurepath_events_total The number of non-default behaviors executed by the archive/tar package due to a non-default GODEBUG=tarinsecurepath=... setting. Sourced from /godebug/non-default-behavior/tarinsecurepath:events.
+# TYPE go_godebug_non_default_behavior_tarinsecurepath_events_total counter
+go_godebug_non_default_behavior_tarinsecurepath_events_total 0
+# HELP go_godebug_non_default_behavior_tls10server_events_total The number of non-default behaviors executed by the crypto/tls package due to a non-default GODEBUG=tls10server=... setting. Sourced from /godebug/non-default-behavior/tls10server:events.
+# TYPE go_godebug_non_default_behavior_tls10server_events_total counter
+go_godebug_non_default_behavior_tls10server_events_total 0
+# HELP go_godebug_non_default_behavior_tls3des_events_total The number of non-default behaviors executed by the crypto/tls package due to a non-default GODEBUG=tls3des=... setting. Sourced from /godebug/non-default-behavior/tls3des:events.
+# TYPE go_godebug_non_default_behavior_tls3des_events_total counter
+go_godebug_non_default_behavior_tls3des_events_total 0
+# HELP go_godebug_non_default_behavior_tlsmaxrsasize_events_total The number of non-default behaviors executed by the crypto/tls package due to a non-default GODEBUG=tlsmaxrsasize=... setting. Sourced from /godebug/non-default-behavior/tlsmaxrsasize:events.
+# TYPE go_godebug_non_default_behavior_tlsmaxrsasize_events_total counter
+go_godebug_non_default_behavior_tlsmaxrsasize_events_total 0
+# HELP go_godebug_non_default_behavior_tlsrsakex_events_total The number of non-default behaviors executed by the crypto/tls package due to a non-default GODEBUG=tlsrsakex=... setting. Sourced from /godebug/non-default-behavior/tlsrsakex:events.
+# TYPE go_godebug_non_default_behavior_tlsrsakex_events_total counter
+go_godebug_non_default_behavior_tlsrsakex_events_total 0
+# HELP go_godebug_non_default_behavior_tlssha1_events_total The number of non-default behaviors executed by the crypto/tls package due to a non-default GODEBUG=tlssha1=... setting. Sourced from /godebug/non-default-behavior/tlssha1:events.
+# TYPE go_godebug_non_default_behavior_tlssha1_events_total counter
+go_godebug_non_default_behavior_tlssha1_events_total 0
+# HELP go_godebug_non_default_behavior_tlsunsafeekm_events_total The number of non-default behaviors executed by the crypto/tls package due to a non-default GODEBUG=tlsunsafeekm=... setting. Sourced from /godebug/non-default-behavior/tlsunsafeekm:events.
+# TYPE go_godebug_non_default_behavior_tlsunsafeekm_events_total counter
+go_godebug_non_default_behavior_tlsunsafeekm_events_total 0
+# HELP go_godebug_non_default_behavior_updatemaxprocs_events_total The number of non-default behaviors executed by the runtime package due to a non-default GODEBUG=updatemaxprocs=... setting. Sourced from /godebug/non-default-behavior/updatemaxprocs:events.
+# TYPE go_godebug_non_default_behavior_updatemaxprocs_events_total counter
+go_godebug_non_default_behavior_updatemaxprocs_events_total 0
+# HELP go_godebug_non_default_behavior_urlmaxqueryparams_events_total The number of non-default behaviors executed by the net/url package due to a non-default GODEBUG=urlmaxqueryparams=... setting. Sourced from /godebug/non-default-behavior/urlmaxqueryparams:events.
+# TYPE go_godebug_non_default_behavior_urlmaxqueryparams_events_total counter
+go_godebug_non_default_behavior_urlmaxqueryparams_events_total 0
+# HELP go_godebug_non_default_behavior_urlstrictcolons_events_total The number of non-default behaviors executed by the net/url package due to a non-default GODEBUG=urlstrictcolons=... setting. Sourced from /godebug/non-default-behavior/urlstrictcolons:events.
+# TYPE go_godebug_non_default_behavior_urlstrictcolons_events_total counter
+go_godebug_non_default_behavior_urlstrictcolons_events_total 0
+# HELP go_godebug_non_default_behavior_winreadlinkvolume_events_total The number of non-default behaviors executed by the os package due to a non-default GODEBUG=winreadlinkvolume=... setting. Sourced from /godebug/non-default-behavior/winreadlinkvolume:events.
+# TYPE go_godebug_non_default_behavior_winreadlinkvolume_events_total counter
+go_godebug_non_default_behavior_winreadlinkvolume_events_total 0
+# HELP go_godebug_non_default_behavior_winsymlink_events_total The number of non-default behaviors executed by the os package due to a non-default GODEBUG=winsymlink=... setting. Sourced from /godebug/non-default-behavior/winsymlink:events.
+# TYPE go_godebug_non_default_behavior_winsymlink_events_total counter
+go_godebug_non_default_behavior_winsymlink_events_total 0
+# HELP go_godebug_non_default_behavior_x509keypairleaf_events_total The number of non-default behaviors executed by the crypto/tls package due to a non-default GODEBUG=x509keypairleaf=... setting. Sourced from /godebug/non-default-behavior/x509keypairleaf:events.
+# TYPE go_godebug_non_default_behavior_x509keypairleaf_events_total counter
+go_godebug_non_default_behavior_x509keypairleaf_events_total 0
+# HELP go_godebug_non_default_behavior_x509negativeserial_events_total The number of non-default behaviors executed by the crypto/x509 package due to a non-default GODEBUG=x509negativeserial=... setting. Sourced from /godebug/non-default-behavior/x509negativeserial:events.
+# TYPE go_godebug_non_default_behavior_x509negativeserial_events_total counter
+go_godebug_non_default_behavior_x509negativeserial_events_total 0
+# HELP go_godebug_non_default_behavior_x509rsacrt_events_total The number of non-default behaviors executed by the crypto/x509 package due to a non-default GODEBUG=x509rsacrt=... setting. Sourced from /godebug/non-default-behavior/x509rsacrt:events.
+# TYPE go_godebug_non_default_behavior_x509rsacrt_events_total counter
+go_godebug_non_default_behavior_x509rsacrt_events_total 0
+# HELP go_godebug_non_default_behavior_x509sha256skid_events_total The number of non-default behaviors executed by the crypto/x509 package due to a non-default GODEBUG=x509sha256skid=... setting. Sourced from /godebug/non-default-behavior/x509sha256skid:events.
+# TYPE go_godebug_non_default_behavior_x509sha256skid_events_total counter
+go_godebug_non_default_behavior_x509sha256skid_events_total 0
+# HELP go_godebug_non_default_behavior_x509usefallbackroots_events_total The number of non-default behaviors executed by the crypto/x509 package due to a non-default GODEBUG=x509usefallbackroots=... setting. Sourced from /godebug/non-default-behavior/x509usefallbackroots:events.
+# TYPE go_godebug_non_default_behavior_x509usefallbackroots_events_total counter
+go_godebug_non_default_behavior_x509usefallbackroots_events_total 0
+# HELP go_godebug_non_default_behavior_x509usepolicies_events_total The number of non-default behaviors executed by the crypto/x509 package due to a non-default GODEBUG=x509usepolicies=... setting. Sourced from /godebug/non-default-behavior/x509usepolicies:events.
+# TYPE go_godebug_non_default_behavior_x509usepolicies_events_total counter
+go_godebug_non_default_behavior_x509usepolicies_events_total 0
+# HELP go_godebug_non_default_behavior_zipinsecurepath_events_total The number of non-default behaviors executed by the archive/zip package due to a non-default GODEBUG=zipinsecurepath=... setting. Sourced from /godebug/non-default-behavior/zipinsecurepath:events.
+# TYPE go_godebug_non_default_behavior_zipinsecurepath_events_total counter
+go_godebug_non_default_behavior_zipinsecurepath_events_total 0
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 257
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.26.4"} 1
+# HELP go_memory_classes_heap_free_bytes Memory that is completely free and eligible to be returned to the underlying system, but has not been. This metric is the runtime's estimate of free address space that is backed by physical memory. Sourced from /memory/classes/heap/free:bytes.
+# TYPE go_memory_classes_heap_free_bytes gauge
+go_memory_classes_heap_free_bytes 1.0633216e+07
+# HELP go_memory_classes_heap_objects_bytes Memory occupied by live objects and dead objects that have not yet been marked free by the garbage collector. Sourced from /memory/classes/heap/objects:bytes.
+# TYPE go_memory_classes_heap_objects_bytes gauge
+go_memory_classes_heap_objects_bytes 1.6553472e+07
+# HELP go_memory_classes_heap_released_bytes Memory that is completely free and has been returned to the underlying system. This metric is the runtime's estimate of free address space that is still mapped into the process, but is not backed by physical memory. Sourced from /memory/classes/heap/released:bytes.
+# TYPE go_memory_classes_heap_released_bytes gauge
+go_memory_classes_heap_released_bytes 1.9726336e+07
+# HELP go_memory_classes_heap_stacks_bytes Memory allocated from the heap that is reserved for stack space, whether or not it is currently in-use. Currently, this represents all stack memory for goroutines. It also includes all OS thread stacks in non-cgo programs. Note that stacks may be allocated differently in the future, and this may change. Sourced from /memory/classes/heap/stacks:bytes.
+# TYPE go_memory_classes_heap_stacks_bytes gauge
+go_memory_classes_heap_stacks_bytes 4.882432e+06
+# HELP go_memory_classes_heap_unused_bytes Memory that is reserved for heap objects but is not currently used to hold heap objects. Sourced from /memory/classes/heap/unused:bytes.
+# TYPE go_memory_classes_heap_unused_bytes gauge
+go_memory_classes_heap_unused_bytes 6.9248e+06
+# HELP go_memory_classes_metadata_mcache_free_bytes Memory that is reserved for runtime mcache structures, but not in-use. Sourced from /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memory_classes_metadata_mcache_free_bytes gauge
+go_memory_classes_metadata_mcache_free_bytes 11480
+# HELP go_memory_classes_metadata_mcache_inuse_bytes Memory that is occupied by runtime mcache structures that are currently being used. Sourced from /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memory_classes_metadata_mcache_inuse_bytes gauge
+go_memory_classes_metadata_mcache_inuse_bytes 36736
+# HELP go_memory_classes_metadata_mspan_free_bytes Memory that is reserved for runtime mspan structures, but not in-use. Sourced from /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memory_classes_metadata_mspan_free_bytes gauge
+go_memory_classes_metadata_mspan_free_bytes 396640
+# HELP go_memory_classes_metadata_mspan_inuse_bytes Memory that is occupied by runtime mspan structures that are currently being used. Sourced from /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memory_classes_metadata_mspan_inuse_bytes gauge
+go_memory_classes_metadata_mspan_inuse_bytes 435680
+# HELP go_memory_classes_metadata_other_bytes Memory that is reserved for or used to hold runtime metadata. Sourced from /memory/classes/metadata/other:bytes.
+# TYPE go_memory_classes_metadata_other_bytes gauge
+go_memory_classes_metadata_other_bytes 4.72704e+06
+# HELP go_memory_classes_os_stacks_bytes Stack memory allocated by the underlying operating system. In non-cgo programs this metric is currently zero. This may change in the future.In cgo programs this metric includes OS thread stacks allocated directly from the OS. Currently, this only accounts for one stack in c-shared and c-archive build modes, and other sources of stacks from the OS are not measured. This too may change in the future. Sourced from /memory/classes/os-stacks:bytes.
+# TYPE go_memory_classes_os_stacks_bytes gauge
+go_memory_classes_os_stacks_bytes 0
+# HELP go_memory_classes_other_bytes Memory used by execution trace buffers, structures for debugging the runtime, finalizer and profiler specials, and more. Sourced from /memory/classes/other:bytes.
+# TYPE go_memory_classes_other_bytes gauge
+go_memory_classes_other_bytes 3.074805e+06
+# HELP go_memory_classes_profiling_buckets_bytes Memory that is used by the stack trace hash map used for profiling. Sourced from /memory/classes/profiling/buckets:bytes.
+# TYPE go_memory_classes_profiling_buckets_bytes gauge
+go_memory_classes_profiling_buckets_bytes 2.747787e+06
+# HELP go_memory_classes_total_bytes All memory mapped by the Go runtime into the current process as read-write. Note that this does not include memory mapped by code called via cgo or via the syscall package. Sum of all metrics in /memory/classes. Sourced from /memory/classes/total:bytes.
+# TYPE go_memory_classes_total_bytes gauge
+go_memory_classes_total_bytes 7.0150424e+07
+# HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 1.6553472e+07
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 6.520642384e+11
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 2.747787e+06
+# HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 1.803153672e+09
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 4.72704e+06
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 1.6553472e+07
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 3.0359552e+07
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 2.3478272e+07
+# HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 65212
+# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
+# TYPE go_memstats_heap_released_bytes gauge
+go_memstats_heap_released_bytes 1.9726336e+07
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 5.3837824e+07
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.783630754438929e+09
+# HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 1.803218884e+09
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 36736
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system. Equals to /memory/classes/metadata/mcache/inuse:bytes + /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 48216
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 435680
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 832320
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 2.8042538e+07
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 3.074805e+06
+# HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 4.882432e+06
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 4.882432e+06
+# HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 7.0150424e+07
+# HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads.
+# TYPE go_sched_gomaxprocs_threads gauge
+go_sched_gomaxprocs_threads 16
+# HELP go_sched_goroutines_created_goroutines_total Count of goroutines created since program start. Sourced from /sched/goroutines-created:goroutines.
+# TYPE go_sched_goroutines_created_goroutines_total counter
+go_sched_goroutines_created_goroutines_total 1.4869404e+07
+# HELP go_sched_goroutines_goroutines Count of live goroutines. Sourced from /sched/goroutines:goroutines.
+# TYPE go_sched_goroutines_goroutines gauge
+go_sched_goroutines_goroutines 282
+# HELP go_sched_goroutines_not_in_go_goroutines Approximate count of goroutines running or blocked in a system call or cgo call. Not guaranteed to add up to /sched/goroutines:goroutines with other goroutine metrics. Sourced from /sched/goroutines/not-in-go:goroutines.
+# TYPE go_sched_goroutines_not_in_go_goroutines gauge
+go_sched_goroutines_not_in_go_goroutines 2
+# HELP go_sched_goroutines_runnable_goroutines Approximate count of goroutines ready to execute, but not executing. Not guaranteed to add up to /sched/goroutines:goroutines with other goroutine metrics. Sourced from /sched/goroutines/runnable:goroutines.
+# TYPE go_sched_goroutines_runnable_goroutines gauge
+go_sched_goroutines_runnable_goroutines 0
+# HELP go_sched_goroutines_running_goroutines Approximate count of goroutines executing. Always less than or equal to /sched/gomaxprocs:threads. Not guaranteed to add up to /sched/goroutines:goroutines with other goroutine metrics. Sourced from /sched/goroutines/running:goroutines.
+# TYPE go_sched_goroutines_running_goroutines gauge
+go_sched_goroutines_running_goroutines 3
+# HELP go_sched_goroutines_waiting_goroutines Approximate count of goroutines waiting on a resource (I/O or sync primitives). Not guaranteed to add up to /sched/goroutines:goroutines with other goroutine metrics. Sourced from /sched/goroutines/waiting:goroutines.
+# TYPE go_sched_goroutines_waiting_goroutines gauge
+go_sched_goroutines_waiting_goroutines 277
+# HELP go_sched_latencies_seconds Distribution of the time goroutines have spent in the scheduler in a runnable state before actually running. Bucket counts increase monotonically. Sourced from /sched/latencies:seconds.
+# TYPE go_sched_latencies_seconds histogram
+go_sched_latencies_seconds_bucket{le="6.399999999999999e-08"} 1.133314e+06
+go_sched_latencies_seconds_bucket{le="6.399999999999999e-07"} 2.327841e+06
+go_sched_latencies_seconds_bucket{le="7.167999999999999e-06"} 8.565447e+06
+go_sched_latencies_seconds_bucket{le="8.191999999999999e-05"} 1.1966769e+07
+go_sched_latencies_seconds_bucket{le="0.0009175039999999999"} 1.2289372e+07
+go_sched_latencies_seconds_bucket{le="0.010485759999999998"} 1.2353039e+07
+go_sched_latencies_seconds_bucket{le="0.11744051199999998"} 1.2387361e+07
+go_sched_latencies_seconds_bucket{le="+Inf"} 1.2390049e+07
+go_sched_latencies_seconds_sum 788.863909568
+go_sched_latencies_seconds_count 1.2390049e+07
+# HELP go_sched_pauses_stopping_gc_seconds Distribution of individual GC-related stop-the-world stopping latencies. This is the time it takes from deciding to stop the world until all Ps are stopped. This is a subset of the total GC-related stop-the-world time (/sched/pauses/total/gc:seconds). During this time, some threads may be executing. Bucket counts increase monotonically. Sourced from /sched/pauses/stopping/gc:seconds.
+# TYPE go_sched_pauses_stopping_gc_seconds histogram
+go_sched_pauses_stopping_gc_seconds_bucket{le="6.399999999999999e-08"} 0
+go_sched_pauses_stopping_gc_seconds_bucket{le="6.399999999999999e-07"} 0
+go_sched_pauses_stopping_gc_seconds_bucket{le="7.167999999999999e-06"} 63912
+go_sched_pauses_stopping_gc_seconds_bucket{le="8.191999999999999e-05"} 95054
+go_sched_pauses_stopping_gc_seconds_bucket{le="0.0009175039999999999"} 100463
+go_sched_pauses_stopping_gc_seconds_bucket{le="0.010485759999999998"} 104199
+go_sched_pauses_stopping_gc_seconds_bucket{le="0.11744051199999998"} 110926
+go_sched_pauses_stopping_gc_seconds_bucket{le="+Inf"} 112218
+go_sched_pauses_stopping_gc_seconds_sum 226.40587878399998
+go_sched_pauses_stopping_gc_seconds_count 112218
+# HELP go_sched_pauses_stopping_other_seconds Distribution of individual non-GC-related stop-the-world stopping latencies. This is the time it takes from deciding to stop the world until all Ps are stopped. This is a subset of the total non-GC-related stop-the-world time (/sched/pauses/total/other:seconds). During this time, some threads may be executing. Bucket counts increase monotonically. Sourced from /sched/pauses/stopping/other:seconds.
+# TYPE go_sched_pauses_stopping_other_seconds histogram
+go_sched_pauses_stopping_other_seconds_bucket{le="6.399999999999999e-08"} 0
+go_sched_pauses_stopping_other_seconds_bucket{le="6.399999999999999e-07"} 0
+go_sched_pauses_stopping_other_seconds_bucket{le="7.167999999999999e-06"} 0
+go_sched_pauses_stopping_other_seconds_bucket{le="8.191999999999999e-05"} 0
+go_sched_pauses_stopping_other_seconds_bucket{le="0.0009175039999999999"} 0
+go_sched_pauses_stopping_other_seconds_bucket{le="0.010485759999999998"} 0
+go_sched_pauses_stopping_other_seconds_bucket{le="0.11744051199999998"} 0
+go_sched_pauses_stopping_other_seconds_bucket{le="+Inf"} 0
+go_sched_pauses_stopping_other_seconds_sum 0
+go_sched_pauses_stopping_other_seconds_count 0
+# HELP go_sched_pauses_total_gc_seconds Distribution of individual GC-related stop-the-world pause latencies. This is the time from deciding to stop the world until the world is started again. Some of this time is spent getting all threads to stop (this is measured directly in /sched/pauses/stopping/gc:seconds), during which some threads may still be running. Bucket counts increase monotonically. Sourced from /sched/pauses/total/gc:seconds.
+# TYPE go_sched_pauses_total_gc_seconds histogram
+go_sched_pauses_total_gc_seconds_bucket{le="6.399999999999999e-08"} 0
+go_sched_pauses_total_gc_seconds_bucket{le="6.399999999999999e-07"} 0
+go_sched_pauses_total_gc_seconds_bucket{le="7.167999999999999e-06"} 1938
+go_sched_pauses_total_gc_seconds_bucket{le="8.191999999999999e-05"} 61006
+go_sched_pauses_total_gc_seconds_bucket{le="0.0009175039999999999"} 85842
+go_sched_pauses_total_gc_seconds_bucket{le="0.010485759999999998"} 97676
+go_sched_pauses_total_gc_seconds_bucket{le="0.11744051199999998"} 109162
+go_sched_pauses_total_gc_seconds_bucket{le="+Inf"} 112218
+go_sched_pauses_total_gc_seconds_sum 492.654591232
+go_sched_pauses_total_gc_seconds_count 112218
+# HELP go_sched_pauses_total_other_seconds Distribution of individual non-GC-related stop-the-world pause latencies. This is the time from deciding to stop the world until the world is started again. Some of this time is spent getting all threads to stop (measured directly in /sched/pauses/stopping/other:seconds). Bucket counts increase monotonically. Sourced from /sched/pauses/total/other:seconds.
+# TYPE go_sched_pauses_total_other_seconds histogram
+go_sched_pauses_total_other_seconds_bucket{le="6.399999999999999e-08"} 0
+go_sched_pauses_total_other_seconds_bucket{le="6.399999999999999e-07"} 0
+go_sched_pauses_total_other_seconds_bucket{le="7.167999999999999e-06"} 0
+go_sched_pauses_total_other_seconds_bucket{le="8.191999999999999e-05"} 0
+go_sched_pauses_total_other_seconds_bucket{le="0.0009175039999999999"} 0
+go_sched_pauses_total_other_seconds_bucket{le="0.010485759999999998"} 0
+go_sched_pauses_total_other_seconds_bucket{le="0.11744051199999998"} 0
+go_sched_pauses_total_other_seconds_bucket{le="+Inf"} 0
+go_sched_pauses_total_other_seconds_sum 0
+go_sched_pauses_total_other_seconds_count 0
+# HELP go_sched_threads_total_threads The current count of live threads that are owned by the Go runtime. Sourced from /sched/threads/total:threads.
+# TYPE go_sched_threads_total_threads gauge
+go_sched_threads_total_threads 23
+# HELP go_sync_mutex_wait_total_seconds_total Approximate cumulative time goroutines have spent blocked on a sync.Mutex, sync.RWMutex, or runtime-internal lock. This metric is useful for identifying global changes in lock contention. Collect a mutex or block profile using the runtime/pprof package for more detailed contention data. Sourced from /sync/mutex/wait/total:seconds.
+# TYPE go_sync_mutex_wait_total_seconds_total counter
+go_sync_mutex_wait_total_seconds_total 3976.570115352
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 23
+# HELP hidden_metrics_total [BETA] The count of hidden metrics.
+# TYPE hidden_metrics_total counter
+hidden_metrics_total 0
+# HELP kcp_backend_rq_body_bytes [ALPHA] Total bytes forwarded in request bodies from clients to backend.
+# TYPE kcp_backend_rq_body_bytes counter
+kcp_backend_rq_body_bytes{shard="root"} 468357
+# HELP kcp_backend_rs_body_bytes [ALPHA] Total bytes returned in response bodies from backend to clients.
+# TYPE kcp_backend_rs_body_bytes counter
+kcp_backend_rs_body_bytes{shard="root"} 7.445908263e+09
+# HELP kcp_indexed_logicalclusters [ALPHA] Number of logicalclusters indexed by kcp-front-proxy or embedded localproxy per shard.
+# TYPE kcp_indexed_logicalclusters gauge
+kcp_indexed_logicalclusters{shard="root"} 27
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 14273.9
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 524287
+# HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
+# TYPE process_network_receive_bytes_total counter
+process_network_receive_bytes_total 1.7853169945e+10
+# HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
+# TYPE process_network_transmit_bytes_total counter
+process_network_transmit_bytes_total 1.6890458295e+10
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 52
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 7.7357056e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.78282638257e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 1.447579648e+09
+# HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
+# TYPE process_virtual_memory_max_bytes gauge
+process_virtual_memory_max_bytes 1.8446744073709552e+19
+# HELP proxy_request_duration_seconds [ALPHA] Response latency distribution in seconds for each verb and HTTP response code.
+# TYPE proxy_request_duration_seconds histogram
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.05"} 1.431697e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.1"} 1.559573e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.2"} 1.650549e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.4"} 1.705619e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.6"} 1.722618e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.8"} 1.727549e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="1"} 1.729656e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="1.25"} 1.730763e+06
+proxy_request_duration_seconds_sum{code="200",method="get"} 1.856743145833e+07
+proxy_request_duration_seconds_count{code="200",method="get"} 1.773739e+06
+proxy_request_duration_seconds_sum{code="200",method="patch"} 133.45049237100002
+proxy_request_duration_seconds_count{code="200",method="patch"} 278
+proxy_request_duration_seconds_sum{code="200",method="put"} 1.1226732890000002
+proxy_request_duration_seconds_count{code="200",method="put"} 3
+proxy_request_duration_seconds_sum{code="201",method="patch"} 24.163828836
+proxy_request_duration_seconds_count{code="201",method="patch"} 63
+proxy_request_duration_seconds_sum{code="201",method="post"} 132.55208215499985
+proxy_request_duration_seconds_count{code="201",method="post"} 2047
+proxy_request_duration_seconds_sum{code="401",method="post"} 0.001370322
+proxy_request_duration_seconds_count{code="401",method="post"} 1
+proxy_request_duration_seconds_sum{code="403",method="get"} 58.40529924600008
+proxy_request_duration_seconds_count{code="403",method="get"} 1587
+proxy_request_duration_seconds_sum{code="404",method="get"} 9.306734454999999
+proxy_request_duration_seconds_count{code="404",method="get"} 64
+# HELP registered_metrics_total [BETA] The count of registered metrics broken by stability level and deprecation version.
+# TYPE registered_metrics_total counter
+registered_metrics_total{deprecated_version="",stability_level="ALPHA"} 76
+registered_metrics_total{deprecated_version="",stability_level="BETA"} 17
+registered_metrics_total{deprecated_version="",stability_level="INTERNAL"} 1
+registered_metrics_total{deprecated_version="",stability_level="STABLE"} 3
+# HELP workqueue_adds_total [BETA] Total number of adds handled by workqueue
+# TYPE workqueue_adds_total counter
+workqueue_adds_total{name="DynamicCABundle-client-ca-bundle"} 1
+workqueue_adds_total{name="DynamicCABundle-serving-cert"} 2
+workqueue_adds_total{name="DynamicClientCertificate"} 2682
+workqueue_adds_total{name="DynamicServingCertificateController"} 13404
+workqueue_adds_total{name="controllerName"} 2
+# HELP workqueue_depth [BETA] Current depth of workqueue
+# TYPE workqueue_depth gauge
+workqueue_depth{name="DynamicCABundle-client-ca-bundle"} 0
+workqueue_depth{name="DynamicCABundle-serving-cert"} 0
+workqueue_depth{name="DynamicClientCertificate"} 0
+workqueue_depth{name="DynamicServingCertificateController"} 0
+workqueue_depth{name="controllerName"} 0
+# HELP workqueue_longest_running_processor_seconds [BETA] How many seconds has the longest running processor for workqueue been running.
+# TYPE workqueue_longest_running_processor_seconds gauge
+workqueue_longest_running_processor_seconds{name="DynamicCABundle-client-ca-bundle"} 0
+workqueue_longest_running_processor_seconds{name="DynamicCABundle-serving-cert"} 0
+workqueue_longest_running_processor_seconds{name="DynamicClientCertificate"} 0
+workqueue_longest_running_processor_seconds{name="DynamicServingCertificateController"} 0
+workqueue_longest_running_processor_seconds{name="controllerName"} 0
+# HELP workqueue_queue_duration_seconds [BETA] How long in seconds an item stays in workqueue before being requested.
+# TYPE workqueue_queue_duration_seconds histogram
+workqueue_queue_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="9.999999999999999e-06"} 0
+workqueue_queue_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="9.999999999999999e-05"} 0
+workqueue_queue_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="0.001"} 1
+workqueue_queue_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="0.01"} 1
+workqueue_queue_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="0.1"} 1
+workqueue_queue_duration_seconds_sum{name="DynamicCABundle-client-ca-bundle"} 0.000240043
+workqueue_queue_duration_seconds_count{name="DynamicCABundle-client-ca-bundle"} 1
+workqueue_queue_duration_seconds_sum{name="DynamicCABundle-serving-cert"} 0.002702837
+workqueue_queue_duration_seconds_count{name="DynamicCABundle-serving-cert"} 2
+workqueue_queue_duration_seconds_sum{name="DynamicClientCertificate"} 0.6810250779999997
+workqueue_queue_duration_seconds_count{name="DynamicClientCertificate"} 2682
+workqueue_queue_duration_seconds_sum{name="DynamicServingCertificateController"} 2.0584059769999916
+workqueue_queue_duration_seconds_count{name="DynamicServingCertificateController"} 13404
+workqueue_queue_duration_seconds_sum{name="controllerName"} 0.150037089
+workqueue_queue_duration_seconds_count{name="controllerName"} 2
+# HELP workqueue_retries_total [BETA] Total number of retries handled by workqueue
+# TYPE workqueue_retries_total counter
+workqueue_retries_total{name="DynamicCABundle-client-ca-bundle"} 0
+workqueue_retries_total{name="DynamicCABundle-serving-cert"} 0
+workqueue_retries_total{name="DynamicClientCertificate"} 0
+workqueue_retries_total{name="DynamicServingCertificateController"} 0
+workqueue_retries_total{name="controllerName"} 0
+# HELP workqueue_unfinished_work_seconds [BETA] How many seconds of work has done that is in progress and hasn't been observed by work_duration. Large values indicate stuck threads. One can deduce the number of stuck threads by observing the rate at which this increases.
+# TYPE workqueue_unfinished_work_seconds gauge
+workqueue_unfinished_work_seconds{name="DynamicCABundle-client-ca-bundle"} 0
+workqueue_unfinished_work_seconds{name="DynamicCABundle-serving-cert"} 0
+workqueue_unfinished_work_seconds{name="DynamicClientCertificate"} 0
+workqueue_unfinished_work_seconds{name="DynamicServingCertificateController"} 0
+workqueue_unfinished_work_seconds{name="controllerName"} 0
+# HELP workqueue_work_duration_seconds [BETA] How long in seconds processing an item from workqueue takes.
+# TYPE workqueue_work_duration_seconds histogram
+workqueue_work_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="9.999999999999999e-05"} 1
+workqueue_work_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="0.001"} 1
+workqueue_work_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="0.01"} 1
+workqueue_work_duration_seconds_bucket{name="DynamicCABundle-client-ca-bundle",le="0.1"} 1
+workqueue_work_duration_seconds_sum{name="DynamicCABundle-client-ca-bundle"} 5.4868e-05
+workqueue_work_duration_seconds_count{name="DynamicCABundle-client-ca-bundle"} 1
+workqueue_work_duration_seconds_sum{name="DynamicCABundle-serving-cert"} 0.005124533
+workqueue_work_duration_seconds_count{name="DynamicCABundle-serving-cert"} 2
+workqueue_work_duration_seconds_sum{name="DynamicClientCertificate"} 37.11270853200003
+workqueue_work_duration_seconds_count{name="DynamicClientCertificate"} 2682
+workqueue_work_duration_seconds_sum{name="DynamicServingCertificateController"} 2.046675454999997
+workqueue_work_duration_seconds_count{name="DynamicServingCertificateController"} 13404
+workqueue_work_duration_seconds_sum{name="controllerName"} 0.00092982
+workqueue_work_duration_seconds_count{name="controllerName"} 2
+
+# --- appended: ALL proxy_request_duration series (full) ---
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.05"} 1.431697e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.1"} 1.559573e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.2"} 1.650549e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.4"} 1.705619e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.6"} 1.722618e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="0.8"} 1.727549e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="1"} 1.729656e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="1.25"} 1.730763e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="1.5"} 1.731307e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="2"} 1.73187e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="3"} 1.732155e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="4"} 1.732266e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="5"} 1.73232e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="6"} 1.732397e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="8"} 1.732456e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="10"} 1.732473e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="15"} 1.732495e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="20"} 1.732509e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="30"} 1.732535e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="45"} 1.732569e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="60"} 1.732584e+06
+proxy_request_duration_seconds_bucket{code="200",method="get",le="+Inf"} 1.773739e+06
+proxy_request_duration_seconds_sum{code="200",method="get"} 1.856743145833e+07
+proxy_request_duration_seconds_count{code="200",method="get"} 1.773739e+06
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="0.05"} 75
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="0.1"} 106
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="0.2"} 146
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="0.4"} 179
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="0.6"} 196
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="0.8"} 209
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="1"} 224
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="1.25"} 235
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="1.5"} 249
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="2"} 275
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="3"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="4"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="5"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="6"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="8"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="10"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="15"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="20"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="30"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="45"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="60"} 278
+proxy_request_duration_seconds_bucket{code="200",method="patch",le="+Inf"} 278
+proxy_request_duration_seconds_sum{code="200",method="patch"} 133.45049237100002
+proxy_request_duration_seconds_count{code="200",method="patch"} 278
+proxy_request_duration_seconds_bucket{code="200",method="put",le="0.05"} 1
+proxy_request_duration_seconds_bucket{code="200",method="put",le="0.1"} 1
+proxy_request_duration_seconds_bucket{code="200",method="put",le="0.2"} 2
+proxy_request_duration_seconds_bucket{code="200",method="put",le="0.4"} 2
+proxy_request_duration_seconds_bucket{code="200",method="put",le="0.6"} 2
+proxy_request_duration_seconds_bucket{code="200",method="put",le="0.8"} 2
+proxy_request_duration_seconds_bucket{code="200",method="put",le="1"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="1.25"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="1.5"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="2"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="3"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="4"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="5"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="6"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="8"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="10"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="15"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="20"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="30"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="45"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="60"} 3
+proxy_request_duration_seconds_bucket{code="200",method="put",le="+Inf"} 3
+proxy_request_duration_seconds_sum{code="200",method="put"} 1.1226732890000002
+proxy_request_duration_seconds_count{code="200",method="put"} 3
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="0.05"} 20
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="0.1"} 31
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="0.2"} 37
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="0.4"} 49
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="0.6"} 52
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="0.8"} 53
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="1"} 55
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="1.25"} 57
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="1.5"} 58
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="2"} 61
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="3"} 62
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="4"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="5"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="6"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="8"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="10"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="15"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="20"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="30"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="45"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="60"} 63
+proxy_request_duration_seconds_bucket{code="201",method="patch",le="+Inf"} 63
+proxy_request_duration_seconds_sum{code="201",method="patch"} 24.163828836
+proxy_request_duration_seconds_count{code="201",method="patch"} 63
+proxy_request_duration_seconds_bucket{code="201",method="post",le="0.05"} 963
+proxy_request_duration_seconds_bucket{code="201",method="post",le="0.1"} 1765
+proxy_request_duration_seconds_bucket{code="201",method="post",le="0.2"} 1955
+proxy_request_duration_seconds_bucket{code="201",method="post",le="0.4"} 2040
+proxy_request_duration_seconds_bucket{code="201",method="post",le="0.6"} 2043
+proxy_request_duration_seconds_bucket{code="201",method="post",le="0.8"} 2045
+proxy_request_duration_seconds_bucket{code="201",method="post",le="1"} 2045
+proxy_request_duration_seconds_bucket{code="201",method="post",le="1.25"} 2046
+proxy_request_duration_seconds_bucket{code="201",method="post",le="1.5"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="2"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="3"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="4"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="5"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="6"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="8"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="10"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="15"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="20"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="30"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="45"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="60"} 2047
+proxy_request_duration_seconds_bucket{code="201",method="post",le="+Inf"} 2047
+proxy_request_duration_seconds_sum{code="201",method="post"} 132.55208215499985
+proxy_request_duration_seconds_count{code="201",method="post"} 2047
+proxy_request_duration_seconds_bucket{code="401",method="post",le="0.05"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="0.1"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="0.2"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="0.4"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="0.6"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="0.8"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="1"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="1.25"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="1.5"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="2"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="3"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="4"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="5"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="6"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="8"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="10"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="15"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="20"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="30"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="45"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="60"} 1
+proxy_request_duration_seconds_bucket{code="401",method="post",le="+Inf"} 1
+proxy_request_duration_seconds_sum{code="401",method="post"} 0.001370322
+proxy_request_duration_seconds_count{code="401",method="post"} 1
+proxy_request_duration_seconds_bucket{code="403",method="get",le="0.05"} 1350
+proxy_request_duration_seconds_bucket{code="403",method="get",le="0.1"} 1440
+proxy_request_duration_seconds_bucket{code="403",method="get",le="0.2"} 1525
+proxy_request_duration_seconds_bucket{code="403",method="get",le="0.4"} 1562
+proxy_request_duration_seconds_bucket{code="403",method="get",le="0.6"} 1577
+proxy_request_duration_seconds_bucket{code="403",method="get",le="0.8"} 1579
+proxy_request_duration_seconds_bucket{code="403",method="get",le="1"} 1581
+proxy_request_duration_seconds_bucket{code="403",method="get",le="1.25"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="1.5"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="2"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="3"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="4"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="5"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="6"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="8"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="10"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="15"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="20"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="30"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="45"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="60"} 1587
+proxy_request_duration_seconds_bucket{code="403",method="get",le="+Inf"} 1587
+proxy_request_duration_seconds_sum{code="403",method="get"} 58.40529924600008
+proxy_request_duration_seconds_count{code="403",method="get"} 1587
+proxy_request_duration_seconds_bucket{code="404",method="get",le="0.05"} 34
+proxy_request_duration_seconds_bucket{code="404",method="get",le="0.1"} 42
+proxy_request_duration_seconds_bucket{code="404",method="get",le="0.2"} 50
+proxy_request_duration_seconds_bucket{code="404",method="get",le="0.4"} 56
+proxy_request_duration_seconds_bucket{code="404",method="get",le="0.6"} 58
+proxy_request_duration_seconds_bucket{code="404",method="get",le="0.8"} 62
+proxy_request_duration_seconds_bucket{code="404",method="get",le="1"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="1.25"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="1.5"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="2"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="3"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="4"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="5"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="6"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="8"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="10"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="15"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="20"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="30"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="45"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="60"} 64
+proxy_request_duration_seconds_bucket{code="404",method="get",le="+Inf"} 64
+proxy_request_duration_seconds_sum{code="404",method="get"} 9.306734454999999
+proxy_request_duration_seconds_count{code="404",method="get"} 64
+proxy_request_duration_seconds_bucket{code="409",method="post",le="0.05"} 0
+proxy_request_duration_seconds_bucket{code="409",method="post",le="0.1"} 0
+proxy_request_duration_seconds_bucket{code="409",method="post",le="0.2"} 2
+proxy_request_duration_seconds_bucket{code="409",method="post",le="0.4"} 5
+proxy_request_duration_seconds_bucket{code="409",method="post",le="0.6"} 9
+proxy_request_duration_seconds_bucket{code="409",method="post",le="0.8"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="1"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="1.25"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="1.5"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="2"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="3"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="4"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="5"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="6"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="8"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="10"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="15"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="20"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="30"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="45"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="60"} 10
+proxy_request_duration_seconds_bucket{code="409",method="post",le="+Inf"} 10
+proxy_request_duration_seconds_sum{code="409",method="post"} 3.4603367840000003
+proxy_request_duration_seconds_count{code="409",method="post"} 10
+proxy_request_duration_seconds_bucket{code="422",method="post",le="0.05"} 0
+proxy_request_duration_seconds_bucket{code="422",method="post",le="0.1"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="0.2"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="0.4"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="0.6"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="0.8"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="1"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="1.25"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="1.5"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="2"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="3"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="4"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="5"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="6"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="8"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="10"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="15"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="20"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="30"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="45"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="60"} 1
+proxy_request_duration_seconds_bucket{code="422",method="post",le="+Inf"} 1
+proxy_request_duration_seconds_sum{code="422",method="post"} 0.062659217
+proxy_request_duration_seconds_count{code="422",method="post"} 1
+proxy_request_duration_seconds_bucket{code="429",method="get",le="0.05"} 0
+proxy_request_duration_seconds_bucket{code="429",method="get",le="0.1"} 0
+proxy_request_duration_seconds_bucket{code="429",method="get",le="0.2"} 0
+proxy_request_duration_seconds_bucket{code="429",method="get",le="0.4"} 10
+proxy_request_duration_seconds_bucket{code="429",method="get",le="0.6"} 23
+proxy_request_duration_seconds_bucket{code="429",method="get",le="0.8"} 33
+proxy_request_duration_seconds_bucket{code="429",method="get",le="1"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="1.25"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="1.5"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="2"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="3"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="4"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="5"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="6"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="8"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="10"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="15"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="20"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="30"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="45"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="60"} 35
+proxy_request_duration_seconds_bucket{code="429",method="get",le="+Inf"} 35
+proxy_request_duration_seconds_sum{code="429",method="get"} 19.393334193
+proxy_request_duration_seconds_count{code="429",method="get"} 35
+proxy_request_duration_seconds_bucket{code="502",method="get",le="0.05"} 0
+proxy_request_duration_seconds_bucket{code="502",method="get",le="0.1"} 0
+proxy_request_duration_seconds_bucket{code="502",method="get",le="0.2"} 1
+proxy_request_duration_seconds_bucket{code="502",method="get",le="0.4"} 2
+proxy_request_duration_seconds_bucket{code="502",method="get",le="0.6"} 2
+proxy_request_duration_seconds_bucket{code="502",method="get",le="0.8"} 2
+proxy_request_duration_seconds_bucket{code="502",method="get",le="1"} 2
+proxy_request_duration_seconds_bucket{code="502",method="get",le="1.25"} 3
+proxy_request_duration_seconds_bucket{code="502",method="get",le="1.5"} 4
+proxy_request_duration_seconds_bucket{code="502",method="get",le="2"} 5
+proxy_request_duration_seconds_bucket{code="502",method="get",le="3"} 6
+proxy_request_duration_seconds_bucket{code="502",method="get",le="4"} 15
+proxy_request_duration_seconds_bucket{code="502",method="get",le="5"} 15
+proxy_request_duration_seconds_bucket{code="502",method="get",le="6"} 19
+proxy_request_duration_seconds_bucket{code="502",method="get",le="8"} 24
+proxy_request_duration_seconds_bucket{code="502",method="get",le="10"} 29
+proxy_request_duration_seconds_bucket{code="502",method="get",le="15"} 33
+proxy_request_duration_seconds_bucket{code="502",method="get",le="20"} 39
+proxy_request_duration_seconds_bucket{code="502",method="get",le="30"} 87
+proxy_request_duration_seconds_bucket{code="502",method="get",le="45"} 87
+proxy_request_duration_seconds_bucket{code="502",method="get",le="60"} 87
+proxy_request_duration_seconds_bucket{code="502",method="get",le="+Inf"} 87
+proxy_request_duration_seconds_sum{code="502",method="get"} 1535.1689306089995
+proxy_request_duration_seconds_count{code="502",method="get"} 87
+proxy_request_duration_seconds_bucket{code="503",method="get",le="0.05"} 0
+proxy_request_duration_seconds_bucket{code="503",method="get",le="0.1"} 0
+proxy_request_duration_seconds_bucket{code="503",method="get",le="0.2"} 0
+proxy_request_duration_seconds_bucket{code="503",method="get",le="0.4"} 0
+proxy_request_duration_seconds_bucket{code="503",method="get",le="0.6"} 0
+proxy_request_duration_seconds_bucket{code="503",method="get",le="0.8"} 1
+proxy_request_duration_seconds_bucket{code="503",method="get",le="1"} 4
+proxy_request_duration_seconds_bucket{code="503",method="get",le="1.25"} 10
+proxy_request_duration_seconds_bucket{code="503",method="get",le="1.5"} 17
+proxy_request_duration_seconds_bucket{code="503",method="get",le="2"} 34
+proxy_request_duration_seconds_bucket{code="503",method="get",le="3"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="4"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="5"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="6"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="8"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="10"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="15"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="20"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="30"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="45"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="60"} 36
+proxy_request_duration_seconds_bucket{code="503",method="get",le="+Inf"} 36
+proxy_request_duration_seconds_sum{code="503",method="get"} 54.097846748
+proxy_request_duration_seconds_count{code="503",method="get"} 36
+proxy_request_duration_seconds_bucket{code="504",method="get",le="0.05"} 0
+proxy_request_duration_seconds_bucket{code="504",method="get",le="0.1"} 1
+proxy_request_duration_seconds_bucket{code="504",method="get",le="0.2"} 2
+proxy_request_duration_seconds_bucket{code="504",method="get",le="0.4"} 4
+proxy_request_duration_seconds_bucket{code="504",method="get",le="0.6"} 4
+proxy_request_duration_seconds_bucket{code="504",method="get",le="0.8"} 4
+proxy_request_duration_seconds_bucket{code="504",method="get",le="1"} 4
+proxy_request_duration_seconds_bucket{code="504",method="get",le="1.25"} 5
+proxy_request_duration_seconds_bucket{code="504",method="get",le="1.5"} 7
+proxy_request_duration_seconds_bucket{code="504",method="get",le="2"} 8
+proxy_request_duration_seconds_bucket{code="504",method="get",le="3"} 22
+proxy_request_duration_seconds_bucket{code="504",method="get",le="4"} 23
+proxy_request_duration_seconds_bucket{code="504",method="get",le="5"} 23
+proxy_request_duration_seconds_bucket{code="504",method="get",le="6"} 23
+proxy_request_duration_seconds_bucket{code="504",method="get",le="8"} 23
+proxy_request_duration_seconds_bucket{code="504",method="get",le="10"} 24
+proxy_request_duration_seconds_bucket{code="504",method="get",le="15"} 26
+proxy_request_duration_seconds_bucket{code="504",method="get",le="20"} 27
+proxy_request_duration_seconds_bucket{code="504",method="get",le="30"} 39
+proxy_request_duration_seconds_bucket{code="504",method="get",le="45"} 39
+proxy_request_duration_seconds_bucket{code="504",method="get",le="60"} 39
+proxy_request_duration_seconds_bucket{code="504",method="get",le="+Inf"} 39
+proxy_request_duration_seconds_sum{code="504",method="get"} 413.55812124999994
+proxy_request_duration_seconds_count{code="504",method="get"} 39
