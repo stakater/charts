@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.shard.storageObjectsHigh }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-shard-storage-objects
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.shard
+      rules:
+        - alert: KcpShardStorageObjectsHigh
+          expr: |
+            apiserver_storage_objects{job=~"{{ .Values.kcp.shards.job }}"} > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp stored objects for {{`{{ $labels.resource }}`}} at {{`{{ $value }}`}}"
+            description: "Unbounded growth of a stored resource is a slow burn toward etcd pressure and latency; check what is creating them."
+{{- end }}

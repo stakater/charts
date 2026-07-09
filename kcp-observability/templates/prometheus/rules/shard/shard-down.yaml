@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.shard.down }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-shard-down
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.shard
+      rules:
+        - alert: KcpShardDown
+          expr: |
+            up{job=~"{{ .Values.kcp.shards.job }}"} == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp shard target {{`{{ $labels.pod }}`}} is down"
+            description: "A down shard takes out exactly the workspaces scheduled to it while the rest of the platform looks healthy."
+{{- end }}

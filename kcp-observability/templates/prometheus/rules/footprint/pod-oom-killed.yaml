@@ -1,0 +1,27 @@
+{{- $r := .Values.prometheus.rules.footprint.podOOMKilled }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-pod-oom-killed
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.footprint
+      rules:
+        - alert: KcpPodOOMKilled
+          expr: |
+            max by (pod, container) (kube_pod_container_status_last_terminated_reason{namespace="{{ include "kcp-observability.namespace" . }}", pod=~"{{ .Values.kcp.podRegex }}", reason="OOMKilled"}) > 0 and max by (pod, container) (increase(kube_pod_container_status_restarts_total{namespace="{{ include "kcp-observability.namespace" . }}", pod=~"{{ .Values.kcp.podRegex }}"}[30m])) > 0
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp pod {{`{{ $labels.pod }}`}} was OOMKilled"
+            description: "The container exceeded its memory limit. Raise the limit or find the leak (see the memory/goroutine panels)."
+{{- end }}

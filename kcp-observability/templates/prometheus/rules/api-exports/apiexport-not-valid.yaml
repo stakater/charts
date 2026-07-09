@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.apiExports.notValid }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-apiexport-not-valid
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.api_exports
+      rules:
+        - alert: KcpAPIExportNotValid
+          expr: |
+            sum by (shard, condition) (kcp_apiexport_condition_status{condition=~"IdentityValid|VirtualWorkspaceURLsReady", status=~"False|Unknown"}) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "{{`{{ $value }}`}} APIExports degraded ({{`{{ $labels.condition }}`}}) on shard {{`{{ $labels.shard }}`}}"
+            description: "An invalid APIExport breaks every tenant bound to it at once — the highest blast radius on the platform (hundreds of bindings per export)."
+{{- end }}

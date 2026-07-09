@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.footprint.podMemoryHigh }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-pod-memory-high
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.footprint
+      rules:
+        - alert: KcpPodMemoryHigh
+          expr: |
+            max by (pod, container) (container_memory_working_set_bytes{namespace="{{ include "kcp-observability.namespace" . }}", pod=~"{{ .Values.kcp.podRegex }}", container!=""}) / clamp_min(max by (pod, container) (kube_pod_container_resource_limits{namespace="{{ include "kcp-observability.namespace" . }}", pod=~"{{ .Values.kcp.podRegex }}", resource="memory"}), 1) > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp pod {{`{{ $labels.pod }}`}} at {{`{{ $value | humanizePercentage }}`}} of its memory limit"
+            description: "Working set near the limit precedes an OOMKill of a control-plane component."
+{{- end }}

@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.syncAgents.clientErrors }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-syncagent-client-errors
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.syncagents
+      rules:
+        - alert: KcpSyncAgentClientErrors
+          expr: |
+            sum by (service_agent) (rate(rest_client_requests_total{job=~"{{ .Values.kcp.syncAgent.job }}", code=~"5..|<error>"}[5m])) / clamp_min(sum by (service_agent) (rate(rest_client_requests_total{job=~"{{ .Values.kcp.syncAgent.job }}"}[5m])), 1e-10) > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "SCO service agent {{`{{ $labels.service_agent }}`}} client error ratio at {{`{{ $value | humanizePercentage }}`}}"
+            description: "The agent is failing to talk to kcp or the workload cluster; syncing degrades silently."
+{{- end }}

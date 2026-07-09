@@ -1,0 +1,32 @@
+# metrics-allowlist.documented.txt — metrics the chart references that are REAL (confirmed
+# in upstream documentation) but are NOT in tests/fixtures/, with the reason. These are NOT
+# guesses; they come from other components on the cluster (KSM, cAdvisor, Prometheus itself).
+#
+# Sources:
+#   - kube-state-metrics docs: https://github.com/kubernetes/kube-state-metrics/tree/main/docs
+#   - cAdvisor metrics: https://github.com/google/cadvisor/blob/master/docs/storage/prometheus.md
+#   - Prometheus ALERTS: https://prometheus.io/docs/prometheus/latest/querying/basics/
+
+# --- kube-state-metrics (Stories 8.1/8.2) — KSM runs cluster-side, not in our fixtures ---
+kube_pod_container_status_restarts_total
+kube_pod_container_status_last_terminated_reason
+kube_pod_container_resource_limits
+
+# --- cAdvisor / kubelet (Story 8.2) — standard on any OpenShift node ---
+container_cpu_cfs_throttled_periods_total
+container_cpu_cfs_periods_total
+container_memory_working_set_bytes
+
+# --- kube-apiserver APF (Story 2.2) ---
+# Documented apiserver metric (https://kubernetes.io/docs/reference/instrumentation/metrics/).
+# ABSENT from the us-2 shard dump even though APF is active (apiserver_flowcontrol_
+# dispatched_requests_total IS captured) — the rejected counter registers lazily on the
+# first rejection. Verify it appears under real APF pressure during deploy validation.
+apiserver_flowcontrol_rejected_requests_total
+
+# --- Prometheus built-in (synthesized by the rule engine, not scraped) ---
+# ALERTS{alertname,alertstate,...} — used by the dashboard alert panels.
+ALERTS
+
+# --- Prometheus scrape-synthesized (per target; not part of an app's /metrics payload) ---
+up

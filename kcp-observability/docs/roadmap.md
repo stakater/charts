@@ -113,7 +113,9 @@ One root shard today; the rules are written per-`job`/`pod` so added shards inhe
 
 - **Metric(s):** `apiserver_request_total{code,verb,resource}` **[captured]**,
   `apiserver_current_inflight_requests{request_kind}` **[captured]**,
-  `apiserver_flowcontrol_rejected_requests_total` **[captured]**
+  `apiserver_flowcontrol_rejected_requests_total` **[documented — absent from the dump;
+  APF is active (`dispatched_requests_total` captured) but the rejected counter registers
+  lazily on first rejection; verify live]**
 - **SLO:** < 1% 5xx over 5m; no sustained APF rejection
 - **Alert:** `KcpShardErrorRateHigh`; `KcpShardAPFRejecting`
 - **Dashboard:** per-shard request/error/inflight/APF

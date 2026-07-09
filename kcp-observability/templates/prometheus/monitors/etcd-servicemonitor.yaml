@@ -1,0 +1,53 @@
+{{- if and (.Values.prometheus.monitors.etcdServiceMonitor) (.Values.prometheus.monitors.etcdServiceMonitor.enabled) }}
+{{- $m := .Values.prometheus.monitors.etcdServiceMonitor }}
+# Scrapes the druid-managed etcd via the <name>-client Service (:2379, client-cert
+# auth — verified on us-2 with the druid-created `etcd-client-tls` secret).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-etcd
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: client
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+        {{- if $m.caSecret }}
+        ca:
+          secret:
+            name: {{ $m.caSecret }}
+            key: ca.crt
+        {{- end }}
+        cert:
+          secret:
+            name: {{ $m.clientCertSecret }}
+            key: tls.crt
+        keySecret:
+          name: {{ $m.clientCertSecret }}
+          key: tls.key
+      relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+    # etcd-backup-restore sidecar (etcdbr_* snapshot metrics — KcpEtcdBackupStale).
+    # Serves https on the backuprestore port; anonymous (verified on us-2).
+    - interval: 60s
+      path: /metrics
+      port: backuprestore
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: etcd-client-service
+      app.kubernetes.io/managed-by: etcd-druid
+{{- end }}

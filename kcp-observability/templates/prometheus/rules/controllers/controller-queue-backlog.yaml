@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.controllers.queueBacklog }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-controller-queue-backlog
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.controllers
+      rules:
+        - alert: KcpControllerQueueBacklog
+          expr: |
+            workqueue_depth{job=~"{{ .Values.kcp.shards.job }}", name=~"kcp-.*"} > {{ $r.depth }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp controller {{`{{ $labels.name }}`}} queue depth at {{`{{ $value }}`}}"
+            description: "A growing kcp controller workqueue is the earliest sign workspace/binding reconciliation is falling behind."
+{{- end }}

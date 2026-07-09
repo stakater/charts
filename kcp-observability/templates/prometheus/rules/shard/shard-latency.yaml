@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.shard.latencyHigh }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-shard-latency
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.shard
+      rules:
+        - alert: KcpShardLatencyHigh
+          expr: |
+            (kcp:shard_latency_seconds:read_p99 > {{ $r.p99Seconds }}) or (kcp:shard_latency_seconds:write_p99 > {{ $r.p99Seconds }})
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp shard {{`{{ $labels.job }}`}} p99 request latency is {{`{{ $value | humanizeDuration }}`}}"
+            description: "Shard request latency above the apiserver SLO — tenants experience a slow control plane before anything visibly fails."
+{{- end }}

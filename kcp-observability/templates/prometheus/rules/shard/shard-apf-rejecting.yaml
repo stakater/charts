@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.shard.apfRejecting }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-shard-apf-rejecting
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.shard
+      rules:
+        - alert: KcpShardAPFRejecting
+          expr: |
+            sum by (job) (rate(apiserver_flowcontrol_rejected_requests_total{job=~"{{ .Values.kcp.shards.job }}"}[5m])) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp shard {{`{{ $labels.job }}`}} is rejecting requests via API Priority and Fairness"
+            description: "Sustained APF rejections mean the shard is saturated and shedding load — requests are being refused."
+{{- end }}
