@@ -17,7 +17,8 @@ spec:
       rules:
         - alert: KcpAPIExportNotValid
           expr: |
-            sum by (shard, condition) (kcp_apiexport_condition_status{condition=~"IdentityValid|VirtualWorkspaceURLsReady", status=~"False|Unknown"}) > 0
+            {{- /* max over replicas: only the controller-leader has the full index (per-replica gauges disagree) */}}
+            sum by (shard, condition) (max by (shard, condition, status) (kcp_apiexport_condition_status{condition=~"IdentityValid|VirtualWorkspaceURLsReady", status=~"False|Unknown"})) > 0
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}

@@ -206,7 +206,7 @@
       },
       "targets": [
         {
-          "expr": "sum(kcp_workspace_count{phase=\"Ready\"})",
+          "expr": "sum(max by (shard, phase) (kcp_workspace_count{phase=\"Ready\"}))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -255,7 +255,7 @@
       },
       "targets": [
         {
-          "expr": "sum(kcp_workspace_count{phase!=\"Ready\"}) or vector(0)",
+          "expr": "sum(max by (shard, phase) (kcp_workspace_count{phase!=\"Ready\"})) or vector(0)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -307,7 +307,7 @@
       },
       "targets": [
         {
-          "expr": "sum(kcp_logicalcluster_count{phase=\"Ready\"})",
+          "expr": "sum(max by (shard, phase) (kcp_logicalcluster_count{phase=\"Ready\"}))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -355,7 +355,7 @@
       },
       "targets": [
         {
-          "expr": "sum(kcp_apibinding_phase{phase=\"Bound\"})",
+          "expr": "sum(max by (shard, phase) (kcp_apibinding_phase{phase=\"Bound\"}))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -773,7 +773,7 @@
       },
       "targets": [
         {
-          "expr": "sum(kcp_apiexport_condition_status{condition=\"IdentityValid\", status=\"True\"})",
+          "expr": "sum(max by (shard, condition) (kcp_apiexport_condition_status{condition=\"IdentityValid\", status=\"True\"}))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -1601,7 +1601,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (phase) (kcp_workspace_count)",
+          "expr": "sum by (phase) (max by (shard, phase) (kcp_workspace_count))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -1647,7 +1647,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (phase) (kcp_logicalcluster_count)",
+          "expr": "sum by (phase) (max by (shard, phase) (kcp_logicalcluster_count))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -1752,7 +1752,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (phase) (kcp_apibinding_phase)",
+          "expr": "sum by (phase) (max by (shard, phase) (kcp_apibinding_phase))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -1798,7 +1798,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (condition) (kcp_apibinding_condition_status{status=~\"False|Unknown\"})",
+          "expr": "sum by (condition) (max by (shard, condition, status) (kcp_apibinding_condition_status{status=~\"False|Unknown\"}))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -1892,7 +1892,7 @@
       },
       "targets": [
         {
-          "expr": "kcp_apiexport_condition_status",
+          "expr": "max by (shard, condition, status) (kcp_apiexport_condition_status)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -1934,7 +1934,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (condition) (kcp_apiexport_condition_status{status=~\"False|Unknown\"}) or vector(0)",
+          "expr": "sum by (condition) (max by (shard, condition, status) (kcp_apiexport_condition_status{status=~\"False|Unknown\"})) or vector(0)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
