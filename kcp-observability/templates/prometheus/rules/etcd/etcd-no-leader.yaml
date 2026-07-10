@@ -16,8 +16,11 @@ spec:
     - name: kcp.etcd
       rules:
         - alert: KcpEtcdNoLeader
+          # container="etcd" is load-bearing: the etcd-backup-restore sidecar exports
+          # its own etcd_server_has_leader that is permanently 0 (seen live on us-2 —
+          # all members "leaderless" while etcd was healthy).
           expr: |
-            etcd_server_has_leader{job=~"{{ .Values.kcp.etcd.job }}"} == 0
+            etcd_server_has_leader{job=~"{{ .Values.kcp.etcd.job }}", container="etcd"} == 0
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}
