@@ -16,8 +16,12 @@ spec:
     - name: kcp.etcd
       rules:
         - alert: KcpEtcdBackupStale
+          # max across members is load-bearing: only the currently-snapshotting
+          # member's sidecar has fresh timestamps — the others report their own
+          # last-leadership times (seen live on us-2: cluster snapshot 5min old,
+          # two members "stale" by days).
           expr: |
-            (time() - etcdbr_snapshot_latest_timestamp{kind="Full"} > {{ $r.fullMaxAgeHours }} * 3600) or (time() - etcdbr_snapshot_latest_timestamp{kind="Incr"} > {{ $r.incrMaxAgeMinutes }} * 60)
+            (time() - max by (kind, job, namespace) (etcdbr_snapshot_latest_timestamp{kind="Full"}) > {{ $r.fullMaxAgeHours }} * 3600) or (time() - max by (kind, job, namespace) (etcdbr_snapshot_latest_timestamp{kind="Incr"}) > {{ $r.incrMaxAgeMinutes }} * 60)
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}

@@ -104,10 +104,17 @@ tests:
               description: "Sustained APF rejections mean the shard is saturated and shedding load — requests are being refused."
 
   # ---------------------------------------------------------------- Area 3: etcd
-  # No leader for 1m -> critical.
+  # No leader for 1m -> critical. Only the etcd container's gauge counts: the
+  # etcd-backup-restore sidecar exports its own etcd_server_has_leader that is
+  # always 0 (seen live on us-2 — all 3 members "leaderless" while etcd was fine),
+  # so a junk sidecar series must NOT fire.
   - interval: 1m
     input_series:
-      - series: 'etcd_server_has_leader{job="root-client", pod="root-0"}'
+      - series: 'etcd_server_has_leader{job="root-client", pod="root-0", container="etcd"}'
+        values: '0x10'
+      - series: 'etcd_server_has_leader{job="root-client", pod="root-1", container="etcd"}'
+        values: '1x10'
+      - series: 'etcd_server_has_leader{job="root-client", pod="root-1", container="backup-restore"}'
         values: '0x10'
     alert_rule_test:
       - eval_time: 3m
@@ -118,6 +125,7 @@ tests:
               rulesgroup: kcp
               job: root-client
               pod: root-0
+              container: etcd
             exp_annotations:
               summary: "kcp etcd member root-0 has no leader"
               description: "etcd without a leader means the kcp control plane cannot write — a hard outage. Check quorum (2/3 members must be healthy)."
@@ -150,6 +158,10 @@ tests:
   # so a value of 0 evaluated at 27h is 27h old. Incr snapshot kept fresh by tracking
   # eval time (value = its own timestamp). 1m resolution so the 5m instant-selector
   # lookback always finds a sample and `for:` never resets.
+  # Only the SNAPSHOTTING member's sidecar has fresh timestamps — the other members
+  # report their own last-leadership snapshot times (seen live on us-2: cluster
+  # snapshot 5min old, two followers "stale" by days). The alert takes the cluster
+  # max, so pod root-1's stale Full series here must NOT make it fire.
   - interval: 1m
     input_series:
       - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Full", pod="root-0"}'
@@ -165,10 +177,24 @@ tests:
               rulesgroup: kcp
               job: root-client
               kind: Full
-              pod: root-0
             exp_annotations:
               summary: "kcp etcd backups are stale (Full snapshot too old)"
               description: "A control plane without a recent backup is one incident away from unrecoverable. Check the etcd-backup-restore sidecar and the backup bucket."
+
+  # Cluster-latest snapshot fresh on one member -> stale timestamps on the other
+  # members must NOT fire.
+  - interval: 1m
+    input_series:
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Full", pod="root-0"}'
+        values: '0x1700'
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Full", pod="root-1"}'
+        values: '0+60x1700'
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Incr", pod="root-0"}'
+        values: '0+60x1700'
+    alert_rule_test:
+      - eval_time: 27h
+        alertname: KcpEtcdBackupStale
+        exp_alerts: []
 
   # ------------------------------------------------------- Area 4: workspaces
   # 6 workspaces + 4 logicalclusters not Ready = 10 > baseline 8 -> fires.
@@ -261,13 +287,23 @@ tests:
               description: "An invalid APIExport breaks every tenant bound to it at once — the highest blast radius on the platform (hundreds of bindings per export)."
 
   # ------------------------------------------------- Area 6: controllers
-  # A kcp-* queue backing up fires; a non-kcp queue at the same depth must NOT.
+  # A kcp-* queue backing up ON EVERY REPLICA fires; a non-kcp queue at the same
+  # depth must NOT. The rule takes min across replicas: the non-leader never runs
+  # workers, so its queues grow unboundedly (seen live on us-2 — follower at 202
+  # while the leader sat at 0). A follower-only backlog must NOT fire; the min is
+  # the leader's (actively drained) depth.
   - interval: 1m
     input_series:
-      - series: 'workqueue_depth{job="root-kcp", name="kcp-apibinding"}'
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-apibinding", pod="root-kcp-a"}'
         values: '50x30'
-      - series: 'workqueue_depth{job="root-kcp", name="garbage_collector_graph_changes"}'
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-apibinding", pod="root-kcp-b"}'
+        values: '80x30'
+      - series: 'workqueue_depth{job="root-kcp", name="garbage_collector_graph_changes", pod="root-kcp-a"}'
         values: '50x30'
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-permissionclaimlabel", pod="root-kcp-a"}'
+        values: '0x30'
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-permissionclaimlabel", pod="root-kcp-b"}'
+        values: '200x30'
     alert_rule_test:
       - eval_time: 20m
         alertname: KcpControllerQueueBacklog

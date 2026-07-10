@@ -1,12 +1,14 @@
 {{- if and (.Values.prometheus.monitors.syncAgentPodMonitor) (.Values.prometheus.monitors.syncAgentPodMonitor.enabled) }}
 {{- $m := .Values.prometheus.monitors.syncAgentPodMonitor }}
 # Scrapes the api-syncagents (SCO service agents) on plain-http :8085 (verified on
-# v0.5.0). The port is NOT declared in the pod spec: `targetPort` silently discovers
-# nothing in that case (found live on us-2 — 35 dropped targets), so this uses
-# `portNumber`, which targets the pod IP at the given number regardless of declaration.
+# v0.5.0). The port is NOT declared in the pod spec, and every port-selection field
+# (`port`, `targetPort`, `portNumber`) generates a keep-relabel on the declared
+# container ports, so each silently drops every pod (found live on us-2: 20 syncagent
+# pods dropped). Instead: no port field at all (a port-less pod then yields exactly one
+# discovered target) and rewrite __address__ to podIP:port ourselves.
 # One agent per published service API; pods carry app.kubernetes.io/name=kcp-api-syncagent.
-# The PodMonitor name is the scrape job (job="kcp-syncagent") — keep in sync with
-# .Values.kcp.syncAgent.job used by the rules.
+# The operator defaults a PodMonitor's job to "<namespace>/<name>", so job is pinned by
+# relabel to "kcp-syncagent" — keep in sync with .Values.kcp.syncAgent.job used by the rules.
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
@@ -18,9 +20,16 @@ spec:
   podMetricsEndpoints:
     - interval: 30s
       path: /metrics
-      portNumber: {{ $m.port }}
       scheme: http
       relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_ip]
+          regex: "(.+)"
+          replacement: "$1:{{ $m.port }}"
+          targetLabel: __address__
+        - action: replace
+          replacement: "{{ .Values.kcp.syncAgent.job }}"
+          targetLabel: job
         - action: replace
           sourceLabels: [__meta_kubernetes_pod_name]
           targetLabel: pod

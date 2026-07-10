@@ -7,10 +7,19 @@
 # nonResourceURL /metrics only.
 
 grafana:
+  # The us-2 grafana-operator is OLM-installed in OwnNamespace mode (OperatorGroup
+  # targets crossplane-observability only) — a dashboard CR anywhere else is never
+  # reconciled (found live on us-2: CR sat with empty status). Land the CR in the
+  # operator's namespace.
+  namespace: crossplane-observability
   # The us-2 Grafana instance (grafana-operator) lives in crossplane-observability and
-  # selects dashboards by this label — NOT the SAAP default app=grafana.
+  # selects dashboards by this label — NOT the SAAP default app=grafana. The default
+  # key must be nulled explicitly: helm deep-merges maps, so without `app: null` the
+  # selector becomes {app: grafana, dashboards: crossplane} and matches no instance
+  # (found live on us-2 — dashboard CR sat unreconciled).
   instanceSelector:
     matchLabels:
+      app: null
       dashboards: crossplane
 
 prometheus:
@@ -22,5 +31,25 @@ prometheus:
       enabled: true
     etcdServiceMonitor:
       enabled: true
+    # DISABLED until the syncagent releases pass --metrics-address=0.0.0.0:8085:
+    # api-syncagent v0.5.0 binds metrics to 127.0.0.1:8085 by default (verified in-pod
+    # on us-2), so scrapes get connection-refused and 20 KcpSyncAgentDown alerts would
+    # fire falsely. The PodMonitor itself discovers all 20 pods correctly (address
+    # relabel to podIP:8085) — flip these on once the agent deployments are fixed.
     syncAgentPodMonitor:
-      enabled: true
+      enabled: false
+  rules:
+    syncAgents:
+      down:
+        enabled: false
+      clientErrors:
+        enabled: false
+    etcd:
+      # us-2 etcd runs on network-attached storage: fsync p99 baseline is
+      # ~170-190ms sustained (7d avg, all members) vs the upstream 10ms guidance.
+      # Raised so the alert pages on degradation-from-baseline instead of firing
+      # permanently. The chronic baseline itself is tracked as an SRE finding in
+      # tests/reports/ — if the storage is ever fixed, drop these overrides.
+      diskSlow:
+        fsyncP99Seconds: 0.5
+        commitP99Seconds: 1.0

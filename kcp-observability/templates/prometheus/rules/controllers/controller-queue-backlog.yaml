@@ -16,8 +16,13 @@ spec:
     - name: kcp.controllers
       rules:
         - alert: KcpControllerQueueBacklog
+          # min across replicas is load-bearing: the non-leader replica never runs
+          # workers, so its queues grow unboundedly (seen live on us-2 — follower at
+          # 202 while the leader sat at 0). The min is the leader's actively-drained
+          # depth. Known blind spot: a backlogged leader is masked while a replica
+          # restarts (its fresh queues read ~0) — accepted over a permanent false page.
           expr: |
-            workqueue_depth{job=~"{{ .Values.kcp.shards.job }}", name=~"kcp-.*"} > {{ $r.depth }}
+            min by (name, job, namespace) (workqueue_depth{job=~"{{ .Values.kcp.shards.job }}", name=~"kcp-.*"}) > {{ $r.depth }}
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}
