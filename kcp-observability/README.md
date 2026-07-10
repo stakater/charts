@@ -18,6 +18,8 @@ has proven to exist.
   SLI/SLO/SLA, the exact (captured) metrics, alert, and dashboard panel.
 - [`docs/dashboard-guide.md`](docs/dashboard-guide.md) — every dashboard panel: why it
   exists, what value it offers, and how to read the board during an incident.
+- [`docs/alerts-guide.md`](docs/alerts-guide.md) — every alert: why it exists, what we'd
+  miss without it, thresholds/calibration, and the live-validation hardening notes.
 - [`tests/fixtures/README.md`](tests/fixtures/README.md) — what was captured, how, and the
   answers to the load-bearing metric questions.
 - [`tests/DEPLOY-VALIDATION.md`](tests/DEPLOY-VALIDATION.md) — the deploy-then-validate loop
