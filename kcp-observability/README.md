@@ -49,8 +49,11 @@ and TLS secrets from there, and UWM's namespace enforcement then matches the scr
      anonymous metrics). **Verify the flag is accepted by v0.32.1 at deploy time.**
    - *Alternative:* mint a client cert with a `kubeconfigs.operator.kcp.io` CR, put its
      `tls.crt`/`tls.key` in a secret, set `prometheus.monitors.shardServiceMonitor.certSecret`.
-3. **Remove the hand-made `kcp-front-proxy` ServiceMonitor** in `kcp-config` when enabling
-   this chart's front-proxy monitor (it would double-scrape).
+3. **Remove any hand-made `kcp-front-proxy` ServiceMonitor** in `kcp-config` when enabling
+   this chart's front-proxy monitor (it would double-scrape). ✅ **Done on us-2 (2026-07-10,
+   team-approved):** the chart's ServiceMonitor was applied, verified scraping (both pods up
+   in a second scrape pool), then the 51-day-old manual one was deleted — zero metrics gap,
+   same `job` label throughout.
 4. **Enable the monitors** (they default off):
    ```yaml
    prometheus:
