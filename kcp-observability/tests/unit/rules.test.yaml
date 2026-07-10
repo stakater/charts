@@ -173,14 +173,23 @@ tests:
   # ------------------------------------------------------- Area 4: workspaces
   # 6 workspaces + 4 logicalclusters not Ready = 10 > baseline 8 -> fires.
   # (us-2 runs a standing Scheduling count, hence a baseline, not zero.)
+  # TWO REPLICAS with DISAGREEING values (seen live: leader 108, follower 27 — only
+  # the controller-leader has the full informer index): the rule must take the
+  # leader's max, NOT sum across pods (sum would say 8+3=11 even if leader saw 8).
   - interval: 1m
     input_series:
-      - series: 'kcp_workspace_count{phase="Ready", shard="root"}'
+      - series: 'kcp_workspace_count{phase="Ready", shard="root", pod="root-kcp-a"}'
         values: '100x30'
-      - series: 'kcp_workspace_count{phase="Scheduling", shard="root"}'
+      - series: 'kcp_workspace_count{phase="Ready", shard="root", pod="root-kcp-b"}'
+        values: '27x30'
+      - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
         values: '6x30'
-      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root"}'
+      - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '2x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
         values: '4x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '1x30'
     alert_rule_test:
       - eval_time: 20m
         alertname: KcpWorkspacesStuck
@@ -193,12 +202,15 @@ tests:
               summary: "10 kcp workspaces/logical clusters are not Ready on shard root"
               description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. Baseline is calibrated per cluster (us-2 runs a standing Scheduling count)."
 
-  # At exactly the baseline (8) -> must NOT fire.
+  # At exactly the baseline (8) -> must NOT fire — even though the naive per-pod SUM
+  # across the two replicas (8+5=13) would breach it. Guards the max-not-sum semantics.
   - interval: 1m
     input_series:
-      - series: 'kcp_workspace_count{phase="Scheduling", shard="root"}'
+      - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
         values: '8x30'
-      - series: 'kcp_logicalcluster_count{phase="Ready", shard="root"}'
+      - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '5x30'
+      - series: 'kcp_logicalcluster_count{phase="Ready", shard="root", pod="root-kcp-a"}'
         values: '100x30'
     alert_rule_test:
       - eval_time: 20m
@@ -206,13 +218,16 @@ tests:
         exp_alerts: []
 
   # ------------------------------------------------- Area 5: bindings/exports
-  # 3 bindings with Ready=False -> fires.
+  # 3 bindings with Ready=False -> fires (leader max across disagreeing replicas,
+  # summary must say 3 — not the pod-sum 4).
   - interval: 1m
     input_series:
-      - series: 'kcp_apibinding_condition_status{condition="Ready", status="True", shard="root"}'
+      - series: 'kcp_apibinding_condition_status{condition="Ready", status="True", shard="root", pod="root-kcp-a"}'
         values: '805x30'
-      - series: 'kcp_apibinding_condition_status{condition="Ready", status="False", shard="root"}'
+      - series: 'kcp_apibinding_condition_status{condition="Ready", status="False", shard="root", pod="root-kcp-a"}'
         values: '3x30'
+      - series: 'kcp_apibinding_condition_status{condition="Ready", status="False", shard="root", pod="root-kcp-b"}'
+        values: '1x30'
     alert_rule_test:
       - eval_time: 20m
         alertname: KcpAPIBindingNotReady

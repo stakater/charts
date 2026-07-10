@@ -50,19 +50,27 @@ spec:
             histogram_quantile(0.99, sum by (job, le) (rate(apiserver_request_duration_seconds_bucket{job=~"{{ .Values.kcp.shards.job }}", verb=~"POST|PUT|PATCH|DELETE"}[5m])))
 
         # --- Areas 4/5: workspace + binding health ------------------------------------
+        # NOTE: every kcp_* gauge is emitted PER REPLICA of the shard, and the replicas
+        # DISAGREE — only the controller-leader maintains the full informer index (seen
+        # live on us-2: leader reported 108 Ready workspaces, the follower 27). sum()
+        # over pods is therefore meaningless; max by (shard) takes the leader's complete
+        # view. Applies to every kcp_* gauge (workspace/logicalcluster counts, binding/
+        # export condition counts). Histogram _bucket rates are safe to sum (the
+        # follower contributes ~0 rate).
         - record: kcp:workspace_ready_ratio
           expr: |
-            sum by (shard) (kcp_workspace_count{phase="Ready"})
+            max by (shard) (kcp_workspace_count{phase="Ready"})
             /
-            clamp_min(sum by (shard) (kcp_workspace_count), 1e-10)
+            clamp_min(sum by (shard) (max by (shard, phase) (kcp_workspace_count)), 1e-10)
         - record: kcp:workspaces_not_ready:count
           expr: |
-            sum by (shard) (kcp_workspace_count{phase!="Ready"}) + sum by (shard) (kcp_logicalcluster_count{phase!="Ready"})
+            sum by (shard) (max by (shard, phase) (kcp_workspace_count{phase!="Ready"}))
+            + sum by (shard) (max by (shard, phase) (kcp_logicalcluster_count{phase!="Ready"}))
         - record: kcp:apibinding_ready_ratio
           expr: |
-            sum by (shard) (kcp_apibinding_condition_status{condition="Ready", status="True"})
+            max by (shard) (kcp_apibinding_condition_status{condition="Ready", status="True"})
             /
-            clamp_min(sum by (shard) (kcp_apibinding_condition_status{condition="Ready"}), 1e-10)
+            clamp_min(sum by (shard) (max by (shard, status) (kcp_apibinding_condition_status{condition="Ready"})), 1e-10)
         - record: kcp:apibinding_ttr_ms:p95
           expr: |
             histogram_quantile(0.95, sum by (shard, le) (rate(kcp_apibinding_ready_duration_ms_bucket[30m])))

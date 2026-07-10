@@ -17,7 +17,8 @@ spec:
       rules:
         - alert: KcpAPIBindingNotReady
           expr: |
-            sum by (shard) (kcp_apibinding_condition_status{condition="Ready", status=~"False|Unknown"}) > 0
+            {{- /* max over replicas: only the controller-leader has the full index (per-replica gauges disagree) */}}
+            sum by (shard) (max by (shard, status) (kcp_apibinding_condition_status{condition="Ready", status=~"False|Unknown"})) > 0
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}
