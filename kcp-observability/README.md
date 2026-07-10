@@ -16,6 +16,8 @@ has proven to exist.
 
 - [`docs/roadmap.md`](docs/roadmap.md) — the 8 capability areas / 20 user stories, each with
   SLI/SLO/SLA, the exact (captured) metrics, alert, and dashboard panel.
+- [`docs/dashboard-guide.md`](docs/dashboard-guide.md) — every dashboard panel: why it
+  exists, what value it offers, and how to read the board during an incident.
 - [`tests/fixtures/README.md`](tests/fixtures/README.md) — what was captured, how, and the
   answers to the load-bearing metric questions.
 - [`tests/DEPLOY-VALIDATION.md`](tests/DEPLOY-VALIDATION.md) — the deploy-then-validate loop
