@@ -46,6 +46,14 @@ spec:
         - action: replace
           sourceLabels: [__meta_kubernetes_pod_name]
           targetLabel: pod
+      # The sidecar exports a full ZERO-VALUED mirror of every etcd_* metric
+      # (db size 0, quota 0, has_leader 0 — seen live on us-2), which pollutes
+      # every etcd panel/rule that aggregates across containers. Keep only its
+      # own etcdbr_* series; the real etcd_* come from the client endpoint above.
+      metricRelabelings:
+        - action: keep
+          sourceLabels: [__name__]
+          regex: "etcdbr_.*"
   selector:
     matchLabels:
       app.kubernetes.io/component: etcd-client-service
