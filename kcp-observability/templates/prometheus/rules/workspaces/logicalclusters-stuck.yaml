@@ -1,9 +1,9 @@
-{{- $r := .Values.prometheus.rules.workspaces.stuck }}
+{{- $r := .Values.prometheus.rules.workspaces.logicalClustersStuck }}
 {{- if and ($r) ($r.enabled) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ include "kcp-observability.fullname" . }}-workspaces-stuck
+  name: {{ include "kcp-observability.fullname" . }}-logicalclusters-stuck
   namespace: {{ include "kcp-observability.namespace" . }}
   labels:
     role: alert-rules
@@ -15,15 +15,15 @@ spec:
   groups:
     - name: kcp.workspaces
       rules:
-        - alert: KcpWorkspacesStuck
+        - alert: KcpLogicalClustersStuck
           expr: |
-            kcp:workspaces_not_ready:count > {{ $r.baseline }}
+            kcp:logicalclusters_not_ready:count > {{ $r.baseline }}
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}
             rulesgroup: kcp
           annotations:
-            summary: "{{`{{ $value }}`}} kcp workspaces are not Ready on shard {{`{{ $labels.shard }}`}}"
-            description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. kcp metrics carry counts by phase only — use the runbook to identify WHICH workspaces are stuck. Baseline is calibrated per cluster."
+            summary: "{{`{{ $value }}`}} kcp logical clusters are not Ready on shard {{`{{ $labels.shard }}`}}"
+            description: "Logical clusters (the per-workspace kcp primitive) stuck outside Ready. kcp metrics carry counts by phase only — use the runbook to identify WHICH logical clusters are stuck. Baseline is calibrated per cluster (us-2 has a standing Scheduling count — SRE finding F2)."
             runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters"
 {{- end }}

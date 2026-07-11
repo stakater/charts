@@ -93,7 +93,7 @@ apiserver board.
 | --- | --- |
 | **Workspaces by phase** | The tenancy pipeline over time. A growing `Scheduling` band = provisioning is stuck (scheduler/shard assignment); growing `Initializing` = initializers (controllers) are stuck. The phase tells you *which* subsystem owns the bug. |
 | **Logical clusters by phase** | Same pipeline one level down. Because every workspace is backed by a logical cluster, comparing the two panels localizes lifecycle failures: workspace stuck + LC fine → workspace controller; both stuck → core scheduling. (us-2's standing 10 `Scheduling` LCs — finding F2 — live here.) |
-| **Not-ready trend (stuck watch)** | The `KcpWorkspacesStuck` alert's exact input (`kcp:workspaces_not_ready:count`), plotted. Value: separates "stuck and accumulating" (bad, slope up) from "high but stable baseline" (calibration question). The panel is how you re-baseline the alert threshold per cluster with evidence. |
+| **Not-ready trend (stuck watch)** | The exact inputs of the `KcpWorkspacesStuck` and `KcpLogicalClustersStuck` alerts, plotted as two named series (workspaces vs logical clusters) so the stuck *resource* is identified at a glance — a combined count once read "10 workspaces" on us-2 when it was 0 workspaces + 10 logical clusters. Value: separates "stuck and accumulating" (bad, slope up) from "high but stable baseline" (calibration question), and is how you re-baseline the alert thresholds with evidence. The metrics are counts only — to list *which* objects are stuck, use the runbook in [`alerts-guide.md`](alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters). |
 
 ## Row 7 — APIBindings & APIExports — Area 5
 

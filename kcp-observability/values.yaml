@@ -171,14 +171,21 @@ prometheus:
         # 26h leaves headroom) and of the last incremental.
         fullMaxAgeHours: 26
         incrMaxAgeMinutes: 60
-    # Area 4 — workspace lifecycle
+    # Area 4 — workspace lifecycle (workspaces and logical clusters alert separately
+    # so the signal names the resource that is stuck)
     workspaces:
       stuck:
         enabled: true
         for: 15m
         severity: warning
-        # count of workspaces/logicalclusters in a non-ready phase above baseline.
-        # us-2 runs a STANDING Scheduling=8 — calibrate before tightening.
+        # count of workspaces in a non-ready phase above baseline (us-2 standing: 0)
+        baseline: 8
+      logicalClustersStuck:
+        enabled: true
+        for: 15m
+        severity: warning
+        # count of logical clusters in a non-ready phase above baseline.
+        # us-2 runs a STANDING Scheduling=8-10 (SRE finding F2) — calibrate before tightening.
         baseline: 8
     # Area 5 — APIExport / APIBinding
     apiBindings:
