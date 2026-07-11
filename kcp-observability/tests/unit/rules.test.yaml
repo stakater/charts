@@ -197,11 +197,14 @@ tests:
         exp_alerts: []
 
   # ------------------------------------------------------- Area 4: workspaces
-  # 6 workspaces + 4 logicalclusters not Ready = 10 > baseline 8 -> fires.
-  # (us-2 runs a standing Scheduling count, hence a baseline, not zero.)
+  # Workspaces and logical clusters alert SEPARATELY (team feedback: a combined
+  # "10 workspaces not ready" was actually 0 workspaces + 10 logical clusters —
+  # the alert must name the resource that is stuck).
   # TWO REPLICAS with DISAGREEING values (seen live: leader 108, follower 27 — only
   # the controller-leader has the full informer index): the rule must take the
-  # leader's max, NOT sum across pods (sum would say 8+3=11 even if leader saw 8).
+  # leader's max, NOT sum across pods.
+  # Case A: 9 workspaces stuck (leader view), logical clusters fine -> only the
+  # workspace alert fires, and says "workspaces".
   - interval: 1m
     input_series:
       - series: 'kcp_workspace_count{phase="Ready", shard="root", pod="root-kcp-a"}'
@@ -209,13 +212,11 @@ tests:
       - series: 'kcp_workspace_count{phase="Ready", shard="root", pod="root-kcp-b"}'
         values: '27x30'
       - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
-        values: '6x30'
+        values: '9x30'
       - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
         values: '2x30'
-      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
-        values: '4x30'
-      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
-        values: '1x30'
+      - series: 'kcp_logicalcluster_count{phase="Ready", shard="root", pod="root-kcp-a"}'
+        values: '100x30'
     alert_rule_test:
       - eval_time: 20m
         alertname: KcpWorkspacesStuck
@@ -225,8 +226,38 @@ tests:
               rulesgroup: kcp
               shard: root
             exp_annotations:
-              summary: "10 kcp workspaces/logical clusters are not Ready on shard root"
-              description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. Baseline is calibrated per cluster (us-2 runs a standing Scheduling count)."
+              summary: "9 kcp workspaces are not Ready on shard root"
+              description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. kcp metrics carry counts by phase only — use the runbook to identify WHICH workspaces are stuck. Baseline is calibrated per cluster."
+              runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters"
+      - eval_time: 20m
+        alertname: KcpLogicalClustersStuck
+        exp_alerts: []
+
+  # Case B: the us-2 reality — workspaces all Ready, 10 logical clusters stuck in
+  # Scheduling -> only the logical-cluster alert fires, and says "logical clusters".
+  - interval: 1m
+    input_series:
+      - series: 'kcp_workspace_count{phase="Ready", shard="root", pod="root-kcp-a"}'
+        values: '135x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
+        values: '10x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpLogicalClustersStuck
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              shard: root
+            exp_annotations:
+              summary: "10 kcp logical clusters are not Ready on shard root"
+              description: "Logical clusters (the per-workspace kcp primitive) stuck outside Ready. kcp metrics carry counts by phase only — use the runbook to identify WHICH logical clusters are stuck. Baseline is calibrated per cluster (us-2 has a standing Scheduling count — SRE finding F2)."
+              runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters"
+      - eval_time: 20m
+        alertname: KcpWorkspacesStuck
+        exp_alerts: []
 
   # At exactly the baseline (8) -> must NOT fire — even though the naive per-pod SUM
   # across the two replicas (8+5=13) would breach it. Guards the max-not-sum semantics.
@@ -236,11 +267,16 @@ tests:
         values: '8x30'
       - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
         values: '5x30'
-      - series: 'kcp_logicalcluster_count{phase="Ready", shard="root", pod="root-kcp-a"}'
-        values: '100x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
+        values: '8x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '5x30'
     alert_rule_test:
       - eval_time: 20m
         alertname: KcpWorkspacesStuck
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: KcpLogicalClustersStuck
         exp_alerts: []
 
   # ------------------------------------------------- Area 5: bindings/exports

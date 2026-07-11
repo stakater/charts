@@ -1699,7 +1699,16 @@
             "type": "prometheus",
             "uid": "$datasource"
           },
-          "legendFormat": "{{shard}}"
+          "legendFormat": "workspaces ({{shard}})"
+        },
+        {
+          "expr": "kcp:logicalclusters_not_ready:count",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "logical clusters ({{shard}})"
         }
       ],
       "fieldConfig": {
@@ -1728,7 +1737,7 @@
         "x": 16,
         "y": 70
       },
-      "description": "Alert baseline 8 (us-2 standing Scheduling count) \u2014 recalibrate per cluster."
+      "description": "Workspaces and logical clusters plotted separately so the stuck resource is named. kcp metrics are counts by phase only (no per-object identity) \u2014 to list WHICH objects are stuck, use the runbook in docs/alerts-guide.md (wildcard list of tenancy.kcp.io workspaces / core.kcp.io logicalclusters filtered to phase != Ready). Alert baselines 8 \u2014 recalibrate per cluster; us-2 has a standing logical-cluster Scheduling count (SRE finding F2)."
     },
     {
       "id": 38,

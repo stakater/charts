@@ -1,4 +1,4 @@
-# Alerts guide — why each of the 26 alerts exists
+# Alerts guide — why each of the 27 alerts exists
 
 The companion to [`dashboard-guide.md`](dashboard-guide.md): for every alert this chart
 ships — why it exists, what value it offers, and **what we would miss if it didn't exist**.
@@ -71,13 +71,48 @@ recoverability guard.
 
 ## Area 4 — Workspace lifecycle (the kcp differentiator)
 
+Workspaces and logical clusters alert **separately** (team feedback: a combined count read
+"10 workspaces not ready" on us-2 when it was actually 0 workspaces + 10 logical clusters —
+the alert must name the resource that is stuck).
+
 | Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
 | --- | --- | --- | --- | --- |
-| `KcpWorkspacesStuck` | warning / 15m / > 8 not-ready | `kcp:workspaces_not_ready:count` (workspaces + logicalclusters non-Ready, leader's view) above the per-cluster baseline | Stuck tenancy provisioning is the platform failing at its core job — and nothing in a stock Kubernetes alert set knows workspaces exist. | Tenants waiting on workspaces that will never arrive; the flagship feature with zero coverage. |
+| `KcpWorkspacesStuck` | warning / 15m / > 8 not-ready | `kcp:workspaces_not_ready:count` (workspaces non-Ready, leader's view) above the per-cluster baseline | Stuck tenancy provisioning is the platform failing at its core job — and nothing in a stock Kubernetes alert set knows workspaces exist. Workspaces are the *tenant-visible* resource: this alert means users are waiting. | Tenants waiting on workspaces that will never arrive; the flagship feature with zero coverage. |
+| `KcpLogicalClustersStuck` | warning / 15m / > 8 not-ready | `kcp:logicalclusters_not_ready:count` (logical clusters non-Ready, leader's view) above the per-cluster baseline | Logical clusters are the internal per-workspace primitive; they can be stuck *without* any workspace being stuck (exactly the us-2 state — SRE finding F2). Splitting them means the alert names the layer: workspace controller vs core scheduling. | Internal lifecycle rot invisible behind healthy workspace counts — accumulating stuck LCs that surface only when tenants eventually hit them. |
 
-**Calibration (us-2):** the threshold sits at the standing baseline (8–10 logicalclusters in
+Both alerts carry a `runbook_url` to the section below — the metrics are counts by phase
+only, so identifying *which* objects are stuck is a kubectl step, not a metrics query.
+
+**Calibration (us-2):** the logical-cluster threshold sits at the standing baseline (8–10 in
 `Scheduling` all week — SRE finding F2). It fires today as a **true positive**. When SRE
-resolves or accepts F2, recalibrate `baseline` using the "Not-ready trend" panel as evidence.
+resolves or accepts F2, recalibrate `logicalClustersStuck.baseline` using the "Not-ready
+trend" panel as evidence. Workspaces on us-2 have a standing not-ready count of 0.
+
+### Runbook: identifying stuck workspaces and logical clusters
+
+`kcp_workspace_count` / `kcp_logicalcluster_count` are per-phase counts — kcp deliberately
+exposes no per-object identity in metrics (label cardinality), so no dashboard panel can
+list the stuck objects. Enumerate them against the shard with a kcp admin kubeconfig
+(wildcard listing works on the shard base URL, not through the front-proxy):
+
+```bash
+# Which logical clusters are not Ready (path + phase + age):
+kubectl --kubeconfig "$KCP_ADMIN_KUBECONFIG" get --raw \
+  "/clusters/*/apis/core.kcp.io/v1alpha1/logicalclusters" \
+  | jq -r '.items[] | select(.status.phase != "Ready")
+      | [.metadata.annotations["kcp.io/path"], .status.phase, .metadata.creationTimestamp]
+      | @tsv'
+
+# Which workspaces are not Ready (parent path + name + phase):
+kubectl --kubeconfig "$KCP_ADMIN_KUBECONFIG" get --raw \
+  "/clusters/*/apis/tenancy.kcp.io/v1alpha1/workspaces" \
+  | jq -r '.items[] | select(.status.phase != "Ready")
+      | [.metadata.annotations["kcp.io/path"], .metadata.name, .status.phase]
+      | @tsv'
+```
+
+> ⚠️ **Not yet verified live on us-2** (VPN was down when written) — verify the exact
+> URL/annotation shapes against v0.32.1 and update this note with the observed output.
 
 ## Area 5 — APIExport / APIBinding (the API economy)
 

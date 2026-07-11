@@ -31,7 +31,7 @@ has proven to exist.
 | --- | --- | --- |
 | 4 monitors (shard, front-proxy, etcd + backup sidecar, syncagents) | `templates/prometheus/monitors/` | **disabled** (opt-in) |
 | 14 recording rules (`kcp:*` SLI signals) | `templates/prometheus/recording/` | enabled |
-| 26 alerts across 8 areas | `templates/prometheus/rules/<area>/` | enabled (fire only once monitors are on) |
+| 27 alerts across 8 areas | `templates/prometheus/rules/<area>/` | enabled (fire only once monitors are on) |
 | Dashboard (10 rows / 46 panels, incl. a unified alert list) | `files/kcp_grafana_dashboard.json` | enabled |
 
 All alerts carry `rulesgroup: kcp` (Alertmanager routing + the dashboard alert panels key on it).
