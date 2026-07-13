@@ -22,6 +22,13 @@ Syncagent discovery itself is fixed and verified: after replacing the port field
 (previously: 20 dropped). Scrapes then failed `connection refused` — the agent binds
 metrics to loopback (S1), which no PodMonitor can work around.
 
+**Front-proxy ServiceMonitor swap (2026-07-10, team-approved, recorded here per audit):**
+the chart's `kcp-observability-front-proxy` ServiceMonitor was applied and verified
+scraping (both pods up in a second scrape pool), then the 51-day-old hand-made
+`kcp-front-proxy` monitor was deleted — zero metrics gap, same `job` label
+(`frontproxy-front-proxy`) throughout. The 2 front-proxy targets in the table above are
+the chart's monitor.
+
 ## 2. kcp-specific series
 
 All present via thanos-querier (series counts at capture):

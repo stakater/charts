@@ -157,7 +157,7 @@ layer above degrades mysteriously when its pod is throttled, OOM-killed, or rest
 | Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
 | --- | --- | --- | --- | --- |
 | `KcpPodRestarting` | warning / 15m / > 3 per hour | A kcp pod restarting repeatedly | Crash-looping that readiness probes hide (pod recovers between probes). Found a real thing on day one: the us-2 syncagents' standing restart baseline that nothing else surfaced. | Flapping components looking healthy in every phase-based view. |
-| `KcpPodOOMKilled` | critical / no `for:` | `last_terminated_reason=OOMKilled` observed | An OOM kill is a discrete fact — there is no "sustained" version, hence no `for:`. Always memory-limit misconfiguration or a leak; both actionable. | The *reason* — the part that names the fix — buried inside generic restart counts. |
+| `KcpPodOOMKilled` | critical / no `for:` | `last_terminated_reason=OOMKilled` **and** a restart within the last 30m (the reason label alone persists indefinitely — the restart conjunct makes the alert auto-resolve ~30m after the kill instead of paging forever) | An OOM kill is a discrete fact — there is no "sustained" version, hence no `for:`. Always memory-limit misconfiguration or a leak; both actionable. | The *reason* — the part that names the fix — buried inside generic restart counts. |
 | `KcpPodCPUThrottled` | warning / 30m / > 5% of CFS periods | A kcp pod throttled by its CPU limit | Throttling is the invisible latency source — slow with zero errors in any log. Proven live: us-2's shard *leader* throttled 9.6% of periods (SRE finding F3), taxing every apiserver request. | Tuning etcd and chasing latency alerts while the actual cause is a too-tight CPU limit. |
 | `KcpPodMemoryHigh` | warning / 30m / > 90% of limit | Working set near the container limit, sustained | The pre-OOM warning: 90% for 30m means the next load spike is a `critical`. With the goroutine panel it separates "leak" from "undersized". | Memory problems only ever surfacing as the OOM kill itself — reactive instead of preventive. |
 
@@ -192,5 +192,6 @@ layer above degrades mysteriously when its pod is throttled, OOM-killed, or rest
   `prometheus.recordingRules.enabled` too, or a values combination ships a dead alert.
 - A firing alert nobody acts on is a defect: either fix the condition, recalibrate the
   threshold with panel evidence, or delete the alert. Never mute-and-forget.
-- Every alert shares its query with a dashboard panel (`dashboard-guide.md`) — the panel is
+- Every threshold-bearing alert shares its query with a dashboard panel
+  (`dashboard-guide.md`; exception: `KcpPodOOMKilled` — a discrete fact with no panel yet) — the panel is
   where you *calibrate*, the alert is where you *commit* to a budget.

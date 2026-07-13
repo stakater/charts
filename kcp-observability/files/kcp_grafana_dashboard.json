@@ -1931,7 +1931,7 @@
         "x": 0,
         "y": 87
       },
-      "description": "IdentityValid / VirtualWorkspaceURLsReady by shard and status."
+      "description": "APIExport conditions by shard and status. Only IdentityValid has been observed on us-2 (kcp v0.32.1) \u2014 VirtualWorkspaceURLsReady appears in no capture; its absence from the table is expected, not data loss."
     },
     {
       "id": 43,
@@ -2315,13 +2315,13 @@
       },
       "targets": [
         {
-          "expr": "topk(15, sum by (pod) (increase(container_cpu_cfs_throttled_periods_total{namespace=~\"$namespace\", pod=~\"$pod_regex\", container!=\"\"}[5m])) / clamp_min(sum by (pod) (increase(container_cpu_cfs_periods_total{namespace=~\"$namespace\", pod=~\"$pod_regex\", container!=\"\"}[5m])), 1))",
+          "expr": "topk(15, sum by (pod, container) (increase(container_cpu_cfs_throttled_periods_total{namespace=~\"$namespace\", pod=~\"$pod_regex\", container!=\"\"}[5m])) / clamp_min(sum by (pod, container) (increase(container_cpu_cfs_periods_total{namespace=~\"$namespace\", pod=~\"$pod_regex\", container!=\"\"}[5m])), 1))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "$datasource"
           },
-          "legendFormat": "{{pod}}"
+          "legendFormat": "{{pod}}/{{container}}"
         }
       ],
       "fieldConfig": {
@@ -2350,7 +2350,8 @@
         "w": 8,
         "x": 8,
         "y": 114
-      }
+      },
+      "description": " Per container \u2014 matches KcpPodCPUThrottled granularity (a pooled per-pod ratio dilutes a throttled container on multi-container pods; audit finding)."
     },
     {
       "id": 54,
@@ -2368,7 +2369,7 @@
             "type": "prometheus",
             "uid": "$datasource"
           },
-          "legendFormat": "{{pod}}"
+          "legendFormat": "{{pod}}/{{container}}"
         }
       ],
       "fieldConfig": {
