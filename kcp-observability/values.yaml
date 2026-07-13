@@ -215,7 +215,9 @@ prometheus:
         enabled: true
         for: 30m
         severity: warning
-        p99Seconds: 10
+        # MUST be < 10: client-go workqueue histograms top out at le="10", so
+        # histogram_quantile can never exceed 10 and a >=10 threshold never fires.
+        p99Seconds: 5
     # Area 7 — SCO syncagents
     syncAgents:
       down:

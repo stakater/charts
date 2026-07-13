@@ -118,9 +118,9 @@ kubectl --kubeconfig "$KCP_ADMIN_KUBECONFIG" get --raw \
 
 | Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
 | --- | --- | --- | --- | --- |
-| `KcpAPIBindingNotReady` | warning / 15m | Any binding condition `False\|Unknown`, by condition name | A degraded binding is a tenant whose subscribed service stopped working. The condition label *is* the diagnosis direction (`APIExportValid` → supply side; `PermissionClaimsApplied` → authz). | Broken service consumption arriving as per-tenant support tickets instead of one platform signal. |
+| `KcpAPIBindingNotReady` | warning / 15m | The **Ready** rollup condition sits `False\|Unknown` for any binding (per shard; no per-condition label — audit corrected this row, the expr never watched other conditions) | A degraded binding is a tenant whose subscribed service stopped working. Per-condition diagnosis lives in the dashboard's "Binding conditions not True" panel, deliberately not in the alert: us-2 carries a standing `PermissionClaimsValid=False` count (~392, untriaged) that would page forever if every condition alerted. | Broken service consumption arriving as per-tenant support tickets instead of one platform signal. |
 | `KcpAPIBindingSlow` | warning / 30m / TTR p95 > 5000ms | Binding time-to-ready p95 regresses (histogram is in **ms**) | Provisioning UX regresses silently with scale; a binding that takes 4 minutes still "succeeds" and never trips `NotReady`. | The subscribe-to-usable experience decaying with no signal — the classic slow-boil regression. |
-| `KcpAPIExportNotValid` | critical / 10m | An export's `IdentityValid`/`VirtualWorkspaceURLsReady` leaves `True` | One invalid export breaks **every** binding to it at once — the highest blast radius on the platform (hundreds of bindings per export). Hence the area's only `critical`. | A mass service-API outage presenting as hundreds of individual binding alerts with the common cause unnamed. |
+| `KcpAPIExportNotValid` | critical / 10m | An export's `IdentityValid`/`VirtualWorkspaceURLsReady` leaves `True` | One invalid export breaks **every** binding to it at once — the highest blast radius on the platform (hundreds of bindings per export). Hence the area's only `critical`. The `$value` is approximate (audit: `False` and `Unknown` states count independently, so a replica-disagreement can double-count one export — firing behavior and labels stay correct). | A mass service-API outage presenting as hundreds of individual binding alerts with the common cause unnamed. |
 
 ## Area 6 — kcp controllers (the reconciliation machinery)
 
@@ -129,7 +129,7 @@ The ways the machinery degrades that rows of green pods won't show.
 | Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
 | --- | --- | --- | --- | --- |
 | `KcpControllerQueueBacklog` | warning / 15m / depth > 10 | A `kcp-*` workqueue's depth — `min` across shard replicas — stays high | Backlog is latency between "tenant changed something" and "it took effect". The queue *name* points at the exact controller. | Reconciliation lag until `WorkspacesStuck`/`BindingSlow` fire — this is their earliest common ancestor. |
-| `KcpControllerProcessingSlow` | warning / 30m / work p99 > 10s | A controller's per-item work duration p99 stays pathological | The failure mode depth can't see: items *succeed slowly* (slow external call, huge LIST per reconcile) while depth barely moves. | Slow-reconcile bugs hiding behind healthy-looking queue depths. Together with backlog (+ the retries panel), the jammed/slow/thrashing triad is covered. |
+| `KcpControllerProcessingSlow` | warning / 30m / work p99 > 5s (**must stay < 10**) | A controller's per-item work duration p99 stays pathological | The failure mode depth can't see: items *succeed slowly* (slow external call, huge LIST per reconcile) while depth barely moves. Audit found the original 10s threshold was **unsatisfiable** — client-go workqueue histograms top out at `le="10"`, so `histogram_quantile` can never exceed 10 and the alert could never fire; a firing unit test now pins this. | Slow-reconcile bugs hiding behind healthy-looking queue depths. Together with backlog (+ the retries panel), the jammed/slow/thrashing triad is covered. |
 
 **Hardening note (us-2):** `QueueBacklog` fired permanently on the follower replica (202
 deep, leader at 0) — the non-leader never runs workers, so its queues grow forever. Fixed
@@ -179,8 +179,17 @@ layer above degrades mysteriously when its pod is throttled, OOM-killed, or rest
 ## Maintenance rules
 
 - New alerts: `Kcp` prefix, `rulesgroup: kcp`, one named failure mode, deterministic expr,
-  every threshold in `values.yaml`, a promtool unit test that encodes the *fix rationale*
-  (see the leader/follower and sidecar tests), and metrics proven in `tests/fixtures/`.
+  every threshold in `values.yaml`, **both a firing and a must-NOT-fire promtool test**
+  (all five shipped bugs — three false positives and two never-fires — lived in the gap
+  between those two assertions), and metrics proven in `tests/fixtures/`.
+- The summary must name **exactly** the resource its expr counts — never aggregate
+  distinct resource types into one series (the workspaces/logicalclusters conflation),
+  and never promise a label the aggregation drops (the binding-condition doc drift).
+- Quantile thresholds must sit strictly below the histogram's top finite bucket —
+  `histogram_quantile` is capped there, so a threshold at/above it can never fire
+  (the ProcessingSlow bug; workqueue histograms cap at `le="10"`).
+- An alert whose only input is a recorded series must gate on
+  `prometheus.recordingRules.enabled` too, or a values combination ships a dead alert.
 - A firing alert nobody acts on is a defect: either fix the condition, recalibrate the
   threshold with panel evidence, or delete the alert. Never mute-and-forget.
 - Every alert shares its query with a dashboard panel (`dashboard-guide.md`) — the panel is

@@ -24,6 +24,11 @@ spec:
             severity: {{ $r.severity }}
             rulesgroup: kcp
           annotations:
-            summary: "{{`{{ $value }}`}} APIExports degraded ({{`{{ $labels.condition }}`}}) on shard {{`{{ $labels.shard }}`}}"
-            description: "An invalid APIExport breaks every tenant bound to it at once — the highest blast radius on the platform (hundreds of bindings per export)."
+            {{- /* $value sums per-(condition,status) leader-max counts: an export reported
+                   False by the leader and stale Unknown by a follower counts twice. The
+                   > 0 gate and labels stay correct; treat the number as approximate
+                   (audit finding — exact per-export counts aren't derivable from this
+                   pre-aggregated gauge). */}}
+            summary: "~{{`{{ $value }}`}} APIExports degraded ({{`{{ $labels.condition }}`}}) on shard {{`{{ $labels.shard }}`}}"
+            description: "An invalid APIExport breaks every tenant bound to it at once — the highest blast radius on the platform (hundreds of bindings per export). The count is approximate (False and Unknown states are counted independently)."
 {{- end }}
