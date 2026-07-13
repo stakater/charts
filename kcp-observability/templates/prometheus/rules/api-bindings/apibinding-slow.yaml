@@ -1,5 +1,8 @@
 {{- $r := .Values.prometheus.rules.apiBindings.slow }}
-{{- if and ($r) ($r.enabled) }}
+{{- /* This alert's only input is the recorded series kcp:apibinding_ttr_ms:p95 —
+       enabling it with recording rules disabled would ship an alert that can
+       never fire (audit finding), so the gate requires both. */}}
+{{- if and ($r) ($r.enabled) (.Values.prometheus.recordingRules.enabled) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
