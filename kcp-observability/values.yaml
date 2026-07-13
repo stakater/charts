@@ -61,9 +61,10 @@ prometheus:
       # Optional client-cert auth for /metrics (secret with tls.crt/tls.key in the
       # release namespace). Empty = anonymous scrape (requires always-allow-paths).
       certSecret: ""
-    # Front-proxy. NOTE: kcp-config on us-2 already carries a hand-made
-    # `kcp-front-proxy` ServiceMonitor — remove it when enabling this one, or the
-    # pods get double-scraped.
+    # Front-proxy. NOTE: remove any hand-made `kcp-front-proxy` ServiceMonitor when
+    # enabling this one, or the pods get double-scraped. (us-2's manual monitor was
+    # deleted 2026-07-10 after this chart's monitor was verified scraping — see the
+    # swap record in tests/reports/validation-us-2-2026-07-10.md §1.)
     frontProxyServiceMonitor:
       enabled: false
       component: front-proxy

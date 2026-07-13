@@ -1,5 +1,7 @@
 {{- $r := .Values.prometheus.rules.frontProxy.errorRateHigh }}
-{{- if and ($r) ($r.enabled) }}
+{{- /* Input is a recorded kcp:* series: without recording rules this alert can
+       never fire, so the gate requires both toggles (audit finding). */}}
+{{- if and ($r) ($r.enabled) (.Values.prometheus.recordingRules.enabled) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

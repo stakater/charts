@@ -14,7 +14,7 @@ has proven to exist.
 
 ## Read these first
 
-- [`docs/roadmap.md`](docs/roadmap.md) — the 8 capability areas / 20 user stories, each with
+- [`docs/roadmap.md`](docs/roadmap.md) — the 8 capability areas / 24 user stories, each with
   SLI/SLO/SLA, the exact (captured) metrics, alert, and dashboard panel.
 - [`docs/dashboard-guide.md`](docs/dashboard-guide.md) — every dashboard panel: why it
   exists, what value it offers, and how to read the board during an incident.
@@ -30,7 +30,7 @@ has proven to exist.
 | Piece | Where | Default |
 | --- | --- | --- |
 | 4 monitors (shard, front-proxy, etcd + backup sidecar, syncagents) | `templates/prometheus/monitors/` | **disabled** (opt-in) |
-| 14 recording rules (`kcp:*` SLI signals) | `templates/prometheus/recording/` | enabled |
+| 15 recording rules (`kcp:*` SLI signals) | `templates/prometheus/recording/` | enabled |
 | 27 alerts across 8 areas | `templates/prometheus/rules/<area>/` | enabled (fire only once monitors are on) |
 | Dashboard (10 rows / 46 panels, incl. a unified alert list) | `files/kcp_grafana_dashboard.json` | enabled |
 

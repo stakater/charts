@@ -33,7 +33,7 @@ is this — tenancy, edge, storage, or agents?*
 | **Workspaces Ready** | The platform's reason to exist: how many tenant workspaces are actually usable. This is the number a status page or customer conversation needs. (135 on us-2 at validation.) |
 | **Workspaces not Ready** | The complement that makes the first number honest — 500 Ready means nothing if 40 are stuck. Non-zero here sends you to the "Workspaces & logical clusters" row. |
 | **Logical clusters Ready** | Workspaces are the tenant-visible wrapper; logical clusters are the underlying kcp primitive (there are more of them — 170 vs 135 on us-2). Divergence between the two counts localizes a lifecycle bug to the wrapper vs the core. |
-| **APIBindings Bound** | Every SCO service a tenant consumes is an APIBinding. This is "how many service subscriptions are live" — the platform's consumption headline (~800 on us-2). |
+| **APIBindings Bound** | Every SCO service a tenant consumes is an APIBinding. This is "how many service subscriptions are live" — the platform's consumption headline (~800 at fixture-capture time; not re-checked in the validation report). |
 | **Edge p95 latency** | The customer-facing latency promise (Area 1 is the only layer with a customer SLA). One number, alert-threshold colored — if it's green, latency complaints are probably not the platform edge. |
 | **Edge 5xx ratio** | Same contract, error dimension. Alert threshold 0.5%; the stat exists so a creeping 0.3% is visible *before* the alert fires. |
 | **etcd DB used of quota** | etcd at quota goes read-only — a self-inflicted full outage. This ratio is the earliest cheap warning (us-2 sits at ~0.1%; the alert fires at 80%). |
@@ -53,7 +53,7 @@ first stop for "the platform feels slow/broken" reports.
 | --- | --- |
 | **Edge request rate by code** | Traffic volume + status mix in one graph. A 401/403 surge is an auth regression, 429s are throttling, 5xx go with the error panel — the *code* split turns "traffic changed" into a diagnosis direction. |
 | **Edge latency (p50/p95/p99)** | Three quantiles because they fail differently: p50 shift = systemic slowdown (etcd, shard saturation); p99-only shift = a heavy tenant or pathological request shape. Recording-rule backed so the alert and the panel can never disagree. |
-| **Edge 5xx ratio** | The SLI behind the `KcpFrontProxyErrorRate` alert, as a trend. Value over the stat: you see whether an error burst is a spike (deploy blip) or a plateau (real degradation), and when it started. |
+| **Edge 5xx ratio** | The SLI behind the `KcpFrontProxyErrorRateHigh` alert, as a trend. Value over the stat: you see whether an error burst is a spike (deploy blip) or a plateau (real degradation), and when it started. |
 | **Edge request rate by method** | Read/write mix. A WATCH storm or a PATCH flood implicate very different components (informers vs controllers); this is the cheapest way to see workload-shape changes that explain load elsewhere. |
 
 ## Row 4 — Shard apiservers — Area 2
@@ -103,9 +103,9 @@ service claim isn't working" tickets get triaged.
 | Panel | Why it exists / value |
 | --- | --- |
 | **APIBindings by phase** | Consumption health over time. A dip in `Bound` during a service rollout = the rollout broke consumers; flat during the same rollout = it didn't. Before/after evidence for every export change. |
-| **Binding conditions not True** | The alert input for `KcpAPIBindingNotReady`, split by condition. The condition name is the diagnosis: `APIExportValid` → supply side broke; `PermissionClaimsApplied` → authz; `InitialBindingCompleted` → binding controller. Any non-zero series is a degraded binding. |
+| **Binding conditions not True** | A superset diagnostic view of every binding condition — deliberately WIDER than `KcpAPIBindingNotReady`, which fires only on the `Ready` rollup (audit-corrected: conditions here can be non-zero without paging; us-2 carries a standing `PermissionClaimsValid=False` ~392). The condition name is the diagnosis: `APIExportValid` → supply side broke; `PermissionClaimsValid` → authz; `InitialBindingCompleted` → binding controller. |
 | **APIBinding time-to-ready p95** | Provisioning UX as a number: how long a tenant waits between "subscribe" and "usable". Creeping TTR is invisible in binary up/down metrics but is exactly what tenants feel — and it regresses silently as scale grows. |
-| **APIExport conditions (instant)** (table) | The supply-side truth table (IdentityValid / VirtualWorkspaceURLsReady per shard). A table, not a graph, because during an incident you want *current state* readable in one look, not history. |
+| **APIExport conditions (instant)** (table) | The supply-side truth table per shard. Only `IdentityValid` has been observed on us-2 (kcp v0.32.1); `VirtualWorkspaceURLsReady` appears in no capture — its absence is expected, not data loss. A table, not a graph, because during an incident you want *current state* readable in one look, not history. |
 | **Export conditions not True** | The trend twin of the table, and the `KcpAPIExportNotValid` alert input. Highest blast radius on the platform (one export ↦ hundreds of bindings), so it gets both an instant and a trend view. |
 
 ## Row 8 — kcp controllers (workqueues) — Area 6
@@ -168,7 +168,8 @@ restart-looping — cheap infra signals that explain expensive control-plane sym
 
 ## Maintenance rules
 
-- Every panel query must reference only metrics proven in `tests/fixtures/` (the offline
+- Every panel query must reference only metrics proven in `tests/fixtures/` or listed
+  with a citation in `metrics-allowlist.documented.txt` (the two-allowlist offline
   gate enforces this) — no aspirational panels.
 - `kcp_*` gauges: always `max by (shard, …)` (leader's view); workqueue alerts: `min`
   across replicas. Never `sum` over shard pods — the replicas disagree by design.
