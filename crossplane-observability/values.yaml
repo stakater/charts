@@ -105,9 +105,11 @@ billing:
 # Grafana dashboard (managed via grafana-operator GrafanaDashboard CR).
 # ---------------------------------------------------------------------------
 grafana:
-  # Namespace to create the GrafanaDashboard in. Defaults to the release namespace.
-  # Set this to the Grafana instance's namespace when the grafana-operator does not
-  # honour allowCrossNamespaceImport.
+  # Namespace to create the Grafana CRs (GrafanaDashboard and, for compositeAlerts,
+  # GrafanaFolder + GrafanaAlertRuleGroup) in. Defaults to the release namespace.
+  # Set this to the Grafana instance's namespace: a namespace-scoped grafana-operator
+  # (OperatorGroup targetNamespaces) only reconciles CRs in the namespace(s) it watches,
+  # regardless of allowCrossNamespaceImport (which only governs which instance imports them).
   namespace: ""
   folder: "Crossplane Observability"
   # Let a Grafana instance in another namespace import this dashboard.
@@ -133,7 +135,9 @@ grafana:
     # UID of the Prometheus/Thanos datasource in your Grafana that can read across namespaces
     # (e.g. the thanos-querier / cluster-monitoring datasource). REQUIRED when enabled.
     datasourceUid: ""
-    # Folder the alert group lands in (grafana-operator GrafanaFolder name). Defaults to grafana.folder.
+    # Title of the Grafana folder the alert group lands in. Defaults to "<grafana.folder> Alerts".
+    # MUST be distinct from grafana.folder (the dashboard folder): grafana-operator keys folders by
+    # title, so a shared title makes the GrafanaAlertRuleGroup's folderRef fail to resolve.
     folder: ""
     # Evaluation interval and pending duration.
     interval: 1m
