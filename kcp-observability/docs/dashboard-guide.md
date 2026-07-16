@@ -138,6 +138,8 @@ converging — so this row is the only coverage this failure mode has.
 | --- | --- |
 | **Agent up / leader per service** | Per-service liveness *and* leadership, keyed by the `service_agent` relabel (pod-name prefix → human-readable service name, e.g. `services-compute.cloud.stakater.com`; handles 63-char-truncated pod names too). With 2 replicas per service, up=2 and leader=1 is healthy — a replica that is up but not leading is the standby, not an incident; a SERVICE with no leader is the incident. |
 | **Agent client error ratio** | Agents live or die by their API calls to kcp and the service cluster. A rising 5xx/error ratio per service catches expired kubeconfigs, RBAC drift, or an unreachable kcp *before* the agent gives up leadership — the leading indicator for the panel above. |
+| **Reconcile errors/s per service** | The agents' *work* health: an agent can be up and leading while failing every reconcile — tenant claims stop converging with zero errors anywhere else. This was unobservable until S1 was fixed (metrics captured live 2026-07-18). |
+| **Reconcile p99 duration per service** | Slow reconciles = slow claim propagation, before anything errors — the agents' equivalent of `ProcessingSlow` for the kcp controllers. Baseline for ~2 weeks before considering an alert on it. |
 
 ## Row 10 — Footprint — Area 8
 
@@ -152,6 +154,7 @@ restart-looping — cheap infra signals that explain expensive control-plane sym
 | **Restarts (1h)** | Crash-looping that readiness probes hide (pod recovers between scrapes). Also the panel that made the us-2 syncagent standing-restart baseline visible — a real finding no other signal caught. |
 | **Goroutines (kcp components)** | Go-specific early warning: a monotonic goroutine climb is a leak and precedes the OOM by hours — enough time to act during business hours instead of at 3am. |
 | **Process RSS (kcp components)** | The process-level memory twin, comparable across shard/proxy/etcd/agents in one graph since they're all Go. Divergence between RSS and working set also flags page-cache-vs-heap confusion when debugging "memory growth". |
+| **OOM kills (last terminated reason)** | Closes the audit's "OOMKilled has no panel" exception: 1 = the container's last termination was an OOM kill (the reason persists until the next termination). The alert auto-resolves 30m after the kill; this panel keeps the history visible for the post-incident look. |
 
 ---
 

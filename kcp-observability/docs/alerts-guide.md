@@ -1,4 +1,4 @@
-# Alerts guide — why each of the 27 alerts exists
+# Alerts guide — why each of the 28 alerts exists
 
 The companion to [`dashboard-guide.md`](dashboard-guide.md): for every alert this chart
 ships — why it exists, what value it offers, and **what we would miss if it didn't exist**.
@@ -204,23 +204,23 @@ layer above degrades mysteriously when its pod is throttled, OOM-killed, or rest
 
 ---
 
-## Known gaps (deliberate, tracked)
+## Watchdog — guarding the alerting system itself
 
-- **Blindness watchdog (planned):** every `*Down` alert is `up == 0`, which only fires
-  while the target *exists and fails*. If targets **vanish** (ServiceMonitor deleted,
-  selector drift, relabel bug — exactly what happened to the 20 syncagent targets during
-  validation), `up == 0` matches nothing and everything goes silently green. The fix is one
-  `absent(up{job=...})` alert per enabled monitor — kcp-scoped, guards the alerting system
-  itself.
+| Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
+| --- | --- | --- | --- | --- |
+| `KcpMetricsAbsent` (one instance per enabled monitor, `target` label names the layer) | warning / 10m | `absent(up{job=~...})` — a layer's scrape targets have **vanished** entirely | Every `*Down` alert is `up == 0`, which only fires while targets *exist and fail*. When targets vanish (monitor deleted, selector drift, relabel bug, cert rot) everything goes silently green — it happened live twice (20 syncagent targets dropped by a port bug; a preempted `Failed` pod producing no target). Gated per monitor so a deliberately disabled layer never fires it. | The alerting system itself dying invisibly: a green board that is green because nothing is measured. |
+
+## Known gaps (deliberate, tracked)
 - **Story 1.4** (per-shard reachability through the proxy): no per-backend proxy metric
   exists on v0.32.1; the observable signature is `KcpShardDown` + edge 5xx together.
   Deferred as its own alert, on purpose.
-- **Per-service agent blindness** (refinement of the watchdog gap, observed live): a pod
+- **Per-service agent blindness** (finer-grained than the shipped `KcpMetricsAbsent`,
+  which catches the whole job vanishing but not one service of many): a pod
   in phase `Failed` (e.g. preempted) is dropped by Prometheus entirely — no target, no
   `up==0`, and if ALL of a service's replicas are gone there is also no leader series, so
   `KcpSyncAgentDown` cannot fire for a service that never comes up. A per-service
-  `absent()` needs an expected-services list (not derivable from metrics); tracked with
-  the blindness watchdog above.
+  `absent()` needs an expected-services list (not derivable from metrics); still open — a per-service
+  `absent()` needs an expected-services list (not derivable from metrics).
 
 ## Maintenance rules
 
@@ -239,5 +239,5 @@ layer above degrades mysteriously when its pod is throttled, OOM-killed, or rest
 - A firing alert nobody acts on is a defect: either fix the condition, recalibrate the
   threshold with panel evidence, or delete the alert. Never mute-and-forget.
 - Every threshold-bearing alert shares its query with a dashboard panel
-  (`dashboard-guide.md`; exception: `KcpPodOOMKilled` — a discrete fact with no panel yet) — the panel is
+  (`dashboard-guide.md`) — the panel is
   where you *calibrate*, the alert is where you *commit* to a budget.

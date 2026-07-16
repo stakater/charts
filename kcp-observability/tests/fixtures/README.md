@@ -23,7 +23,7 @@ in `front-proxy-metrics.txt` — those label sets are load-bearing for the rules
 | `root-proxy-metrics.txt` | `root-proxy` (legacy v0.31.1) | :6443/metrics | anonymous |
 | `etcd-metrics.txt` | druid etcd (`root-0`) | :2379/metrics | etcd client cert |
 | `etcd-backup-restore-metrics.txt` | etcdbrctl sidecar | :8080/metrics (https) | anonymous |
-| `syncagent-metrics.txt` | api-syncagent (`services-compute…`) | :8085/metrics (http) | anonymous |
+| `syncagent-metrics.txt` | api-syncagent (LEADER replica, `system-tenant…`; re-captured live 2026-07-18 post-S1 — includes the full controller_runtime reconcile family, which never registers on standby replicas) | :8085/metrics (http, port-forward) | anonymous |
 
 **Not captured:** `kcp-operator` metrics (:8443 behind kube-rbac-proxy returned
 "Authentication failed" for the cluster-admin token — not pursued; the operator is a

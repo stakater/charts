@@ -2254,6 +2254,101 @@
       }
     },
     {
+      "id": 57,
+      "type": "timeseries",
+      "title": "Reconcile errors/s per service",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "sum by (service_agent) (rate(controller_runtime_reconcile_errors_total{job=~\"$syncagent_job\"}[5m]))",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "{{service_agent}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 113
+      },
+      "description": "The agents' WORK health: an agent can be up and leading while failing every reconcile \u2014 tenant claims stop converging with zero errors elsewhere. Sustained non-zero per service = investigate that agent's logs. Metric captured live post-S1 (2026-07-18 fixture)."
+    },
+    {
+      "id": 58,
+      "type": "timeseries",
+      "title": "Reconcile p99 duration per service",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (service_agent, le) (rate(controller_runtime_reconcile_time_seconds_bucket{job=~\"$syncagent_job\"}[5m])))",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "{{service_agent}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 113
+      },
+      "description": "Slow reconciles = slow claim propagation to the service cluster, before anything errors. Complements the error-rate panel the same way ProcessingSlow complements QueueBacklog for the kcp controllers."
+    },
+    {
       "id": 51,
       "type": "row",
       "title": "Footprint",
@@ -2262,7 +2357,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 113
+        "y": 121
       }
     },
     {
@@ -2309,7 +2404,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 114
+        "y": 122
       }
     },
     {
@@ -2356,7 +2451,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 114
+        "y": 122
       },
       "description": " Per container \u2014 matches KcpPodCPUThrottled granularity (a pooled per-pod ratio dilutes a throttled container on multi-container pods; audit finding)."
     },
@@ -2403,7 +2498,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 114
+        "y": 122
       },
       "description": "Syncagents have a standing restart baseline on us-2 \u2014 investigate separately."
     },
@@ -2448,9 +2543,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
-        "y": 122
+        "y": 130
       },
       "description": "A sustained climb precedes an OOM."
     },
@@ -2496,10 +2591,57 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 122
+        "w": 8,
+        "x": 8,
+        "y": 130
       }
+    },
+    {
+      "id": 59,
+      "type": "timeseries",
+      "title": "OOM kills (last terminated reason)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "max by (pod, container) (kube_pod_container_status_last_terminated_reason{namespace=~\"$namespace\", pod=~\"$pod_regex\", reason=\"OOMKilled\"})",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "{{pod}}/{{container}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 130
+      },
+      "description": "1 = this container's LAST termination was an OOM kill (the reason persists until the next termination). Pairs with the KcpPodOOMKilled alert, which additionally requires a restart in the last 30m so it auto-resolves; this panel keeps the history visible after the alert clears."
     }
   ]
 }
