@@ -252,3 +252,13 @@ prometheus:
         severity: warning
         # fraction of the container memory limit
         threshold: 0.90
+    # Watchdog — guards the alerting system itself. Every *Down alert is `up == 0`,
+    # which only fires while targets EXIST and fail; if targets vanish (ServiceMonitor
+    # deleted, selector drift, relabel bug — both happened live on us-2) everything
+    # goes silently green. One absent(up) alert per ENABLED monitor.
+    watchdog:
+      metricsAbsent:
+        enabled: true
+        # long enough to ride out prometheus config reloads and pod rollouts
+        for: 10m
+        severity: warning

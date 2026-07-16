@@ -872,3 +872,44 @@ tests:
       - eval_time: 35m
         alertname: KcpShardStorageObjectsHigh
         exp_alerts: []
+
+  # ------------------------------------------------- Watchdog (blindness guard)
+  # Shard targets VANISHED (no up series at all for the job) while other layers
+  # still report -> only the shard watchdog fires. This is the case no up==0
+  # alert can catch: it fires on ABSENCE, not failure.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="frontproxy-front-proxy", pod="frontproxy-a"}'
+        values: '1x20'
+      - series: 'up{job="root-client", pod="root-0"}'
+        values: '1x20'
+      - series: 'up{job="kcp-syncagent", pod="services-compute-x", service_agent="services-compute.cloud.stakater.com"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KcpMetricsAbsent
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              target: shard
+            exp_annotations:
+              summary: "Monitoring is blind: no shard scrape targets exist"
+              description: "up{job=~\".*-kcp\"} has NO series — the targets have vanished (monitor deleted, label-selector drift, relabel bug, or cert rot), which no up==0 alert can catch. Every shard alert is silently disarmed until this is fixed; the platform may look green because nothing is measured."
+
+  # All four layers scraping (even if some targets are DOWN — up==0 still exists)
+  # -> the watchdog stays quiet; down-ness is the *Down alerts' job.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-kcp", pod="root-kcp-a"}'
+        values: '0x20'
+      - series: 'up{job="frontproxy-front-proxy", pod="frontproxy-a"}'
+        values: '1x20'
+      - series: 'up{job="root-client", pod="root-0"}'
+        values: '1x20'
+      - series: 'up{job="kcp-syncagent", pod="services-compute-x", service_agent="services-compute.cloud.stakater.com"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KcpMetricsAbsent
+        exp_alerts: []
