@@ -243,7 +243,7 @@
         "x": 0,
         "y": 10
       },
-      "description": "kcp_workspace_count phase=Ready, all shards."
+      "description": "kcp_workspace_count phase=Ready, all shards. NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
     },
     {
       "id": 6,
@@ -295,7 +295,8 @@
         "w": 4,
         "x": 4,
         "y": 10
-      }
+      },
+      "description": " NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
     },
     {
       "id": 7,
@@ -343,7 +344,8 @@
         "w": 4,
         "x": 8,
         "y": 10
-      }
+      },
+      "description": " NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
     },
     {
       "id": 8,
@@ -391,7 +393,8 @@
         "w": 4,
         "x": 12,
         "y": 10
-      }
+      },
+      "description": " NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
     },
     {
       "id": 9,
@@ -1635,7 +1638,8 @@
         "w": 8,
         "x": 0,
         "y": 70
-      }
+      },
+      "description": " NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
     },
     {
       "id": 36,
@@ -1681,7 +1685,8 @@
         "w": 8,
         "x": 8,
         "y": 70
-      }
+      },
+      "description": " NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
     },
     {
       "id": 37,
@@ -1737,7 +1742,7 @@
         "x": 16,
         "y": 70
       },
-      "description": "Workspaces and logical clusters plotted separately so the stuck resource is named. kcp metrics are counts by phase only (no per-object identity) \u2014 to list WHICH objects are stuck, use the runbook in docs/alerts-guide.md (wildcard list of tenancy.kcp.io workspaces / core.kcp.io logicalclusters filtered to phase != Ready). Alert baselines 8 \u2014 recalibrate per cluster; us-2 has a standing logical-cluster Scheduling count (SRE finding F2)."
+      "description": "Workspaces and logical clusters plotted separately so the stuck resource is named. kcp metrics are counts by phase only (no per-object identity) \u2014 to list WHICH objects are stuck, use the runbook in docs/alerts-guide.md (wildcard list of tenancy.kcp.io workspaces / core.kcp.io logicalclusters filtered to phase != Ready). Alert baselines 8 \u2014 recalibrate per cluster; us-2 has a standing logical-cluster Scheduling count (SRE finding F2). NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
     },
     {
       "id": 38,
@@ -1795,7 +1800,8 @@
         "w": 8,
         "x": 0,
         "y": 79
-      }
+      },
+      "description": " NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
     },
     {
       "id": 40,
