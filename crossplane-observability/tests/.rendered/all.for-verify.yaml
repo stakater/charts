@@ -1,0 +1,1147 @@
+---
+# Source: crossplane-observability/templates/grafana/crossplane-dashboard.yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: crossplane-dashboard
+  namespace: default
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  folder: Crossplane Observability
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    
+   matchLabels:
+     app: grafana
+  datasources:
+    
+   - datasourceName: Prometheus
+     inputName: DS_PROMETHEUS
+  json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "Crossplane observability — organised by the roadmap capability areas (docs/roadmap.md). Rows labelled (Phase 2) stay empty until the 2.2/2.3 upgrade; the Cloud row is Upjet-providers only.",
+      "editable": true,
+      "graphTooltip": 1,
+      "links": [],
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "label": "Datasource",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "refresh": 1,
+            "regex": ""
+          },
+          {
+            "name": "gvk",
+            "label": "GVK",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "${datasource}" },
+            "query": "label_values(crossplane_managed_resource_ready, gvk)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": { "text": "All", "value": "$__all" },
+            "sort": 1
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "row",
+          "title": "Overview / SLO (top-of-glass)",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 1
+        },
+        {
+          "type": "stat",
+          "title": "Fleet MR Ready ratio (Story 1.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+          "id": 2,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": { "mode": "absolute", "steps": [
+                { "color": "red", "value": null },
+                { "color": "yellow", "value": 0.99 },
+                { "color": "green", "value": 0.995 }
+              ] }
+            },
+            "overrides": []
+          },
+          "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "crossplane:managed_resource_ready:ratio:fleet" }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Claim tree p95 TTR (Story 1.3 headline)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+          "id": 3,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": { "mode": "absolute", "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 300 },
+                { "color": "red", "value": 360 }
+              ] }
+            },
+            "overrides": []
+          },
+          "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "crossplane:claim_tree_ttr_seconds:p95" }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Crossplane API available (Story 2.4)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+          "id": 4,
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }
+              ],
+              "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+            },
+            "overrides": []
+          },
+          "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "1 - max(aggregator_unavailable_apiservice{name=~\".*crossplane.*\"})" }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "MRs not ready (Story 1.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+          "id": 5,
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 } ] }
+            },
+            "overrides": []
+          },
+          "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_ready{gvk=~\"$gvk\"}) or vector(0)" }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "Resource Health (Stories 1.1, 1.2)",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 10
+        },
+        {
+          "type": "table",
+          "title": "Not-ready / not-synced managed resources (count by GVK)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "id": 11,
+          "options": { "showHeader": true },
+          "targets": [
+            { "refId": "A", "format": "table", "instant": true, "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_ready{gvk=~\"$gvk\"}) > 0" },
+            { "refId": "B", "format": "table", "instant": true, "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_synced{gvk=~\"$gvk\"}) > 0" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Time-to-readiness p50 / p95 / p99 by kind",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "id": 12,
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p50 {{gvk}}", "expr": "histogram_quantile(0.50, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk=~\"$gvk\"}[30m])))" },
+            { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p95 {{gvk}}", "expr": "crossplane:managed_resource_ttr_seconds:p95" },
+            { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p99 {{gvk}}", "expr": "histogram_quantile(0.99, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk=~\"$gvk\"}[30m])))" }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "Control Plane (Stories 2.1–2.5)",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "id": 20
+        },
+        {
+          "type": "timeseries",
+          "title": "Reconcile rate & error ratio (2.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 12, "x": 0, "y": 15 },
+          "id": 21,
+          "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [ { "matcher": { "id": "byName", "options": "error ratio" }, "properties": [ { "id": "unit", "value": "percentunit" } ] } ] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{controller}} reconciles/s", "expr": "sum by (controller) (rate(controller_runtime_reconcile_total[5m]))" },
+            { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "error ratio", "expr": "crossplane:reconcile_errors:ratio" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Reconcile latency p50 / p95 / p99 (2.2)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 12, "x": 12, "y": 15 },
+          "id": 22,
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p50 {{controller}}", "expr": "histogram_quantile(0.50, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket[5m])))" },
+            { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p99 {{controller}}", "expr": "crossplane:reconcile_time_seconds:p99" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Workqueue depth & add rate (2.3)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 12, "x": 0, "y": 22 },
+          "id": 23,
+          "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "depth {{name}}", "expr": "workqueue_depth" },
+            { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "adds/s {{name}}", "expr": "sum by (name) (rate(workqueue_adds_total[5m]))" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Detection lag p95 — create→first reconcile (2.5)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 12, "x": 12, "y": 22 },
+          "id": 24,
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p95 {{gvk}}", "expr": "histogram_quantile(0.95, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk=~\"$gvk\"}[15m])))" }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "Correctness & Drift (Story 3.1)",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+          "id": 30
+        },
+        {
+          "type": "timeseries",
+          "title": "Time-out-of-sync (drift) by kind",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 24, "x": 0, "y": 30 },
+          "id": 31,
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{gvk}}", "expr": "crossplane_managed_resource_drift_seconds{gvk=~\"$gvk\"} > 0" }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "Fleet & Multi-tenancy (Stories 4.1, 4.2 — 4.2 is Phase 2)",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 },
+          "id": 40
+        },
+        {
+          "type": "stat",
+          "title": "Ready ratio by GVK (4.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 38 },
+          "id": 41,
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 }, "overrides": [] },
+          "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{gvk}}", "expr": "crossplane:managed_resource_ready:ratio" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Circuit-breaker drop ratio (4.2 — Phase 2)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 6, "w": 8, "x": 8, "y": 38 },
+          "id": 42,
+          "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{controller}}", "expr": "sum by (controller) (rate(circuit_breaker_events_total{result=\"Dropped\"}[5m])) / clamp_min(sum by (controller) (rate(circuit_breaker_events_total[5m])), 1)" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Circuit-breaker opens / hr (4.2 — Phase 2)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 6, "w": 8, "x": 16, "y": 38 },
+          "id": 43,
+          "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{controller}}", "expr": "sum by (controller) (increase(circuit_breaker_opens_total[1h]))" }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "Composition / Function Pipeline (Stories 5.1, 5.2 — Phase 2, after upgrade)",
+          "collapsed": true,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 },
+          "id": 50,
+          "panels": [
+            {
+              "type": "timeseries",
+              "title": "Function execution p95 (5.1)",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "gridPos": { "h": 7, "w": 8, "x": 0, "y": 45 },
+              "id": 51,
+              "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+              "targets": [
+                { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{function_name}}", "expr": "histogram_quantile(0.95, sum by (le, function_name) (rate(function_run_function_seconds_bucket[5m])))" }
+              ]
+            },
+            {
+              "type": "timeseries",
+              "title": "Function error ratio (5.1)",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "gridPos": { "h": 7, "w": 8, "x": 8, "y": 45 },
+              "id": 52,
+              "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+              "targets": [
+                { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{function_name}}", "expr": "sum by (function_name) (rate(function_run_function_response_total{result=\"error\"}[5m])) / clamp_min(sum by (function_name) (rate(function_run_function_response_total[5m])), 1)" }
+              ]
+            },
+            {
+              "type": "timeseries",
+              "title": "Function cache hit ratio (5.2)",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "gridPos": { "h": 7, "w": 8, "x": 16, "y": 45 },
+              "id": 53,
+              "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+              "targets": [
+                { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "hit ratio", "expr": "sum(rate(function_run_function_response_cache_hits_total[10m])) / clamp_min(sum(rate(function_run_function_response_cache_hits_total[10m]) + rate(function_run_function_response_cache_misses_total[10m]) + rate(function_run_function_response_cache_errors_total[10m])), 1)" }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "Cloud Provider Interaction (Story 6.1 — Upjet providers only)",
+          "collapsed": true,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 },
+          "id": 60,
+          "panels": [
+            {
+              "type": "timeseries",
+              "title": "Reconcile delay p95 (6.1)",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "gridPos": { "h": 7, "w": 24, "x": 0, "y": 46 },
+              "id": 61,
+              "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+              "targets": [
+                { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "p95 delay {{kind}}", "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(upjet_resource_reconcile_delay_seconds_bucket[15m])))" }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "Resource Footprint (Stories 7.1, 7.2)",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 46 },
+          "id": 70
+        },
+        {
+          "type": "timeseries",
+          "title": "Provider pod restarts (7.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 8, "x": 0, "y": 47 },
+          "id": 71,
+          "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{pod}}", "expr": "increase(kube_pod_container_status_restarts_total{pod=~\"provider.*\"}[1h])" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Provider memory working set (7.1)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 8, "x": 8, "y": 47 },
+          "id": 72,
+          "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{pod}}", "expr": "sum by (pod) (container_memory_working_set_bytes{pod=~\"provider.*\", container!=\"\"})" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Provider CPU throttled % (7.2)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 7, "w": 8, "x": 16, "y": 47 },
+          "id": 73,
+          "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "legendFormat": "{{pod}}", "expr": "rate(container_cpu_cfs_throttled_periods_total{pod=~\"provider.*\", container!=\"\"}[5m]) / clamp_min(rate(container_cpu_cfs_periods_total{pod=~\"provider.*\", container!=\"\"}[5m]), 1)" }
+          ]
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "style": "dark",
+      "tags": [ "crossplane", "observability", "stakater" ],
+      "time": { "from": "now-6h", "to": "now" },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Crossplane Observability",
+      "uid": "crossplane-observability",
+      "version": 1
+    }
+---
+# Source: crossplane-observability/templates/prometheus/monitors/provider-podmonitor.yaml
+# Scrapes the provider pods. Every crossplane-runtime provider emits the
+# crossplane_managed_resource_* family (ready/synced/TTR/drift) natively, plus
+# upjet_* metrics on Upjet providers — so leaf-MR health comes from here, not an
+# external exporter.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: cp-crossplane-observability-providers
+  namespace: default
+  labels:
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      pkg.crossplane.io/provider: ""
+  namespaceSelector:
+    matchNames:
+      - default
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+---
+# Source: crossplane-observability/templates/prometheus/recording/slo-recording-rules.yaml
+# SLO recording rules. Pre-compute the SLIs from the roadmap so error-budget burn is
+# directly queryable, alert expressions stay readable, and the headline composite SLO
+# (Story 1.3) is a single series. Recording-rule names follow the Prometheus
+# level:metric:operation convention.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cp-crossplane-observability-slo-recording
+  namespace: default
+  labels:
+    role: recording-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.slo.resource-health
+      rules:
+        # Story 1.1 SLI — fraction of managed resources Ready, per GVK. The state metrics
+        # are per-GVK COUNTS (labelled only `gvk`), so ready/exists is the ratio directly;
+        # `sum by (gvk)` is defensive against duplicate series.
+        - record: crossplane:managed_resource_ready:ratio
+          expr: |
+            sum by (gvk) (crossplane_managed_resource_ready{job="crossplane-providers"})
+            /
+            clamp_min(sum by (gvk) (crossplane_managed_resource_exists{job="crossplane-providers"}), 1)
+        # Story 1.1 SLI — fleet-wide ready ratio (rolls 4.1 up into 1.1).
+        - record: crossplane:managed_resource_ready:ratio:fleet
+          expr: |
+            sum (crossplane_managed_resource_ready{job="crossplane-providers"})
+            /
+            clamp_min(sum (crossplane_managed_resource_exists{job="crossplane-providers"}), 1)
+        # Story 1.2 SLI — p95 first-time-to-readiness (seconds), per GVK.
+        - record: crossplane:managed_resource_ttr_seconds:p95
+          expr: |
+            histogram_quantile(0.95, sum by (le, gvk) (
+              rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{job="crossplane-providers"}[30m])
+            ))
+        # Story 1.3 SLI (headline) — p95 full Claim→XR→MR tree time-to-ready. Until the
+        # Story 4.1 inventory exporter lands (Decision 1), this composes the layers
+        # crossplane self-reports; add the claim layer to the union when available.
+        - record: crossplane:claim_tree_ttr_seconds:p95
+          expr: |
+            histogram_quantile(0.95, sum by (le) (
+              rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{job="crossplane-providers"}[30m])
+            ))
+    - name: crossplane.slo.control-plane
+      rules:
+        # Story 2.1 SLI — reconcile error ratio over 1h, per controller.
+        - record: crossplane:reconcile_errors:ratio
+          expr: |
+            sum by (controller) (rate(controller_runtime_reconcile_errors_total{job="crossplane"}[1h]))
+            /
+            clamp_min(sum by (controller) (rate(controller_runtime_reconcile_total{job="crossplane"}[1h])), 1)
+        # Story 2.2 SLI — p99 reconcile duration (seconds), per controller.
+        - record: crossplane:reconcile_time_seconds:p99
+          expr: |
+            histogram_quantile(0.99, sum by (le, controller) (
+              rate(controller_runtime_reconcile_time_seconds_bucket{job="crossplane"}[5m])
+            ))
+---
+# Source: crossplane-observability/templates/prometheus/rules/cloud/cloud-api-throttling.yaml
+# Story 6.1 — we are being throttled by the cloud provider. Throttling at the cloud SDK
+# is the root cause behind many latency/TTR alerts and is upstream of us. Upjet providers
+# only (gated on upjet.enabled). NEVER an SLA — the failure is upstream at the cloud provider.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-cloud-api-throttling
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.cloud
+      rules:
+        - alert: CloudAPIThrottling
+          # A high reconcile delay means the provider is falling behind its poll cadence —
+          # typically cloud-side rate limiting. Threshold is configurable (seconds); the
+          # roadmap notes it should be calibrated against the providers' configured poll
+          # interval rather than a fixed number.
+          expr: |
+            histogram_quantile(0.95, sum by (le, kind) (
+              rate(upjet_resource_reconcile_delay_seconds_bucket{job="crossplane-providers"}[15m])
+            )) > 60
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Cloud-API throttling suspected for {{ $labels.kind }}"
+            description: "p95 reconcile delay for {{ $labels.kind }} is {{ $value | humanizeDuration }}, above the 60s threshold, for more than 15m — the provider is falling behind, typically due to cloud-provider rate limiting (upstream of Crossplane)."
+---
+# Source: crossplane-observability/templates/prometheus/rules/control-plane/apiservice-unavailable.yaml
+# Story 2.4 — the Crossplane aggregated API is unavailable. If it is down, nothing in the
+# platform works. This IS the control-plane availability SLA. Sourced from kube-apiserver,
+# so it does not depend on the Crossplane /metrics endpoints being scraped.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-apiservice-unavailable
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: APIServiceUnavailable
+          expr: aggregator_unavailable_apiservice{name=~".*crossplane.*"} == 1
+          for: 5m
+          labels:
+            severity: critical
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane aggregated APIService {{ $labels.name }} unavailable"
+            description: "Aggregated APIService {{ $labels.name }} has been unavailable for more than 5m. The Crossplane control plane is down — provisioning and reconciliation are halted."
+---
+# Source: crossplane-observability/templates/prometheus/rules/control-plane/detection-lag.yaml
+# Story 2.5 — slow to even notice a new resource. Detection lag points to watch/informer
+# problems upstream of provisioning (leading indicator).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-detection-lag
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: DetectionLagHigh
+          expr: |
+            histogram_quantile(0.95, sum by (le, gvk) (
+              rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{job="crossplane-providers"}[15m])
+            )) > 30
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "High create→detect lag for {{ $labels.gvk }}"
+            description: "p95 time from resource creation to first reconcile for {{ $labels.gvk }} is {{ $value | humanizeDuration }}, above the 30s SLO, for more than 15m — likely a watch/informer problem."
+---
+# Source: crossplane-observability/templates/prometheus/rules/control-plane/reconcile-error-rate.yaml
+# Story 2.1 — the controller's reconcile error rate is climbing. Rising errors precede
+# stalled provisioning and predict a customer-facing failure (leading indicator).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-reconcile-error-rate
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: ReconcileErrorRateHigh
+          expr: crossplane:reconcile_errors:ratio > 0.01
+          for: 10m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "High reconcile error ratio for controller {{ $labels.controller }}"
+            description: "Controller {{ $labels.controller }} reconcile error ratio is {{ $value | humanizePercentage }} (SLO < 0.01) for more than 10m."
+---
+# Source: crossplane-observability/templates/prometheus/rules/control-plane/reconcile-latency.yaml
+# Story 2.2 — reconcile latency is climbing. Signals provider or cloud-API degradation
+# before it becomes a customer-facing TTR breach (leading indicator).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-reconcile-latency
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: ReconcileLatencyHigh
+          expr: crossplane:reconcile_time_seconds:p99 > 30
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "High reconcile latency for controller {{ $labels.controller }}"
+            description: "Controller {{ $labels.controller }} p99 reconcile duration is {{ $value | humanizeDuration }} (SLO ≤ 30s) for more than 15m."
+---
+# Source: crossplane-observability/templates/prometheus/rules/control-plane/workqueue-depth.yaml
+# Story 2.3 — the controller work queue is growing unbounded. A sustained backlog means
+# customer requests are piling up faster than they can be serviced (capacity signal).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-workqueue-depth
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.control-plane
+      rules:
+        - alert: WorkqueueDepthGrowing
+          expr: workqueue_depth{job="crossplane"} > 50
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane workqueue {{ $labels.name }} backlog growing"
+            description: "Workqueue {{ $labels.name }} depth has stayed above 50 (currently {{ $value }}) for more than 15m — reconciles are not keeping up with demand."
+---
+# Source: crossplane-observability/templates/prometheus/rules/drift/drift-detected.yaml
+# Story 3.1 — a managed resource has drifted out of sync with its desired state. Silent
+# drift means configuration we believe is enforced actually is not (correctness signal).
+# NOTE: crossplane_managed_resource_drift_seconds is documented but not yet captured (no
+# drift occurred in the capture). Its exact type (gauge vs histogram) and labels are
+# unconfirmed — verify with a real fetch (see tests/fetch-cluster-metrics.sh) and adjust
+# the expr/labels if needed; this assumes a per-GVK gauge consistent with the rest of the family.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-drift-detected
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.drift
+      rules:
+        - alert: DriftDetected
+          expr: crossplane_managed_resource_drift_seconds{job="crossplane-providers"} > 600
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Drift detected for {{ $labels.gvk }}"
+            description: "Managed resources of {{ $labels.gvk }} have been out of sync with desired state for {{ $value | humanizeDuration }} (threshold 600s)."
+---
+# Source: crossplane-observability/templates/prometheus/rules/fleet/circuit-breaker.yaml
+# Story 4.2 (PHASE 2) — multi-tenant protection: a single XR thrashing (reconcile storm)
+# can saturate the control plane and starve other tenants. The circuit-breaker mechanism
+# runs on 2.1.x, but its Prometheus metrics are guaranteed only after the 2.2/2.3 upgrade
+# (confirm-on-build). Thresholds are the upstream-published values, used verbatim.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-circuit-breaker
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.fleet
+      rules:
+        - alert: CircuitBreakerDropRatioHigh
+          expr: |
+            sum by (controller) (rate(circuit_breaker_events_total{job="crossplane", result="Dropped"}[5m]))
+            /
+            clamp_min(sum by (controller) (rate(circuit_breaker_events_total{job="crossplane"}[5m])), 1)
+            > 0.2
+          for: 5m
+          labels:
+            severity: critical
+            rulesgroup: crossplane
+          annotations:
+            summary: "Circuit breaker dropping events for {{ $labels.controller }}"
+            description: "Controller {{ $labels.controller }} is dropping {{ $value | humanizePercentage }} of watch events (> 0.2) for more than 5m — a thrashing XR may be starving other tenants."
+        - alert: CircuitBreakerFrequentOpens
+          expr: |
+            sum by (controller) (increase(circuit_breaker_opens_total{job="crossplane"}[1h])) > 6
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Circuit breaker opening frequently for {{ $labels.controller }}"
+            description: "Controller {{ $labels.controller }} circuit breaker opened more than 6 times in the last hour (sustained 15m) — repeated reconcile storms."
+---
+# Source: crossplane-observability/templates/prometheus/rules/fleet/claim-not-ready.yaml
+# Story 4.1 — Claim-level readiness across the fleet, per tenant/namespace. Providers
+# self-report leaf-MR health, but the Claim/XR/Composition inventory layer needs an
+# external exporter (KSM Custom Resource State or resource-state-metrics — see Decision 1
+# in docs/roadmap.md). Disabled by default until that exporter is wired up; the metric
+# name below assumes a KSM-CRS series and will likely need adjusting to your exporter.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-claim-not-ready
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.fleet
+      rules:
+        - alert: ClaimNotReady
+          expr: crossplane_claim_ready == 0
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Claim {{ $labels.kind }}/{{ $labels.name }} not ready"
+            description: "Claim {{ $labels.kind }}/{{ $labels.name }} in namespace {{ $labels.namespace }} has been not-ready for more than 15m — the customer's end-to-end request is not satisfied."
+---
+# Source: crossplane-observability/templates/prometheus/rules/footprint/provider-pod-cpu-throttled.yaml
+# Story 7.2 — a provider pod is being CPU-throttled (under-provisioned). Under-provisioning
+# shows up as mysterious slowness rather than an outright failure. Sourced from cAdvisor.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-provider-pod-cpu-throttled
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.footprint
+      rules:
+        - alert: ProviderPodCPUThrottled
+          expr: |
+            rate(container_cpu_cfs_throttled_periods_total{namespace="default", pod=~"provider.*", container!=""}[5m])
+            /
+            clamp_min(rate(container_cpu_cfs_periods_total{namespace="default", pod=~"provider.*", container!=""}[5m]), 1)
+            > 0.01
+          for: 15m
+          labels:
+            severity: info
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane provider pod {{ $labels.pod }} CPU-throttled"
+            description: "Provider pod {{ $labels.pod }} is CPU-throttled {{ $value | humanizePercentage }} of the time (SLO < 0.01) for more than 15m — consider raising its CPU limit."
+---
+# Source: crossplane-observability/templates/prometheus/rules/footprint/provider-pod-oom.yaml
+# Story 7.1 (part 2) — a provider pod was OOM-killed. Memory pressure silently kills the
+# provider and stops its reconciles. Sourced from kube-state-metrics last-terminated reason.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-provider-pod-oom
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.footprint
+      rules:
+        - alert: ProviderPodOOM
+          expr: |
+            kube_pod_container_status_last_terminated_reason{namespace="default", pod=~"provider.*", reason="OOMKilled"} == 1
+          for: 5m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane provider pod {{ $labels.pod }} OOMKilled"
+            description: "Container {{ $labels.container }} in provider pod {{ $labels.pod }} was OOMKilled. Raise its memory limit or investigate the leak — reconciles stop while it is down."
+---
+# Source: crossplane-observability/templates/prometheus/rules/footprint/provider-pod-restarting.yaml
+# Story 7.1 (part 1) — a provider pod is restarting. A dead provider silently stops all of
+# its reconciles. Sourced from kube-state-metrics.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-provider-pod-restarting
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.footprint
+      rules:
+        - alert: ProviderPodRestarting
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="default", pod=~"provider.*"}[1h]) > 2
+          for: 10m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Crossplane provider pod {{ $labels.pod }} restarting"
+            description: "Provider pod {{ $labels.pod }} has restarted more than 2 times in 1h. While it is down its reconciles do not run."
+---
+# Source: crossplane-observability/templates/prometheus/rules/functions/function-cache.yaml
+# Story 5.2 (PHASE 2) — the function response cache is unhealthy. Cache misses and errors
+# silently inflate reconcile latency. PHASE 2 (post-upgrade) — disabled by default. Alerts
+# when the hit ratio drops below the SLO.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-function-cache
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.functions
+      rules:
+        - alert: FunctionCacheErrorRate
+          expr: |
+            sum (rate(function_run_function_response_cache_hits_total{job="crossplane"}[10m]))
+            /
+            clamp_min(sum (
+              rate(function_run_function_response_cache_hits_total{job="crossplane"}[10m])
+              + rate(function_run_function_response_cache_misses_total{job="crossplane"}[10m])
+              + rate(function_run_function_response_cache_errors_total{job="crossplane"}[10m])
+            ), 1)
+            < 0.9
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Composition function cache hit ratio low"
+            description: "Function response cache hit ratio is {{ $value | humanizePercentage }}, below the 0.9 SLO, for more than 15m — reconcile latency is being inflated by cache misses/errors."
+---
+# Source: crossplane-observability/templates/prometheus/rules/functions/function-error-rate.yaml
+# Story 5.1 (PHASE 2, part 2) — a composition function is erroring. Hidden function
+# failures surface only as generic reconcile errors. PHASE 2 (post-upgrade) — disabled by
+# default. Error vs total is split on the response-total metric's result label.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-function-error-rate
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.functions
+      rules:
+        - alert: FunctionErrorRate
+          expr: |
+            sum by (function_name) (rate(function_run_function_response_total{job="crossplane", result="error"}[5m]))
+            /
+            clamp_min(sum by (function_name) (rate(function_run_function_response_total{job="crossplane"}[5m])), 1)
+            > 0.005
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Composition function {{ $labels.function_name }} error rate high"
+            description: "Function {{ $labels.function_name }} error ratio is {{ $value | humanizePercentage }} (SLO < 0.005) for more than 15m."
+---
+# Source: crossplane-observability/templates/prometheus/rules/functions/function-latency.yaml
+# Story 5.1 (PHASE 2, part 1) — a composition function is slow. Functions run custom code
+# in the provisioning path; a hidden slowdown surfaces only as a generic reconcile error
+# with no indication of which function. Function-pipeline metrics arrive with the 2.2/2.3
+# upgrade, so this is disabled by default.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-function-latency
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.functions
+      rules:
+        - alert: FunctionLatencyHigh
+          expr: |
+            histogram_quantile(0.95, sum by (le, function_name) (
+              rate(function_run_function_seconds_bucket{job="crossplane"}[5m])
+            )) > 5
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Composition function {{ $labels.function_name }} slow"
+            description: "p95 execution time for function {{ $labels.function_name }} is {{ $value | humanizeDuration }} (SLO ≤ 5s) for more than 15m."
+---
+# Source: crossplane-observability/templates/prometheus/rules/resource-health/claim-tree-not-ready.yaml
+# Story 1.3 (HEADLINE) — the full Claim→XR→MR tree the customer asked for is not ready
+# within the SLO. This end-to-end state is what the customer actually experiences. Run
+# this internal SLO meaningfully tighter than the published SLA so error budget burns
+# before a contractual breach. Uses the crossplane:claim_tree_ttr_seconds:p95 recording rule.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-claim-tree-not-ready
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.resource-health
+      rules:
+        - alert: ClaimTreeNotReady
+          expr: crossplane:claim_tree_ttr_seconds:p95 > 360
+          for: 15m
+          labels:
+            severity: critical
+            rulesgroup: crossplane
+          annotations:
+            summary: "End-to-end Claim→XR→MR provisioning over SLO"
+            description: "p95 time for the full Claim→XR→MR tree to become ready is {{ $value | humanizeDuration }}, above the internal 360s SLO, for more than 15m. This is the headline customer-experience signal."
+---
+# Source: crossplane-observability/templates/prometheus/rules/resource-health/mr-not-ready.yaml
+# Story 1.1 — managed resources of a GVK are provisioned but not all healthy. A customer's
+# infrastructure can exist while being unusable. The crossplane_managed_resource_* state
+# metrics are per-GVK counts (labelled `gvk`), so this is the ready/exists ratio from the
+# recording rule; warning escalates to critical the longer it stays degraded.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-mr-not-ready
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.resource-health
+      rules:
+        - alert: MRNotReady
+          expr: crossplane:managed_resource_ready:ratio < 1
+          for: 15m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Managed resources not all ready for {{ $labels.gvk }}"
+            description: "Only {{ $value | humanizePercentage }} of {{ $labels.gvk }} managed resources are Ready (SLO 1) for more than 15m. Some infrastructure may exist but be unusable."
+        - alert: MRNotReadyCritical
+          expr: crossplane:managed_resource_ready:ratio < 0.995
+          for: 1h
+          labels:
+            severity: critical
+            rulesgroup: crossplane
+          annotations:
+            summary: "Managed resources critically degraded for {{ $labels.gvk }}"
+            description: "Only {{ $value | humanizePercentage }} of {{ $labels.gvk }} managed resources are Ready (below 0.995) for over 1h — a sustained, customer-visible failure."
+---
+# Source: crossplane-observability/templates/prometheus/rules/resource-health/ttr-degraded.yaml
+# Story 1.2 — resources are taking too long to become ready. Slow provisioning is a
+# customer-visible SLA breach even when nothing has outright "failed". The native TTR
+# metric covers all providers; on Upjet providers upjet_resource_ttr is more accurate
+# for async resources (preferred when upjet.enabled).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crossplane-ttr-degraded
+  namespace: default
+  labels:
+    role: alert-rules
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: crossplane.resource-health
+      rules:
+        - alert: TTRDegraded
+          expr: |
+            histogram_quantile(0.95, sum by (le, gvk) (
+              rate(
+                upjet_resource_ttr_bucket{job="crossplane-providers"}[30m]
+              )
+            )) > 300
+          for: 30m
+          labels:
+            severity: warning
+            rulesgroup: crossplane
+          annotations:
+            summary: "Slow provisioning for {{ $labels.gvk }} (p95 TTR over SLO)"
+            description: "p95 time-to-readiness for {{ $labels.gvk }} is {{ $value | humanizeDuration }}, above the 300s SLO, for more than 30m."
+---
+# Source: crossplane-observability/templates/prometheus/monitors/core-servicemonitor.yaml
+# Scrapes Crossplane core /metrics: controller-runtime (reconcile rate/latency,
+# workqueue), the aggregated-API health, and — after the 2.2/2.3 upgrade — the
+# circuit-breaker and composition/function-pipeline metrics.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cp-crossplane-observability-core
+  namespace: default
+  labels:
+    helm.sh/chart: crossplane-observability-0.0.1
+    app.kubernetes.io/name: crossplane-observability
+    app.kubernetes.io/instance: cp
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: crossplane
+      app.kubernetes.io/instance: crossplane
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

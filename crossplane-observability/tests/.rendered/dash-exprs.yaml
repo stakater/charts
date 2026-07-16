@@ -1,0 +1,120 @@
+groups:
+  - name: dashboard.exprs
+    rules:
+    - record: dash_0
+      expr: |
+        count(ALERTS{rulesgroup="crossplane", alertstate="firing"}) or vector(0)
+    - record: dash_1
+      expr: |
+        crossplane:managed_resource_ready:ratio:fleet
+    - record: dash_2
+      expr: |
+        crossplane:claim_tree_ttr_seconds:p95
+    - record: dash_3
+      expr: |
+        1 - max(aggregator_unavailable_apiservice{name=~".*crossplane.*"})
+    - record: dash_4
+      expr: |
+        sum(crossplane_managed_resource_exists{gvk=~"$gvk"} - crossplane_managed_resource_ready{gvk=~"$gvk"}) or vector(0)
+    - record: dash_5
+      expr: |
+        sum by (gvk) (crossplane_managed_resource_exists{gvk=~"$gvk"}) - sum by (gvk) (crossplane_managed_resource_ready{gvk=~"$gvk"}) > 0
+    - record: dash_6
+      expr: |
+        sum by (gvk) (crossplane_managed_resource_exists{gvk=~"$gvk"}) - sum by (gvk) (crossplane_managed_resource_synced{gvk=~"$gvk"}) > 0
+    - record: dash_7
+      expr: |
+        histogram_quantile(0.50, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk=~"$gvk"}[30m])))
+    - record: dash_8
+      expr: |
+        crossplane:managed_resource_ttr_seconds:p95
+    - record: dash_9
+      expr: |
+        histogram_quantile(0.99, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk=~"$gvk"}[30m])))
+    - record: dash_10
+      expr: |
+        topk(15, sum by (controller) (rate(controller_runtime_reconcile_total{job=~"$core_job"}[5m])))
+    - record: dash_11
+      expr: |
+        topk(15, crossplane:reconcile_errors:ratio)
+    - record: dash_12
+      expr: |
+        topk(10, histogram_quantile(0.50, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket{job=~"$core_job"}[5m]))))
+    - record: dash_13
+      expr: |
+        topk(10, crossplane:reconcile_time_seconds:p99)
+    - record: dash_14
+      expr: |
+        workqueue_depth{job=~"$core_job"}
+    - record: dash_15
+      expr: |
+        sum by (name) (rate(workqueue_adds_total{job=~"$core_job"}[5m]))
+    - record: dash_16
+      expr: |
+        topk(10, histogram_quantile(0.95, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk=~"$gvk"}[15m]))))
+    - record: dash_17
+      expr: |
+        crossplane_managed_resource_drift_seconds{gvk=~"$gvk"} > 0
+    - record: dash_18
+      expr: |
+        crossplane:managed_resource_ready:ratio
+    - record: dash_19
+      expr: |
+        sum by (controller) (rate(circuit_breaker_events_total{result="Dropped"}[5m])) / clamp_min(sum by (controller) (rate(circuit_breaker_events_total[5m])), 1)
+    - record: dash_20
+      expr: |
+        sum by (controller) (increase(circuit_breaker_opens_total[1h]))
+    - record: dash_21
+      expr: |
+        sum by (crossplane_kind) ({__name__=~"kube_customresource_crossplane_xr_.+_condition", type="Ready", status="True"}) / clamp_min(count by (crossplane_kind) ({__name__=~"kube_customresource_crossplane_xr_.+_condition", type="Ready", status="True"}), 1)
+    - record: dash_22
+      expr: |
+        histogram_quantile(0.95, sum by (le, function_name) (rate(function_run_function_seconds_bucket[5m])))
+    - record: dash_23
+      expr: |
+        sum by (function_name) (rate(function_run_function_response_total{result_severity="Fatal"}[5m])) / clamp_min(sum by (function_name) (rate(function_run_function_response_total[5m])), 1)
+    - record: dash_24
+      expr: |
+        sum(rate(function_run_function_response_cache_hits_total[10m])) / clamp_min(sum(rate(function_run_function_response_cache_hits_total[10m]) + rate(function_run_function_response_cache_misses_total[10m]) + rate(function_run_function_response_cache_errors_total[10m])), 1)
+    - record: dash_25
+      expr: |
+        topk(10, histogram_quantile(0.95, sum by (le, kind) (rate(upjet_resource_reconcile_delay_seconds_bucket[15m]))))
+    - record: dash_26
+      expr: |
+        increase(kube_pod_container_status_restarts_total{pod=~"provider.*"}[1h])
+    - record: dash_27
+      expr: |
+        sum by (pod) (container_memory_working_set_bytes{pod=~"provider.*", container!=""})
+    - record: dash_28
+      expr: |
+        rate(container_cpu_cfs_throttled_periods_total{pod=~"provider.*", container!=""}[5m]) / clamp_min(rate(container_cpu_cfs_periods_total{pod=~"provider.*", container!=""}[5m]), 1)
+    - record: dash_29
+      expr: |
+        crossplane:managed_resource:total
+    - record: dash_30
+      expr: |
+        count({__name__=~"kube_customresource_crossplane_(xr|claim)_.+_condition", type="Ready", status="True", crossplane_kind=~"$billable"})
+    - record: dash_31
+      expr: |
+        count(crossplane_managed_resource_exists > 0)
+    - record: dash_32
+      expr: |
+        count({__name__=~"kube_customresource_crossplane_xr_.+_condition", type="Ready", status="True"})
+    - record: dash_33
+      expr: |
+        count(count by (namespace) ({__name__=~"kube_customresource_crossplane_xr_.+_condition", type="Ready", status="True"}))
+    - record: dash_34
+      expr: |
+        sort_desc(crossplane_managed_resource_exists > 0)
+    - record: dash_35
+      expr: |
+        crossplane:managed_resource:total
+    - record: dash_36
+      expr: |
+        count by (crossplane_kind) ({__name__=~"kube_customresource_crossplane_(xr|claim)_.+_condition", type="Ready", status="True", crossplane_kind=~"$billable"})
+    - record: dash_37
+      expr: |
+        count by (namespace) ({__name__=~"kube_customresource_crossplane_claim_.+_condition", type="Ready", status="True", crossplane_kind=~"$billable", namespace=~"$tenant"})
+    - record: dash_38
+      expr: |
+        count by (namespace, crossplane_kind) ({__name__=~"kube_customresource_crossplane_claim_.+_condition", type="Ready", status="True", crossplane_kind=~"$billable", namespace=~"$tenant"})
