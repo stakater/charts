@@ -30,10 +30,10 @@ is this — tenancy, edge, storage, or agents?*
 
 | Panel | Why it exists / value |
 | --- | --- |
-| **Workspaces Ready** | The platform's reason to exist: how many tenant workspaces are actually usable. This is the number a status page or customer conversation needs. (Metric read 135 on us-2 while etcd truth was 33 — the kcp v0.32.1 count gauges drift; treat as trend, use the alerts-guide runbook for truth.) |
-| **Workspaces not Ready** | The complement that makes the first number honest — 500 Ready means nothing if 40 are stuck. Non-zero here sends you to the "Workspaces & logical clusters" row. |
-| **Logical clusters Ready** | Workspaces are the tenant-visible wrapper; logical clusters are the underlying kcp primitive (metric read 170 vs 135 on us-2; etcd truth was 36 vs 33 — same drift caveat). Divergence between the two counts localizes a lifecycle bug to the wrapper vs the core. |
-| **APIBindings Bound** | Every SCO service a tenant consumes is an APIBinding. This is "how many service subscriptions are live" — the platform's consumption headline (~800 at fixture-capture time; not re-checked in the validation report). |
+| **Workspaces (stored)** | The platform's reason to exist, as a TRUE number: `apiserver_storage_objects` comes from the apiserver storage layer and matched etcd exactly at verification (27), unlike the drifting `kcp_workspace_count` gauge (which read 135). No phase split at this layer — the approximate phase breakdown lives in the Workspaces row. |
+| **Workspaces not Ready (approx)** | The complement that makes the first number honest — non-zero here sends you to the "Workspaces & logical clusters" row. Phase data only exists on the drifting gauge, hence "(approx)": at verification it read 10 while etcd truth was 2. Direction matters more than the value; the runbook gives truth. |
+| **Logical clusters (stored)** | Workspaces are the tenant-visible wrapper; logical clusters are the underlying kcp primitive. True etcd-backed count (36 at verification); more LCs than workspaces = system LCs + orphans of deleted workspaces. Divergence between the two counts localizes a lifecycle bug to the wrapper vs the core. |
+| **APIBindings (stored)** | Every SCO service a tenant consumes is an APIBinding — the platform's consumption headline, as a TRUE etcd-backed count (202 at verification; the phase gauge read ~800). Phase breakdown (approximate) lives in the APIBindings row. |
 | **Edge p95 latency** | The customer-facing latency promise (Area 1 is the only layer with a customer SLA). One number, alert-threshold colored — if it's green, latency complaints are probably not the platform edge. |
 | **Edge 5xx ratio** | Same contract, error dimension. Alert threshold 0.5%; the stat exists so a creeping 0.3% is visible *before* the alert fires. |
 | **etcd DB used of quota** | etcd at quota goes read-only — a self-inflicted full outage. This ratio is the earliest cheap warning (us-2 sits at ~0.1%; the alert fires at 80%). |
@@ -41,7 +41,7 @@ is this — tenancy, edge, storage, or agents?*
 | **Shards up** | The apiservers actually serving. Below the replica count → capacity/crash problem, go to "Shard apiservers". |
 | **Front-proxy pods up** | The only door customers enter through. Any number below replica count is a customer-facing risk even if the shards are fine. |
 | **Service agents leading** | One agent must hold leadership per SCO service API or that service's tenant claims silently stop syncing — "silently" is why the stat exists; nothing else surfaces it. (Blocked on us-2 until the agents expose metrics — see report issue S1.) |
-| **APIExports** (IdentityValid) | Exports are the supply side of the API economy; an invalid export breaks *every* binding to it at once — the highest blast radius on the platform. This counts the healthy ones; the APIExport row has the breakdown. |
+| **APIExports (stored)** | Exports are the supply side of the API economy; an invalid export breaks *every* binding to it at once — the highest blast radius on the platform. True etcd-backed count (15 at verification); the validity breakdown (condition-based) lives in the APIExports row. |
 
 ## Row 3 — Request edge (front-proxy) — Area 1
 
