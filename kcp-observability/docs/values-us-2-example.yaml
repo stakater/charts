@@ -31,19 +31,15 @@ prometheus:
       enabled: true
     etcdServiceMonitor:
       enabled: true
-    # DISABLED until the syncagent releases pass --metrics-address=0.0.0.0:8085:
-    # api-syncagent v0.5.0 binds metrics to 127.0.0.1:8085 by default (verified in-pod
-    # on us-2), so scrapes get connection-refused and 20 KcpSyncAgentDown alerts would
-    # fire falsely. The PodMonitor itself discovers all 20 pods correctly (address
-    # relabel to podIP:8085) — flip these on once the agent deployments are fixed.
+    # S1 RESOLVED (2026-07-16): the api-syncagent releases now pass
+    # --metrics-address=0.0.0.0:8085 (verified in-pod: args + socket on all
+    # interfaces). The agents still declare NO containerPort, so the PodMonitor's
+    # __address__-relabel-to-podIP:8085 approach stays — do NOT switch to
+    # port/targetPort/portNumber, all of which silently drop port-less pods
+    # (proven live: 20 dropped targets; see the audit history in git).
     syncAgentPodMonitor:
-      enabled: false
+      enabled: true
   rules:
-    syncAgents:
-      down:
-        enabled: false
-      clientErrors:
-        enabled: false
     etcd:
       # us-2 etcd runs on network-attached storage: fsync p99 baseline is
       # ~170-190ms sustained (7d avg, all members) vs the upstream 10ms guidance.

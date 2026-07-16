@@ -178,9 +178,11 @@ replica's near-empty queues hold the min down.
 
 ## Area 7 — SCO service agents (api-syncagent)
 
-> Both alerts are **disabled on us-2** until the agents expose metrics
-> (`--metrics-address=0.0.0.0:8085` — report issue S1). Deliberately disabled-with-reason
-> beats firing 20 false pages: benign ≠ actionable.
+> **S1 resolved 2026-07-16**: the agent releases now pass `--metrics-address=0.0.0.0:8085`;
+> monitor + both alerts are live on us-2 (20/20 targets up at verification). Topology
+> correction from live data: each service runs a **2-replica** agent Deployment with
+> leader election (~10 services × 2 pods, one leader each) — the down-alert's leadership
+> clause exists precisely for the up-but-not-leading replica.
 
 | Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
 | --- | --- | --- | --- | --- |
@@ -213,7 +215,12 @@ layer above degrades mysteriously when its pod is throttled, OOM-killed, or rest
 - **Story 1.4** (per-shard reachability through the proxy): no per-backend proxy metric
   exists on v0.32.1; the observable signature is `KcpShardDown` + edge 5xx together.
   Deferred as its own alert, on purpose.
-- **Syncagent alerts disabled on us-2** until S1 (loopback bind) is fixed agent-side.
+- **Per-service agent blindness** (refinement of the watchdog gap, observed live): a pod
+  in phase `Failed` (e.g. preempted) is dropped by Prometheus entirely — no target, no
+  `up==0`, and if ALL of a service's replicas are gone there is also no leader series, so
+  `KcpSyncAgentDown` cannot fire for a service that never comes up. A per-service
+  `absent()` needs an expected-services list (not derivable from metrics); tracked with
+  the blindness watchdog above.
 
 ## Maintenance rules
 

@@ -6,7 +6,9 @@
 # container ports, so each silently drops every pod (found live on us-2: 20 syncagent
 # pods dropped). Instead: no port field at all (a port-less pod then yields exactly one
 # discovered target) and rewrite __address__ to podIP:port ourselves.
-# One agent per published service API; pods carry app.kubernetes.io/name=kcp-api-syncagent.
+# Each published service API runs a 2-replica agent Deployment with leader election
+# (verified live: ~10 services x 2 pods; one leader each — which is why the down-alert's
+# leadership clause exists). Pods carry app.kubernetes.io/name=kcp-api-syncagent.
 # The operator defaults a PodMonitor's job to "<namespace>/<name>", so job is pinned by
 # relabel to "kcp-syncagent" — keep in sync with .Values.kcp.syncAgent.job used by the rules.
 apiVersion: monitoring.coreos.com/v1
@@ -36,10 +38,13 @@ spec:
         # The service each agent publishes (deployment name = service API name, e.g.
         # services-compute.cloud.stakater.com) — extracted from the pod-name prefix
         # (the pods' instance label is an unhelpful hash). Gives rules/dashboards a
-        # stable per-service dimension.
+        # stable per-service dimension. Two name shapes (found live on us-2): the normal
+        # "<deploy>-<rs-hash>-<suffix>", and 63-char-TRUNCATED names where k8s fuses the
+        # hash and suffix into one 10-16 char segment (services-experimental.* pods lost
+        # their service_agent label until the second alternative was added).
         - action: replace
           sourceLabels: [__meta_kubernetes_pod_name]
-          regex: "(.+)-[a-z0-9]+-[a-z0-9]{5}"
+          regex: "(.+?)-(?:[a-z0-9]+-[a-z0-9]{5}|[a-z0-9]{10,16})"
           targetLabel: service_agent
   selector:
     matchLabels:

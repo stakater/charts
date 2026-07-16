@@ -130,14 +130,13 @@ The last mile: agents that sync tenant claims from kcp to the underlying service
 A dead agent produces **no** errors anywhere else — tenant claims just silently stop
 converging — so this row is the only coverage this failure mode has.
 
-> Currently empty on us-2: api-syncagent v0.5.0 binds metrics to `127.0.0.1:8085`
-> (report issue S1). The panels, monitor, and alerts are ready; flip
-> `syncAgentPodMonitor.enabled` + the syncagent alerts on once the agent releases pass
-> `--metrics-address=0.0.0.0:8085`.
+> Live since 2026-07-16 (S1 resolved: agents now pass `--metrics-address=0.0.0.0:8085`;
+> 20/20 targets up). Topology: each service runs 2 agent replicas with leader election —
+> expect one leading + one standby per service on the panels.
 
 | Panel | Why it exists / value |
 | --- | --- |
-| **Agent up / leader per service** | Per-service liveness *and* leadership, keyed by the `service_agent` relabel (pod-name prefix → human-readable service name, e.g. `services-compute.cloud.stakater.com`). Both series matter: a pod can be up and not leading — same tenant-visible outcome as down. |
+| **Agent up / leader per service** | Per-service liveness *and* leadership, keyed by the `service_agent` relabel (pod-name prefix → human-readable service name, e.g. `services-compute.cloud.stakater.com`; handles 63-char-truncated pod names too). With 2 replicas per service, up=2 and leader=1 is healthy — a replica that is up but not leading is the standby, not an incident; a SERVICE with no leader is the incident. |
 | **Agent client error ratio** | Agents live or die by their API calls to kcp and the service cluster. A rising 5xx/error ratio per service catches expired kubeconfigs, RBAC drift, or an unreachable kcp *before* the agent gives up leadership — the leading indicator for the panel above. |
 
 ## Row 10 — Footprint — Area 8
