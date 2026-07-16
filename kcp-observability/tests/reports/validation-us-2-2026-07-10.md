@@ -159,7 +159,10 @@ here). Findings:
   churn-correlated (leader inflates), not uptime- or informer-partiality-correlated, so
   **no aggregation (max/min) recovers truth**. Chart response: count panels and the two
   stuck alerts now carry an explicit unreliability caveat + runbook pointer; treat gauges
-  as trend signals only. **Action: file upstream kcp issue.**
+  as trend signals only. **Filed upstream: [kcp-dev/kcp#4277](https://github.com/kcp-dev/kcp/issues/4277)**
+  (root cause: event-driven Inc/Dec gauges from #4095/#4147 — suggested collect-time
+  computation from the informer store). Overview dashboard stats switched to
+  `apiserver_storage_objects`, which matched etcd exactly at verification.
 - **F4 (new, real):** `PermissionClaimsValid=False` on **98 of 202** apibindings (etcd
   truth; the metric's 392 is the same drift). All 202 bindings are otherwise fully Ready.
   Widespread genuine condition — needs SCO-side triage; deliberately NOT alerted (would
