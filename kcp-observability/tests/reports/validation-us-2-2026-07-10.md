@@ -172,3 +172,22 @@ here). Findings:
   restore-when-observed comment.
 - The ephemeral `system:masters` audit cert (`kcp-audit-admin-ephemeral`, 1h TTL) was
   minted for the verification and deleted afterwards.
+
+## Addendum — 2026-07-16 (later): S1 resolved, syncagent monitoring live
+
+The api-syncagent releases now pass `--metrics-address=0.0.0.0:8085` (verified in-pod:
+args + socket on all interfaces; pods still declare no containerPort, so the PodMonitor's
+`__address__` relabel remains required). `syncAgentPodMonitor` + both syncagent alerts
+enabled (rev 14); **20/20 targets up**. Live corrections from first real agent data:
+
+- **Topology**: each service runs a 2-replica agent Deployment with leader election
+  (~10 services × 2 pods, one leader each) — not "one agent per service" as previously
+  documented. The down-alert's `max by (service_agent)` leadership clause handles this
+  correctly by construction.
+- **Truncated pod names** (rev 15): `services-experimental.compute...` pods hit the
+  63-char name limit, fusing the ReplicaSet hash + suffix; the `service_agent` relabel
+  regex gained a second alternative for the fused shape (was: empty label).
+- **Refined blindness case**: one agent pod sat in phase `Failed` for ~2 days (preempted;
+  a healthy replacement existed). Failed pods are dropped by Prometheus — no target, no
+  `up==0` — so a service whose replicas ALL end that way would page nothing. Folded into
+  the tracked absent()-watchdog gap.
