@@ -199,14 +199,14 @@
     {
       "id": 5,
       "type": "stat",
-      "title": "Workspaces Ready",
+      "title": "Workspaces (stored)",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "targets": [
         {
-          "expr": "sum(max by (shard, phase) (kcp_workspace_count{phase=\"Ready\"}))",
+          "expr": "max(apiserver_storage_objects{job=~\"$shard_job\", resource=\"workspaces.tenancy.kcp.io\"})",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -243,12 +243,12 @@
         "x": 0,
         "y": 10
       },
-      "description": "kcp_workspace_count phase=Ready, all shards. NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
+      "description": "True stored Workspace count from the apiserver storage layer (etcd-backed; verified exact vs etcd 2026-07-16). Replaces the drifting kcp_workspace_count gauge for the headline number; phase breakdown (approximate) lives in the Workspaces row."
     },
     {
       "id": 6,
       "type": "stat",
-      "title": "Workspaces not Ready",
+      "title": "Workspaces not Ready (approx)",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
@@ -301,14 +301,14 @@
     {
       "id": 7,
       "type": "stat",
-      "title": "Logical clusters Ready",
+      "title": "Logical clusters (stored)",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "targets": [
         {
-          "expr": "sum(max by (shard, phase) (kcp_logicalcluster_count{phase=\"Ready\"}))",
+          "expr": "max(apiserver_storage_objects{job=~\"$shard_job\", resource=\"logicalclusters.core.kcp.io\"})",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -345,19 +345,19 @@
         "x": 8,
         "y": 10
       },
-      "description": " NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
+      "description": "True stored LogicalCluster count (etcd-backed, verified exact 2026-07-16). More than workspaces = system LCs + orphans of deleted workspaces."
     },
     {
       "id": 8,
       "type": "stat",
-      "title": "APIBindings Bound",
+      "title": "APIBindings (stored)",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "targets": [
         {
-          "expr": "sum(max by (shard, phase) (kcp_apibinding_phase{phase=\"Bound\"}))",
+          "expr": "max(apiserver_storage_objects{job=~\"$shard_job\", resource=\"apibindings.apis.kcp.io\"})",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -394,7 +394,7 @@
         "x": 12,
         "y": 10
       },
-      "description": " NOTE: kcp v0.32.1 count gauges are unreliable in absolute terms (verified 2026-07-16: etcd truth 33 workspaces / 36 logical clusters / 202 bindings vs metric 135/180/~800) \u2014 treat as a trend signal; the runbook in docs/alerts-guide.md gives etcd truth."
+      "description": "True stored APIBinding count (etcd-backed, verified exact vs etcd 2026-07-16: 202). Replaces the drifting kcp_apibinding_phase gauge which read ~800."
     },
     {
       "id": 9,
@@ -769,14 +769,14 @@
     {
       "id": 16,
       "type": "stat",
-      "title": "APIExports",
+      "title": "APIExports (stored)",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "targets": [
         {
-          "expr": "sum(max by (shard, condition) (kcp_apiexport_condition_status{condition=\"IdentityValid\", status=\"True\"}))",
+          "expr": "max(apiserver_storage_objects{job=~\"$shard_job\", resource=\"apiexports.apis.kcp.io\"})",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -812,7 +812,8 @@
         "w": 4,
         "x": 20,
         "y": 14
-      }
+      },
+      "description": "True stored APIExport count (etcd-backed, verified exact 2026-07-16: 15). Validity breakdown (condition-based, approximate) lives in the APIExports row. (kcp v0.32.1 phase gauges drift \u2014 see docs/alerts-guide.md runbook for truth)"
     },
     {
       "id": 17,
