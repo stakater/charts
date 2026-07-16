@@ -2,7 +2,12 @@
 {{- if and .Values.crossplane.inventory.enabled $ca $ca.enabled }}
 {{- $ds := required "grafana.compositeAlerts.datasourceUid is required when grafana.compositeAlerts.enabled (the UID of a Prometheus/Thanos datasource in Grafana that can read across namespaces)" $ca.datasourceUid }}
 {{- $pattern := .Values.crossplane.inventory.conditionMetricPattern }}
-{{- $folder := $ca.folder | default .Values.grafana.folder }}
+{{- /* The alert folder MUST have its own title, distinct from the dashboard folder
+       (.Values.grafana.folder). grafana-operator keys folders by title: if this GrafanaFolder
+       reuses the dashboard folder's title, the operator matches the existing folder and never
+       creates one at this CR's UID, so the GrafanaAlertRuleGroup's folderRef fails to resolve
+       ("folder with uid ... not found"). */ -}}
+{{- $folder := $ca.folder | default (printf "%s Alerts" .Values.grafana.folder) }}
 # Story 4.1 — Grafana-MANAGED composite alerts (see docs/alerting-architecture.md). Used on
 # OpenShift UWM, where a PrometheusRule is namespace-enforced and the composite series carry
 # tenant namespaces (so a PrometheusRule fires 0). Grafana queries thanos-querier (not
@@ -12,7 +17,9 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaFolder
 metadata:
   name: {{ include "crossplane-observability.fullname" . }}-alerts
-  namespace: {{ include "crossplane-observability.namespace" . }}
+  # Must land in the namespace the grafana-operator watches (same as the dashboard).
+  # A namespace-scoped operator (OperatorGroup targetNamespaces) ignores CRs elsewhere.
+  namespace: {{ .Values.grafana.namespace | default (include "crossplane-observability.namespace" .) }}
   labels:
     {{- include "crossplane-observability.labels" . | nindent 4 }}
 spec:
@@ -25,7 +32,7 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaAlertRuleGroup
 metadata:
   name: {{ include "crossplane-observability.fullname" . }}-composite
-  namespace: {{ include "crossplane-observability.namespace" . }}
+  namespace: {{ .Values.grafana.namespace | default (include "crossplane-observability.namespace" .) }}
   labels:
     {{- include "crossplane-observability.labels" . | nindent 4 }}
 spec:
