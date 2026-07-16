@@ -26,6 +26,6 @@ spec:
             rulesgroup: kcp
           annotations:
             summary: "{{`{{ $value }}`}} kcp workspaces are not Ready on shard {{`{{ $labels.shard }}`}}"
-            description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. kcp metrics carry counts by phase only — use the runbook to identify WHICH workspaces are stuck. Baseline is calibrated per cluster."
+            description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. kcp v0.32.1 count gauges are UNRELIABLE in absolute terms (verified 2026-07-16: etcd truth 2 stuck logical clusters, metric said 10; replicas disagree with etcd and each other) — ALWAYS verify via the runbook before acting, which also identifies WHICH workspaces are stuck. Baseline is calibrated per cluster."
             runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters"
 {{- end }}

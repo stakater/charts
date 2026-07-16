@@ -83,44 +83,83 @@ the alert must name the resource that is stuck).
 Both alerts carry a `runbook_url` to the section below — the metrics are counts by phase
 only, so identifying *which* objects are stuck is a kubectl step, not a metrics query.
 
-**Calibration (us-2):** the logical-cluster threshold sits at the standing baseline (8–10 in
+**Calibration (us-2, updated 2026-07-16):** the metric's "8–10 standing" turned out to be
+mostly phantom — etcd truth is **2** stuck logical clusters (both `e2e-vm-project` e2e-test
+leftovers from March; see the runbook's observed output). The alert still fires because the
+drifting gauge reads 10 > 8. Until the upstream gauge bug is fixed, treat this alert as
+"something may be stuck — run the runbook", not as a count. Original text follows for
+history: the threshold sits at the standing baseline (8–10 in
 `Scheduling` all week — SRE finding F2). It fires today as a **true positive**. When SRE
 resolves or accepts F2, recalibrate `logicalClustersStuck.baseline` using the "Not-ready
 trend" panel as evidence. Workspaces on us-2 have a standing not-ready count of 0.
 
 ### Runbook: identifying stuck workspaces and logical clusters
 
-`kcp_workspace_count` / `kcp_logicalcluster_count` are per-phase counts — kcp deliberately
-exposes no per-object identity in metrics (label cardinality), so no dashboard panel can
-list the stuck objects. Enumerate them against the shard with a kcp admin kubeconfig
-(wildcard listing works on the shard base URL, not through the front-proxy):
+**Verified live on us-2 2026-07-16 (kcp v0.32.1).** Two reasons this runbook is mandatory,
+not optional: (1) kcp exposes no per-object identity in metrics, so no panel can list the
+stuck objects; (2) the `kcp_*` count gauges are **unreliable in absolute terms** — at
+verification, etcd truth was 33 workspaces / 36 logical clusters / 2 stuck, while the
+metrics claimed 135 / 180 / 10, and the two shard replicas (same start time) reported 27
+vs 135. Neither `max` nor `min` recovers truth; only the API does.
+
+Hard-won access facts (all verified):
+- Wildcard (`/clusters/*`) requests are **refused via the front-proxy** for every identity
+  (even `O=system:kcp:admin`) — go to the shard service directly.
+- On the shard, wildcard requires **`system:masters`**; `system:kcp:admin`,
+  `logical-cluster-admin`, and `external-logical-cluster-admin` are all denied.
+- `tenancy.kcp.io` workspaces are **404 at wildcard scope** (they are per-parent
+  projections) — enumerate LogicalClusters instead; workspace-owned ones carry
+  `spec.owner.resource: workspaces`.
 
 ```bash
-# Which logical clusters are not Ready (path + phase + age):
-kubectl --kubeconfig "$KCP_ADMIN_KUBECONFIG" get --raw \
-  "/clusters/*/apis/core.kcp.io/v1alpha1/logicalclusters" \
-  | jq -r '.items[] | select(.status.phase != "Ready")
-      | [.metadata.annotations["kcp.io/path"], .status.phase, .metadata.creationTimestamp]
-      | @tsv'
+# 1. Mint a SHORT-LIVED shard-admin client cert (delete it in step 4):
+kubectl -n kcp-config apply -f - <<'CERT'
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata: {name: kcp-audit-admin-ephemeral, namespace: kcp-config}
+spec:
+  commonName: kcp-audit-admin
+  subject: {organizations: ["system:masters"]}
+  issuerRef: {name: root-client-ca}
+  duration: 1h
+  secretName: kcp-audit-admin-ephemeral
+  usages: ["client auth"]
+CERT
+kubectl -n kcp-config wait certificates.cert-manager.io/kcp-audit-admin-ephemeral --for=condition=Ready
+kubectl -n kcp-config get secret kcp-audit-admin-ephemeral -o jsonpath='{.data.tls\.crt}' | base64 -d > /tmp/audit.crt
+kubectl -n kcp-config get secret kcp-audit-admin-ephemeral -o jsonpath='{.data.tls\.key}' | base64 -d > /tmp/audit.key
 
-# Which workspaces are not Ready (parent path + name + phase):
-kubectl --kubeconfig "$KCP_ADMIN_KUBECONFIG" get --raw \
-  "/clusters/*/apis/tenancy.kcp.io/v1alpha1/workspaces" \
+# 2. Port-forward the root shard (wildcard only works here, not the front-proxy):
+kubectl -n kcp-config port-forward svc/root-kcp 16443:6443 &
+
+# 3. Which logical clusters are not Ready (path + cluster id + phase + age):
+curl -sk --cert /tmp/audit.crt --key /tmp/audit.key \
+  "https://localhost:16443/clusters/*/apis/core.kcp.io/v1alpha1/logicalclusters" \
   | jq -r '.items[] | select(.status.phase != "Ready")
-      | [.metadata.annotations["kcp.io/path"], .metadata.name, .status.phase]
-      | @tsv'
+      | [.metadata.annotations["kcp.io/path"], .metadata.annotations["kcp.io/cluster"],
+         .status.phase, .metadata.creationTimestamp] | @tsv'
+
+# 4. Clean up the credential:
+kubectl -n kcp-config delete certificate/kcp-audit-admin-ephemeral secret/kcp-audit-admin-ephemeral
+rm -f /tmp/audit.crt /tmp/audit.key
 ```
 
-> ⚠️ **Not yet verified live on us-2** (VPN was down when written) — verify the exact
-> URL/annotation shapes against v0.32.1 and update this note with the observed output.
+Observed output at verification (the alert said "10"; the truth was these two — both
+e2e-test leftovers stuck in `Scheduling` since March, the older one orphaned by a
+workspace re-create):
+
+```
+root:cloud:e2e-testing:e2e-vm-project  1muhm7z511vwnzvd  Scheduling  2026-03-30T11:57:00Z
+root:cloud:e2e-testing:e2e-vm-project  2dcwd5j12mtqbikh  Scheduling  2026-03-27T21:21:51Z
+```
 
 ## Area 5 — APIExport / APIBinding (the API economy)
 
 | Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
 | --- | --- | --- | --- | --- |
-| `KcpAPIBindingNotReady` | warning / 15m | The **Ready** rollup condition sits `False\|Unknown` for any binding (per shard; no per-condition label — audit corrected this row, the expr never watched other conditions) | A degraded binding is a tenant whose subscribed service stopped working. Per-condition diagnosis lives in the dashboard's "Binding conditions not True" panel, deliberately not in the alert: us-2 carries a standing `PermissionClaimsValid=False` count (~392, untriaged) that would page forever if every condition alerted. | Broken service consumption arriving as per-tenant support tickets instead of one platform signal. |
+| `KcpAPIBindingNotReady` | warning / 15m | The **Ready** rollup condition sits `False\|Unknown` for any binding (per shard; no per-condition label — audit corrected this row, the expr never watched other conditions) | A degraded binding is a tenant whose subscribed service stopped working. Per-condition diagnosis lives in the dashboard's "Binding conditions not True" panel, deliberately not in the alert: us-2 genuinely carries `PermissionClaimsValid=False` on 98 of 202 bindings (etcd truth 2026-07-16; the metric said 392 — same gauge drift; SRE finding F4) that would page forever if every condition alerted. | Broken service consumption arriving as per-tenant support tickets instead of one platform signal. |
 | `KcpAPIBindingSlow` | warning / 30m / TTR p95 > 5000ms | Binding time-to-ready p95 regresses (histogram is in **ms**) | Provisioning UX regresses silently with scale; a binding that takes 4 minutes still "succeeds" and never trips `NotReady`. | The subscribe-to-usable experience decaying with no signal — the classic slow-boil regression. |
-| `KcpAPIExportNotValid` | critical / 10m | An export's `IdentityValid`/`VirtualWorkspaceURLsReady` leaves `True` | One invalid export breaks **every** binding to it at once — the highest blast radius on the platform (hundreds of bindings per export). Hence the area's only `critical`. The `$value` is approximate (audit: `False` and `Unknown` states count independently, so a replica-disagreement can double-count one export — firing behavior and labels stay correct). | A mass service-API outage presenting as hundreds of individual binding alerts with the common cause unnamed. |
+| `KcpAPIExportNotValid` | critical / 10m | An export's `IdentityValid` leaves `True` (expr trimmed to IdentityValid — kcp v0.32.1 never emits `VirtualWorkspaceURLsReady`, verified live; re-add when observed) | One invalid export breaks **every** binding to it at once — the highest blast radius on the platform (hundreds of bindings per export). Hence the area's only `critical`. The `$value` is approximate (audit: `False` and `Unknown` states count independently, so a replica-disagreement can double-count one export — firing behavior and labels stay correct). | A mass service-API outage presenting as hundreds of individual binding alerts with the common cause unnamed. |
 
 ## Area 6 — kcp controllers (the reconciliation machinery)
 

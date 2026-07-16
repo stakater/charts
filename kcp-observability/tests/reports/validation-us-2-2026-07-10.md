@@ -138,3 +138,34 @@ fixture scrape is added): `kube_pod_container_status_restarts_total` (32 series)
   us-2 values override to 0.5s/1.0s (degradation-from-baseline). Drop the override if storage
   improves (F1).
 - DEPLOY-VALIDATION brief ballparks drifted: workspaces Ready 108 → 135, syncagents 10 → 20.
+
+---
+
+## Addendum — 2026-07-16 live verification (post-audit, chart rev 11)
+
+The runbook was executed live for the first time (all commands in
+`docs/alerts-guide.md` § Runbook are now verified; access facts — front-proxy refuses
+wildcard, shard requires `system:masters`, workspaces 404 at wildcard — were discovered
+here). Findings:
+
+- **F2 resolved to truth:** the "8–10 stuck logical clusters" is **2** in etcd — both
+  `root:cloud:e2e-testing:e2e-vm-project` (cluster IDs `1muhm7z511vwnzvd`,
+  `2dcwd5j12mtqbikh`), created 2026-03-27/30, stuck in `Scheduling` ~3.5 months; the older
+  one orphaned by a workspace re-create. **Action: e2e cleanup deletes two LogicalClusters.**
+- **F5 (new, upstream kcp bug):** the `kcp_*` count gauges are unreliable in absolute
+  terms on v0.32.1. etcd truth vs metric at verification: workspaces **33** vs 135 Ready;
+  logical clusters **36** vs 180; stuck **2** vs 10; apibindings **202** vs ~800 Bound.
+  Both shard replicas started within 8s of each other yet report 27 vs 135 — the drift is
+  churn-correlated (leader inflates), not uptime- or informer-partiality-correlated, so
+  **no aggregation (max/min) recovers truth**. Chart response: count panels and the two
+  stuck alerts now carry an explicit unreliability caveat + runbook pointer; treat gauges
+  as trend signals only. **Action: file upstream kcp issue.**
+- **F4 (new, real):** `PermissionClaimsValid=False` on **98 of 202** apibindings (etcd
+  truth; the metric's 392 is the same drift). All 202 bindings are otherwise fully Ready.
+  Widespread genuine condition — needs SCO-side triage; deliberately NOT alerted (would
+  page forever) but visible in the "Binding conditions not True" panel.
+- **`VirtualWorkspaceURLsReady` is never emitted by kcp v0.32.1** (15 exports live, all
+  `IdentityValid=True` only). Trimmed from the `KcpAPIExportNotValid` expr with a
+  restore-when-observed comment.
+- The ephemeral `system:masters` audit cert (`kcp-audit-admin-ephemeral`, 1h TTL) was
+  minted for the verification and deleted afterwards.

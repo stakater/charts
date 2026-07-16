@@ -227,7 +227,7 @@ tests:
               shard: root
             exp_annotations:
               summary: "9 kcp workspaces are not Ready on shard root"
-              description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. kcp metrics carry counts by phase only — use the runbook to identify WHICH workspaces are stuck. Baseline is calibrated per cluster."
+              description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. kcp v0.32.1 count gauges are UNRELIABLE in absolute terms (verified 2026-07-16: etcd truth 2 stuck logical clusters, metric said 10; replicas disagree with etcd and each other) — ALWAYS verify via the runbook before acting, which also identifies WHICH workspaces are stuck. Baseline is calibrated per cluster."
               runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters"
       - eval_time: 20m
         alertname: KcpLogicalClustersStuck
@@ -253,7 +253,7 @@ tests:
               shard: root
             exp_annotations:
               summary: "10 kcp logical clusters are not Ready on shard root"
-              description: "Logical clusters (the per-workspace kcp primitive) stuck outside Ready. kcp metrics carry counts by phase only — use the runbook to identify WHICH logical clusters are stuck. Baseline is calibrated per cluster (us-2 has a standing Scheduling count — SRE finding F2)."
+              description: "Logical clusters (the per-workspace kcp primitive) stuck outside Ready. kcp v0.32.1 count gauges are UNRELIABLE in absolute terms (verified 2026-07-16: etcd truth 2 stuck logical clusters, metric said 10; replicas disagree with etcd and each other) — ALWAYS verify via the runbook before acting, which also identifies WHICH logical clusters are stuck. Baseline is calibrated per cluster (us-2 has a standing Scheduling count — SRE finding F2)."
               runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters"
       - eval_time: 20m
         alertname: KcpWorkspacesStuck
