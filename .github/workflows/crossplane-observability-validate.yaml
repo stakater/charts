@@ -65,14 +65,19 @@ jobs:
       - name: Capture from the pinned stack
         working-directory: crossplane-observability
         run: ./tests/integration.sh
-      - name: Fail if fixtures or captured allowlist drifted
+      - name: Fail if the captured metric name set drifted
         working-directory: crossplane-observability
         run: |
-          if ! git diff --quiet -- tests/fixtures tests/metrics-allowlist.captured.txt; then
-            echo "::error::Captured metrics differ from what is committed. The pinned stack"
-            echo "::error::emits a different metric set than tests/fixtures records. Review:"
-            git diff --stat -- tests/fixtures tests/metrics-allowlist.captured.txt
+          # Diff only the DERIVED allowlist (deterministic: sorted, de-duplicated metric
+          # names, no timestamps). The raw tests/fixtures/*.txt dumps are intentionally NOT
+          # byte-diffed — they carry live counter/gauge values and non-deterministic series
+          # ordering, so they churn on every scrape even when the metric SET is unchanged.
+          # A renamed/added/removed metric shows up here; that is the signal this job exists for.
+          if ! git diff --quiet -- tests/metrics-allowlist.captured.txt; then
+            echo "::error::The pinned stack emits a different metric name set than"
+            echo "::error::tests/metrics-allowlist.captured.txt records. Review and, if intended,"
+            echo "::error::commit the regenerated allowlist (and refreshed tests/fixtures/*)."
             git diff -- tests/metrics-allowlist.captured.txt
             exit 1
           fi
-          echo "fixtures and captured allowlist match the live pinned capture."
+          echo "captured metric name set matches the live pinned capture."

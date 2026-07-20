@@ -78,14 +78,17 @@ fi
 extract() { grep -hvE '^#' "$@" 2>/dev/null | sed -E 's/[ {].*$//' | grep -E '^[a-zA-Z_:][a-zA-Z0-9_:]*$' || true; }
 
 {
-  echo "# metrics-allowlist.txt — CAPTURED from live Crossplane metrics on $(date -u +%FT%TZ)"
+  echo "# metrics-allowlist.txt — CAPTURED metric names from a real Crossplane build (see tests/fixtures/CAPTURE.md for the pinned versions)."
   echo "# Source endpoints: core=${CORE_SVC:-n/a} provider-selector=${PROVIDER_SELECTOR:-n/a} ns=${NS}"
   echo "# Regenerate with tests/capture-metrics.sh. check_metrics.py validates rules against this."
   echo "#"
   echo "# NOTE: this is the FULL emitted metric set. The chart only references a subset; that"
   echo "#       is fine — the gate only requires referenced metrics to be present here."
   echo
-  extract "${tmp}"/*.txt | sort -u
+  # LC_ALL=C so the ordering is byte-collation, identical on every machine/CI runner —
+  # otherwise a runner's default locale reorders punctuation (e.g. `_`) and the weekly
+  # drift check sees phantom churn even when the metric name set is unchanged.
+  extract "${tmp}"/*.txt | LC_ALL=C sort -u
 } > "$OUT"
 
 echo ">> wrote $(grep -cvE '^#|^$' "$OUT") metric names to $OUT" >&2
