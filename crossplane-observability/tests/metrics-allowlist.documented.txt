@@ -18,26 +18,18 @@
 # Object (drift detection needs management policies + an out-of-band change).
 crossplane_managed_resource_drift_seconds
 
-# --- Crossplane core: composition functions (Stories 5.1, 5.2) ---
-# Documented core metrics. Register only once a composition Function actually runs; this
-# capture installs no Composition/Function, so they are absent here.
-function_run_function_seconds_bucket
-function_run_function_response_total
+# --- Crossplane core: composition-function response CACHE (Story 5.2) ---
+# Register only when the function-response cache is exercised (realtime/cached compositions).
+# The other function_run_* metrics (seconds_bucket, response_total) are now CAPTURED from a
+# live cluster — see tests/fixtures/live-exercised-metrics.txt.
 function_run_function_response_cache_hits_total
 function_run_function_response_cache_misses_total
 function_run_function_response_cache_errors_total
 
-# --- Crossplane core: circuit breaker / realtime compositions (Story 4.2) ---
-# Documented core metrics. Register when realtime compositions / the circuit breaker engage.
-circuit_breaker_events_total
-circuit_breaker_opens_total
-
-# --- Upjet providers only (Story 1.2 Upjet path, 6.1) ---
-# Documented Upjet runtime metrics; provider-kubernetes is not an Upjet provider. Verify with
-# provider-upjet-aws/-gcp/-azure. NOTE: the docs list base names upjet_resource_ttr and
-# upjet_resource_reconcile_delay_seconds — confirm the histogram `_bucket` series when captured.
-upjet_resource_ttr_bucket
-upjet_resource_reconcile_delay_seconds_bucket
+# NOTE (2026-07-20): circuit_breaker_events_total / circuit_breaker_opens_total and
+# upjet_resource_ttr_bucket / upjet_resource_reconcile_delay_seconds_bucket were GRADUATED
+# to metrics-allowlist.captured.txt — captured live on us-2 (Crossplane v2.1.3 + Stakater
+# upjet AWS providers), see tests/fixtures/live-exercised-metrics.txt.
 
 # --- Prometheus built-in (synthesized by the rule engine, not scraped) ---
 # ALERTS{alertname,alertstate,...} — one series per firing/pending alert. Used by the

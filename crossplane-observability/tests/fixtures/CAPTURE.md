@@ -11,6 +11,9 @@ tests/validate.sh derives the captured allowlist from these and checks the chart
 
 Captured: 2026-06-09T10:49:15Z
 
-Note: function_run_* and circuit_breaker_* are core metrics that only register once a
-composition function / realtime composition actually runs; this capture does not exercise
-one, so those remain in metrics-allowlist.documented.txt (confirmed in the upstream docs).
+Note: the pinned kind rig above does not exercise composition functions, the realtime
+circuit breaker, or Upjet providers, so those metrics are NOT scraped here. They are
+captured separately from a live cluster and committed as side-fixtures this capture does
+not overwrite, then folded into the captured allowlist via capture-metrics.sh:
+  - inventory-metrics.txt      (--inventory) — ksm-crossplane inventory exporter (XR/claim conditions)
+  - live-exercised-metrics.txt (--extra)     — function_run_*, circuit_breaker_*, upjet_resource_*
