@@ -155,3 +155,97 @@ tests:
             exp_annotations:
               summary: "Composite XProject/e2e not synced"
               description: "Composite XProject/e2e has Synced != True for more than 15m — Crossplane cannot reconcile its desired state (often a reconcile error)."
+
+  # --- Story 1.2 (upjet branch): TTRDegraded groups by (group, kind) ---
+  # Regression for the label bug: upjet_resource_ttr_bucket has group/kind/version and NO
+  # `gvk`; the rendered rule (upjet.enabled=true in validate.sh) must group by (group, kind)
+  # so per-type series survive and the annotation is populated. p95 lands in (300s,600s] -> 585s.
+  - name: TTR degraded on upjet providers (group/kind labels)
+    interval: 1m
+    input_series:
+      - series: 'upjet_resource_ttr_bucket{job="crossplane-providers", group="s3.aws.m.upbound.io", kind="Bucket", version="v1beta1", le="300"}'
+        values: '0+0x60'
+      - series: 'upjet_resource_ttr_bucket{job="crossplane-providers", group="s3.aws.m.upbound.io", kind="Bucket", version="v1beta1", le="600"}'
+        values: '0+10x60'
+      - series: 'upjet_resource_ttr_bucket{job="crossplane-providers", group="s3.aws.m.upbound.io", kind="Bucket", version="v1beta1", le="+Inf"}'
+        values: '0+10x60'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: TTRDegraded
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: crossplane
+              group: s3.aws.m.upbound.io
+              kind: Bucket
+            exp_annotations:
+              summary: "Slow provisioning for Bucket (s3.aws.m.upbound.io) (p95 TTR over SLO)"
+              description: "p95 time-to-readiness for Bucket (s3.aws.m.upbound.io) is 9m 45s, above the 300s SLO, for more than 30m."
+
+  # --- Story 6.1: CloudAPIThrottling groups by (group, kind) on the upjet delay histogram ---
+  # p95 reconcile delay lands in (60s,120s] -> 117s, above the 60s threshold.
+  - name: cloud API throttling on upjet delay histogram
+    interval: 1m
+    input_series:
+      - series: 'upjet_resource_reconcile_delay_seconds_bucket{job="crossplane-providers", group="route53.aws.m.upbound.io", kind="Record", version="v1beta1", le="60"}'
+        values: '0+0x30'
+      - series: 'upjet_resource_reconcile_delay_seconds_bucket{job="crossplane-providers", group="route53.aws.m.upbound.io", kind="Record", version="v1beta1", le="120"}'
+        values: '0+10x30'
+      - series: 'upjet_resource_reconcile_delay_seconds_bucket{job="crossplane-providers", group="route53.aws.m.upbound.io", kind="Record", version="v1beta1", le="+Inf"}'
+        values: '0+10x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: CloudAPIThrottling
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: crossplane
+              group: route53.aws.m.upbound.io
+              kind: Record
+            exp_annotations:
+              summary: "Cloud-API throttling suspected for Record (route53.aws.m.upbound.io)"
+              description: "p95 reconcile delay for Record (route53.aws.m.upbound.io) is 1m 57s, above the 60s threshold, for more than 15m — the provider is falling behind, typically due to cloud-provider rate limiting (upstream of Crossplane)."
+
+  # --- Story 5.1: FunctionErrorRate splits on result_severity="Fatal" ---
+  # The response-total metric is labelled result_severity (Normal/Fatal), NOT result="error".
+  # 1 Fatal/min against 101 total/min -> ratio ~0.99% > the 0.5% SLO.
+  - name: function error rate uses result_severity=Fatal
+    interval: 1m
+    input_series:
+      - series: 'function_run_function_response_total{job="crossplane", function_name="function-kcl", result_severity="Normal"}'
+        values: '0+100x60'
+      - series: 'function_run_function_response_total{job="crossplane", function_name="function-kcl", result_severity="Fatal"}'
+        values: '0+1x60'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: FunctionErrorRate
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: crossplane
+              function_name: function-kcl
+            exp_annotations:
+              summary: "Composition function function-kcl error rate high"
+              description: "Function function-kcl error ratio is 0.9901% (SLO < 0.005) for more than 15m."
+
+  # --- Story 4.2: CircuitBreakerDropRatioHigh splits on result="Dropped" ---
+  # events_total is labelled controller + result (Allowed/Dropped/HalfOpenAllowed).
+  # 30 Dropped/min against 100 total/min -> 30% > the 20% threshold.
+  - name: circuit breaker drop ratio uses result=Dropped
+    interval: 1m
+    input_series:
+      - series: 'circuit_breaker_events_total{job="crossplane", controller="composite/databases.data.cloud.stakater.com", result="Allowed"}'
+        values: '0+70x60'
+      - series: 'circuit_breaker_events_total{job="crossplane", controller="composite/databases.data.cloud.stakater.com", result="Dropped"}'
+        values: '0+30x60'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: CircuitBreakerDropRatioHigh
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: crossplane
+              controller: composite/databases.data.cloud.stakater.com
+            exp_annotations:
+              summary: "Circuit breaker dropping events for composite/databases.data.cloud.stakater.com"
+              description: "Controller composite/databases.data.cloud.stakater.com is dropping 30% of watch events (> 0.2) for more than 5m — a thrashing XR may be starving other tenants."

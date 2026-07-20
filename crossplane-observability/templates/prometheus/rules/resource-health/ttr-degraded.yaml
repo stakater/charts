@@ -20,8 +20,12 @@ spec:
     - name: crossplane.resource-health
       rules:
         - alert: TTRDegraded
+          # The two source metrics carry different identity labels (confirmed on a live
+          # build): the native metric is per-`gvk`; upjet_resource_ttr_bucket is labelled
+          # `group`/`kind`/`version` and has NO `gvk` — so the group-by and the annotation
+          # switch with upjet.enabled, else the upjet series all collapse to one empty group.
           expr: |
-            histogram_quantile({{ $r.quantile }}, sum by (le, gvk) (
+            histogram_quantile({{ $r.quantile }}, sum by (le, {{ if .Values.upjet.enabled }}group, kind{{ else }}gvk{{ end }}) (
               rate(
               {{- if .Values.upjet.enabled }}
                 upjet_resource_ttr_bucket{job="{{ .Values.crossplane.providers.job }}"}[30m]
@@ -35,6 +39,6 @@ spec:
             severity: {{ $r.severity }}
             rulesgroup: crossplane
           annotations:
-            summary: "Slow provisioning for {{`{{ $labels.gvk }}`}} (p{{ $r.quantile | mulf 100 | int }} TTR over SLO)"
-            description: "p{{ $r.quantile | mulf 100 | int }} time-to-readiness for {{`{{ $labels.gvk }}`}} is {{`{{ $value | humanizeDuration }}`}}, above the {{ $r.thresholdSeconds }}s SLO, for more than {{ $r.for }}."
+            summary: "Slow provisioning for {{ if .Values.upjet.enabled }}{{`{{ $labels.kind }} ({{ $labels.group }})`}}{{ else }}{{`{{ $labels.gvk }}`}}{{ end }} (p{{ $r.quantile | mulf 100 | int }} TTR over SLO)"
+            description: "p{{ $r.quantile | mulf 100 | int }} time-to-readiness for {{ if .Values.upjet.enabled }}{{`{{ $labels.kind }} ({{ $labels.group }})`}}{{ else }}{{`{{ $labels.gvk }}`}}{{ end }} is {{`{{ $value | humanizeDuration }}`}}, above the {{ $r.thresholdSeconds }}s SLO, for more than {{ $r.for }}."
 {{- end }}
