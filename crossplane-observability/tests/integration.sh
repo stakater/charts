@@ -116,18 +116,24 @@ tests/validate.sh derives the captured allowlist from these and checks the chart
 
 Captured: $(date -u +%FT%TZ)
 
-Note: function_run_* and circuit_breaker_* are core metrics that only register once a
-composition function / realtime composition actually runs; this capture does not exercise
-one, so those remain in metrics-allowlist.documented.txt (confirmed in the upstream docs).
+Note: the pinned kind rig above does not exercise composition functions, the realtime
+circuit breaker, or Upjet providers, so those metrics are NOT scraped here. They are
+captured separately from a live cluster and committed as side-fixtures this capture does
+not overwrite, then folded into the captured allowlist via capture-metrics.sh:
+  - inventory-metrics.txt      (--inventory) — ksm-crossplane inventory exporter (XR/claim conditions)
+  - live-exercised-metrics.txt (--extra)     — function_run_*, circuit_breaker_*, upjet_resource_*
 EOF
 
 echo ">> regenerating captured allowlist from fixtures"
 # Include the committed inventory fixture (captured separately from a real cluster's
-# ksm-crossplane exporter — kind has no exporter) so the captured allowlist stays complete.
+# ksm-crossplane exporter — kind has no exporter) and the live-exercised fixture (functions,
+# circuit breaker, upjet — paths the pinned kind rig doesn't exercise) so the captured
+# allowlist stays complete. Both are committed side-fixtures the kind capture never overwrites.
 "${HERE}/capture-metrics.sh" \
   --core "${FIX}/core-metrics.txt" \
   $( [ -f "${FIX}/provider-metrics.txt" ] && echo --provider "${FIX}/provider-metrics.txt" ) \
   $( [ -f "${FIX}/inventory-metrics.txt" ] && echo --inventory "${FIX}/inventory-metrics.txt" ) \
+  $( [ -f "${FIX}/live-exercised-metrics.txt" ] && echo --extra "${FIX}/live-exercised-metrics.txt" ) \
   -o "${HERE}/metrics-allowlist.captured.txt"
 
 echo ">> done. Review & commit: tests/fixtures/* and tests/metrics-allowlist.captured.txt"

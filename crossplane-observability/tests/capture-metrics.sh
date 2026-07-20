@@ -30,6 +30,7 @@ PROVIDER_SELECTOR="pkg.crossplane.io/provider"
 CORE_FILE=""
 PROVIDER_FILE=""
 INVENTORY_FILE=""
+EXTRA_FILE=""
 PORT=8080
 
 while [ $# -gt 0 ]; do
@@ -39,6 +40,7 @@ while [ $# -gt 0 ]; do
     --core) CORE_FILE="$2"; shift 2 ;;
     --provider) PROVIDER_FILE="$2"; shift 2 ;;
     --inventory) INVENTORY_FILE="$2"; shift 2 ;;
+    --extra) EXTRA_FILE="$2"; shift 2 ;;
     --core-svc) CORE_SVC="$2"; shift 2 ;;
     --provider-selector) PROVIDER_SELECTOR="$2"; shift 2 ;;
     --port) PORT="$2"; shift 2 ;;
@@ -68,8 +70,9 @@ else
   [ -n "$CORE_FILE" ] && cp "$CORE_FILE" "${tmp}/core.txt"
   [ -n "$PROVIDER_FILE" ] && cp "$PROVIDER_FILE" "${tmp}/provider.txt"
   [ -n "$INVENTORY_FILE" ] && cp "$INVENTORY_FILE" "${tmp}/inventory.txt"
+  [ -n "$EXTRA_FILE" ] && cp "$EXTRA_FILE" "${tmp}/extra.txt"
   if ! ls "${tmp}"/*.txt >/dev/null 2>&1; then
-    echo "offline mode needs --core and/or --provider and/or --inventory <dump.txt>" >&2; exit 2
+    echo "offline mode needs --core and/or --provider and/or --inventory and/or --extra <dump.txt>" >&2; exit 2
   fi
 fi
 
