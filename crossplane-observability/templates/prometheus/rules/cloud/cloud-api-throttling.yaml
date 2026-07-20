@@ -23,8 +23,11 @@ spec:
           # typically cloud-side rate limiting. Threshold is configurable (seconds); the
           # roadmap notes it should be calibrated against the providers' configured poll
           # interval rather than a fixed number.
+          # upjet_resource_reconcile_delay_seconds_bucket is labelled group/kind/version
+          # (confirmed on a live build) — group by (group, kind) so the same Kind name in
+          # two different API groups isn't merged into one p95.
           expr: |
-            histogram_quantile(0.95, sum by (le, kind) (
+            histogram_quantile(0.95, sum by (le, group, kind) (
               rate(upjet_resource_reconcile_delay_seconds_bucket{job="{{ .Values.crossplane.providers.job }}"}[15m])
             )) > {{ $r.thresholdSeconds }}
           for: {{ $r.for }}
@@ -32,6 +35,6 @@ spec:
             severity: {{ $r.severity }}
             rulesgroup: crossplane
           annotations:
-            summary: "Cloud-API throttling suspected for {{`{{ $labels.kind }}`}}"
-            description: "p95 reconcile delay for {{`{{ $labels.kind }}`}} is {{`{{ $value | humanizeDuration }}`}}, above the {{ $r.thresholdSeconds }}s threshold, for more than {{ $r.for }} — the provider is falling behind, typically due to cloud-provider rate limiting (upstream of Crossplane)."
+            summary: "Cloud-API throttling suspected for {{`{{ $labels.kind }} ({{ $labels.group }})`}}"
+            description: "p95 reconcile delay for {{`{{ $labels.kind }} ({{ $labels.group }})`}} is {{`{{ $value | humanizeDuration }}`}}, above the {{ $r.thresholdSeconds }}s threshold, for more than {{ $r.for }} — the provider is falling behind, typically due to cloud-provider rate limiting (upstream of Crossplane)."
 {{- end }}
