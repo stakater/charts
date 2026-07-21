@@ -27,58 +27,35 @@ spec:
           - |
             export HOME=/tmp/approver
             echo
+            sub() { oc get subscriptions.operators.coreos.com -n ${SUBSCRIPTION_NAMESPACE} ${SUBSCRIPTION} -o=jsonpath="$1" 2>/dev/null; }
 
-            # Resolve the Subscription UID (bounded retry).
-            subscriptionUID=""
-            attempt=0
-            while [ -z "${subscriptionUID}" ]; do
-              echo "Get Subscription (${SUBSCRIPTION}) UID"
-              subscriptionUID=$(oc get subscriptions.operators.coreos.com -n ${SUBSCRIPTION_NAMESPACE} --field-selector metadata.name=${SUBSCRIPTION} -o=jsonpath="{.items[0].metadata.uid}")
-              if [ -z "${subscriptionUID}" ]; then
-                attempt=$((attempt+1))
-                if [ "${attempt}" -ge "${MAX_ATTEMPTS}" ]; then
-                  echo "ERROR: Subscription ${SUBSCRIPTION} not found after ${MAX_ATTEMPTS} attempts."
-                  exit 1
-                fi
-                echo "Subscription UID not found, retrying in ${SLEEP_TIMER} seconds... (${attempt}/${MAX_ATTEMPTS})"
-                sleep "${SLEEP_TIMER}"
-              fi
-            done
-            echo "Subscription (${SUBSCRIPTION}) UID: ${subscriptionUID}"
-
-            # Which csv's InstallPlan must complete? strict -> pin; track -> the
-            # csv the Subscription actually resolved to (status.installedCSV).
-            targetCSV="${SUBSCRIPTION_CSV}"
-            if [ "${PIN_POLICY}" = "track" ]; then
-              targetCSV=$(oc get subscriptions.operators.coreos.com -n ${SUBSCRIPTION_NAMESPACE} ${SUBSCRIPTION} -o=jsonpath="{.status.installedCSV}")
-              [ -z "${targetCSV}" ] && targetCSV="${SUBSCRIPTION_CSV}"
-            fi
-            echo "Waiting for the InstallPlan of csv ${targetCSV} (Subscription ${SUBSCRIPTION}) to reach Complete"
-
-            # go-template: emit "name|csv|phase" for each InstallPlan owned by
-            # this Subscription. (See installplan-approver.yaml for the escaping.)
-            {{`ownedInstallPlansGoTemplate=$(cat << EOF
-            {{- range .items -}}{{- \$ip := . -}}{{- range \$ip.metadata.ownerReferences -}}{{- if eq .uid "${subscriptionUID}" -}}{{ \$ip.metadata.name }}|{{ index \$ip.spec.clusterServiceVersionNames 0 }}|{{ \$ip.status.phase }}
-            {{ end -}}{{- end -}}{{- end -}}
-            EOF
-            )`}}
-
+            echo "Waiting for the InstallPlan of Subscription ${SUBSCRIPTION} to reach Complete (pinned csv=${SUBSCRIPTION_CSV}, pinPolicy=${PIN_POLICY})"
             attempt=0
             while true; do
-              # strip go-template indentation whitespace (fields never contain spaces)
-              owned=$(oc get installplan -n ${SUBSCRIPTION_NAMESPACE} -o=go-template="${ownedInstallPlansGoTemplate}" | tr -d ' ')
-              line=$(echo "${owned}" | grep -F "|${targetCSV}|" | head -n1)
-              phase=$(echo "${line}" | cut -d'|' -f3)
-              if [ "${phase}" = "Complete" ]; then
-                echo "InstallPlan for csv ${targetCSV} is Complete."
+              installedCSV=$(sub '{.status.installedCSV}')
+              # In strict mode the pin being installed is success, regardless of any
+              # newer pending upgrade InstallPlan that is intentionally left unapproved.
+              if [ "${PIN_POLICY}" != "track" ] && [ "${installedCSV}" = "${SUBSCRIPTION_CSV}" ]; then
+                echo "Pinned csv ${SUBSCRIPTION_CSV} is installed."
                 exit 0
               fi
+
+              # Otherwise track the InstallPlan OLM designated for this Subscription.
+              ipName=$(sub '{.status.installPlanRef.name}')
+              if [ -n "${ipName}" ]; then
+                phase=$(oc get installplan -n ${SUBSCRIPTION_NAMESPACE} ${ipName} -o=jsonpath="{.status.phase}" 2>/dev/null)
+                if [ "${phase}" = "Complete" ]; then
+                  echo "InstallPlan ${ipName} (currentCSV $(sub '{.status.currentCSV}')) is Complete."
+                  exit 0
+                fi
+              fi
+
               attempt=$((attempt+1))
               if [ "${attempt}" -ge "${MAX_ATTEMPTS}" ]; then
-                echo "Giving up. InstallPlan for csv ${targetCSV} did not reach Complete (last phase: '${phase}')."
+                echo "Giving up. InstallPlan '${ipName}' for Subscription ${SUBSCRIPTION} did not reach Complete (last phase: '${phase}', installedCSV='${installedCSV}', currentCSV='$(sub '{.status.currentCSV}')')."
                 exit 3
               fi
-              echo "InstallPlan for csv ${targetCSV} phase: '${phase}' (attempt ${attempt}/${MAX_ATTEMPTS}), retrying in ${SLEEP_TIMER} seconds..."
+              echo "InstallPlan '${ipName}' phase: '${phase}' (attempt ${attempt}/${MAX_ATTEMPTS}), retrying in ${SLEEP_TIMER} seconds..."
               sleep "${SLEEP_TIMER}"
             done
         imagePullPolicy: Always

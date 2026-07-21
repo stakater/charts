@@ -31,23 +31,24 @@ spec:
             # ----------------------------------------------------------------
             # Decide WHICH csv to verify.
             #   strict : the pinned csv must be the one that reaches Succeeded.
-            #   track  : verify whatever the Subscription actually resolved to
-            #            (status.installedCSV), since that may be the channel
-            #            head rather than the pin.
+            #   track  : verify the csv OLM resolved to (status.currentCSV) - the
+            #            version being installed now, which may be the channel head
+            #            rather than the pin. (Not installedCSV: that is the OLD
+            #            version until the upgrade completes and would pass early.)
             # ----------------------------------------------------------------
             verifyCSV="${SUBSCRIPTION_CSV}"
             if [ "${PIN_POLICY}" = "track" ]; then
               verifyCSV=""
               counter=0
               while [ -z "${verifyCSV}" ]; do
-                verifyCSV=$(oc get subscriptions.operators.coreos.com -n ${Namespace} ${SUBSCRIPTION} -o=jsonpath="{.status.installedCSV}")
+                verifyCSV=$(oc get subscriptions.operators.coreos.com -n ${Namespace} ${SUBSCRIPTION} -o=jsonpath="{.status.currentCSV}")
                 if [ -n "${verifyCSV}" ]; then break; fi
                 counter=$((counter+1))
                 if [ "${counter}" -ge "${MAX_ATTEMPTS}" ]; then
-                  echo "Giving up: Subscription ${SUBSCRIPTION} never reported an installedCSV. Operator installation failed."
+                  echo "Giving up: Subscription ${SUBSCRIPTION} never reported a currentCSV. Operator installation failed."
                   exit 3
                 fi
-                echo "Waiting for Subscription ${SUBSCRIPTION} to resolve installedCSV... (${counter}/${MAX_ATTEMPTS})"
+                echo "Waiting for Subscription ${SUBSCRIPTION} to resolve currentCSV... (${counter}/${MAX_ATTEMPTS})"
                 sleep "${SLEEP_TIMER}"
               done
             fi
