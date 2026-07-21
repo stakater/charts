@@ -27,85 +27,126 @@ spec:
           - |
             export HOME=/tmp/approver
             echo
+
+            # ----------------------------------------------------------------
+            # Resolve the Subscription UID (bounded retry).
+            # ----------------------------------------------------------------
             subscriptionUID=""
+            attempt=0
             while [ -z "${subscriptionUID}" ]; do
               echo "Get Subscription (${SUBSCRIPTION}) UID"
-              subscriptionUID=$(oc get subscriptions.operators.coreos.com --field-selector metadata.name=${SUBSCRIPTION} -o=jsonpath="{.items[0].metadata.uid}")
+              subscriptionUID=$(oc get subscriptions.operators.coreos.com -n ${SUBSCRIPTION_NAMESPACE} --field-selector metadata.name=${SUBSCRIPTION} -o=jsonpath="{.items[0].metadata.uid}")
               if [ -z "${subscriptionUID}" ]; then
-                echo "Subscription UID not found, retrying in 5 seconds..."
+                attempt=$((attempt+1))
+                if [ "${attempt}" -ge "${LOOKUP_ATTEMPTS}" ]; then
+                  echo "ERROR: Subscription ${SUBSCRIPTION} not found after ${LOOKUP_ATTEMPTS} attempts."
+                  exit 1
+                fi
+                echo "Subscription UID not found, retrying in 5 seconds... (${attempt}/${LOOKUP_ATTEMPTS})"
                 sleep 5
               fi
             done
             echo "Subscription (${SUBSCRIPTION}) UID: ${subscriptionUID}"
-            if [ ! -z "subscriptionUID" ]; then
-              # this complicated go-template finds an InstallPlan where both the .spec.clusterServiceVersionNames contains the expected CSV
-              # and .metadata.ownerReferences contains the expected Subscription owner. JsonPath doesn't let you do and statements and go-templates
-              # done seem to have a function for checking if a value is in an array without iterating. so here we are.
-              # NOTE 1: if for whatever reason multiple InstallPlans are found that are associated with the Subscription for the correct CSV, only the first will be approved
-              # NOTE 2: this is nested in {{` `}} so that helm doesn't try to interpret the go template
-              {{`installPlanGoTemplate=$(cat << EOF
-              {{- \$installPlanName := "" -}}
-              {{- range .items -}}
-                {{- \$installPlanItem := . -}}
-                {{- range .spec.clusterServiceVersionNames -}}
-                  {{- if and (eq . "${SUBSCRIPTION_CSV}") (not \$installPlanName) -}}
-                    {{- if or (eq \$installPlanItem.status.phase "RequiresApproval") (eq \$installPlanItem.status.phase "Complete") -}}
-                      {{- range \$installPlanItem.metadata.ownerReferences -}}
-                        {{- if eq .uid "${subscriptionUID}" -}}
-                          {{- \$installPlanName = \$installPlanItem.metadata.name -}}
-                        {{- end -}}
-                      {{- end -}}
-                    {{- end -}}
-                  {{- end -}}
-                {{- end -}}
-              {{- end -}}
-              {{ \$installPlanName }}
-            EOF
-              )`}}
 
-              echo
-              echo "Get InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner"
-              installPlan=""
-              while [ -z "${installPlan}" ]; do
-                echo "Get InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner"
-                installPlan=$(oc get installplan -o=go-template="${installPlanGoTemplate}")
-                if [ -z "${installPlan}" ]; then
-                  echo "InstallPlan not found, retrying in 5 seconds..."
-                  sleep 5
+            # ----------------------------------------------------------------
+            # go-template: emit one "name|csv|phase|approved" line per InstallPlan
+            # owned by this Subscription (ANY csv). Unlike the previous version
+            # this does NOT filter on the pinned csv, so the selection logic below
+            # is robust to the catalog channel head having moved past the pin.
+            # NOTE: nested in {{`  `}} so helm does not interpret the go template;
+            #       go-template vars are written \$var, shell vars stay ${var}.
+            # ----------------------------------------------------------------
+            {{`ownedInstallPlansGoTemplate=$(cat << EOF
+            {{- range .items -}}{{- \$ip := . -}}{{- range \$ip.metadata.ownerReferences -}}{{- if eq .uid "${subscriptionUID}" -}}{{ \$ip.metadata.name }}|{{ index \$ip.spec.clusterServiceVersionNames 0 }}|{{ \$ip.status.phase }}|{{ \$ip.spec.approved }}
+            {{ end -}}{{- end -}}{{- end -}}
+            EOF
+            )`}}
+
+            echo
+            echo "Reconciling InstallPlans for Subscription ${SUBSCRIPTION} (pinned csv=${SUBSCRIPTION_CSV}, pinPolicy=${PIN_POLICY})"
+            attempt=0
+            while true; do
+              # strip go-template indentation whitespace (fields never contain spaces)
+              owned=$(oc get installplan -n ${SUBSCRIPTION_NAMESPACE} -o=go-template="${ownedInstallPlansGoTemplate}" | tr -d ' ')
+              installedCSV=$(oc get subscriptions.operators.coreos.com -n ${SUBSCRIPTION_NAMESPACE} ${SUBSCRIPTION} -o=jsonpath="{.status.installedCSV}")
+
+              # a pending InstallPlan for the PINNED csv (initial install of the pin)
+              pinnedPending=$(echo "${owned}" | grep -F "|${SUBSCRIPTION_CSV}|RequiresApproval|" | head -n1)
+              # any pending InstallPlan owned by this Subscription (channel head / upgrade)
+              anyPending=$(echo "${owned}" | grep -F "|RequiresApproval|" | head -n1)
+
+              # 1. The pinned version is offered and pending -> approve it.
+              if [ -n "${pinnedPending}" ]; then
+                toApprove=$(echo "${pinnedPending}" | cut -d'|' -f1)
+                echo "Approving InstallPlan ${toApprove} for pinned csv ${SUBSCRIPTION_CSV}"
+                oc patch installplan -n ${SUBSCRIPTION_NAMESPACE} ${toApprove} --type=json -p='[{"op":"replace","path":"/spec/approved","value":true}]'
+                exit 0
+              fi
+
+              # 2. The pin is already installed -> nothing to do. Any other pending
+              #    InstallPlan is an un-approved upgrade we intentionally leave
+              #    pending: that is the whole point of a Manual pin. Idempotent on
+              #    every Argo re-sync.
+              if [ "${installedCSV}" = "${SUBSCRIPTION_CSV}" ]; then
+                echo "Pinned csv ${SUBSCRIPTION_CSV} already installed. Nothing to approve."
+                if [ -n "${anyPending}" ]; then
+                  echo "NOTE: a newer InstallPlan is pending but is intentionally left unapproved (Manual pin)."
                 fi
-              done
-              echo "InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner: ${installPlan}"
-              if [ ! -z "${installPlan}" ]; then
-                echo
-                echo "Check InstallPlan (${installPlan}) approval"
-                if installPlanApproved=$(oc get installplan ${installPlan} -o=jsonpath="{.spec.approved}"); then
-                  if [ "${installPlanApproved}" == "false" ]; then
-                    echo "Approving InstallPlan (${installPlan})"
-                    oc patch installplan ${installPlan} --type=json -p='[{"op":"replace","path": "/spec/approved", "value": true}]'
-                  else
-                    echo "InstallPlan (${installPlan})already approved"
-                  fi
-                  exit 0
-                else
-                  echo "Failed to look up InstallPlan (${installPlan}) approval"
-                  exit 1
-                fi
-              else
-                echo
-                echo "Could not find InstallPlan for CSV (${SUBSCRIPTION_CSV}) with Subscription (${SUBSCRIPTION_CSV}) (${subscriptionUID}) owner. This can happen if InstallPlan isn't created yet. Try again."
+                exit 0
+              fi
+
+              # 3. track mode: approve whatever OLM resolved from the channel
+              #    (the head), regardless of whether it equals the pin.
+              if [ "${PIN_POLICY}" = "track" ] && [ -n "${anyPending}" ]; then
+                toApprove=$(echo "${anyPending}" | cut -d'|' -f1)
+                resolvedCSV=$(echo "${anyPending}" | cut -d'|' -f2)
+                echo "pinPolicy=track: approving InstallPlan ${toApprove} for catalog-resolved csv ${resolvedCSV} (pinned ${SUBSCRIPTION_CSV})"
+                oc patch installplan -n ${SUBSCRIPTION_NAMESPACE} ${toApprove} --type=json -p='[{"op":"replace","path":"/spec/approved","value":true}]'
+                exit 0
+              fi
+
+              # 3b. track mode + nothing pending but something is already
+              #     installed -> resting state (the channel head is in), nothing
+              #     to approve. Idempotent on every Argo re-sync.
+              if [ "${PIN_POLICY}" = "track" ] && [ -n "${installedCSV}" ]; then
+                echo "pinPolicy=track: installedCSV=${installedCSV}, no pending InstallPlan. Nothing to approve."
+                exit 0
+              fi
+
+              # 4. strict mode + the only pending InstallPlan is for a DIFFERENT csv
+              #    and the pin is NOT installed -> the catalog cannot give us the
+              #    pinned version. Fail LOUD with the exact mismatch instead of
+              #    silently spinning until the job deadline.
+              if [ "${PIN_POLICY}" != "track" ] && [ -n "${anyPending}" ]; then
+                resolvedCSV=$(echo "${anyPending}" | cut -d'|' -f2)
+                echo "ERROR (pinPolicy=strict): the pending InstallPlan for Subscription ${SUBSCRIPTION} is for csv '${resolvedCSV}', but the pinned csv is '${SUBSCRIPTION_CSV}' and it is not installed (installedCSV='${installedCSV}')."
+                echo "This usually means the catalog channel head has moved past the pinned csv, or the channel only offers an upgrade path that skips it."
+                echo "Remedy: bump this operator's 'csv' pin to '${resolvedCSV}' (recommended - keeps version control), or set 'pinPolicy: track' on this operator to auto-approve the channel head."
+                exit 2
+              fi
+
+              # 5. Nothing actionable yet (InstallPlan not created) -> bounded retry.
+              attempt=$((attempt+1))
+              if [ "${attempt}" -ge "${LOOKUP_ATTEMPTS}" ]; then
+                subState=$(oc get subscriptions.operators.coreos.com -n ${SUBSCRIPTION_NAMESPACE} ${SUBSCRIPTION} -o=jsonpath="{.status.state}")
+                echo "ERROR: no approvable InstallPlan for Subscription ${SUBSCRIPTION} after ${LOOKUP_ATTEMPTS} attempts (pinned csv '${SUBSCRIPTION_CSV}', state='${subState}', installedCSV='${installedCSV}'). Check the Subscription and its CatalogSource are healthy."
                 exit 1
               fi
-            else
-              echo
-              echo "Failed to get Subscription ($SUBSCRIPTION) UID. This really shouldn't happen."
-              exit 1
-            fi
+              echo "No approvable InstallPlan yet, retrying in 5 seconds... (${attempt}/${LOOKUP_ATTEMPTS})"
+              sleep 5
+            done
         imagePullPolicy: Always
         env:
         - name: SUBSCRIPTION_CSV
-          value: {{ .csv }}
+          value: {{ .csv | quote }}
         - name: SUBSCRIPTION
-          value: {{ .name }}
+          value: {{ .name | quote }}
+        - name: SUBSCRIPTION_NAMESPACE
+          value: {{ .namespace | default $.Release.Namespace | quote }}
+        - name: PIN_POLICY
+          value: {{ .pinPolicy | default "strict" | quote }}
+        - name: LOOKUP_ATTEMPTS
+          value: {{ .installPlanApproverLookupAttempts | default 36 | quote }}
       dnsPolicy: ClusterFirst
       restartPolicy: Never
       serviceAccount: {{ include "operators-installer.approverName" . }}

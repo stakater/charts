@@ -19,6 +19,24 @@ annotations:
 ## Both Helm are argo hooks are defined . as per docs . If you define some Argo CD hooks in addition to the Helm ones, the Helm hooks will be ignored.
 ## https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
 
+# Per-operator manual-approval knobs (all optional):
+#
+#   pinPolicy: strict | track   (default: strict)
+#     strict - only the pinned `csv` is approved/verified. If the catalog
+#              channel head has moved past the pin and the pin is not
+#              installed, the approver FAILS LOUD with the exact mismatch
+#              (pinned vs catalog-offered csv) instead of silently spinning
+#              until the job deadline. A pending upgrade InstallPlan while the
+#              pin IS installed is intentionally left unapproved (that is the
+#              point of a Manual pin) and the approver exits 0.
+#     track  - approve/verify whatever OLM resolved from the channel (the head),
+#              regardless of whether it equals `csv`. Use when you want
+#              gated-but-current rather than a hard version pin.
+#
+#   installPlanApproverLookupAttempts: 36   # 5s each ~= 3 min before failing loud
+#   installPlanVerifierAttempts: 60         # attempts for the csv/complete verifiers
+#   installPlanVerifierSleepSeconds: 5      # sleep between verifier attempts
+#
 # EXAMPLE: declaratively controlled operator version
 operators:
 # - channel: stable
@@ -27,6 +45,7 @@ operators:
 #   source: community-operators
 #   sourceNamespace: openshift-marketplace
 #   csv: external-secrets-operator.v0.8.2
+#   pinPolicy: strict
 # - channel: gitops-1.10
 #   installPlanApproval: Manual
 #   name: openshift-gitops-operator

@@ -25,70 +25,65 @@ spec:
           - /bin/bash
           - -c
           - |
-            counter=0
-            SLEEPER_TMP=0
-            get_status=`oc get clusterserviceversion -n ${Namespace} ${SUBSCRIPTION_CSV} -o jsonpath={.status.phase}`
-            until [ "$get_status" != "" ]; do
-              # do not wait forever
-              let "counter=counter+1"
-              echo "Attempt $counter of $max_timer"
+            export HOME=/tmp/approver
+            echo
 
-              if [[ $counter -eq $max_timer ]]
-              then
-                echo "Giving up. Operator installation failed"
+            # ----------------------------------------------------------------
+            # Decide WHICH csv to verify.
+            #   strict : the pinned csv must be the one that reaches Succeeded.
+            #   track  : verify whatever the Subscription actually resolved to
+            #            (status.installedCSV), since that may be the channel
+            #            head rather than the pin.
+            # ----------------------------------------------------------------
+            verifyCSV="${SUBSCRIPTION_CSV}"
+            if [ "${PIN_POLICY}" = "track" ]; then
+              verifyCSV=""
+              counter=0
+              while [ -z "${verifyCSV}" ]; do
+                verifyCSV=$(oc get subscriptions.operators.coreos.com -n ${Namespace} ${SUBSCRIPTION} -o=jsonpath="{.status.installedCSV}")
+                if [ -n "${verifyCSV}" ]; then break; fi
+                counter=$((counter+1))
+                if [ "${counter}" -ge "${MAX_ATTEMPTS}" ]; then
+                  echo "Giving up: Subscription ${SUBSCRIPTION} never reported an installedCSV. Operator installation failed."
+                  exit 3
+                fi
+                echo "Waiting for Subscription ${SUBSCRIPTION} to resolve installedCSV... (${counter}/${MAX_ATTEMPTS})"
+                sleep "${SLEEP_TIMER}"
+              done
+            fi
+            echo "Verifying ClusterServiceVersion ${verifyCSV} in namespace ${Namespace}"
+
+            # Wait for the CSV to reach Succeeded (bounded).
+            counter=0
+            get_status=""
+            until [ "${get_status}" = "Succeeded" ]; do
+              get_status=$(oc get clusterserviceversion -n ${Namespace} ${verifyCSV} -o jsonpath="{.status.phase}" 2>/dev/null)
+              if [ "${get_status}" = "Succeeded" ]; then break; fi
+              counter=$((counter+1))
+              if [ "${counter}" -ge "${MAX_ATTEMPTS}" ]; then
+                echo "Giving up. CSV ${verifyCSV} did not reach Succeeded (last phase: '${get_status}'). Operator installation failed."
                 exit 3
               fi
-
-              echo "Operator not yet ready ... Waiting $sleep_timer seconds"
-              while [[ $SLEEPER_TMP -le "$sleep_timer" ]]; do
-                echo -n "."
-                sleep 1
-                SLEEPER_TMP=$(($SLEEPER_TMP+1))
-              done
-              get_status=`oc get clusterserviceversion -n ${Namespace} ${SUBSCRIPTION_CSV} -o jsonpath={.status.phase}`
+              echo "CSV ${verifyCSV} phase: '${get_status}' (attempt ${counter}/${MAX_ATTEMPTS})"
+              sleep "${SLEEP_TIMER}"
             done
 
-            echo "Checking status of ${SUBSCRIPTION_CSV}. Current status: $get_status"
-            # Wait until operator is ready
-            counter=0
-            SLEEPER_TMP=0
-            until [ "$get_status" == "Succeeded" ]; do
-            let "counter=counter+1"
-              echo "Attempt $counter of $max_timer"
-               if [[ $counter -eq $max_timer ]]
-              then
-                echo "Giving up. Operator installation failed"
-                exit 3
-              fi
-              echo "Operator deployment is ongoing. Current status: $get_status"
-              #sleep $sleep_timer
-              while [[ $SLEEPER_TMP -le "$sleep_timer" ]]; do
-                echo -n "."
-                sleep 1
-                SLEEPER_TMP=$(($SLEEPER_TMP+1))
-              done
-              if [ "$get_status" == "Succeeded" ];
-              then
-                status=$?
-              fi
-              get_status=`oc get clusterserviceversion -n ${Namespace} ${SUBSCRIPTION_CSV} -o jsonpath={.status.phase}`
-            done
-            oc get clusterserviceversion -n ${Namespace} ${SUBSCRIPTION_CSV}
-            echo "Falling to sleep"
-
-            SLEEPER_TMP=0
-
-            while [[ $SLEEPER_TMP -le "10" ]]; do
-                echo -n "."
-                sleep 1
-                SLEEPER_TMP=$(($SLEEPER_TMP+1))
-            done
+            echo "CSV ${verifyCSV} reached Succeeded."
+            oc get clusterserviceversion -n ${Namespace} ${verifyCSV}
         imagePullPolicy: Always
         env:
         - name: SUBSCRIPTION_CSV
-          value: {{ .csv }}
+          value: {{ .csv | quote }}
+        - name: SUBSCRIPTION
+          value: {{ .name | quote }}
         - name: Namespace
-          value: {{ .namespace | default $.Release.Namespace }}
+          value: {{ .namespace | default $.Release.Namespace | quote }}
+        - name: PIN_POLICY
+          value: {{ .pinPolicy | default "strict" | quote }}
+        - name: MAX_ATTEMPTS
+          value: {{ .installPlanVerifierAttempts | default 60 | quote }}
+        - name: SLEEP_TIMER
+          value: {{ .installPlanVerifierSleepSeconds | default 5 | quote }}
       dnsPolicy: ClusterFirst
       restartPolicy: Never
       serviceAccount: {{ include "operators-installer.approverName" . }}
