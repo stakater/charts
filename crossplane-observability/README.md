@@ -193,6 +193,13 @@ These need cluster/Grafana context an agent can't safely guess:
    Without it, the Alert list shows only the Grafana-managed alerts; the "Alerts firing" stat
    (which reads the `ALERTS` metric) still works regardless — **a count there with an empty list
    means this toggle is off** (confirmed in the 2026-06-16 deploy validation).
+
+   > **This datasource is not owned by this chart — make the edit durable.** The Prometheus/Thanos
+   > `GrafanaDatasource` is a platform resource (its namespace varies per cluster — e.g.
+   > `stakater-grafana-operator` in the standard layout, or the grafana-operator's own namespace).
+   > Set `manageAlerts` in that datasource's **source manifest** (the GitOps/bootstrap repo that
+   > applies it), not with a live `kubectl patch` — a patch survives an in-place `kubectl apply` but
+   > is lost if the datasource is ever deleted and recreated from a source that omits the field.
 4. **Confirm the inventory exporter** (`crossplane.inventory.{conditionMetricPattern,job}`) by
    scraping it (`tests/fetch-cluster-metrics.sh`) before trusting Story 4.1.
 5. **Calibrate thresholds** over 2–4 weeks of baseline before treating any SLA number as real.
