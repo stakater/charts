@@ -1580,7 +1580,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "{{pod}}",
-          "expr": "increase(kube_pod_container_status_restarts_total{pod=~\"provider.*\"}[1h])"
+          "expr": "increase(kube_pod_container_status_restarts_total{pod=~\".*provider.*\"}[1h])"
         }
       ]
     },
@@ -1616,7 +1616,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "{{pod}}",
-          "expr": "sum by (pod) (container_memory_working_set_bytes{pod=~\"provider.*\", container!=\"\"})"
+          "expr": "sum by (pod) (container_memory_working_set_bytes{pod=~\".*provider.*\", container!=\"\"})"
         }
       ]
     },
@@ -1672,7 +1672,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "{{pod}}",
-          "expr": "rate(container_cpu_cfs_throttled_periods_total{pod=~\"provider.*\", container!=\"\"}[5m]) / clamp_min(rate(container_cpu_cfs_periods_total{pod=~\"provider.*\", container!=\"\"}[5m]), 1)"
+          "expr": "rate(container_cpu_cfs_throttled_periods_total{pod=~\".*provider.*\", container!=\"\"}[5m]) / clamp_min(rate(container_cpu_cfs_periods_total{pod=~\".*provider.*\", container!=\"\"}[5m]), 1)"
         }
       ]
     },
