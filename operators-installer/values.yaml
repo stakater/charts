@@ -32,6 +32,15 @@ annotations:
 #     track  - approve/verify whatever OLM resolved from the channel (the head),
 #              regardless of whether it equals `csv`. Use when you want
 #              gated-but-current rather than a hard version pin.
+#              track also OMITS `startingCSV` from the Subscription, because
+#              startingCSV constrains OLM's *resolver*: leaving it set makes the
+#              Subscription fail resolution outright (ResolutionFailed -> no
+#              InstallPlan -> approver spins to its deadline) whenever the pinned
+#              build is absent from this cluster's catalog. That is what makes
+#              track the correct choice for operators whose builds are tied to
+#              the cluster's OCP minor, since the catalog only carries builds for
+#              the running release train. Under track, `csv` is retained purely
+#              as documentation of the intended baseline.
 #
 #   installPlanApproverLookupAttempts: 36   # 5s each ~= 3 min before failing loud
 #   installPlanVerifierAttempts: 60         # attempts for the csv/complete verifiers

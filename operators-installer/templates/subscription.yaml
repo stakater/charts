@@ -18,5 +18,19 @@ spec:
   name: "{{ .name }}"
   source: "{{ .source }}"
   sourceNamespace: "{{ .sourceNamespace }}"
+  {{- /*
+    startingCSV pins OLM's *resolver*, not just the approval step. Emitting it
+    under pinPolicy: track defeats the whole point of track: if the pinned build
+    is absent from this cluster's catalog, the Subscription fails resolution
+    (`ResolutionFailed: no operators found with name <csv> in channel <ch>`), no
+    InstallPlan is ever created, and the approver/verifier Jobs spin until their
+    deadline — the operator never installs. That is exactly how an OCP-coupled
+    pin (e.g. a v4.21 VPA build on a 4.20 cluster) wedges. Under track we want
+    OLM to resolve the channel head, so omit startingCSV and let the approver
+    gate the resulting InstallPlan instead. `csv` stays meaningful under track as
+    the documented baseline/intent, it just no longer constrains the resolver.
+  */}}
+  {{- if and .csv (ne (.pinPolicy | default "strict") "track") }}
   startingCSV: "{{ .csv }}"
+  {{- end }}
 {{- end }}
