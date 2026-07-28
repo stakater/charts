@@ -191,3 +191,31 @@ enabled (rev 14); **20/20 targets up**. Live corrections from first real agent d
   a healthy replacement existed). Failed pods are dropped by Prometheus — no target, no
   `up==0` — so a service whose replicas ALL end that way would page nothing. Folded into
   the tracked absent()-watchdog gap.
+
+---
+
+## Addendum — 2026-07-24 release audit (7 days unattended runtime, revs 16→17)
+
+Question: is the chart ready for prod release? Method: behavioral evidence from a week of
+unattended runtime (firing history, rule health, full panel walk via `tests/walk-panels.py`)
+rather than re-auditing the static definitions. Findings:
+
+- **F6 (infra incident, found BY the audit): etcd member root-2 dead for 3+ days,
+  silently.** PVC filesystem went read-only (SELinux relabel fails on the CSI mount);
+  etcd container in CreateContainerError since 2026-07-21, quorum on 2/3, zero failure
+  tolerance. NOTHING fired: dead containers produce absent metrics (invisible to every
+  metric-value alert), pod phase "Running" (1/2), 2 restarts under threshold, watchdog
+  fires only when a whole job vanishes. **Chart fix: `KcpEtcdMembersDown` (29th alert,
+  critical) + "etcd members healthy" overview stat. SRE action: recover root-2's PVC.**
+- **Stuck alerts retired to default-off (kcp#4277 in action):** `KcpLogicalClustersStuck`
+  fired ~60% of the week — gauge read 28 not-ready vs 36 total stored; replica B read 2
+  (matching last-known etcd truth). The shard pods restarted ~July 18 (gauges reset to
+  truth, then drifted again), confirming the churn-drift model. A permanently-phantom
+  alert is exactly how alert sets die; both stuck alerts now ship disabled with the
+  panel + runbook as the honest replacement until upstream fixes the gauges.
+- **Everything else behaved:** zero false pages from the other 26 alerts all week; all
+  rules health=ok; watchdog loaded (4 instances, inactive, correct); syncagent reconcile
+  metrics flowing for all 10 services; panel walk 54/58 with data, 0 errors, 4 empties
+  all benign (lazy APF counter, two quiet-period recording rules, no current OOM).
+- New committed tooling: `tests/thanos-query.sh` (canonical workstation query path) and
+  `tests/walk-panels.py` (live panel gate, replaces the ad-hoc walker).

@@ -1,4 +1,4 @@
-# Alerts guide — why each of the 28 alerts exists
+# Alerts guide — why each of the 29 alerts exists
 
 The companion to [`dashboard-guide.md`](dashboard-guide.md): for every alert this chart
 ships — why it exists, what value it offers, and **what we would miss if it didn't exist**.
@@ -50,6 +50,7 @@ recoverability guard.
 
 | Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
 | --- | --- | --- | --- | --- |
+| `KcpEtcdMembersDown` | critical / 15m / healthy < 3 | Fewer healthy members (scrape up on the etcd container) than the cluster size | The only alert that can see a **dead** member: a dead etcd container produces ABSENT metrics, so NoLeader/DiskSlow/DBSize can never fire for it. Proven live (release audit): a member with a read-only PVC sat in CreateContainerError for **3 days** with quorum intact and nothing fired. `or vector(0)` keeps it alive even when all members vanish. | Running one failure away from a full control-plane outage without knowing it — for days. |
 | `KcpEtcdNoLeader` | critical / 1m | Any member's `etcd_server_has_leader` (etcd container only) = 0 | No leader = no writes = the control plane is read-only *right now*. Shortest `for:` in the chart — a hard outage in progress. | The cause behind "everything is mysteriously timing out" — no other alert names it. |
 | `KcpEtcdLeaderChangesHigh` | warning / 15m / > 3 per hour | Leader elections churning | Each election is a write stall; churn is the signature of disk/network distress *before* quorum is lost — the early-warning twin of `NoLeader`. Churn + `DiskSlow` = "storage is killing etcd". | Only ever seeing the terminal state. |
 | `KcpEtcdDiskSlow` | warning / 15m / fsync p99 > 10ms, commit p99 > 25ms | WAL fsync or backend commit p99 over upstream guidance | Slow fsync is *the* canonical predictor of etcd trouble (elections, write stalls). Deterministic, upstream-sanctioned budgets. | Storage degradation presenting as unexplained shard write latency and leader churn, root cause invisible. |
@@ -74,6 +75,12 @@ recoverability guard.
 Workspaces and logical clusters alert **separately** (team feedback: a combined count read
 "10 workspaces not ready" on us-2 when it was actually 0 workspaces + 10 logical clusters —
 the alert must name the resource that is stuck).
+
+> **Both alerts ship DISABLED by default** since the release audit: kcp v0.32.1's phase
+> gauges drift unboundedly ([kcp#4277](https://github.com/kcp-dev/kcp/issues/4277)) — on
+> us-2 the LC alert fired ~60% of a week on phantom counts (gauge 28, etcd truth 2), and
+> the gauge can also drift BELOW truth, so no threshold direction is trustworthy. The
+> trend panel and the runbook keep the signal observable; re-enable on a fixed kcp.
 
 | Alert | Severity / for / threshold | Fires when | Why it exists — the value | Without it, we'd miss |
 | --- | --- | --- | --- | --- |

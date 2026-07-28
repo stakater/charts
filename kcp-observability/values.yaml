@@ -24,6 +24,11 @@ kcp:
   etcd:
     # druid's client Service is <etcd-name>-client.
     job: ".*-client"
+    # etcd cluster size — the MembersDown alert fires when fewer members are
+    # healthy (verified need: a member sat dead for 3 days on us-2 with quorum
+    # intact and NOTHING fired — dead containers produce ABSENT metrics, which
+    # no metric-value alert can see).
+    expectedMembers: 3
   syncAgent:
     job: "kcp-syncagent"
   # Footprint (Area 8): pods covered by restart/OOM/throttle/memory alerts.
@@ -137,6 +142,12 @@ prometheus:
         threshold: 10000
     # Area 3 — etcd + backups
     etcd:
+      membersDown:
+        enabled: true
+        for: 15m
+        # quorum may still hold with a member down, but failure tolerance is
+        # ZERO — one more loss is a full control-plane outage. Act now.
+        severity: critical
       noLeader:
         enabled: true
         for: 1m
@@ -176,13 +187,20 @@ prometheus:
     # so the signal names the resource that is stuck)
     workspaces:
       stuck:
-        enabled: true
+        # DISABLED by default: kcp v0.32.1's phase gauges drift unboundedly
+        # (kcp-dev/kcp#4277 — us-2 audit: gauge said 28 stuck, etcd truth 2;
+        # the alert fired ~60% of a week on phantoms). A count threshold on
+        # this gauge cannot be trusted in either direction. Re-enable when
+        # running a kcp release with the fix; the trend panel + runbook keep
+        # the signal observable meanwhile.
+        enabled: false
         for: 15m
         severity: warning
         # count of workspaces in a non-ready phase above baseline (us-2 standing: 0)
         baseline: 8
       logicalClustersStuck:
-        enabled: true
+        # DISABLED by default — same kcp#4277 gauge drift as workspaces.stuck.
+        enabled: false
         for: 15m
         severity: warning
         # count of logical clusters in a non-ready phase above baseline.

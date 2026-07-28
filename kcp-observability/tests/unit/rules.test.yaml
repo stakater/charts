@@ -913,3 +913,61 @@ tests:
       - eval_time: 15m
         alertname: KcpMetricsAbsent
         exp_alerts: []
+
+  # ------------------------------------------------- etcd membership (audit F6)
+  # A DEAD member produces ABSENT metrics — no metric-value alert can see it
+  # (proven live: root-2 sat in CreateContainerError for 3 days, quorum intact,
+  # nothing fired). MembersDown counts healthy scrapes on the etcd container.
+  # 2 of 3 healthy -> critical, value = healthy count. The backup-restore
+  # container's up series must NOT count.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-client", container="etcd", pod="root-0"}'
+        values: '1x20'
+      - series: 'up{job="root-client", container="etcd", pod="root-1"}'
+        values: '1x20'
+      - series: 'up{job="root-client", container="etcd", pod="root-2"}'
+        values: '0x20'
+      - series: 'up{job="root-client", container="backup-restore", pod="root-2"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: KcpEtcdMembersDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+            exp_annotations:
+              summary: "kcp etcd has 2 healthy members (expected 3)"
+              description: "Quorum may still hold, but failure tolerance is reduced — at 2/3 one more loss is a full control-plane outage. Covers dead containers, dead scrapes, and vanished members alike (all produce a missing/failed up series). Check `kubectl -n <ns> get pods -l app.kubernetes.io/managed-by=etcd-druid` and the member's PVC."
+
+  # ALL etcd-container targets vanished -> the `or vector(0)` keeps the expr
+  # alive and it fires with 0 healthy (count() alone over empty is empty).
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-client", container="backup-restore", pod="root-0"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: KcpEtcdMembersDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+            exp_annotations:
+              summary: "kcp etcd has 0 healthy members (expected 3)"
+              description: "Quorum may still hold, but failure tolerance is reduced — at 2/3 one more loss is a full control-plane outage. Covers dead containers, dead scrapes, and vanished members alike (all produce a missing/failed up series). Check `kubectl -n <ns> get pods -l app.kubernetes.io/managed-by=etcd-druid` and the member's PVC."
+
+  # Full healthy cluster -> quiet.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-client", container="etcd", pod="root-0"}'
+        values: '1x20'
+      - series: 'up{job="root-client", container="etcd", pod="root-1"}'
+        values: '1x20'
+      - series: 'up{job="root-client", container="etcd", pod="root-2"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: KcpEtcdMembersDown
+        exp_alerts: []

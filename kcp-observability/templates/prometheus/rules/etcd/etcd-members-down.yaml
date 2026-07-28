@@ -1,0 +1,35 @@
+{{- $r := .Values.prometheus.rules.etcd.membersDown }}
+{{- if and ($r) ($r.enabled) }}
+# Counts HEALTHY members (scrape up on the etcd container) against the expected
+# cluster size. This is the only alert that can see a DEAD member: a dead etcd
+# container produces ABSENT metrics, so no metric-value alert (NoLeader, DiskSlow,
+# DBSize) can ever fire for it — proven live on us-2, where a member with a
+# read-only PVC sat in CreateContainerError for 3 days with quorum intact and
+# nothing fired. `or vector(0)` keeps the expr alive even when ALL members are
+# gone (count() over an empty vector is empty, not zero).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-etcd-members-down
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.etcd
+      rules:
+        - alert: KcpEtcdMembersDown
+          expr: |
+            (count(up{job=~"{{ .Values.kcp.etcd.job }}", container="etcd"} == 1) or vector(0)) < {{ .Values.kcp.etcd.expectedMembers }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp etcd has {{`{{ $value }}`}} healthy members (expected {{ .Values.kcp.etcd.expectedMembers }})"
+            description: "Quorum may still hold, but failure tolerance is reduced — at {{ sub .Values.kcp.etcd.expectedMembers 1 }}/{{ .Values.kcp.etcd.expectedMembers }} one more loss is a full control-plane outage. Covers dead containers, dead scrapes, and vanished members alike (all produce a missing/failed up series). Check `kubectl -n <ns> get pods -l app.kubernetes.io/managed-by=etcd-druid` and the member's PVC."
+{{- end }}
