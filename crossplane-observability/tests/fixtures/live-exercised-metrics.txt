@@ -53,3 +53,32 @@ upjet_resource_reconcile_delay_seconds_bucket{group="s3.aws.upbound.io",kind="Bu
 upjet_resource_reconcile_delay_seconds_bucket{group="s3.aws.upbound.io",kind="Bucket",version="v1beta1",le="+Inf"} 485
 upjet_resource_reconcile_delay_seconds_sum{group="s3.aws.upbound.io",kind="Bucket",version="v1beta1"} 212412.73812315892
 upjet_resource_reconcile_delay_seconds_count{group="s3.aws.upbound.io",kind="Bucket",version="v1beta1"} 485
+
+# --- Provider runtime: managed-resource drift (Story 3.1) ---
+# Captured from us-2 provider-kubernetes (2026-07-28). This is a HISTOGRAM, not the
+# per-GVK gauge the chart originally assumed — only _bucket/_sum/_count exist, so the
+# bare `crossplane_managed_resource_drift_seconds` name never matched anything and
+# DriftDetected could not fire. Kept here because the pinned kind rig never drifts a
+# resource, so its capture cannot register this family.
+#
+# NOTE the bucket boundaries: they stop at le=10 while real observations are minutes
+# (mean here = 8858877/113901 = 77.8s), so ~all mass lands in +Inf and quantiles are
+# meaningless on this metric. The rule and the dashboard panel both use the mean,
+# rate(_sum)/rate(_count). Label contract: gvk only (no group/kind/version).
+# HELP crossplane_managed_resource_drift_seconds ALPHA: How long since the previous successful reconcile when a resource was found to be out of sync; excludes restart of the provider
+# TYPE crossplane_managed_resource_drift_seconds histogram
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1e-08"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1e-07"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1e-06"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="9.999999999999999e-06"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="9.999999999999999e-05"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="0.001"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="0.01"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="0.1"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="1"} 0
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="10"} 10
+crossplane_managed_resource_drift_seconds_bucket{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object",le="+Inf"} 113901
+crossplane_managed_resource_drift_seconds_sum{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 8.858877845956234e+06
+crossplane_managed_resource_drift_seconds_sum{gvk="kubernetes.m.crossplane.io/v1alpha1, Kind=Object"} 986202.3326357857
+crossplane_managed_resource_drift_seconds_count{gvk="kubernetes.crossplane.io/v1alpha2, Kind=Object"} 113901
+crossplane_managed_resource_drift_seconds_count{gvk="kubernetes.m.crossplane.io/v1alpha1, Kind=Object"} 1754

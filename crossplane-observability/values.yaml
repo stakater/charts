@@ -260,8 +260,11 @@ prometheus:
       # Story 3.1 — managed resource drifted from desired state.
       driftDetected:
         enabled: true
-        # Time-out-of-sync before detection, seconds, before alerting.
-        thresholdSeconds: 600
+        # Mean time-out-of-sync per GVK, seconds, before alerting. PLACEHOLDER —
+        # calibrate per cluster: the source metric is bounded by the providers' poll
+        # interval, so this largely measures how long drift goes unnoticed. 900s sits
+        # above the worst kind observed on a live fleet (~625s mean) with headroom.
+        thresholdSeconds: 900
         for: 15m
         severity: warning
 

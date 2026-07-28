@@ -994,7 +994,7 @@
               },
               {
                 "color": "red",
-                "value": 600
+                "value": 900
               }
             ]
           }
@@ -1009,7 +1009,7 @@
             "uid": "${datasource}"
           },
           "legendFormat": "{{gvk}}",
-          "expr": "crossplane_managed_resource_drift_seconds{gvk=~\"$gvk\"} > 0"
+          "expr": "sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_sum{gvk=~\"$gvk\"}[1h])) / sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_count{gvk=~\"$gvk\"}[1h]))"
         }
       ]
     },
