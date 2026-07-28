@@ -249,3 +249,32 @@ tests:
             exp_annotations:
               summary: "Circuit breaker dropping events for composite/databases.data.cloud.stakater.com"
               description: "Controller composite/databases.data.cloud.stakater.com is dropping 30% of watch events (> 0.2) for more than 5m — a thrashing XR may be starving other tenants."
+
+  # --- Story 3.1: DriftDetected reads the histogram's MEAN, not the bare metric name ---
+  # crossplane_managed_resource_drift_seconds is a histogram (_bucket/_sum/_count); the bare
+  # name does not exist, so the original gauge-form expr could never fire. Quantiles are
+  # unusable (upstream buckets stop at le=10.0), hence rate(_sum)/rate(_count).
+  # 1200s of drift per minute over 1 observation per minute -> 1200s mean > the 900s threshold.
+  - name: drift detected uses histogram mean (sum/count)
+    interval: 1m
+    input_series:
+      - series: 'crossplane_managed_resource_drift_seconds_sum{job="crossplane-providers", gvk="kv.vault.upbound.io/v1alpha1, Kind=SecretV2"}'
+        values: '0+1200x180'
+      - series: 'crossplane_managed_resource_drift_seconds_count{job="crossplane-providers", gvk="kv.vault.upbound.io/v1alpha1, Kind=SecretV2"}'
+        values: '0+1x180'
+      # A kind well under the threshold must stay quiet: 60s mean.
+      - series: 'crossplane_managed_resource_drift_seconds_sum{job="crossplane-providers", gvk="route53.aws.upbound.io/v1beta1, Kind=Record"}'
+        values: '0+60x180'
+      - series: 'crossplane_managed_resource_drift_seconds_count{job="crossplane-providers", gvk="route53.aws.upbound.io/v1beta1, Kind=Record"}'
+        values: '0+1x180'
+    alert_rule_test:
+      - eval_time: 120m
+        alertname: DriftDetected
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: crossplane
+              gvk: "kv.vault.upbound.io/v1alpha1, Kind=SecretV2"
+            exp_annotations:
+              summary: "Drift detected for kv.vault.upbound.io/v1alpha1, Kind=SecretV2"
+              description: "Managed resources of kv.vault.upbound.io/v1alpha1, Kind=SecretV2 are spending 20m 0s out of sync with desired state on average, above the 900s threshold, for more than 15m."

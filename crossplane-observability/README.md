@@ -247,7 +247,7 @@ promise; the rest are internal SLIs/SLOs that exist to protect them.
 | 2.3 | `WorkqueueDepthGrowing` | control-plane | `workqueue_depth` sustained over threshold | ❌ | 1 |
 | 2.4 | `APIServiceUnavailable` | control-plane | `aggregator_unavailable_apiservice{name=~".*crossplane.*"} == 1` | ✅ | 1 |
 | 2.5 | `DetectionLagHigh` | control-plane | p95 create→first-reconcile > SLO | ❌ | 1 |
-| 3.1 | `DriftDetected` | drift | `crossplane_managed_resource_drift_seconds` > threshold | ❌ | 1 |
+| 3.1 | `DriftDetected` | drift | mean `crossplane_managed_resource_drift_seconds` (`rate(_sum)/rate(_count)`) per `gvk` > threshold | ❌ | 1 |
 | 4.1 | `CompositeNotReady` | fleet | XR condition `{type=Ready,status=True} == 0` *(needs inventory exporter)* | →1.1 | needs exporter |
 | 4.1 | `CompositeNotSynced` | fleet | XR condition `{type=Synced,status=True} == 0` *(needs inventory exporter)* | →1.1 | needs exporter |
 | 4.2 | `CircuitBreakerDropRatioHigh` | fleet | > 20% events dropped (5m) | ✅ (indirect) | 2 |
@@ -312,12 +312,16 @@ provider-kubernetes v1.2.1**):
   `workqueue_*` (2.3), and the `crossplane_managed_resource_*` family —
   `exists` / `ready` / `synced` (Story 1.1) and `first_time_to_{readiness,reconcile}_seconds_*`
   (1.2, 1.3, 2.5).
+- ✅ **Captured from a live cluster** — paths the pinned kind rig cannot exercise, committed as
+  real samples in [tests/fixtures/live-exercised-metrics.txt](tests/fixtures/live-exercised-metrics.txt):
+  `function_run_function_{seconds_bucket,response_total}` (5.1), `circuit_breaker_{events,opens}_total`
+  (4.2), `upjet_resource_{ttr,reconcile_delay_seconds}_bucket` (1.2 Upjet, 6.1), and
+  `crossplane_managed_resource_drift_seconds_{bucket,sum,count}` (3.1 — a **histogram**, so the
+  rule and panel read its mean; the bare metric name does not exist).
 - 📖 **Documented upstream, not emitted by the pinned rig** — listed with citations in
   [tests/metrics-allowlist.documented.txt](tests/metrics-allowlist.documented.txt):
-  - `crossplane_managed_resource_drift_seconds` (3.1) — needs an actual drift to occur.
-  - `function_run_*`, `circuit_breaker_*` (5.x, 4.2) — core metrics that register only when a
-    composition Function / realtime composition runs.
-  - `upjet_resource_*` (1.2 Upjet path, 6.1) — need an Upjet provider.
+  - `function_run_function_response_cache_*` (5.2) — register only when the function-response
+    cache is exercised.
   - `aggregator_unavailable_apiservice`, `container_*`, `kube_pod_container_*` — standard
     apiserver / cAdvisor / kube-state-metrics metrics (present on a real UWM cluster).
   - The Story 4.1 inventory metric (`kube_customresource_crossplane_xr_xproject_condition`)

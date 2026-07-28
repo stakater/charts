@@ -13,10 +13,11 @@
 # To move one to CAPTURED: exercise the path in tests/integration.sh (e.g. add an Upjet
 # provider, or a Composition+Function) and re-run, then it lands in the captured allowlist.
 
-# --- crossplane-runtime state metric: drift (Story 3.1) ---
-# Documented provider metric. Not emitted here because no drift occurred on the sample
-# Object (drift detection needs management policies + an out-of-band change).
-crossplane_managed_resource_drift_seconds
+# --- crossplane-runtime state metric: drift (Story 3.1) — now CAPTURED ---
+# `crossplane_managed_resource_drift_seconds` used to be listed here as a bare (gauge) name.
+# It is a HISTOGRAM: only _bucket/_sum/_count exist, so that name matched nothing on any
+# cluster. The real family is captured from a live cluster (drift does occur there, just not
+# in the pinned kind rig) — see tests/fixtures/live-exercised-metrics.txt.
 
 # --- Crossplane core: composition-function response CACHE (Story 5.2) ---
 # Register only when the function-response cache is exercised (realtime/cached compositions).

@@ -2,10 +2,6 @@
 {{- if and $r $r.enabled }}
 # Story 3.1 — a managed resource has drifted out of sync with its desired state. Silent
 # drift means configuration we believe is enforced actually is not (correctness signal).
-# NOTE: crossplane_managed_resource_drift_seconds is documented but not yet captured (no
-# drift occurred in the capture). Its exact type (gauge vs histogram) and labels are
-# unconfirmed — verify with a real fetch (see tests/fetch-cluster-metrics.sh) and adjust
-# the expr/labels if needed; this assumes a per-GVK gauge consistent with the rest of the family.
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -22,12 +18,28 @@ spec:
     - name: crossplane.drift
       rules:
         - alert: DriftDetected
-          expr: crossplane_managed_resource_drift_seconds{job="{{ .Values.crossplane.providers.job }}"} > {{ $r.thresholdSeconds }}
+          # crossplane_managed_resource_drift_seconds is a HISTOGRAM, not the per-GVK gauge
+          # this rule originally assumed (confirmed on a live build: only _bucket/_sum/_count
+          # exist, labelled gvk + crossplane_provider/crossplane_revision). The bare metric
+          # name matches nothing, so the gauge form could never fire.
+          #
+          # Quantiles are unusable on this histogram: upstream bucket boundaries stop at
+          # le=10.0 while real observations are minutes, so ~all of them land in +Inf and
+          # histogram_quantile returns a flat 10 for every kind with traffic. The mean —
+          # rate(_sum)/rate(_count) — is the only faithful reading of the real duration.
+          #
+          # 1h window: drift observations are sparse per gvk (tens per day on some kinds),
+          # so a short window leaves most kinds with no samples and the alert blind.
+          expr: |
+            sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_sum{job="{{ .Values.crossplane.providers.job }}"}[1h]))
+              /
+            sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_count{job="{{ .Values.crossplane.providers.job }}"}[1h]))
+              > {{ $r.thresholdSeconds }}
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}
             rulesgroup: crossplane
           annotations:
             summary: "Drift detected for {{`{{ $labels.gvk }}`}}"
-            description: "Managed resources of {{`{{ $labels.gvk }}`}} have been out of sync with desired state for {{`{{ $value | humanizeDuration }}`}} (threshold {{ $r.thresholdSeconds }}s)."
+            description: "Managed resources of {{`{{ $labels.gvk }}`}} are spending {{`{{ $value | humanizeDuration }}`}} out of sync with desired state on average, above the {{ $r.thresholdSeconds }}s threshold, for more than {{ $r.for }}."
 {{- end }}
