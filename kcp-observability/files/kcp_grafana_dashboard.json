@@ -2642,6 +2642,59 @@
         "y": 130
       },
       "description": "1 = this container's LAST termination was an OOM kill (the reason persists until the next termination). Pairs with the KcpPodOOMKilled alert, which additionally requires a restart in the last 30m so it auto-resolves; this panel keeps the history visible after the alert clears."
+    },
+    {
+      "id": 60,
+      "type": "stat",
+      "title": "etcd members healthy",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "count(up{job=~\"$etcd_job\", container=\"etcd\"} == 1) or vector(0)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 14
+      },
+      "description": "Healthy etcd members (scrape up on the etcd container) vs cluster size. Below 3 = failure tolerance reduced or gone \u2014 the KcpEtcdMembersDown alert input. A dead member produces ABSENT metrics, so this count is the only place it shows (proven live: a member with a read-only PVC was invisible for 3 days)."
     }
   ]
 }
