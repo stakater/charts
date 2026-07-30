@@ -11,6 +11,20 @@ metadata:
     {{- include "operators-installer.labels" $ | nindent 4 }}
   annotations:
     argocd.argoproj.io/sync-wave: "20"
+    # Unlike the approver/verifier Jobs this one is a NORMAL synced resource, not an
+    # Argo hook, so hook-delete-policy does not apply to it — it needs the non-hook
+    # equivalent. Its name derives from `csv` and a Job's spec.template is immutable,
+    # so once this Job has FAILED, ArgoCD can only try to patch it and the sync dies
+    # with
+    #   Job.batch "<csv>-csv-verifier" is invalid: spec.template: Invalid value: ...
+    # leaving the app Degraded on a stale failure that no longer reflects reality,
+    # and unable to re-verify after the underlying problem is fixed. Observed on
+    # y0c8muex: a 15h-old failed csv-verifier kept openshift-vertical-pod-autoscaler
+    # Degraded even once the operator was installed and Running, and only a manual
+    # `oc delete job` cleared it (SA-8641).
+    # Force+Replace makes ArgoCD delete and recreate it (kubectl replace --force)
+    # instead of patching, which is the only way to roll an immutable Job.
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   completions: 1
   parallelism: 1
