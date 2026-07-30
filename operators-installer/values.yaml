@@ -13,7 +13,17 @@ approveManualInstallPlanViaHook: true
 installPlanApproverAndVerifyJobsImage: quay.io/openshift/origin-cli:4.20.0
 
 annotations:
-  argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  # BeforeHookCreation is load-bearing, not tidiness. These Jobs are named after the
+  # operator's `csv` value, so the name is stable across syncs — and a Job's
+  # spec.template is immutable. A previously FAILED approver/verifier Job therefore
+  # blocks its own replacement: ArgoCD tries to patch it and the sync dies with
+  #   Job.batch "<csv>-approver" is invalid: spec.template: Invalid value: ...
+  # so the InstallPlan is never approved and the operator never installs — even
+  # after the values that caused the original failure have been corrected. Recovery
+  # then needs the stale Jobs deleted by hand (hit twice on y0c8muex while fixing
+  # the VPA pin, SA-8641). HookSucceeded alone does not help: it only removes Jobs
+  # that succeeded, and it is exactly the failed ones that wedge the next sync.
+  argocd.argoproj.io/hook-delete-policy: HookSucceeded,BeforeHookCreation
   argocd.argoproj.io/hook: Sync
 
 ## Both Helm are argo hooks are defined . as per docs . If you define some Argo CD hooks in addition to the Helm ones, the Helm hooks will be ignored.
