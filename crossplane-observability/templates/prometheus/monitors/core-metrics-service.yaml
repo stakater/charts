@@ -1,0 +1,37 @@
+{{- if and ( .Values.prometheus.monitors.coreMetricsService ) ( .Values.prometheus.monitors.coreMetricsService.enabled ) }}
+{{- $svc := .Values.prometheus.monitors.coreMetricsService }}
+{{- $sm := .Values.prometheus.monitors.coreServiceMonitor | default dict }}
+{{- $sel := .Values.crossplane.core.serviceMonitorSelector | default dict }}
+# Headless Service in front of the Crossplane core pods' /metrics port.
+#
+# Crossplane core serves /metrics (with `metrics.enabled=true`) but upstream ships NO Service
+# for it, so `coreServiceMonitor` selects nothing unless the cluster happens to have one
+# hand-applied. Enable this and the chart owns both halves of the scrape.
+#
+# Two couplings are derived rather than restated, so the pair cannot drift apart:
+#   * the Service NAME becomes the `job` label on every core metric (prometheus-operator
+#     derives a ServiceMonitor's job from the Service), so it defaults to
+#     `crossplane.core.job` — the value the alert and recording expressions filter on;
+#   * its LABELS are the ServiceMonitor's own selector `matchLabels`, so the monitor this
+#     chart ships always matches the Service this chart ships. (Only `matchLabels` is
+#     reflected — a selector written with `matchExpressions` must be matched by hand.)
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc.name | default .Values.crossplane.core.job }}
+  namespace: {{ include "crossplane-observability.namespace" . }}
+  labels:
+    {{- /* the monitor's selector labels win over the chart defaults — see the note above */}}
+    {{- merge (deepCopy ($sel.matchLabels | default dict)) (fromYaml (include "crossplane-observability.labels" .)) | toYaml | nindent 4 }}
+spec:
+  # Headless: this Service exists only to produce Endpoints for the scrape. Nothing dials
+  # it by name, so it needs no ClusterIP.
+  clusterIP: None
+  selector:
+    {{- toYaml $svc.selector | nindent 4 }}
+  ports:
+    - name: {{ $sm.port | default "metrics" }}
+      port: {{ $svc.port }}
+      targetPort: {{ $svc.targetPort }}
+      protocol: TCP
+{{- end }}

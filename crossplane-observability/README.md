@@ -52,6 +52,11 @@ UWM evaluates these `PrometheusRule`s in `thanos-ruler-user-workload`.
 ### 2. Crossplane metrics exposed
 
 - **Core:** start core with `--set metrics.enabled=true` (Helm) so `/metrics` is served.
+  Upstream ships **no Service** in front of that port, so a `ServiceMonitor` has nothing to
+  select. Either point `crossplane.core.serviceMonitorSelector` at a metrics Service your
+  cluster already has, or let this chart create one with
+  `prometheus.monitors.coreMetricsService.enabled=true` (set its `selector` to your core pod
+  labels — the upstream chart labels them `app: crossplane`, `release: <release name>`).
 - **Providers:** expose a metrics port on each provider via its `DeploymentRuntimeConfig`.
   Every crossplane-runtime provider emits `crossplane_managed_resource_*` natively
   (ready/synced/TTR/drift) — no external exporter is needed for leaf-MR health.
@@ -61,6 +66,7 @@ Then turn on the scrapers (both default to `false`):
 ```yaml
 prometheus:
   monitors:
+    coreMetricsService: { enabled: true }   # only if the cluster has no metrics Service
     coreServiceMonitor: { enabled: true }
     providerPodMonitor: { enabled: true }
 ```
@@ -223,6 +229,8 @@ These need cluster/Grafana context an agent can't safely guess:
 | `grafana.compositeAlerts.enabled` | `false` | Story 4.1 composite alerts as **Grafana-managed** rules (use on UWM instead of the PrometheusRule composite alerts). |
 | `grafana.compositeAlerts.datasourceUid` | `""` | **Required when enabled** — UID of the cross-namespace Prometheus/Thanos datasource in Grafana. |
 | `grafana.namespace` | release ns | Namespace to create the GrafanaDashboard in. |
+| `prometheus.monitors.coreMetricsService.enabled` | `false` | Create the headless metrics Service for Crossplane core (upstream ships none, so `coreServiceMonitor` has nothing to select without it). Its name defaults to `crossplane.core.job` — which is what makes the `job` label match — and its labels to `crossplane.core.serviceMonitorSelector.matchLabels`. |
+| `prometheus.monitors.coreMetricsService.selector` | `{app: crossplane, release: crossplane}` | Pod labels of the Crossplane core Deployment. **Install-specific** — the upstream chart sets `release: <helm release name>`. |
 | `prometheus.monitors.coreServiceMonitor.enabled` | `false` | Scrape Crossplane core. |
 | `prometheus.monitors.providerPodMonitor.enabled` | `false` | Scrape provider pods. |
 | `prometheus.recordingRules.enabled` | `true` | Emit the SLO recording rules. |

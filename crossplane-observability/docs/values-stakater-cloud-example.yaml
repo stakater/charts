@@ -6,12 +6,33 @@
 
 # The cluster already scrapes core + providers via its own ServiceMonitor/PodMonitor, so the
 # chart's monitors stay OFF; the rules just point at the existing Prometheus jobs.
+#
+# ⚠️ CONFIRM this per cluster — it is NOT true of every Stakater Cloud cluster. Those
+# monitors and the `crossplane-metrics` Service they select are hand-applied platform
+# objects, not part of any chart, so a cluster can be missing them entirely and every rule
+# and panel then evaluates against nothing. Check with:
+#   kubectl get servicemonitor,podmonitor -A | grep -i crossplane
+#   kubectl get svc -n crossplane-system | grep metrics
+# If they are absent, turn the chart's own scrape on instead (see the commented block
+# below) rather than hand-applying more unowned objects.
 prometheus:
   monitors:
     coreServiceMonitor:
       enabled: false
     providerPodMonitor:
       enabled: false
+    # If the cluster has NO crossplane-metrics Service, uncomment these three blocks. The
+    # Service is named after `crossplane.core.job` below, so the core rules keep matching;
+    # set `selector` to your core pods' labels (the upstream chart uses
+    # `release: <helm release name>` — `crossplane-operator` on us-2, `crossplane` on eu-2)
+    # and override `crossplane.providers.job` to
+    # `crossplane-system/<release>-crossplane-observability-providers`, because a PodMonitor's
+    # job label is `<namespace>/<podmonitor-name>` and will not match the value set below.
+    # coreMetricsService:
+    #   enabled: true
+    #   selector:
+    #     app: crossplane
+    #     release: crossplane
   rules:
     fleet:
       # On UWM, keep the PrometheusRule composite alerts OFF — Grafana handles them

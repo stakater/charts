@@ -24,6 +24,7 @@ green() { printf "\033[32m%s\033[0m\n" "$*"; }
 step()  { printf "\n\033[1m== %s ==\033[0m\n" "$*"; }
 
 ALL_FLAGS=(
+  --set prometheus.monitors.coreMetricsService.enabled=true
   --set prometheus.monitors.coreServiceMonitor.enabled=true
   --set prometheus.monitors.providerPodMonitor.enabled=true
   --set upjet.enabled=true

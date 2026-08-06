@@ -33,6 +33,8 @@ crossplane:
     # Label selector for the core metrics Service (used only when coreServiceMonitor is
     # enabled). Default targets the metrics Service by component; the upstream metrics
     # Service has no per-instance label, so don't require one.
+    # `prometheus.monitors.coreMetricsService` labels the Service it creates with exactly
+    # these matchLabels, so leaving both at their defaults always pairs.
     serviceMonitorSelector:
       matchLabels:
         app.kubernetes.io/name: crossplane
@@ -148,11 +150,35 @@ grafana:
 # Prometheus configuration
 # ---------------------------------------------------------------------------
 prometheus:
-  # Scrape configuration. Both default to disabled — turn them on once the matching
+  # Scrape configuration. All default to disabled — turn them on once the matching
   # metrics ports are confirmed exposed (see docs/roadmap.md, Decision 2).
   monitors:
+    # Headless Service in front of the core pods' /metrics port. Upstream Crossplane
+    # serves /metrics but ships NO Service for it, so `coreServiceMonitor` below selects
+    # nothing unless the cluster has one hand-applied. Enable this to have the chart own
+    # both halves of the core scrape.
+    coreMetricsService:
+      enabled: false
+      # Service name. Prometheus-operator derives a ServiceMonitor's `job` label from the
+      # Service, so this name IS the job label — it defaults to `crossplane.core.job` so
+      # the alert/recording expressions match without a second setting to keep in sync.
+      # Override only if your Prometheus relabels the job.
+      name: ""
+      # Pod labels of the Crossplane core Deployment. Varies by install: the upstream
+      # chart sets `release: <helm release name>`, so this default fits a release named
+      # `crossplane`. Check with
+      #   kubectl get pod -n <ns> -l app=crossplane --show-labels
+      selector:
+        app: crossplane
+        release: crossplane
+      # Port the core pods serve /metrics on. Crossplane's Deployment does not declare it
+      # as a containerPort, which is fine — a Service may target a raw port number. The
+      # port NAME is taken from `coreServiceMonitor.port` so the two always agree.
+      port: 8080
+      targetPort: 8080
     # Scrapes Crossplane core /metrics (controller-runtime, workqueue, circuit
-    # breaker, function-pipeline metrics).
+    # breaker, function-pipeline metrics). Needs a metrics Service to select — either
+    # `coreMetricsService` above, or one already present on the cluster.
     coreServiceMonitor:
       enabled: false
       port: metrics
