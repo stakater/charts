@@ -22,17 +22,14 @@ prometheus:
     providerPodMonitor:
       enabled: false
     # If the cluster has NO crossplane-metrics Service, uncomment these three blocks. The
-    # Service is named after `crossplane.core.job` below, so the core rules keep matching;
-    # set `selector` to your core pods' labels (the upstream chart uses
-    # `release: <helm release name>` — `crossplane-operator` on us-2, `crossplane` on eu-2)
-    # and override `crossplane.providers.job` to
+    # Service is named after `crossplane.core.job` below, so the core rules keep matching,
+    # and its default selector `{app: crossplane}` needs no per-cluster value — that label
+    # tracks the upstream chart's name, not the release name (which is `crossplane-operator`
+    # on us-2 and `crossplane` on eu-2). But DO override `crossplane.providers.job` to
     # `crossplane-system/<release>-crossplane-observability-providers`, because a PodMonitor's
     # job label is `<namespace>/<podmonitor-name>` and will not match the value set below.
     # coreMetricsService:
     #   enabled: true
-    #   selector:
-    #     app: crossplane
-    #     release: crossplane
   rules:
     fleet:
       # On UWM, keep the PrometheusRule composite alerts OFF — Grafana handles them

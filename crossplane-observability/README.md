@@ -55,8 +55,9 @@ UWM evaluates these `PrometheusRule`s in `thanos-ruler-user-workload`.
   Upstream ships **no Service** in front of that port, so a `ServiceMonitor` has nothing to
   select. Either point `crossplane.core.serviceMonitorSelector` at a metrics Service your
   cluster already has, or let this chart create one with
-  `prometheus.monitors.coreMetricsService.enabled=true` (set its `selector` to your core pod
-  labels — the upstream chart labels them `app: crossplane`, `release: <release name>`).
+  `prometheus.monitors.coreMetricsService.enabled=true`. Its default selector `{app: crossplane}`
+  is install-agnostic — that label comes from the upstream chart's name, not the release name —
+  so it needs no per-cluster value unless Crossplane was installed with a `nameOverride`.
 - **Providers:** expose a metrics port on each provider via its `DeploymentRuntimeConfig`.
   Every crossplane-runtime provider emits `crossplane_managed_resource_*` natively
   (ready/synced/TTR/drift) — no external exporter is needed for leaf-MR health.
@@ -230,7 +231,7 @@ These need cluster/Grafana context an agent can't safely guess:
 | `grafana.compositeAlerts.datasourceUid` | `""` | **Required when enabled** — UID of the cross-namespace Prometheus/Thanos datasource in Grafana. |
 | `grafana.namespace` | release ns | Namespace to create the GrafanaDashboard in. |
 | `prometheus.monitors.coreMetricsService.enabled` | `false` | Create the headless metrics Service for Crossplane core (upstream ships none, so `coreServiceMonitor` has nothing to select without it). Its name defaults to `crossplane.core.job` — which is what makes the `job` label match — and its labels to `crossplane.core.serviceMonitorSelector.matchLabels`. |
-| `prometheus.monitors.coreMetricsService.selector` | `{app: crossplane, release: crossplane}` | Pod labels of the Crossplane core Deployment. **Install-specific** — the upstream chart sets `release: <helm release name>`. |
+| `prometheus.monitors.coreMetricsService.selector` | `{app: crossplane}` | Pod labels of the Crossplane core Deployment. Install-agnostic: `app` derives from the upstream chart's name (not the release name) and is unique to core — rbac-manager is `app: crossplane-rbac-manager`, and provider/function pods carry no `app` label. Don't swap in the `app.kubernetes.io/*` labels: core and rbac-manager carry identical values there, and rbac-manager also serves /metrics on 8080. |
 | `prometheus.monitors.coreServiceMonitor.enabled` | `false` | Scrape Crossplane core. |
 | `prometheus.monitors.providerPodMonitor.enabled` | `false` | Scrape provider pods. |
 | `prometheus.recordingRules.enabled` | `true` | Emit the SLO recording rules. |

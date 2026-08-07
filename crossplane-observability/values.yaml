@@ -164,13 +164,22 @@ prometheus:
       # the alert/recording expressions match without a second setting to keep in sync.
       # Override only if your Prometheus relabels the job.
       name: ""
-      # Pod labels of the Crossplane core Deployment. Varies by install: the upstream
-      # chart sets `release: <helm release name>`, so this default fits a release named
-      # `crossplane`. Check with
+      # Pod labels of the Crossplane core Deployment. `app` is the one label that is both
+      # install-agnostic and unique to core, so this default needs no per-cluster value:
+      #   * it comes from the upstream chart's `nameOverride | default .Chart.Name`, not
+      #     from the release name — so it is `crossplane` whether the release is called
+      #     `crossplane` (eu-2) or `crossplane-operator` (us-2), whereas `release:` is the
+      #     part that differs and is deliberately NOT selected on;
+      #   * the rbac-manager pod is `app: crossplane-rbac-manager`, so equality matching
+      #     excludes it. Do NOT select on the `app.kubernetes.io/*` labels instead: core
+      #     and rbac-manager carry byte-identical `name`/`part-of`/`component` values, and
+      #     rbac-manager also serves /metrics on 8080 — it would be scraped as core;
+      #   * provider and function pods carry only `pkg.crossplane.io/{revision,provider,
+      #     function}` (Crossplane builds those Deployments itself), so no `app` key at all.
+      # Override only if the Crossplane chart was installed with a `nameOverride`. Check:
       #   kubectl get pod -n <ns> -l app=crossplane --show-labels
       selector:
         app: crossplane
-        release: crossplane
       # Port the core pods serve /metrics on. Crossplane's Deployment does not declare it
       # as a containerPort, which is fine — a Service may target a raw port number. The
       # port NAME is taken from `coreServiceMonitor.port` so the two always agree.
