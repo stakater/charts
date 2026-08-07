@@ -20,7 +20,7 @@ spec:
         - alert: DetectionLagHigh
           expr: |
             histogram_quantile({{ $r.quantile }}, sum by (le, gvk) (
-              rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{job="{{ .Values.crossplane.providers.job }}"}[15m])
+              rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{job="{{ include "crossplane-observability.providersJob" . }}"}[15m])
             )) > {{ $r.thresholdSeconds }}
           for: {{ $r.for }}
           labels:

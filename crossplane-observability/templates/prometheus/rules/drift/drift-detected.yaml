@@ -31,9 +31,9 @@ spec:
           # 1h window: drift observations are sparse per gvk (tens per day on some kinds),
           # so a short window leaves most kinds with no samples and the alert blind.
           expr: |
-            sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_sum{job="{{ .Values.crossplane.providers.job }}"}[1h]))
+            sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_sum{job="{{ include "crossplane-observability.providersJob" . }}"}[1h]))
               /
-            sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_count{job="{{ .Values.crossplane.providers.job }}"}[1h]))
+            sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_count{job="{{ include "crossplane-observability.providersJob" . }}"}[1h]))
               > {{ $r.thresholdSeconds }}
           for: {{ $r.for }}
           labels:

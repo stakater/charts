@@ -57,3 +57,23 @@ Crossplane runs in, so UWM can resolve the metrics endpoints.
 {{- define "crossplane-observability.namespace" -}}
 {{- .Values.global.namespace | default .Release.Namespace }}
 {{- end }}
+
+{{/*
+The `job` label provider metrics carry, used by every provider-scoped rule expression.
+
+Unset means "the PodMonitor this chart ships", whose job label prometheus-operator
+derives as `<namespace>/<podmonitor-name>` — so it is computed here rather than
+restated in values, because a hand-written guess at that string is wrong in a way
+nothing catches: the rules render fine and silently match no series.
+
+Set `crossplane.providers.job` explicitly only when some OTHER scrape already covers
+the provider pods (a platform PodMonitor, a differently-relabelled job); then this
+chart's own `providerPodMonitor` should stay disabled.
+*/}}
+{{- define "crossplane-observability.providersJob" -}}
+{{- if .Values.crossplane.providers.job -}}
+{{- .Values.crossplane.providers.job -}}
+{{- else -}}
+{{- printf "%s/%s-providers" (include "crossplane-observability.namespace" .) (include "crossplane-observability.fullname" .) -}}
+{{- end -}}
+{{- end }}

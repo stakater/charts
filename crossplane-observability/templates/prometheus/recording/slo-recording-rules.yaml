@@ -1,6 +1,6 @@
 {{- if .Values.prometheus.recordingRules.enabled }}
 {{- $core := .Values.crossplane.core.job }}
-{{- $prov := .Values.crossplane.providers.job }}
+{{- $prov := include "crossplane-observability.providersJob" . }}
 # SLO recording rules. Pre-compute the SLIs from the roadmap so error-budget burn is
 # directly queryable, alert expressions stay readable, and the headline composite SLO
 # (Story 1.3) is a single series. Recording-rule names follow the Prometheus

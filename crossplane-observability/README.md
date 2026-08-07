@@ -84,7 +84,7 @@ override:
 | Value | Default | Stakater Cloud / typical override |
 | --- | --- | --- |
 | `crossplane.core.job` | `crossplane` | `crossplane-metrics` |
-| `crossplane.providers.job` | `crossplane-providers` | `crossplane-system/crossplane-providers-and-functions` |
+| `crossplane.providers.job` | *empty* → derived from the chart's own PodMonitor | only when another scrape already covers the provider pods, e.g. `crossplane-system/crossplane-providers-and-functions` |
 | `crossplane.core.serviceMonitorSelector` | `{name:crossplane, component:metrics}` | match your metrics Service labels (only if you enable the chart's monitor) |
 | `crossplane.providers.selector` | `pkg.crossplane.io/revision: Exists` | match your provider pods (only if you enable the chart's monitor) |
 | `grafana.instanceSelector` | `{app: grafana}` | your instance's labels, e.g. `{dashboards: crossplane}` |
@@ -92,6 +92,11 @@ override:
 The `job` values are the important ones — **the alert/recording expressions filter on them**,
 so if they don't match what your Prometheus assigns, rules evaluate to empty. Find them with
 `count by (job)({__name__=~"crossplane_managed_resource_.+"})`.
+
+If you let the chart own the scrape (the `prometheus.monitors.*` toggles above), you do **not**
+need to set either job value: the core Service is named after `crossplane.core.job`, and
+`crossplane.providers.job` left empty is derived from the PodMonitor the chart renders. Both
+couplings are asserted by `./tests/validate.sh`, so they cannot drift apart silently.
 
 **Grafana gotchas (grafana-operator):** to change `grafana.instanceSelector` you must also null
 the default key, because Helm deep-merges maps — e.g. `--set grafana.instanceSelector.app=null
@@ -219,7 +224,7 @@ These need cluster/Grafana context an agent can't safely guess:
 | `crossplane.core.name` | `crossplane` | Crossplane core release/fullname (core ServiceMonitor selector). |
 | `crossplane.core.job` | `crossplane` | `job` label core metrics land under (used in alert/recording expressions). |
 | `crossplane.providers.selector` | `pkg.crossplane.io/revision: Exists` | Label selector matching provider pods (PodMonitor). |
-| `crossplane.providers.job` | `crossplane-providers` | `job` label provider metrics land under. |
+| `crossplane.providers.job` | `""` | `job` label provider metrics land under. Empty means "the PodMonitor this chart ships", whose job label prometheus-operator derives as `<namespace>/<name>` — computed rather than restated, since a wrong guess renders fine and matches nothing. Set it only when another scrape already covers the provider pods (and then keep `providerPodMonitor` off). |
 | `crossplane.inventory.enabled` | `false` | Enable Claim/inventory rules (needs an exporter — see [example](docs/resource-state-metrics-example.yaml)). |
 | `crossplane.inventory.conditionMetricPattern` | `kube_customresource_crossplane_xr_.+_condition` | Regex (PromQL `__name__=~`) matching the exporter's one-hot condition metrics across **all** XR kinds (Story 4.1). |
 | `upjet.enabled` | `false` | Upjet providers present — enables Story 6.1 and the more-accurate Upjet TTR (Story 1.2). |

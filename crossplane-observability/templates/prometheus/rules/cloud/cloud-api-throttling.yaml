@@ -28,7 +28,7 @@ spec:
           # two different API groups isn't merged into one p95.
           expr: |
             histogram_quantile(0.95, sum by (le, group, kind) (
-              rate(upjet_resource_reconcile_delay_seconds_bucket{job="{{ .Values.crossplane.providers.job }}"}[15m])
+              rate(upjet_resource_reconcile_delay_seconds_bucket{job="{{ include "crossplane-observability.providersJob" . }}"}[15m])
             )) > {{ $r.thresholdSeconds }}
           for: {{ $r.for }}
           labels:
