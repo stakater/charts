@@ -28,9 +28,9 @@ spec:
             histogram_quantile({{ $r.quantile }}, sum by (le, {{ if .Values.upjet.enabled }}group, kind{{ else }}gvk{{ end }}) (
               rate(
               {{- if .Values.upjet.enabled }}
-                upjet_resource_ttr_bucket{job="{{ .Values.crossplane.providers.job }}"}[30m]
+                upjet_resource_ttr_bucket{job="{{ include "crossplane-observability.providersJob" . }}"}[30m]
               {{- else }}
-                crossplane_managed_resource_first_time_to_readiness_seconds_bucket{job="{{ .Values.crossplane.providers.job }}"}[30m]
+                crossplane_managed_resource_first_time_to_readiness_seconds_bucket{job="{{ include "crossplane-observability.providersJob" . }}"}[30m]
               {{- end }}
               )
             )) > {{ $r.thresholdSeconds }}

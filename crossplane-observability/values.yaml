@@ -48,9 +48,21 @@ crossplane:
     selector:
       matchExpressions:
         - { key: pkg.crossplane.io/revision, operator: Exists }
-    # The `job` label provider metrics land under once scraped. On Stakater Cloud this is
+    # The `job` label provider metrics land under once scraped, used by every
+    # provider-scoped rule expression.
+    #
+    # LEAVE EMPTY to use the PodMonitor this chart ships (`providerPodMonitor` above).
+    # Prometheus-operator derives a PodMonitor's job label as `<namespace>/<name>`, so the
+    # correct value is computed from the rendered object rather than restated here — a
+    # hand-written guess at that string is wrong in a way nothing catches: the rules render
+    # fine and silently match no series. (The previous default, `crossplane-providers`, was
+    # exactly that: a plausible name no PodMonitor ever produces.)
+    #
+    # Set it only when some OTHER scrape already covers the provider pods — then keep
+    # `providerPodMonitor` disabled so the two don't both scrape. On Stakater Cloud clusters
+    # carrying the platform PodMonitor that value is
     # `crossplane-system/crossplane-providers-and-functions`.
-    job: crossplane-providers
+    job: ""
   # Story 4.1 — Composite (XR) inventory & readiness. The leaf-MR metrics above are per-GVK
   # counts that do NOT cover the Composite/Claim layer the customer experiences. That comes
   # from an inventory exporter (resource-state-metrics / ksm-crossplane), which emits a

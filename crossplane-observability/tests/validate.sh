@@ -5,6 +5,8 @@
 #
 # Layers (each fails the script on error):
 #   1. helm lint + template render (Phase 1 defaults AND everything enabled)
+#   1c. scrape/job coherence    — the `job` label each shipped monitor produces is the one
+#                                 the rules actually query (silent-empty-rules guard)
 #   2. promtool check rules     — PromQL parses, rule structure valid
 #   3. promtool test rules      — rule LOGIC fires as intended on synthetic series
 #   4. metric gate              — every referenced metric is in the allowlist; every
@@ -49,7 +51,7 @@ run_kubeconform() {
 }
 
 mkdir -p "$RENDER_DIR"
-trap 'rm -f "${RENDER_DIR}/all.yaml"' EXIT
+trap 'rm -f "${RENDER_DIR}/all.yaml" "${RENDER_DIR}/all-fixedjob.yaml"' EXIT
 
 step "1. helm lint"
 helm lint "$CHART"
@@ -60,8 +62,54 @@ helm template cp "$CHART" >/dev/null && green "renders"
 step "1. helm template (everything enabled)"
 helm template cp "$CHART" "${ALL_FLAGS[@]}" > "${RENDER_DIR}/all.yaml" && green "renders"
 
+step "1c. scrape/job coherence — the monitors this chart ships match the job labels its rules query"
+# Prometheus-operator derives the `job` label from the scrape object, and the rules filter on
+# it: a ServiceMonitor's job is the SERVICE name, a PodMonitor's is `<namespace>/<name>`. Get
+# either wrong and nothing complains — the rules render, validate, parse, and match no series
+# forever. That is exactly how the shipped provider default (`crossplane-providers`, a name no
+# PodMonitor can produce) stayed broken. So assert both couplings on the rendered output.
+python3 - "${RENDER_DIR}/all.yaml" <<'PY'
+import sys, yaml, re
+svcs, pms, jobs = [], [], set()
+for d in yaml.safe_load_all(open(sys.argv[1])):
+    if not d:
+        continue
+    k = d.get("kind")
+    if k == "Service":
+        svcs.append(d["metadata"]["name"])
+    elif k == "PodMonitor":
+        pms.append(d["metadata"]["namespace"] + "/" + d["metadata"]["name"])
+    elif k == "PrometheusRule":
+        for g in d["spec"]["groups"]:
+            for r in g["rules"]:
+                jobs.update(re.findall(r'job="([^"]+)"', r.get("expr", "")))
+fail = []
+for name in svcs:
+    if name not in jobs:
+        fail.append(f'Service/{name} is scraped as job="{name}", which no rule queries')
+for job in pms:
+    if job not in jobs:
+        fail.append(f'PodMonitor job="{job}" is queried by no rule (crossplane.providers.job disagrees)')
+if not svcs or not pms:
+    fail.append(f"expected a Service and a PodMonitor in the all-enabled render, got {len(svcs)}/{len(pms)}")
+if fail:
+    print("\033[31mscrape/job MISMATCH:\033[0m")
+    for f in fail:
+        print("  -", f)
+    print("  jobs queried by rules:", ", ".join(sorted(jobs)))
+    sys.exit(1)
+print(f"\033[32mjob labels coherent: Service {svcs} + PodMonitor {pms} all queried by rules\033[0m")
+PY
+
 step "2/3. merge rendered PrometheusRules for promtool"
-python3 - "${RENDER_DIR}/all.yaml" "${RENDER_DIR}/rules.yaml" <<'PY'
+# Rendered with an EXPLICIT crossplane.providers.job, unlike all.yaml above: left at the
+# default it derives to `<namespace>/<release>-crossplane-observability-providers`, which
+# would pin the unit-test fixtures to this script's release name. The unit tests check rule
+# LOGIC, not scrape wiring — step 1c owns the wiring — so a stable job label is what they
+# want, and pinning it here exercises the override path too.
+helm template cp "$CHART" "${ALL_FLAGS[@]}" \
+  --set crossplane.providers.job=crossplane-providers > "${RENDER_DIR}/all-fixedjob.yaml"
+python3 - "${RENDER_DIR}/all-fixedjob.yaml" "${RENDER_DIR}/rules.yaml" <<'PY'
 import sys, yaml
 src, dst = sys.argv[1], sys.argv[2]
 groups = {}  # name -> rules[]  (merge same-named groups across CRs into one file)
