@@ -22,4 +22,29 @@ spec:
       path: {{ $pm.path }}
       interval: {{ $pm.interval }}
       scrapeTimeout: {{ $pm.scrapeTimeout }}
+      # Promote the package-runtime pod labels to series labels. Without these, every
+      # provider's metrics are distinguishable only by `pod`/`instance` — churning
+      # values that change on every revision roll — so "which provider is failing?"
+      # cannot be asked of the data at all.
+      #
+      # These are not install-specific: Crossplane's package runtime stamps
+      # pkg.crossplane.io/{provider,function,revision} onto every Deployment it builds,
+      # so the same three labels exist on every cluster. They are hardcoded rather than
+      # exposed as a value deliberately — a relabeling knob invites restating a coupling
+      # the chart can derive, which is how the job-label bugs happened.
+      #
+      # `crossplane_provider` in particular is the grouping label operators already
+      # query on (a hand-written provider scrape on Stakater Cloud emits exactly these),
+      # so shipping them lets this PodMonitor replace such a scrape without silently
+      # emptying whatever was built on it.
+      relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_label_pkg_crossplane_io_provider]
+          targetLabel: crossplane_provider
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_label_pkg_crossplane_io_function]
+          targetLabel: crossplane_function
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_label_pkg_crossplane_io_revision]
+          targetLabel: crossplane_revision
 {{- end }}
