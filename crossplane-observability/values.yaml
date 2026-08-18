@@ -133,9 +133,16 @@ grafana:
   instanceSelector:
     matchLabels:
       app: "grafana"
+  # Binds every dashboard panel to a datasource BY NAME. grafana-operator does a plain
+  # string replace of "${inputName}" with datasourceName in the dashboard JSON -- it does
+  # not look the datasource up, so this must match the NAME of a Prometheus datasource that
+  # exists in the target Grafana instance (kubectl get grafanadatasources -A). A wrong name
+  # surfaces as a "Datasource not found" error on every panel, not as an empty dashboard.
+  # Default is the Stakater Cloud convention ("prometheus", pointing at thanos-querier);
+  # override alongside instanceSelector when targeting a Grafana that names it differently.
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "Prometheus"
+      datasourceName: "prometheus"
   dashboard:
     enabled: true
 

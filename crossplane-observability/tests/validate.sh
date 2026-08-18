@@ -12,6 +12,8 @@
 #   4. metric gate              — every referenced metric is in the allowlist; every
 #                                 recording-rule reference resolves (check_metrics.py)
 #   5. dashboard JSON           — valid JSON, unique panel ids
+#   5c. datasource binding      — every querying panel binds to a datasource the CR declares
+#                                 (silent-empty-dashboard guard)
 #   6. kubeconform (strict)    — every object validates against a CRD schema (vendored)
 #
 # promtool/kubeconform run from a local binary if present, else via Docker.
@@ -185,6 +187,63 @@ open(out, "w").write("groups:\n  - name: dashboard.exprs\n    rules:\n" + rules 
 print(f"extracted {len(exprs)} panel queries")
 PY
 run_promtool check rules "${P}/tests/.rendered/dash-exprs.yaml" >/dev/null && green "all panel queries parse"
+
+step "5c. dashboard datasource binding — every querying panel resolves to a declared datasource"
+# A dashboard binds panels to a datasource, and grafana-operator resolves that binding by a
+# blind string replace of "${inputName}" -> spec.datasources[].datasourceName. Nothing looks
+# the datasource up, so an UNBOUND panel silently falls back to whatever Grafana picks first
+# — which on a cluster with two Prometheus datasources is a coin flip, and rendered the whole
+# dashboard "No data" on eu-2 while the metrics were present all along. So assert the binding
+# on the rendered CR + its JSON together: no querying panel may be left to Grafana's choice,
+# and the CR's declared inputs must actually be the ones the JSON uses.
+python3 - "${RENDER_DIR}/all.yaml" <<'PY_DS'
+import sys, yaml, json, re
+dash = None
+for d in yaml.safe_load_all(open(sys.argv[1])):
+    if d and d.get("kind") == "GrafanaDashboard":
+        dash = d
+if dash is None:
+    print("no GrafanaDashboard in the render"); sys.exit(1)
+
+declared = {i["inputName"]: i.get("datasourceName", "") for i in dash["spec"].get("datasources", [])}
+raw = dash["spec"]["json"]
+model = json.loads(raw)
+dsvars = {v["name"] for v in model.get("templating", {}).get("list", []) if v.get("type") == "datasource"}
+
+refs, unbound = set(), []
+def walk(panels, path="panels"):
+    for i, p in enumerate(panels or []):
+        where = f"{path}[{i}] id={p.get('id')} title={p.get('title')!r}"
+        ds = p.get("datasource")
+        queries = bool(p.get("targets"))
+        if isinstance(ds, str):
+            refs.update(re.findall(r"\$\{([^}]+)\}", ds))
+        elif isinstance(ds, dict):
+            refs.update(re.findall(r"\$\{([^}]+)\}", json.dumps(ds)))
+        elif queries:
+            unbound.append(where)
+        walk(p.get("panels"), where)
+walk(model.get("panels", []))
+
+fail = []
+for name in sorted(refs):
+    if name not in declared and name not in dsvars:
+        fail.append(f'panels reference datasource "${{{name}}}", which is neither a spec.datasources inputName nor a datasource template variable')
+for name, value in declared.items():
+    if not value:
+        fail.append(f'spec.datasources input "{name}" has an empty datasourceName')
+    if name not in refs:
+        fail.append(f'spec.datasources declares input "{name}" but no panel uses "${{{name}}}" — the mapping is dead code and panels bind elsewhere')
+for where in unbound:
+    fail.append(f"panel with targets has no datasource, so Grafana picks one: {where}")
+
+if fail:
+    for f in fail:
+        print("  " + f)
+    sys.exit(1)
+print(f"{len(refs)} datasource input(s) bound: " + ", ".join(f"${{{n}}} -> {declared.get(n, '<template var>')}" for n in sorted(refs)))
+PY_DS
+green "every querying panel binds to a declared datasource"
 
 step "6. kubeconform — CRD schema validation (monitors, rules, dashboard)"
 # Strict, NO -ignore-missing-schemas: every rendered object must validate against a schema,

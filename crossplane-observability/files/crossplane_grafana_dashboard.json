@@ -19,23 +19,10 @@
   "templating": {
     "list": [
       {
-        "name": "datasource",
-        "label": "Datasource",
-        "type": "datasource",
-        "query": "prometheus",
-        "current": {},
-        "hide": 0,
-        "refresh": 1,
-        "regex": ""
-      },
-      {
         "name": "gvk",
         "label": "GVK",
         "type": "query",
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
+        "datasource": "${DS_PROMETHEUS}",
         "query": "label_values(crossplane_managed_resource_ready, gvk)",
         "refresh": 2,
         "includeAll": true,
@@ -69,10 +56,7 @@
         "name": "tenant",
         "label": "Tenant (ns)",
         "type": "query",
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
+        "datasource": "${DS_PROMETHEUS}",
         "query": "label_values({__name__=~\"kube_customresource_crossplane_claim_.+_condition\"}, namespace)",
         "refresh": 2,
         "includeAll": true,
@@ -114,10 +98,7 @@
     {
       "type": "stat",
       "title": "Alerts firing",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 6,
         "w": 6,
@@ -160,10 +141,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "count(ALERTS{rulesgroup=\"crossplane\", alertstate=\"firing\"}) or vector(0)"
         }
       ]
@@ -213,10 +191,7 @@
     {
       "type": "stat",
       "title": "Fleet MR Ready ratio",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 6,
@@ -264,10 +239,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "crossplane:managed_resource_ready:ratio:fleet"
         }
       ]
@@ -275,10 +247,7 @@
     {
       "type": "stat",
       "title": "Claim tree p95 time-to-ready",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 6,
@@ -324,10 +293,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "crossplane:claim_tree_ttr_seconds:p95"
         }
       ],
@@ -336,10 +302,7 @@
     {
       "type": "stat",
       "title": "Crossplane API available",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 6,
@@ -392,10 +355,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "1 - max(aggregator_unavailable_apiservice{name=~\".*crossplane.*\"})"
         }
       ]
@@ -403,10 +363,7 @@
     {
       "type": "stat",
       "title": "MRs not ready",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 6,
@@ -452,10 +409,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "sum(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_ready{gvk=~\"$gvk\"}) or vector(0)"
         }
       ]
@@ -475,10 +429,7 @@
     {
       "type": "table",
       "title": "Not-ready / not-synced managed resources (count by GVK)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -494,20 +445,14 @@
           "refId": "A",
           "format": "table",
           "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "sum by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - sum by (gvk) (crossplane_managed_resource_ready{gvk=~\"$gvk\"}) > 0"
         },
         {
           "refId": "B",
           "format": "table",
           "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "sum by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - sum by (gvk) (crossplane_managed_resource_synced{gvk=~\"$gvk\"}) > 0"
         }
       ],
@@ -545,10 +490,7 @@
     {
       "type": "timeseries",
       "title": "Time-to-readiness p50 / p95 / p99 by kind",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -585,28 +527,19 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "p50 {{gvk}}",
           "expr": "histogram_quantile(0.50, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk=~\"$gvk\"}[30m])))"
         },
         {
           "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "p95 {{gvk}}",
           "expr": "crossplane:managed_resource_ttr_seconds:p95"
         },
         {
           "refId": "C",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "p99 {{gvk}}",
           "expr": "histogram_quantile(0.99, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_readiness_seconds_bucket{gvk=~\"$gvk\"}[30m])))"
         }
@@ -627,10 +560,7 @@
     {
       "type": "timeseries",
       "title": "Reconcile rate & error ratio \u2014 top N",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 7,
         "w": 12,
@@ -703,19 +633,13 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{controller}} reconciles/s",
           "expr": "topk(15, sum by (controller) (rate(controller_runtime_reconcile_total{job=~\"$core_job\"}[5m])))"
         },
         {
           "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "error ratio",
           "expr": "topk(15, crossplane:reconcile_errors:ratio)"
         }
@@ -734,10 +658,7 @@
     {
       "type": "timeseries",
       "title": "Reconcile latency p50 / p95 / p99 \u2014 top N",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 7,
         "w": 12,
@@ -774,19 +695,13 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "p50 {{controller}}",
           "expr": "topk(10, histogram_quantile(0.50, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket{job=~\"$core_job\"}[5m]))))"
         },
         {
           "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "p99 {{controller}}",
           "expr": "topk(10, crossplane:reconcile_time_seconds:p99)"
         }
@@ -805,10 +720,7 @@
     {
       "type": "timeseries",
       "title": "Workqueue depth & add rate",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 7,
         "w": 12,
@@ -869,19 +781,13 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "depth {{name}}",
           "expr": "workqueue_depth{job=~\"$core_job\"}"
         },
         {
           "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "adds/s {{name}}",
           "expr": "sum by (name) (rate(workqueue_adds_total{job=~\"$core_job\"}[5m]))"
         }
@@ -890,10 +796,7 @@
     {
       "type": "timeseries",
       "title": "Detection lag p95 \u2014 create\u2192first reconcile \u2014 top N",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 7,
         "w": 12,
@@ -930,10 +833,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "p95 {{gvk}}",
           "expr": "topk(10, histogram_quantile(0.95, sum by (le, gvk) (rate(crossplane_managed_resource_first_time_to_reconcile_seconds_bucket{gvk=~\"$gvk\"}[15m]))))"
         }
@@ -964,10 +864,7 @@
     {
       "type": "timeseries",
       "title": "Time-out-of-sync (drift) by kind",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 7,
         "w": 24,
@@ -1004,10 +901,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{gvk}}",
           "expr": "sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_sum{gvk=~\"$gvk\"}[1h])) / sum by (gvk) (rate(crossplane_managed_resource_drift_seconds_count{gvk=~\"$gvk\"}[1h]))"
         }
@@ -1028,10 +922,7 @@
     {
       "type": "stat",
       "title": "Ready ratio by GVK",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 6,
         "w": 6,
@@ -1079,10 +970,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{gvk}}",
           "expr": "crossplane:managed_resource_ready:ratio"
         }
@@ -1091,10 +979,7 @@
     {
       "type": "timeseries",
       "title": "Circuit-breaker drop ratio (Phase 2)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 6,
         "w": 6,
@@ -1135,10 +1020,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{controller}}",
           "expr": "sum by (controller) (rate(circuit_breaker_events_total{result=\"Dropped\"}[5m])) / clamp_min(sum by (controller) (rate(circuit_breaker_events_total[5m])), 1)"
         }
@@ -1147,10 +1029,7 @@
     {
       "type": "timeseries",
       "title": "Circuit-breaker opens / hr (Phase 2)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 6,
         "w": 6,
@@ -1191,10 +1070,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{controller}}",
           "expr": "sum by (controller) (increase(circuit_breaker_opens_total[1h]))"
         }
@@ -1203,10 +1079,7 @@
     {
       "type": "stat",
       "title": "Composite (XR) ready ratio by kind",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 6,
         "w": 6,
@@ -1255,10 +1128,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{crossplane_kind}}",
           "expr": "sum by (crossplane_kind) ({__name__=~\"kube_customresource_crossplane_xr_.+_condition\", type=\"Ready\", status=\"True\"}) / clamp_min(count by (crossplane_kind) ({__name__=~\"kube_customresource_crossplane_xr_.+_condition\", type=\"Ready\", status=\"True\"}), 1)"
         }
@@ -1279,10 +1149,7 @@
         {
           "type": "timeseries",
           "title": "Function execution p95",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "gridPos": {
             "h": 7,
             "w": 8,
@@ -1319,10 +1186,7 @@
           "targets": [
             {
               "refId": "A",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
+              "datasource": "${DS_PROMETHEUS}",
               "legendFormat": "{{function_name}}",
               "expr": "histogram_quantile(0.95, sum by (le, function_name) (rate(function_run_function_seconds_bucket[5m])))"
             }
@@ -1331,10 +1195,7 @@
         {
           "type": "timeseries",
           "title": "Function error ratio",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "gridPos": {
             "h": 7,
             "w": 8,
@@ -1371,10 +1232,7 @@
           "targets": [
             {
               "refId": "A",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
+              "datasource": "${DS_PROMETHEUS}",
               "legendFormat": "{{function_name}}",
               "expr": "sum by (function_name) (rate(function_run_function_response_total{result_severity=\"Fatal\"}[5m])) / clamp_min(sum by (function_name) (rate(function_run_function_response_total[5m])), 1)"
             }
@@ -1383,10 +1241,7 @@
         {
           "type": "timeseries",
           "title": "Function cache hit ratio",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "gridPos": {
             "h": 7,
             "w": 8,
@@ -1429,10 +1284,7 @@
           "targets": [
             {
               "refId": "A",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
+              "datasource": "${DS_PROMETHEUS}",
               "legendFormat": "hit ratio",
               "expr": "sum(rate(function_run_function_response_cache_hits_total[10m])) / clamp_min(sum(rate(function_run_function_response_cache_hits_total[10m]) + rate(function_run_function_response_cache_misses_total[10m]) + rate(function_run_function_response_cache_errors_total[10m])), 1)"
             }
@@ -1455,10 +1307,7 @@
         {
           "type": "timeseries",
           "title": "Reconcile delay p95 \u2014 top N",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "gridPos": {
             "h": 7,
             "w": 24,
@@ -1495,10 +1344,7 @@
           "targets": [
             {
               "refId": "A",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
+              "datasource": "${DS_PROMETHEUS}",
               "legendFormat": "p95 delay {{kind}}",
               "expr": "topk(10, histogram_quantile(0.95, sum by (le, kind) (rate(upjet_resource_reconcile_delay_seconds_bucket[15m]))))"
             }
@@ -1531,10 +1377,7 @@
     {
       "type": "timeseries",
       "title": "Provider pod restarts",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 7,
         "w": 8,
@@ -1575,10 +1418,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{pod}}",
           "expr": "increase(kube_pod_container_status_restarts_total{pod=~\".*provider.*\"}[1h])"
         }
@@ -1587,10 +1427,7 @@
     {
       "type": "timeseries",
       "title": "Provider memory working set",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 7,
         "w": 8,
@@ -1611,10 +1448,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{pod}}",
           "expr": "sum by (pod) (container_memory_working_set_bytes{pod=~\".*provider.*\", container!=\"\"})"
         }
@@ -1623,10 +1457,7 @@
     {
       "type": "timeseries",
       "title": "Provider CPU throttled %",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 7,
         "w": 8,
@@ -1667,10 +1498,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "{{pod}}",
           "expr": "rate(container_cpu_cfs_throttled_periods_total{pod=~\".*provider.*\", container!=\"\"}[5m]) / clamp_min(rate(container_cpu_cfs_periods_total{pod=~\".*provider.*\", container!=\"\"}[5m]), 1)"
         }
@@ -1691,10 +1519,7 @@
     {
       "type": "stat",
       "title": "Total managed resources",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -1733,10 +1558,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "crossplane:managed_resource:total"
         }
       ]
@@ -1744,10 +1566,7 @@
     {
       "type": "stat",
       "title": "Billable units (XR/Claim)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -1786,10 +1605,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "count({__name__=~\"kube_customresource_crossplane_(xr|claim)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
         }
       ]
@@ -1797,10 +1613,7 @@
     {
       "type": "stat",
       "title": "Distinct kinds in use",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -1839,10 +1652,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "count(crossplane_managed_resource_exists > 0)"
         }
       ]
@@ -1850,10 +1660,7 @@
     {
       "type": "stat",
       "title": "Composites (XRs)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -1892,10 +1699,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "count({__name__=~\"kube_customresource_crossplane_xr_.+_condition\", type=\"Ready\", status=\"True\"})"
         }
       ]
@@ -1903,10 +1707,7 @@
     {
       "type": "stat",
       "title": "Tenants",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -1945,10 +1746,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "count(count by (namespace) ({__name__=~\"kube_customresource_crossplane_xr_.+_condition\", type=\"Ready\", status=\"True\"}))"
         }
       ]
@@ -1956,10 +1754,7 @@
     {
       "type": "table",
       "title": "Managed resources by kind (MRU basis)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -1976,10 +1771,7 @@
           "refId": "A",
           "format": "table",
           "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "sort_desc(crossplane_managed_resource_exists > 0)"
         }
       ]
@@ -1987,10 +1779,7 @@
     {
       "type": "timeseries",
       "title": "Managed resources over time (growth)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -2012,10 +1801,7 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "legendFormat": "total MRs",
           "expr": "crossplane:managed_resource:total"
         }
@@ -2036,10 +1822,7 @@
     {
       "type": "table",
       "title": "Billable units by kind",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
         "w": 8,
@@ -2056,10 +1839,7 @@
           "refId": "A",
           "format": "table",
           "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "count by (crossplane_kind) ({__name__=~\"kube_customresource_crossplane_(xr|claim)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
         }
       ]
@@ -2067,10 +1847,7 @@
     {
       "type": "table",
       "title": "Billable claims by tenant",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
         "w": 8,
@@ -2087,10 +1864,7 @@
           "refId": "A",
           "format": "table",
           "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "count by (namespace) ({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\", namespace=~\"$tenant\"})"
         }
       ]
@@ -2098,10 +1872,7 @@
     {
       "type": "table",
       "title": "Billable claims by tenant & kind",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
         "w": 8,
@@ -2118,10 +1889,7 @@
           "refId": "A",
           "format": "table",
           "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
+          "datasource": "${DS_PROMETHEUS}",
           "expr": "count by (namespace, crossplane_kind) ({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\", namespace=~\"$tenant\"})"
         }
       ]
