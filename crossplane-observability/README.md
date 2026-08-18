@@ -235,6 +235,7 @@ These need cluster/Grafana context an agent can't safely guess:
 | `grafana.compositeAlerts.enabled` | `false` | Story 4.1 composite alerts as **Grafana-managed** rules (use on UWM instead of the PrometheusRule composite alerts). |
 | `grafana.compositeAlerts.datasourceUid` | `""` | **Required when enabled** — UID of the cross-namespace Prometheus/Thanos datasource in Grafana. |
 | `grafana.namespace` | release ns | Namespace to create the GrafanaDashboard in. |
+| `grafana.datasources[0].datasourceName` | `prometheus` | **Name** of the Prometheus datasource in the target Grafana that every panel binds to. grafana-operator string-replaces `${DS_PROMETHEUS}` in the dashboard JSON with this value without looking it up, so it must match a datasource that exists in that instance (`kubectl get grafanadatasources -A`). Override it together with `grafana.instanceSelector` — a Grafana that needs a different selector usually names its datasource differently too (e.g. `Prometheus (UWM)`). A wrong name shows "Datasource not found" on every panel; leaving panels unbound instead lets Grafana pick the first datasource alphabetically, which is how a fully-populated cluster still renders "No data". |
 | `prometheus.monitors.coreMetricsService.enabled` | `false` | Create the headless metrics Service for Crossplane core (upstream ships none, so `coreServiceMonitor` has nothing to select without it). Its name defaults to `crossplane.core.job` — which is what makes the `job` label match — and its labels to `crossplane.core.serviceMonitorSelector.matchLabels`. |
 | `prometheus.monitors.coreMetricsService.selector` | `{app: crossplane}` | Pod labels of the Crossplane core Deployment. Install-agnostic: `app` derives from the upstream chart's name (not the release name) and is unique to core — rbac-manager is `app: crossplane-rbac-manager`, and provider/function pods carry no `app` label. Don't swap in the `app.kubernetes.io/*` labels: core and rbac-manager carry identical values there, and rbac-manager also serves /metrics on 8080. |
 | `prometheus.monitors.coreServiceMonitor.enabled` | `false` | Scrape Crossplane core. |
@@ -293,7 +294,10 @@ Emitted as one `PrometheusRule` (`role: recording-rules`) when
 ## Dashboard
 
 Enabled with `grafana.dashboard.enabled=true`. One row per capability area, with
-`$datasource`, `$namespace`, and `$kind` template variables. Phase 2 and Upjet rows are
+`$gvk`, `$tenant`, `$billable` and `$core_job` template variables. Every panel binds to the
+datasource named by `grafana.datasources[0].datasourceName` (substituted into the JSON as
+`${DS_PROMETHEUS}`), so there is no datasource picker — the binding is explicit rather than
+left to Grafana's default. Phase 2 and Upjet rows are
 **collapsed by default** and render empty until their metrics exist — they "light up" the
 moment you upgrade / enable Upjet, with no dashboard rework.
 
