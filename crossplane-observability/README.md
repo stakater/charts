@@ -87,7 +87,7 @@ override:
 | `crossplane.providers.job` | *empty* → derived from the chart's own PodMonitor | only when another scrape already covers the provider pods, e.g. `crossplane-system/crossplane-providers-and-functions` |
 | `crossplane.core.serviceMonitorSelector` | `{name:crossplane, component:metrics}` | match your metrics Service labels (only if you enable the chart's monitor) |
 | `crossplane.providers.selector` | `pkg.crossplane.io/revision: Exists` | match your provider pods (only if you enable the chart's monitor) |
-| `grafana.instanceSelector` | `{app: grafana}` | your instance's labels, e.g. `{dashboards: crossplane}` |
+| `grafana.instanceSelector` | *empty* → `{app: grafana}` | the COMPLETE selector for your instance, e.g. `{dashboards: crossplane}` |
 
 The `job` values are the important ones — **the alert/recording expressions filter on them**,
 so if they don't match what your Prometheus assigns, rules evaluate to empty. Find them with
@@ -98,10 +98,14 @@ need to set either job value: the core Service is named after `crossplane.core.j
 `crossplane.providers.job` left empty is derived from the PodMonitor the chart renders. Both
 couplings are asserted by `./tests/validate.sh`, so they cannot drift apart silently.
 
-**Grafana gotchas (grafana-operator):** to change `grafana.instanceSelector` you must also null
-the default key, because Helm deep-merges maps — e.g. `--set grafana.instanceSelector.app=null
---set grafana.instanceSelector.dashboards=crossplane`. And `spec.instanceSelector` is
-**immutable**: changing it requires deleting and recreating the `GrafanaDashboard`.
+**Grafana gotchas (grafana-operator):** `grafana.instanceSelector` defaults to *empty* and
+resolves to `{app: grafana}` in the template, so an override REPLACES it — give the complete
+selector for your instance and nothing else is merged in. (Do not null the default key; there is
+no default to null, and a literal `app: null` would render an invalid label.) `matchLabels` is an
+AND, so one stray key means the CR matches no Grafana and the dashboard is never imported —
+silently, since no Grafana ever saw it. `./tests/validate.sh` step 5d asserts the replacement.
+And `spec.instanceSelector` is **immutable**: changing it on a live CR requires deleting and
+recreating it — grafana-operator rejects the patch, which surfaces as a stuck Argo sync.
 
 A ready-to-edit override file for this layout (job labels, Grafana, and wiring the
 `ksm-crossplane` inventory exporter for Story 4.1) is in
@@ -161,8 +165,8 @@ and control-plane stories are unaffected.
 2. Install with the cluster's values (start from
    [docs/values-stakater-cloud-example.yaml](docs/values-stakater-cloud-example.yaml)):
    set `crossplane.core.job` / `crossplane.providers.job`, `grafana.namespace` /
-   `instanceSelector` (with `--set grafana.instanceSelector.app=null` to defeat Helm
-   deep-merge), and the inventory block if used.
+   `instanceSelector` (the complete selector — it replaces the default), and the inventory
+   block if used.
 3. Pick the **composite alerting path** (Story 4.1) — they're mutually exclusive, don't enable both:
    - **OpenShift UWM (the usual case):** `grafana.compositeAlerts.enabled=true` +
      `grafana.compositeAlerts.datasourceUid=<thanos datasource UID>`, and **leave the

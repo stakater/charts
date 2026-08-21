@@ -62,10 +62,12 @@ crossplane:
 # Grafana: target the cluster's Crossplane Grafana instance.
 grafana:
   namespace: crossplane-observability
-  # NOTE: instanceSelector is a map and Helm DEEP-MERGES it, so a -f override that sets
-  # `dashboards: crossplane` would leave the default `app: grafana` in place. Null the default
-  # on the CLI alongside this file:
-  #   --set grafana.instanceSelector.app=null
+  # This REPLACES the chart default: grafana.instanceSelector is empty in values and resolves
+  # to {app: grafana} in the template, so what you write here is exactly what the CRs select.
+  # Give the complete selector — matchLabels is an AND, and one extra key means the CR matches
+  # no Grafana and the dashboard is never imported (silently — no Grafana ever saw the CR).
+  # Do NOT add `app: null`: there is no default to cancel, and the KubeStack addon pipeline
+  # strips nulls with RFC-7386 merge semantics before Helm sees them anyway.
   # Also: spec.instanceSelector is IMMUTABLE — to change it, delete & recreate the GrafanaDashboard.
   instanceSelector:
     matchLabels:

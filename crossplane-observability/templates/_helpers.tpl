@@ -77,3 +77,28 @@ chart's own `providerPodMonitor` should stay disabled.
 {{- printf "%s/%s-providers" (include "crossplane-observability.namespace" .) (include "crossplane-observability.fullname" .) -}}
 {{- end -}}
 {{- end }}
+
+{{/*
+The Grafana instance every CR this chart ships selects.
+
+Unset means the Stakater Cloud convention (`app: grafana`). It is resolved here
+rather than defaulted in values because `instanceSelector` is a MAP, and Helm
+deep-merges maps: a non-empty values default UNIONS with a per-cluster override
+instead of being replaced. Overriding `{dashboards: crossplane}` against a
+default of `{app: grafana}` yields BOTH keys, and `matchLabels` is an AND — so
+the CR selects no Grafana at all and the dashboard silently stops being imported.
+
+Nulling the default key (`app: null`) is not a usable workaround: the KubeStack
+addon pipeline deep-merges a cluster's EnvironmentConfigs with RFC-7386 merge-patch
+semantics, which CONSUMES the null and drops the key before Helm ever sees it —
+so the default is resurrected. Keeping the default out of values is the only form
+that survives both merges.
+*/}}
+{{- define "crossplane-observability.grafana.instanceSelector" -}}
+{{- if .Values.grafana.instanceSelector -}}
+{{- toYaml .Values.grafana.instanceSelector -}}
+{{- else -}}
+matchLabels:
+  app: grafana
+{{- end -}}
+{{- end }}

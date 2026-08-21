@@ -12,7 +12,7 @@ spec:
   folder: {{ .Values.grafana.folder }}
   allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
   instanceSelector:
-    {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}
+    {{- include "crossplane-observability.grafana.instanceSelector" . | nindent 4 }}
   datasources:
     {{ toYaml .Values.grafana.datasources | nindent 3 }}
   json: |-
