@@ -128,11 +128,16 @@ grafana:
   folder: "Crossplane Observability"
   # Let a Grafana instance in another namespace import this dashboard.
   allowCrossNamespaceImport: true
-  # Selects the target Grafana instance. Default matches the Stakater Cloud convention
-  # (app: grafana); override per-cluster if the live instance is labelled differently.
-  instanceSelector:
-    matchLabels:
-      app: "grafana"
+  # Selects the target Grafana instance. LEFT EMPTY ON PURPOSE: unset resolves to the
+  # Stakater Cloud convention (app: grafana) in the template, not here. A default spelled
+  # out in values would DEEP-MERGE with a per-cluster override rather than being replaced
+  # -- setting {dashboards: crossplane} would yield BOTH keys, and matchLabels is an AND,
+  # so the CR would select no Grafana and the dashboard would silently stop being imported.
+  # Override with the COMPLETE selector for the target instance:
+  #   instanceSelector:
+  #     matchLabels:
+  #       dashboards: crossplane
+  instanceSelector: {}
   # Binds every dashboard panel to a datasource BY NAME. grafana-operator does a plain
   # string replace of "${inputName}" with datasourceName in the dashboard JSON -- it does
   # not look the datasource up, so this must match the NAME of a Prometheus datasource that

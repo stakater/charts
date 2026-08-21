@@ -14,6 +14,8 @@
 #   5. dashboard JSON           — valid JSON, unique panel ids
 #   5c. datasource binding      — every querying panel binds to a datasource the CR declares
 #                                 (silent-empty-dashboard guard)
+#   5d. instanceSelector         — an override REPLACES the default instead of unioning with it
+#                                 (silent-unimported-dashboard guard)
 #   6. kubeconform (strict)    — every object validates against a CRD schema (vendored)
 #
 # promtool/kubeconform run from a local binary if present, else via Docker.
@@ -244,6 +246,46 @@ if fail:
 print(f"{len(refs)} datasource input(s) bound: " + ", ".join(f"${{{n}}} -> {declared.get(n, '<template var>')}" for n in sorted(refs)))
 PY_DS
 green "every querying panel binds to a declared datasource"
+
+step "5d. grafana instanceSelector is REPLACEABLE — an override must not union with a default"
+# Every Grafana CR this chart ships selects its instance by `spec.instanceSelector.matchLabels`,
+# which is an AND: one extra key and the CR matches nothing, the dashboard is never imported,
+# and Grafana shows no error because no Grafana ever saw the CR. `instanceSelector` is a MAP, so
+# a non-empty default in values.yaml DEEP-MERGES with a per-cluster override rather than being
+# replaced — a cluster asking for {dashboards: crossplane} would get {app: grafana, dashboards:
+# crossplane}. Nulling the default key does not save it either: the KubeStack addon pipeline
+# merges a cluster's EnvironmentConfigs with RFC-7386 semantics and CONSUMES the null before
+# Helm sees it, resurrecting the default. That is what stuck us-2's addon on 2026-08-20. So
+# assert the property directly on rendered output: an override must come back EXACTLY, on every
+# Grafana kind, and the unset case must still resolve to the Stakater Cloud default.
+python3 - <<'PY_SEL' "$(helm template cp "$CHART" "${ALL_FLAGS[@]}"       --set grafana.instanceSelector.matchLabels.dashboards=crossplane)"     "$(helm template cp "$CHART" "${ALL_FLAGS[@]}")"
+import sys, yaml
+def selectors(rendered):
+    out = {}
+    for d in yaml.safe_load_all(rendered):
+        if d and str(d.get("kind", "")).startswith("Grafana"):
+            out[(d["kind"], d["metadata"]["name"])] = d["spec"].get("instanceSelector")
+    return out
+
+overridden, default = selectors(sys.argv[1]), selectors(sys.argv[2])
+fail = []
+if not overridden:
+    fail.append("no Grafana CRs in the render — this guard would pass vacuously")
+for key, sel in sorted(overridden.items()):
+    want = {"matchLabels": {"dashboards": "crossplane"}}
+    if sel != want:
+        fail.append(f"{key[0]}/{key[1]}: override did not replace the default — got {sel}, want {want}")
+for key, sel in sorted(default.items()):
+    want = {"matchLabels": {"app": "grafana"}}
+    if sel != want:
+        fail.append(f"{key[0]}/{key[1]}: unset selector must resolve to {want}, got {sel}")
+if fail:
+    for f in fail:
+        print("  " + f)
+    sys.exit(1)
+print(f"{len(overridden)} Grafana CR(s): override replaces cleanly, unset resolves to the default")
+PY_SEL
+green "instanceSelector overrides replace the default instead of unioning with it"
 
 step "6. kubeconform — CRD schema validation (monitors, rules, dashboard)"
 # Strict, NO -ignore-missing-schemas: every rendered object must validate against a schema,
