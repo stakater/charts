@@ -1,0 +1,973 @@
+# promtool unit tests for kcp-observability rule LOGIC.
+# Runs against tests/.rendered/rules.yaml (all groups merged, values substituted with
+# chart defaults — job values: shard "root-kcp", front-proxy "frontproxy-front-proxy",
+# etcd "root-client"; helm template renders the release namespace as "default").
+rule_files:
+  - ../.rendered/rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # ---------------------------------------------------------------- Area 1: edge
+  # Front-proxy target down for 2m -> KcpFrontProxyDown fires.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="frontproxy-front-proxy", pod="frontproxy-a"}'
+        values: '0x10'
+      - series: 'up{job="frontproxy-front-proxy", pod="frontproxy-b"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KcpFrontProxyDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              job: frontproxy-front-proxy
+              pod: frontproxy-a
+            exp_annotations:
+              summary: "kcp front-proxy target frontproxy-a is down"
+              description: "The kcp front-proxy is the single entrypoint for every tenant. A down target means reduced or lost control-plane access for all workspaces."
+
+  # 2% edge 5xx (above the 0.5% threshold) sustained -> error-rate alert fires;
+  # and the recording rule computes the right ratio.
+  - interval: 1m
+    input_series:
+      - series: 'proxy_request_duration_seconds_count{job="frontproxy-front-proxy", code="200", method="get"}'
+        values: '0+980x30'
+      - series: 'proxy_request_duration_seconds_count{job="frontproxy-front-proxy", code="500", method="get"}'
+        values: '0+20x30'
+    promql_expr_test:
+      - expr: kcp:front_proxy_error_ratio:rate5m
+        eval_time: 10m
+        exp_samples:
+          - labels: '{__name__="kcp:front_proxy_error_ratio:rate5m"}'
+            value: 0.02
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: KcpFrontProxyErrorRateHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+            exp_annotations:
+              summary: "kcp edge 5xx ratio is 2%"
+              description: "5xx responses at the front-proxy are customer-visible: tenants' kubectl/API calls are failing at the edge."
+
+  # Healthy edge (0.1% 5xx, below threshold) -> no alert.
+  - interval: 1m
+    input_series:
+      - series: 'proxy_request_duration_seconds_count{job="frontproxy-front-proxy", code="200", method="get"}'
+        values: '0+999x30'
+      - series: 'proxy_request_duration_seconds_count{job="frontproxy-front-proxy", code="500", method="get"}'
+        values: '0+1x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: KcpFrontProxyErrorRateHigh
+        exp_alerts: []
+
+  # ---------------------------------------------------------------- Area 2: shard
+  # Shard 5xx ratio 5% (above 1%) sustained -> fires with the shard's job label.
+  - interval: 1m
+    input_series:
+      - series: 'apiserver_request_total{job="root-kcp", code="200", verb="GET"}'
+        values: '0+950x30'
+      - series: 'apiserver_request_total{job="root-kcp", code="500", verb="GET"}'
+        values: '0+50x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: KcpShardErrorRateHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: root-kcp
+            exp_annotations:
+              summary: "kcp shard root-kcp 5xx ratio is 5%"
+              description: "A shard 5xx-ing predicts customer-facing failures for the workspaces it serves."
+
+  # APF rejecting -> fires.
+  - interval: 1m
+    input_series:
+      - series: 'apiserver_flowcontrol_rejected_requests_total{job="root-kcp", flow_schema="x", priority_level="global-default"}'
+        values: '0+10x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpShardAPFRejecting
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: root-kcp
+            exp_annotations:
+              summary: "kcp shard root-kcp is rejecting requests via API Priority and Fairness"
+              description: "Sustained APF rejections mean the shard is saturated and shedding load — requests are being refused."
+
+  # ---------------------------------------------------------------- Area 3: etcd
+  # No leader for 1m -> critical. Only the etcd container's gauge counts: the
+  # etcd-backup-restore sidecar exports its own etcd_server_has_leader that is
+  # always 0 (seen live on us-2 — all 3 members "leaderless" while etcd was fine),
+  # so a junk sidecar series must NOT fire.
+  - interval: 1m
+    input_series:
+      - series: 'etcd_server_has_leader{job="root-client", pod="root-0", container="etcd"}'
+        values: '0x10'
+      - series: 'etcd_server_has_leader{job="root-client", pod="root-1", container="etcd"}'
+        values: '1x10'
+      - series: 'etcd_server_has_leader{job="root-client", pod="root-1", container="backup-restore"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: KcpEtcdNoLeader
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              job: root-client
+              pod: root-0
+              container: etcd
+            exp_annotations:
+              summary: "kcp etcd member root-0 has no leader"
+              description: "etcd without a leader means the kcp control plane cannot write — a hard outage. Check quorum (2/3 members must be healthy)."
+
+  # DB at 85% of quota -> warning fires; at 96% -> critical fires too.
+  - interval: 1m
+    input_series:
+      - series: 'etcd_mvcc_db_total_size_in_bytes{job="root-client", pod="root-0"}'
+        values: '850x30'
+      - series: 'etcd_server_quota_backend_bytes{job="root-client", pod="root-0"}'
+        values: '1000x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpEtcdDBSizeHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: root-client
+              pod: root-0
+            exp_annotations:
+              summary: "kcp etcd DB at 85% of quota"
+              description: "Approaching the backend quota. At 100% etcd goes into a read-only alarm — a self-inflicted total outage. Consider compaction/defrag or a larger quota."
+      - eval_time: 20m
+        alertname: KcpEtcdDBSizeCritical
+        exp_alerts: []
+
+  # Backups: last Full snapshot 27h old (26h budget) -> critical. Series value is the
+  # snapshot's unix timestamp; in promtool, time() at eval equals seconds since t=0,
+  # so a value of 0 evaluated at 27h is 27h old. Incr snapshot kept fresh by tracking
+  # eval time (value = its own timestamp). 1m resolution so the 5m instant-selector
+  # lookback always finds a sample and `for:` never resets.
+  # Only the SNAPSHOTTING member's sidecar has fresh timestamps — the other members
+  # report their own last-leadership snapshot times (seen live on us-2: cluster
+  # snapshot 5min old, two followers "stale" by days). The alert takes the cluster
+  # max, so pod root-1's stale Full series here must NOT make it fire.
+  - interval: 1m
+    input_series:
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Full", pod="root-0"}'
+        values: '0x1700'
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Incr", pod="root-0"}'
+        values: '0+60x1700'
+    alert_rule_test:
+      - eval_time: 27h
+        alertname: KcpEtcdBackupStale
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              job: root-client
+              kind: Full
+            exp_annotations:
+              summary: "kcp etcd backups are stale (Full snapshot too old)"
+              description: "A control plane without a recent backup is one incident away from unrecoverable. Check the etcd-backup-restore sidecar and the backup bucket."
+
+  # Cluster-latest snapshot fresh on one member -> stale timestamps on the other
+  # members must NOT fire.
+  - interval: 1m
+    input_series:
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Full", pod="root-0"}'
+        values: '0x1700'
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Full", pod="root-1"}'
+        values: '0+60x1700'
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Incr", pod="root-0"}'
+        values: '0+60x1700'
+    alert_rule_test:
+      - eval_time: 27h
+        alertname: KcpEtcdBackupStale
+        exp_alerts: []
+
+  # ------------------------------------------------------- Area 4: workspaces
+  # Workspaces and logical clusters alert SEPARATELY (team feedback: a combined
+  # "10 workspaces not ready" was actually 0 workspaces + 10 logical clusters —
+  # the alert must name the resource that is stuck).
+  # TWO REPLICAS with DISAGREEING values (seen live: leader 108, follower 27 — only
+  # the controller-leader has the full informer index): the rule must take the
+  # leader's max, NOT sum across pods.
+  # Case A: 9 workspaces stuck (leader view), logical clusters fine -> only the
+  # workspace alert fires, and says "workspaces".
+  - interval: 1m
+    input_series:
+      - series: 'kcp_workspace_count{phase="Ready", shard="root", pod="root-kcp-a"}'
+        values: '100x30'
+      - series: 'kcp_workspace_count{phase="Ready", shard="root", pod="root-kcp-b"}'
+        values: '27x30'
+      - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
+        values: '9x30'
+      - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '2x30'
+      - series: 'kcp_logicalcluster_count{phase="Ready", shard="root", pod="root-kcp-a"}'
+        values: '100x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpWorkspacesStuck
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              shard: root
+            exp_annotations:
+              summary: "9 kcp workspaces are not Ready on shard root"
+              description: "Workspaces sitting in Scheduling/Initializing/Unavailable beyond the baseline are tenants who cannot work. kcp v0.32.1 count gauges are UNRELIABLE in absolute terms (verified 2026-07-16: etcd truth 2 stuck logical clusters, metric said 10; replicas disagree with etcd and each other) — ALWAYS verify via the runbook before acting, which also identifies WHICH workspaces are stuck. Baseline is calibrated per cluster."
+              runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters"
+      - eval_time: 20m
+        alertname: KcpLogicalClustersStuck
+        exp_alerts: []
+
+  # Case B: the us-2 reality — workspaces all Ready, 10 logical clusters stuck in
+  # Scheduling -> only the logical-cluster alert fires, and says "logical clusters".
+  - interval: 1m
+    input_series:
+      - series: 'kcp_workspace_count{phase="Ready", shard="root", pod="root-kcp-a"}'
+        values: '135x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
+        values: '10x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpLogicalClustersStuck
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              shard: root
+            exp_annotations:
+              summary: "10 kcp logical clusters are not Ready on shard root"
+              description: "Logical clusters (the per-workspace kcp primitive) stuck outside Ready. kcp v0.32.1 count gauges are UNRELIABLE in absolute terms (verified 2026-07-16: etcd truth 2 stuck logical clusters, metric said 10; replicas disagree with etcd and each other) — ALWAYS verify via the runbook before acting, which also identifies WHICH logical clusters are stuck. Baseline is calibrated per cluster (us-2 has a standing Scheduling count — SRE finding F2)."
+              runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-identifying-stuck-workspaces-and-logical-clusters"
+      - eval_time: 20m
+        alertname: KcpWorkspacesStuck
+        exp_alerts: []
+
+  # At exactly the baseline (8) -> must NOT fire — even though the naive per-pod SUM
+  # across the two replicas (8+5=13) would breach it. Guards the max-not-sum semantics.
+  - interval: 1m
+    input_series:
+      - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
+        values: '8x30'
+      - series: 'kcp_workspace_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '5x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-a"}'
+        values: '8x30'
+      - series: 'kcp_logicalcluster_count{phase="Scheduling", shard="root", pod="root-kcp-b"}'
+        values: '5x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpWorkspacesStuck
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: KcpLogicalClustersStuck
+        exp_alerts: []
+
+  # ------------------------------------------------- Area 5: bindings/exports
+  # 3 bindings with Ready=False -> fires (leader max across disagreeing replicas,
+  # summary must say 3 — not the pod-sum 4).
+  - interval: 1m
+    input_series:
+      - series: 'kcp_apibinding_condition_status{condition="Ready", status="True", shard="root", pod="root-kcp-a"}'
+        values: '805x30'
+      - series: 'kcp_apibinding_condition_status{condition="Ready", status="False", shard="root", pod="root-kcp-a"}'
+        values: '3x30'
+      - series: 'kcp_apibinding_condition_status{condition="Ready", status="False", shard="root", pod="root-kcp-b"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpAPIBindingNotReady
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              shard: root
+            exp_annotations:
+              summary: "3 APIBindings not Ready on shard root"
+              description: "A tenant's bound API silently disappears when its APIBinding degrades — their kubectl just stops listing the resource. Find the bindings via the kcp API."
+
+  # An APIExport with IdentityValid=False -> critical (high blast radius).
+  # TWO REPLICAS with disagreeing values: the leader's full informer view sees 2
+  # degraded, the follower's partial view only 1 — max-not-sum must report the
+  # leader's 2, not the pod-sum 3 (audit finding: the firing test previously never
+  # exercised the replica path). The count is "~" because False and Unknown states
+  # are counted independently.
+  - interval: 1m
+    input_series:
+      - series: 'kcp_apiexport_condition_status{condition="IdentityValid", status="False", shard="root", pod="root-kcp-a"}'
+        values: '2x30'
+      - series: 'kcp_apiexport_condition_status{condition="IdentityValid", status="False", shard="root", pod="root-kcp-b"}'
+        values: '1x30'
+      - series: 'kcp_apiexport_condition_status{condition="IdentityValid", status="True", shard="root", pod="root-kcp-a"}'
+        values: '59x30'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KcpAPIExportNotValid
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              shard: root
+              condition: IdentityValid
+            exp_annotations:
+              summary: "~2 APIExports degraded (IdentityValid) on shard root"
+              description: "An invalid APIExport breaks every tenant bound to it at once — the highest blast radius on the platform (hundreds of bindings per export). The count is approximate (False and Unknown states are counted independently)."
+
+  # All export conditions True -> must NOT fire.
+  - interval: 1m
+    input_series:
+      - series: 'kcp_apiexport_condition_status{condition="IdentityValid", status="True", shard="root", pod="root-kcp-a"}'
+        values: '60x30'
+      - series: 'kcp_apiexport_condition_status{condition="IdentityValid", status="False", shard="root", pod="root-kcp-a"}'
+        values: '0x30'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KcpAPIExportNotValid
+        exp_alerts: []
+
+  # ------------------------------------------------- Area 6: controllers
+  # A kcp-* queue backing up ON EVERY REPLICA fires; a non-kcp queue at the same
+  # depth must NOT. The rule takes min across replicas: the non-leader never runs
+  # workers, so its queues grow unboundedly (seen live on us-2 — follower at 202
+  # while the leader sat at 0). A follower-only backlog must NOT fire; the min is
+  # the leader's (actively drained) depth.
+  - interval: 1m
+    input_series:
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-apibinding", pod="root-kcp-a"}'
+        values: '50x30'
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-apibinding", pod="root-kcp-b"}'
+        values: '80x30'
+      - series: 'workqueue_depth{job="root-kcp", name="garbage_collector_graph_changes", pod="root-kcp-a"}'
+        values: '50x30'
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-permissionclaimlabel", pod="root-kcp-a"}'
+        values: '0x30'
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-permissionclaimlabel", pod="root-kcp-b"}'
+        values: '200x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpControllerQueueBacklog
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: root-kcp
+              name: kcp-apibinding
+            exp_annotations:
+              summary: "kcp controller kcp-apibinding queue depth at 50"
+              description: "A growing kcp controller workqueue is the earliest sign workspace/binding reconciliation is falling behind."
+
+  # ------------------------------------------------- Area 7: syncagents
+  # Agent target down -> fires (up==0 branch).
+  - interval: 1m
+    input_series:
+      - series: 'up{job="kcp-syncagent", pod="services-compute.cloud.stakater.com-abc-xyz12", service_agent="services-compute.cloud.stakater.com"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: KcpSyncAgentDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              job: kcp-syncagent
+              pod: services-compute.cloud.stakater.com-abc-xyz12
+              service_agent: services-compute.cloud.stakater.com
+            exp_annotations:
+              summary: "SCO service agent services-compute.cloud.stakater.com is down or has no leader"
+              description: "A dead service agent means that service's tenant claims silently stop syncing to the underlying clusters."
+
+  # ------------------------------------------------- Area 8: footprint
+  # 12 restarts/hour (>3) -> fires. Steady 1-restart-per-5m slope so increase() is
+  # exact (samples sit on the window edges — no extrapolation artifacts in $value).
+  # (rendered namespace is "default")
+  - interval: 5m
+    input_series:
+      - series: 'kube_pod_container_status_restarts_total{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '0+1x14'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: KcpPodRestarting
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              namespace: default
+              pod: root-kcp-abc-x1
+              container: kcp
+            exp_annotations:
+              summary: "kcp pod root-kcp-abc-x1 restarted 12 times in the last hour"
+              description: "A crash-looping control-plane component is both cause and symptom of an outage. NOTE: syncagents have a standing restart baseline on us-2 — calibrate before paging."
+
+  # ======================================================================
+  # Coverage closure (audit 2026-07-13): every alert gets BOTH a firing and
+  # a must-NOT-fire case — all three live false positives (and the two
+  # never-fire bugs) lived in the gap between those two assertions.
+  # ======================================================================
+
+  # --- Area 1: front-proxy ----------------------------------------------
+  # Healthy edge -> neither Down nor LatencyHigh fires.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="frontproxy-front-proxy", pod="frontproxy-a"}'
+        values: '1x40'
+      - series: 'kcp:front_proxy_latency_seconds:p95{job="frontproxy-front-proxy"}'
+        values: '0.2x40'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: KcpFrontProxyDown
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: KcpFrontProxyLatencyHigh
+        exp_alerts: []
+
+  # Edge p95 above the 1s SLO for 30m -> warning.
+  - interval: 1m
+    input_series:
+      - series: 'kcp:front_proxy_latency_seconds:p95{job="frontproxy-front-proxy"}'
+        values: '2x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpFrontProxyLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: frontproxy-front-proxy
+            exp_annotations:
+              summary: "kcp edge p95 latency is 2s"
+              description: "Sustained high latency at the front-proxy degrades every tenant interaction with the control plane."
+
+  # --- Area 2: shard ------------------------------------------------------
+  # Shard target down 2m -> critical; healthy shard stays quiet.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-kcp", pod="root-kcp-a"}'
+        values: '0x10'
+      - series: 'up{job="root-kcp", pod="root-kcp-b"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: KcpShardDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              job: root-kcp
+              pod: root-kcp-a
+            exp_annotations:
+              summary: "kcp shard target root-kcp-a is down"
+              description: "A down shard takes out exactly the workspaces scheduled to it while the rest of the platform looks healthy."
+
+  # Shard read p99 above SLO 30m -> warning; healthy latency + error ratio quiet.
+  - interval: 1m
+    input_series:
+      - series: 'kcp:shard_latency_seconds:read_p99{job="root-kcp"}'
+        values: '2x40'
+      - series: 'kcp:shard_latency_seconds:write_p99{job="root-kcp"}'
+        values: '0.2x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpShardLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: root-kcp
+            exp_annotations:
+              summary: "kcp shard root-kcp p99 request latency is 2s"
+              description: "Shard request latency above the apiserver SLO — tenants experience a slow control plane before anything visibly fails."
+
+  - interval: 1m
+    input_series:
+      - series: 'kcp:shard_latency_seconds:read_p99{job="root-kcp"}'
+        values: '0.2x40'
+      - series: 'kcp:shard_latency_seconds:write_p99{job="root-kcp"}'
+        values: '0.2x40'
+      - series: 'kcp:shard_error_ratio:rate5m{job="root-kcp"}'
+        values: '0.001x40'
+      - series: 'apiserver_flowcontrol_rejected_requests_total{job="root-kcp", pod="root-kcp-a"}'
+        values: '5x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpShardLatencyHigh
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: KcpShardErrorRateHigh
+        exp_alerts: []
+      # rejected counter present but FLAT (rate 0) -> APF alert must stay quiet.
+      - eval_time: 15m
+        alertname: KcpShardAPFRejecting
+        exp_alerts: []
+
+  # A resource crossing the stored-objects capacity line -> warning; normal counts quiet.
+  - interval: 1m
+    input_series:
+      - series: 'apiserver_storage_objects{job="root-kcp", resource="workspaces.tenancy.kcp.io"}'
+        values: '20000x40'
+      - series: 'apiserver_storage_objects{job="root-kcp", resource="apibindings.apis.kcp.io"}'
+        values: '800x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpShardStorageObjectsHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: root-kcp
+              resource: workspaces.tenancy.kcp.io
+            exp_annotations:
+              summary: "kcp stored objects for workspaces.tenancy.kcp.io at 20000"
+              description: "Unbounded growth of a stored resource is a slow burn toward etcd pressure and latency; check what is creating them."
+
+  # --- Area 3: etcd -------------------------------------------------------
+  # DB at 96% -> DBSizeCritical fires (the 85% case already asserts it stays
+  # quiet below the critical line); healthy 50% keeps both size alerts quiet.
+  - interval: 1m
+    input_series:
+      - series: 'kcp:etcd_db_used_ratio{job="root-client", pod="root-0"}'
+        values: '0.96x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: KcpEtcdDBSizeCritical
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              job: root-client
+              pod: root-0
+            exp_annotations:
+              summary: "kcp etcd DB at 96% of quota — read-only alarm imminent"
+              description: "etcd is about to hit its space quota and become read-only. Act now: defrag, compact, or raise the quota."
+
+  - interval: 1m
+    input_series:
+      - series: 'kcp:etcd_db_used_ratio{job="root-client", pod="root-0"}'
+        values: '0.5x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpEtcdDBSizeHigh
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: KcpEtcdDBSizeCritical
+        exp_alerts: []
+
+  # fsync p99 above the 10ms budget 15m -> warning; healthy disk quiet.
+  - interval: 1m
+    input_series:
+      - series: 'kcp:etcd_fsync_seconds:p99{pod="root-0"}'
+        values: '0.02x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: KcpEtcdDiskSlow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              pod: root-0
+            exp_annotations:
+              summary: "kcp etcd disk p99 latency on root-0 is 20ms"
+              description: "Rising fsync/backend-commit latency is the canonical precursor to control-plane-wide slowness."
+
+  - interval: 1m
+    input_series:
+      - series: 'kcp:etcd_fsync_seconds:p99{pod="root-0"}'
+        values: '0.005x20'
+      - series: 'kcp:etcd_commit_seconds:p99{pod="root-0"}'
+        values: '0.01x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: KcpEtcdDiskSlow
+        exp_alerts: []
+
+  # Leader churn: 60 elections/hour -> warning; a stable leader (flat counter) quiet.
+  - interval: 1m
+    input_series:
+      - series: 'etcd_server_leader_changes_seen_total{job="root-client", pod="root-0", container="etcd"}'
+        values: '0+1x120'
+    alert_rule_test:
+      - eval_time: 90m
+        alertname: KcpEtcdLeaderChangesHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: root-client
+              pod: root-0
+              container: etcd
+            exp_annotations:
+              summary: "kcp etcd saw 60 leader changes in the last hour"
+              description: "Frequent elections indicate disk or network trouble under etcd; expect intermittent write stalls."
+
+  - interval: 1m
+    input_series:
+      - series: 'etcd_server_leader_changes_seen_total{job="root-client", pod="root-0", container="etcd"}'
+        values: '45x120'
+      - series: 'etcd_server_has_leader{job="root-client", pod="root-0", container="etcd"}'
+        values: '1x120'
+    alert_rule_test:
+      - eval_time: 90m
+        alertname: KcpEtcdLeaderChangesHigh
+        exp_alerts: []
+      # healthy has-leader must keep NoLeader quiet (explicit no-fire).
+      - eval_time: 5m
+        alertname: KcpEtcdNoLeader
+        exp_alerts: []
+
+  # --- Area 5: bindings ---------------------------------------------------
+  # All bindings Ready (zero-valued False series present) -> NotReady quiet.
+  - interval: 1m
+    input_series:
+      - series: 'kcp_apibinding_condition_status{condition="Ready", status="False", shard="root", pod="root-kcp-a"}'
+        values: '0x30'
+      - series: 'kcp_apibinding_condition_status{condition="Ready", status="True", shard="root", pod="root-kcp-a"}'
+        values: '800x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpAPIBindingNotReady
+        exp_alerts: []
+
+  # Binding time-to-ready p95 above the 5000ms budget 30m -> warning; fast quiet.
+  # (Feeds the recorded series directly — the alert's contract is the series.)
+  - interval: 1m
+    input_series:
+      - series: 'kcp:apibinding_ttr_ms:p95{shard="root"}'
+        values: '6000x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpAPIBindingSlow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              shard: root
+            exp_annotations:
+              summary: "APIBinding p95 time-to-ready is 6000ms on shard root"
+              description: "Slow binding is slow tenant onboarding — binding an API into a workspace is a core first-use step."
+
+  - interval: 1m
+    input_series:
+      - series: 'kcp:apibinding_ttr_ms:p95{shard="root"}'
+        values: '2000x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpAPIBindingSlow
+        exp_alerts: []
+
+  # --- Area 6: controllers -------------------------------------------------
+  # Work landing beyond the top finite bucket (le=10) -> p99 pins at 10s > 5s
+  # threshold -> fires. This is the case that proved the old ">= 10" threshold
+  # unsatisfiable: histogram_quantile can NEVER exceed the top finite bucket.
+  - interval: 1m
+    input_series:
+      - series: 'workqueue_work_duration_seconds_bucket{job="root-kcp", name="kcp-apibinding", le="1"}'
+        values: '0x40'
+      - series: 'workqueue_work_duration_seconds_bucket{job="root-kcp", name="kcp-apibinding", le="10"}'
+        values: '0x40'
+      - series: 'workqueue_work_duration_seconds_bucket{job="root-kcp", name="kcp-apibinding", le="+Inf"}'
+        values: '0+10x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpControllerProcessingSlow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              job: root-kcp
+              name: kcp-apibinding
+            exp_annotations:
+              summary: "kcp controller kcp-apibinding p99 work duration is 10s"
+              description: "Slow controller processing stretches workspace/binding readiness before queues visibly back up."
+
+  # All work completing within 1s -> quiet.
+  - interval: 1m
+    input_series:
+      - series: 'workqueue_work_duration_seconds_bucket{job="root-kcp", name="kcp-apibinding", le="1"}'
+        values: '0+10x40'
+      - series: 'workqueue_work_duration_seconds_bucket{job="root-kcp", name="kcp-apibinding", le="10"}'
+        values: '0+10x40'
+      - series: 'workqueue_work_duration_seconds_bucket{job="root-kcp", name="kcp-apibinding", le="+Inf"}'
+        values: '0+10x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpControllerProcessingSlow
+        exp_alerts: []
+
+  # All queues drained on every replica -> backlog quiet (explicit no-fire).
+  - interval: 1m
+    input_series:
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-apibinding", pod="root-kcp-a"}'
+        values: '5x30'
+      - series: 'workqueue_depth{job="root-kcp", name="kcp-apibinding", pod="root-kcp-b"}'
+        values: '5x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpControllerQueueBacklog
+        exp_alerts: []
+
+  # --- Area 7: syncagents ---------------------------------------------------
+  # Agent client 5xx ratio at 10% for 15m -> warning; 1% quiet. Healthy up+leader
+  # keeps SyncAgentDown quiet (explicit no-fire for both branches).
+  - interval: 1m
+    input_series:
+      - series: 'rest_client_requests_total{job="kcp-syncagent", service_agent="services-compute.cloud.stakater.com", code="500"}'
+        values: '0+10x30'
+      - series: 'rest_client_requests_total{job="kcp-syncagent", service_agent="services-compute.cloud.stakater.com", code="200"}'
+        values: '0+90x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpSyncAgentClientErrors
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              service_agent: services-compute.cloud.stakater.com
+            exp_annotations:
+              summary: "SCO service agent services-compute.cloud.stakater.com client error ratio at 10%"
+              description: "The agent is failing to talk to kcp or the workload cluster; syncing degrades silently."
+
+  - interval: 1m
+    input_series:
+      - series: 'rest_client_requests_total{job="kcp-syncagent", service_agent="services-compute.cloud.stakater.com", code="500"}'
+        values: '0+1x30'
+      - series: 'rest_client_requests_total{job="kcp-syncagent", service_agent="services-compute.cloud.stakater.com", code="200"}'
+        values: '0+99x30'
+      - series: 'up{job="kcp-syncagent", service_agent="services-compute.cloud.stakater.com", pod="services-compute-x"}'
+        values: '1x30'
+      - series: 'leader_election_master_status{job="kcp-syncagent", service_agent="services-compute.cloud.stakater.com", pod="services-compute-x"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KcpSyncAgentClientErrors
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: KcpSyncAgentDown
+        exp_alerts: []
+
+  # --- Area 8: footprint -----------------------------------------------------
+  # Pod throttled 10% of CFS periods 30m -> warning; 2% quiet.
+  - interval: 1m
+    input_series:
+      - series: 'container_cpu_cfs_throttled_periods_total{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '0+10x40'
+      - series: 'container_cpu_cfs_periods_total{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '0+100x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpPodCPUThrottled
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              pod: root-kcp-abc-x1
+              container: kcp
+            exp_annotations:
+              summary: "kcp pod root-kcp-abc-x1 CPU-throttled 10% of periods"
+              description: "A throttled apiserver/proxy is a slow one. Raise the CPU limit or reduce load."
+
+  - interval: 1m
+    input_series:
+      - series: 'container_cpu_cfs_throttled_periods_total{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '0+2x40'
+      - series: 'container_cpu_cfs_periods_total{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '0+100x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpPodCPUThrottled
+        exp_alerts: []
+
+  # Working set at 95% of the memory limit 30m -> warning; 50% quiet.
+  - interval: 1m
+    input_series:
+      - series: 'container_memory_working_set_bytes{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '950x40'
+      - series: 'kube_pod_container_resource_limits{namespace="default", pod="root-kcp-abc-x1", container="kcp", resource="memory"}'
+        values: '1000x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpPodMemoryHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              pod: root-kcp-abc-x1
+              container: kcp
+            exp_annotations:
+              summary: "kcp pod root-kcp-abc-x1 at 95% of its memory limit"
+              description: "Working set near the limit precedes an OOMKill of a control-plane component."
+
+  - interval: 1m
+    input_series:
+      - series: 'container_memory_working_set_bytes{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '500x40'
+      - series: 'kube_pod_container_resource_limits{namespace="default", pod="root-kcp-abc-x1", container="kcp", resource="memory"}'
+        values: '1000x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpPodMemoryHigh
+        exp_alerts: []
+
+  # OOMKilled + a recent restart -> critical immediately (no for:); an OLD OOM
+  # with no recent restart must NOT re-page.
+  - interval: 1m
+    input_series:
+      - series: 'kube_pod_container_status_last_terminated_reason{namespace="default", pod="root-kcp-abc-x1", container="kcp", reason="OOMKilled"}'
+        values: '1x40'
+      - series: 'kube_pod_container_status_restarts_total{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '0+1x40'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: KcpPodOOMKilled
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              pod: root-kcp-abc-x1
+              container: kcp
+            exp_annotations:
+              summary: "kcp pod root-kcp-abc-x1 was OOMKilled"
+              description: "The container exceeded its memory limit. Raise the limit or find the leak (see the memory/goroutine panels)."
+
+  - interval: 1m
+    input_series:
+      - series: 'kube_pod_container_status_last_terminated_reason{namespace="default", pod="root-kcp-abc-x1", container="kcp", reason="OOMKilled"}'
+        values: '1x60'
+      - series: 'kube_pod_container_status_restarts_total{namespace="default", pod="root-kcp-abc-x1", container="kcp"}'
+        values: '5x60'
+    alert_rule_test:
+      - eval_time: 50m
+        alertname: KcpPodOOMKilled
+        exp_alerts: []
+      # flat restart counter also keeps PodRestarting quiet.
+      - eval_time: 50m
+        alertname: KcpPodRestarting
+        exp_alerts: []
+
+  # Healthy shard targets + normal object counts -> both shard alerts quiet.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-kcp", pod="root-kcp-a"}'
+        values: '1x10'
+      - series: 'apiserver_storage_objects{job="root-kcp", resource="workspaces.tenancy.kcp.io"}'
+        values: '200x40'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KcpShardDown
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: KcpShardStorageObjectsHigh
+        exp_alerts: []
+
+  # ------------------------------------------------- Watchdog (blindness guard)
+  # Shard targets VANISHED (no up series at all for the job) while other layers
+  # still report -> only the shard watchdog fires. This is the case no up==0
+  # alert can catch: it fires on ABSENCE, not failure.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="frontproxy-front-proxy", pod="frontproxy-a"}'
+        values: '1x20'
+      - series: 'up{job="root-client", pod="root-0"}'
+        values: '1x20'
+      - series: 'up{job="kcp-syncagent", pod="services-compute-x", service_agent="services-compute.cloud.stakater.com"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KcpMetricsAbsent
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: kcp
+              target: shard
+            exp_annotations:
+              summary: "Monitoring is blind: no shard scrape targets exist"
+              description: "up{job=~\".*-kcp\"} has NO series — the targets have vanished (monitor deleted, label-selector drift, relabel bug, or cert rot), which no up==0 alert can catch. Every shard alert is silently disarmed until this is fixed; the platform may look green because nothing is measured."
+
+  # All four layers scraping (even if some targets are DOWN — up==0 still exists)
+  # -> the watchdog stays quiet; down-ness is the *Down alerts' job.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-kcp", pod="root-kcp-a"}'
+        values: '0x20'
+      - series: 'up{job="frontproxy-front-proxy", pod="frontproxy-a"}'
+        values: '1x20'
+      - series: 'up{job="root-client", pod="root-0"}'
+        values: '1x20'
+      - series: 'up{job="kcp-syncagent", pod="services-compute-x", service_agent="services-compute.cloud.stakater.com"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KcpMetricsAbsent
+        exp_alerts: []
+
+  # ------------------------------------------------- etcd membership (audit F6)
+  # A DEAD member produces ABSENT metrics — no metric-value alert can see it
+  # (proven live: root-2 sat in CreateContainerError for 3 days, quorum intact,
+  # nothing fired). MembersDown counts healthy scrapes on the etcd container.
+  # 2 of 3 healthy -> critical, value = healthy count. The backup-restore
+  # container's up series must NOT count.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-client", container="etcd", pod="root-0"}'
+        values: '1x20'
+      - series: 'up{job="root-client", container="etcd", pod="root-1"}'
+        values: '1x20'
+      - series: 'up{job="root-client", container="etcd", pod="root-2"}'
+        values: '0x20'
+      - series: 'up{job="root-client", container="backup-restore", pod="root-2"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: KcpEtcdMembersDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+            exp_annotations:
+              summary: "kcp etcd has 2 healthy members (expected 3)"
+              description: "Quorum may still hold, but failure tolerance is reduced — at 2/3 one more loss is a full control-plane outage. Covers dead containers, dead scrapes, and vanished members alike (all produce a missing/failed up series). Check `kubectl -n <ns> get pods -l app.kubernetes.io/managed-by=etcd-druid` and the member's PVC."
+
+  # ALL etcd-container targets vanished -> the `or vector(0)` keeps the expr
+  # alive and it fires with 0 healthy (count() alone over empty is empty).
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-client", container="backup-restore", pod="root-0"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: KcpEtcdMembersDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+            exp_annotations:
+              summary: "kcp etcd has 0 healthy members (expected 3)"
+              description: "Quorum may still hold, but failure tolerance is reduced — at 2/3 one more loss is a full control-plane outage. Covers dead containers, dead scrapes, and vanished members alike (all produce a missing/failed up series). Check `kubectl -n <ns> get pods -l app.kubernetes.io/managed-by=etcd-druid` and the member's PVC."
+
+  # Full healthy cluster -> quiet.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-client", container="etcd", pod="root-0"}'
+        values: '1x20'
+      - series: 'up{job="root-client", container="etcd", pod="root-1"}'
+        values: '1x20'
+      - series: 'up{job="root-client", container="etcd", pod="root-2"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: KcpEtcdMembersDown
+        exp_alerts: []

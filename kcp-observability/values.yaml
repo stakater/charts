@@ -1,0 +1,282 @@
+# kcp-observability values.
+#
+# Metric names and label shapes are pinned against a REAL capture from us-2
+# (kcp v0.32.1) — see tests/fixtures/README.md. Do not reference a metric that is
+# not captured there or documented in tests/metrics-allowlist.documented.txt;
+# ./tests/validate.sh enforces this.
+
+nameOverride: ""
+fullnameOverride: ""
+# Namespace the monitoring objects land in. Must be the namespace kcp runs in
+# (kcp-config on us-2) so UWM resolves scrape targets and TLS secrets, and so the
+# namespace label UWM enforces onto rules matches the scraped series.
+namespaceOverride: ""
+
+kcp:
+  # Scrape-job selectors used inside rule expressions. Defaults match what the
+  # chart's own monitors produce on the kcp-operator layout (job = Service name
+  # for ServiceMonitors, PodMonitor name for the syncagent PodMonitor).
+  shards:
+    # Regex — a new shard's Service just has to match (kcp-operator names them <shard>-kcp).
+    job: ".*-kcp"
+  frontProxy:
+    job: "frontproxy-front-proxy"
+  etcd:
+    # druid's client Service is <etcd-name>-client.
+    job: ".*-client"
+    # etcd cluster size — the MembersDown alert fires when fewer members are
+    # healthy (verified need: a member sat dead for 3 days on us-2 with quorum
+    # intact and NOTHING fired — dead containers produce ABSENT metrics, which
+    # no metric-value alert can see).
+    expectedMembers: 3
+  syncAgent:
+    job: "kcp-syncagent"
+  # Footprint (Area 8): pods covered by restart/OOM/throttle/memory alerts.
+  # All kcp-related pods in the release namespace.
+  podRegex: "(.*-kcp-.*|frontproxy-.*|root-proxy-.*|root-[0-9]+|services-.*|system-.*)"
+
+grafana:
+  namespace: ""                          # where the GrafanaDashboard CR lands; default release ns
+  folder: "kcp Observability"
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: Prometheus
+  dashboard:
+    enabled: true
+
+prometheus:
+  # --- scraping --------------------------------------------------------------------
+  # All monitors default OFF (repo convention: installing the chart must not start
+  # scraping until the operator opts in). See README for the per-monitor prerequisites
+  # (shard /metrics authz, etcd client cert).
+  monitors:
+    # Root shard(s): selects the kcp-operator shard Services (component=rootshard).
+    # PREREQUISITE: shard /metrics returns 403 to anonymous clients by default —
+    # add extraArgs "--authorization-always-allow-paths=...,/metrics" on the
+    # RootShard/Shard CR (see README), or configure certSecret below with a client
+    # cert minted by a kubeconfigs.operator.kcp.io CR.
+    shardServiceMonitor:
+      enabled: false
+      component: rootshard          # also covers additional shards: set to a regex-free
+                                    # label value per extra ServiceMonitor if needed
+      # Optional client-cert auth for /metrics (secret with tls.crt/tls.key in the
+      # release namespace). Empty = anonymous scrape (requires always-allow-paths).
+      certSecret: ""
+    # Front-proxy. NOTE: remove any hand-made `kcp-front-proxy` ServiceMonitor when
+    # enabling this one, or the pods get double-scraped. (us-2's manual monitor was
+    # deleted 2026-07-10 after this chart's monitor was verified scraping — see the
+    # swap record in tests/reports/validation-us-2-2026-07-10.md §1.)
+    frontProxyServiceMonitor:
+      enabled: false
+      component: front-proxy
+    # druid etcd via the <name>-client Service; scraped with the etcd client cert.
+    etcdServiceMonitor:
+      enabled: false
+      # Secret holding tls.crt/tls.key for etcd client auth (druid creates
+      # `etcd-client-tls`) and the CA (`etcd-ca-tls`), in the release namespace.
+      clientCertSecret: "etcd-client-tls"
+      caSecret: "etcd-ca-tls"
+    # api-syncagents (SCO service agents): plain-http :8085, selected by pod label
+    # app.kubernetes.io/name=kcp-api-syncagent.
+    syncAgentPodMonitor:
+      enabled: false
+      port: 8085
+
+  # --- recording rules ---------------------------------------------------------------
+  recordingRules:
+    enabled: true
+
+  # --- alerts --------------------------------------------------------------------
+  rules:
+    # Labels merged into every PrometheusRule (Alertmanager routing / ruleSelector).
+    labels: {}
+
+    # Area 1 — front-proxy edge
+    frontProxy:
+      down:
+        enabled: true
+        for: 2m
+        severity: critical
+      errorRateHigh:
+        enabled: true
+        for: 10m
+        severity: warning
+        # ratio of 5xx over all edge requests (placeholder — calibrate)
+        threshold: 0.005
+      latencyHigh:
+        enabled: true
+        for: 30m
+        severity: warning
+        # p95 seconds (placeholder — calibrate)
+        p95Seconds: 1
+    # Area 2 — shard apiserver
+    shard:
+      down:
+        enabled: true
+        for: 2m
+        severity: critical
+      errorRateHigh:
+        enabled: true
+        for: 10m
+        severity: warning
+        threshold: 0.01
+      apfRejecting:
+        enabled: true
+        for: 10m
+        severity: warning
+      latencyHigh:
+        enabled: true
+        for: 30m
+        severity: warning
+        # p99 seconds for non-longrunning read/write requests (placeholder)
+        p99Seconds: 1
+      storageObjectsHigh:
+        enabled: true
+        for: 30m
+        severity: warning
+        # per-resource stored-object count (us-2 max today: 202) — capacity placeholder
+        threshold: 10000
+    # Area 3 — etcd + backups
+    etcd:
+      membersDown:
+        enabled: true
+        for: 15m
+        # quorum may still hold with a member down, but failure tolerance is
+        # ZERO — one more loss is a full control-plane outage. Act now.
+        severity: critical
+      noLeader:
+        enabled: true
+        for: 1m
+        severity: critical
+      leaderChangesHigh:
+        enabled: true
+        for: 15m
+        severity: warning
+        # leader changes per hour
+        threshold: 3
+      diskSlow:
+        enabled: true
+        for: 15m
+        severity: warning
+        fsyncP99Seconds: 0.01
+        commitP99Seconds: 0.025
+      dbSizeHigh:
+        enabled: true
+        for: 15m
+        severity: warning
+        # fraction of the backend quota
+        threshold: 0.80
+      dbSizeCritical:
+        enabled: true
+        for: 5m
+        severity: critical
+        threshold: 0.95
+      backupStale:
+        enabled: true
+        for: 15m
+        severity: critical
+        # max age of the last successful FULL snapshot (druid default schedule is daily;
+        # 26h leaves headroom) and of the last incremental.
+        fullMaxAgeHours: 26
+        incrMaxAgeMinutes: 60
+    # Area 4 — workspace lifecycle (workspaces and logical clusters alert separately
+    # so the signal names the resource that is stuck)
+    workspaces:
+      stuck:
+        # DISABLED by default: kcp v0.32.1's phase gauges drift unboundedly
+        # (kcp-dev/kcp#4277 — us-2 audit: gauge said 28 stuck, etcd truth 2;
+        # the alert fired ~60% of a week on phantoms). A count threshold on
+        # this gauge cannot be trusted in either direction. Re-enable when
+        # running a kcp release with the fix; the trend panel + runbook keep
+        # the signal observable meanwhile.
+        enabled: false
+        for: 15m
+        severity: warning
+        # count of workspaces in a non-ready phase above baseline (us-2 standing: 0)
+        baseline: 8
+      logicalClustersStuck:
+        # DISABLED by default — same kcp#4277 gauge drift as workspaces.stuck.
+        enabled: false
+        for: 15m
+        severity: warning
+        # count of logical clusters in a non-ready phase above baseline.
+        # us-2 runs a STANDING Scheduling=8-10 (SRE finding F2) — calibrate before tightening.
+        baseline: 8
+    # Area 5 — APIExport / APIBinding
+    apiBindings:
+      notReady:
+        enabled: true
+        for: 15m
+        severity: warning
+      slow:
+        enabled: true
+        for: 30m
+        severity: warning
+        # binding ready-duration p95 in ms (histogram is in ms!)
+        p95Ms: 5000
+    apiExports:
+      notValid:
+        enabled: true
+        for: 10m
+        severity: critical
+    # Area 6 — kcp controllers (workqueues name=~"kcp-.*")
+    controllers:
+      queueBacklog:
+        enabled: true
+        for: 15m
+        severity: warning
+        depth: 10
+      processingSlow:
+        enabled: true
+        for: 30m
+        severity: warning
+        # MUST be < 10: client-go workqueue histograms top out at le="10", so
+        # histogram_quantile can never exceed 10 and a >=10 threshold never fires.
+        p99Seconds: 5
+    # Area 7 — SCO syncagents
+    syncAgents:
+      down:
+        enabled: true
+        for: 5m
+        severity: critical
+      clientErrors:
+        enabled: true
+        for: 15m
+        severity: warning
+        threshold: 0.05
+    # Area 8 — footprint
+    footprint:
+      podRestarting:
+        enabled: true
+        for: 15m
+        severity: warning
+        # restarts over the last hour
+        threshold: 3
+      podOOMKilled:
+        enabled: true
+        severity: critical
+      podCPUThrottled:
+        enabled: true
+        for: 30m
+        severity: warning
+        threshold: 0.05
+      podMemoryHigh:
+        enabled: true
+        for: 30m
+        severity: warning
+        # fraction of the container memory limit
+        threshold: 0.90
+    # Watchdog — guards the alerting system itself. Every *Down alert is `up == 0`,
+    # which only fires while targets EXIST and fail; if targets vanish (ServiceMonitor
+    # deleted, selector drift, relabel bug — both happened live on us-2) everything
+    # goes silently green. One absent(up) alert per ENABLED monitor.
+    watchdog:
+      metricsAbsent:
+        enabled: true
+        # long enough to ride out prometheus config reloads and pod rollouts
+        for: 10m
+        severity: warning

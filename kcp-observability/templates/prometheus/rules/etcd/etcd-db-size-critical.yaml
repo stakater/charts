@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.etcd.dbSizeCritical }}
+{{- /* Input is a recorded kcp:* series: without recording rules this alert can
+       never fire, so the gate requires both toggles (audit finding). */}}
+{{- if and ($r) ($r.enabled) (.Values.prometheus.recordingRules.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-etcd-db-size-critical
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.etcd
+      rules:
+        - alert: KcpEtcdDBSizeCritical
+          expr: |
+            kcp:etcd_db_used_ratio > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp etcd DB at {{`{{ $value | humanizePercentage }}`}} of quota — read-only alarm imminent"
+            description: "etcd is about to hit its space quota and become read-only. Act now: defrag, compact, or raise the quota."
+{{- end }}

@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.frontProxy.latencyHigh }}
+{{- /* Input is a recorded kcp:* series: without recording rules this alert can
+       never fire, so the gate requires both toggles (audit finding). */}}
+{{- if and ($r) ($r.enabled) (.Values.prometheus.recordingRules.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-front-proxy-latency
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.front_proxy
+      rules:
+        - alert: KcpFrontProxyLatencyHigh
+          expr: |
+            kcp:front_proxy_latency_seconds:p95 > {{ $r.p95Seconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp edge p95 latency is {{`{{ $value | humanizeDuration }}`}}"
+            description: "Sustained high latency at the front-proxy degrades every tenant interaction with the control plane."
+{{- end }}

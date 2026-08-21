@@ -1,0 +1,95 @@
+{{- if .Values.prometheus.recordingRules.enabled }}
+# Recording rules — the derived SLI signals the alerts and dashboard consume.
+# Metric names/labels verified against tests/fixtures/ (us-2, kcp v0.32.1).
+# NOTE: proxy_request_duration_seconds is the front-proxy's own family (code, method);
+# apiserver_request_duration_seconds is per-shard; kcp_apibinding_ready_duration_ms
+# is in MILLISECONDS.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-recording
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.recording
+      rules:
+        # --- Area 1: front-proxy edge -------------------------------------------------
+        - record: kcp:front_proxy_requests:rate5m
+          expr: |
+            sum by (code) (rate(proxy_request_duration_seconds_count{job=~"{{ .Values.kcp.frontProxy.job }}"}[5m]))
+        - record: kcp:front_proxy_error_ratio:rate5m
+          expr: |
+            sum(rate(proxy_request_duration_seconds_count{job=~"{{ .Values.kcp.frontProxy.job }}", code=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(proxy_request_duration_seconds_count{job=~"{{ .Values.kcp.frontProxy.job }}"}[5m])), 1e-10)
+        - record: kcp:front_proxy_latency_seconds:p95
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(proxy_request_duration_seconds_bucket{job=~"{{ .Values.kcp.frontProxy.job }}"}[5m])))
+        - record: kcp:front_proxy_latency_seconds:p99
+          expr: |
+            histogram_quantile(0.99, sum by (le) (rate(proxy_request_duration_seconds_bucket{job=~"{{ .Values.kcp.frontProxy.job }}"}[5m])))
+
+        # --- Area 2: shard apiserver --------------------------------------------------
+        - record: kcp:shard_error_ratio:rate5m
+          expr: |
+            sum by (job) (rate(apiserver_request_total{job=~"{{ .Values.kcp.shards.job }}", code=~"5.."}[5m]))
+            /
+            clamp_min(sum by (job) (rate(apiserver_request_total{job=~"{{ .Values.kcp.shards.job }}"}[5m])), 1e-10)
+        # p99 of non-long-running requests (WATCH/CONNECT/WATCHLIST excluded), read vs write.
+        - record: kcp:shard_latency_seconds:read_p99
+          expr: |
+            histogram_quantile(0.99, sum by (job, le) (rate(apiserver_request_duration_seconds_bucket{job=~"{{ .Values.kcp.shards.job }}", verb=~"GET|LIST"}[5m])))
+        - record: kcp:shard_latency_seconds:write_p99
+          expr: |
+            histogram_quantile(0.99, sum by (job, le) (rate(apiserver_request_duration_seconds_bucket{job=~"{{ .Values.kcp.shards.job }}", verb=~"POST|PUT|PATCH|DELETE"}[5m])))
+
+        # --- Areas 4/5: workspace + binding health ------------------------------------
+        # NOTE: every kcp_* gauge is emitted PER REPLICA of the shard, and the replicas
+        # DISAGREE — only the controller-leader maintains the full informer index (seen
+        # live on us-2: leader reported 108 Ready workspaces, the follower 27). sum()
+        # over pods is therefore meaningless; max by (shard) takes the leader's complete
+        # view. Applies to every kcp_* gauge (workspace/logicalcluster counts, binding/
+        # export condition counts). Histogram _bucket rates are safe to sum (the
+        # follower contributes ~0 rate).
+        - record: kcp:workspace_ready_ratio
+          expr: |
+            max by (shard) (kcp_workspace_count{phase="Ready"})
+            /
+            clamp_min(sum by (shard) (max by (shard, phase) (kcp_workspace_count)), 1e-10)
+        # Workspaces and logical clusters recorded SEPARATELY: a combined count read
+        # "10 workspaces not ready" on us-2 when it was 0 workspaces + 10 logical
+        # clusters — the signal must name the resource that is stuck.
+        - record: kcp:workspaces_not_ready:count
+          expr: |
+            sum by (shard) (max by (shard, phase) (kcp_workspace_count{phase!="Ready"}))
+        - record: kcp:logicalclusters_not_ready:count
+          expr: |
+            sum by (shard) (max by (shard, phase) (kcp_logicalcluster_count{phase!="Ready"}))
+        - record: kcp:apibinding_ready_ratio
+          expr: |
+            max by (shard) (kcp_apibinding_condition_status{condition="Ready", status="True"})
+            /
+            clamp_min(sum by (shard) (max by (shard, status) (kcp_apibinding_condition_status{condition="Ready"})), 1e-10)
+        - record: kcp:apibinding_ttr_ms:p95
+          expr: |
+            histogram_quantile(0.95, sum by (shard, le) (rate(kcp_apibinding_ready_duration_ms_bucket[30m])))
+
+        # --- Area 3: etcd ----------------------------------------------------------
+        - record: kcp:etcd_fsync_seconds:p99
+          expr: |
+            histogram_quantile(0.99, sum by (pod, le) (rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~"{{ .Values.kcp.etcd.job }}"}[5m])))
+        - record: kcp:etcd_commit_seconds:p99
+          expr: |
+            histogram_quantile(0.99, sum by (pod, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~"{{ .Values.kcp.etcd.job }}"}[5m])))
+        - record: kcp:etcd_db_used_ratio
+          expr: |
+            etcd_mvcc_db_total_size_in_bytes{job=~"{{ .Values.kcp.etcd.job }}"}
+            /
+            clamp_min(etcd_server_quota_backend_bytes{job=~"{{ .Values.kcp.etcd.job }}"}, 1)
+{{- end }}

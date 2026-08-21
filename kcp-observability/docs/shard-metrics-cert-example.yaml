@@ -1,0 +1,27 @@
+# SRE prerequisite (option B in README step 2): a client cert the shard trusts, for the
+# shard ServiceMonitor's tlsConfig. Applied on us-2 2026-07-10; verified HTTP 200 on
+# /metrics. Issuer `root-client-ca` is the kcp-operator-generated shard client CA.
+#
+# TODO(hardening): O=system:kcp:admin is broader than needed. Replace with a dedicated
+# group + a kcp ClusterRoleBinding on nonResourceURL /metrics in the root workspace.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kcp-metrics-scraper-cert
+  namespace: kcp-config
+  labels:
+    app.kubernetes.io/name: kcp-observability
+    app.kubernetes.io/component: metrics-scraper
+spec:
+  commonName: kcp-metrics-scraper
+  issuerRef:
+    name: root-client-ca
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  secretName: kcp-metrics-scraper-cert
+  subject:
+    organizations:
+      - system:kcp:admin
+  usages:
+    - client auth

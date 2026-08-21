@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.syncAgents.down }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-syncagent-down
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.syncagents
+      rules:
+        - alert: KcpSyncAgentDown
+          expr: |
+            up{job=~"{{ .Values.kcp.syncAgent.job }}"} == 0
+            or
+            max by (service_agent) (leader_election_master_status{job=~"{{ .Values.kcp.syncAgent.job }}"}) == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "SCO service agent {{`{{ $labels.service_agent }}`}} is down or has no leader"
+            description: "A dead service agent means that service's tenant claims silently stop syncing to the underlying clusters."
+{{- end }}

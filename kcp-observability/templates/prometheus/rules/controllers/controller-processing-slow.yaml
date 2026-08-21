@@ -1,0 +1,34 @@
+{{- $r := .Values.prometheus.rules.controllers.processingSlow }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-controller-processing-slow
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.controllers
+      rules:
+        - alert: KcpControllerProcessingSlow
+          # client-go workqueue histograms top out at le="10" (verified in the captured
+          # fixtures): histogram_quantile can never exceed 10, so any threshold >= 10s
+          # is unsatisfiable and the alert silently never fires (audit finding).
+          # values.yaml enforces p99Seconds < 10. job/namespace kept in the aggregation
+          # so multi-shard distributions don't dilute each other and the summary can
+          # locate the slow shard.
+          expr: |
+            histogram_quantile(0.99, sum by (name, job, namespace, le) (rate(workqueue_work_duration_seconds_bucket{job=~"{{ .Values.kcp.shards.job }}", name=~"kcp-.*"}[5m]))) > {{ $r.p99Seconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp controller {{`{{ $labels.name }}`}} p99 work duration is {{`{{ $value | humanizeDuration }}`}}"
+            description: "Slow controller processing stretches workspace/binding readiness before queues visibly back up."
+{{- end }}

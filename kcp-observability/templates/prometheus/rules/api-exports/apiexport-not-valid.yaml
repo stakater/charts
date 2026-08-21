@@ -1,0 +1,37 @@
+{{- $r := .Values.prometheus.rules.apiExports.notValid }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-apiexport-not-valid
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.api_exports
+      rules:
+        - alert: KcpAPIExportNotValid
+          {{- /* Only IdentityValid: kcp v0.32.1 never emits VirtualWorkspaceURLsReady
+                 (verified live on us-2, 2026-07-16 — 15 exports, IdentityValid only).
+                 Re-add it here if a later kcp version is observed emitting it. */}}
+          expr: |
+            {{- /* max over replicas: only the controller-leader has the full index (per-replica gauges disagree) */}}
+            sum by (shard, condition) (max by (shard, condition, status) (kcp_apiexport_condition_status{condition=~"IdentityValid", status=~"False|Unknown"})) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            {{- /* $value sums per-(condition,status) leader-max counts: an export reported
+                   False by the leader and stale Unknown by a follower counts twice. The
+                   > 0 gate and labels stay correct; treat the number as approximate
+                   (audit finding — exact per-export counts aren't derivable from this
+                   pre-aggregated gauge). */}}
+            summary: "~{{`{{ $value }}`}} APIExports degraded ({{`{{ $labels.condition }}`}}) on shard {{`{{ $labels.shard }}`}}"
+            description: "An invalid APIExport breaks every tenant bound to it at once — the highest blast radius on the platform (hundreds of bindings per export). The count is approximate (False and Unknown states are counted independently)."
+{{- end }}

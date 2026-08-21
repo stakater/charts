@@ -1,0 +1,51 @@
+# values override used for the us-2 deployment (deploy-validation reference).
+#
+# Prerequisite applied on us-2 (see docs/shard-metrics-cert-example.yaml): a cert-manager
+# Certificate `kcp-metrics-scraper-cert` issued by the shard's `root-client-ca`
+# (CN=kcp-metrics-scraper, O=system:kcp:admin) — verified HTTP 200 on shard /metrics.
+# TODO(hardening): replace the admin group with a dedicated kcp RBAC binding for
+# nonResourceURL /metrics only.
+
+grafana:
+  # The us-2 grafana-operator is OLM-installed in OwnNamespace mode (OperatorGroup
+  # targets crossplane-observability only) — a dashboard CR anywhere else is never
+  # reconciled (found live on us-2: CR sat with empty status). Land the CR in the
+  # operator's namespace.
+  namespace: crossplane-observability
+  # The us-2 Grafana instance (grafana-operator) lives in crossplane-observability and
+  # selects dashboards by this label — NOT the SAAP default app=grafana. The default
+  # key must be nulled explicitly: helm deep-merges maps, so without `app: null` the
+  # selector becomes {app: grafana, dashboards: crossplane} and matches no instance
+  # (found live on us-2 — dashboard CR sat unreconciled).
+  instanceSelector:
+    matchLabels:
+      app: null
+      dashboards: crossplane
+
+prometheus:
+  monitors:
+    shardServiceMonitor:
+      enabled: true
+      certSecret: kcp-metrics-scraper-cert
+    frontProxyServiceMonitor:
+      enabled: true
+    etcdServiceMonitor:
+      enabled: true
+    # S1 RESOLVED (2026-07-16): the api-syncagent releases now pass
+    # --metrics-address=0.0.0.0:8085 (verified in-pod: args + socket on all
+    # interfaces). The agents still declare NO containerPort, so the PodMonitor's
+    # __address__-relabel-to-podIP:8085 approach stays — do NOT switch to
+    # port/targetPort/portNumber, all of which silently drop port-less pods
+    # (proven live: 20 dropped targets; see the audit history in git).
+    syncAgentPodMonitor:
+      enabled: true
+  rules:
+    etcd:
+      # us-2 etcd runs on network-attached storage: fsync p99 baseline is
+      # ~170-190ms sustained (7d avg, all members) vs the upstream 10ms guidance.
+      # Raised so the alert pages on degradation-from-baseline instead of firing
+      # permanently. The chronic baseline itself is tracked as an SRE finding in
+      # tests/reports/ — if the storage is ever fixed, drop these overrides.
+      diskSlow:
+        fsyncP99Seconds: 0.5
+        commitP99Seconds: 1.0

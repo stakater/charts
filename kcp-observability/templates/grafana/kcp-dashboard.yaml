@@ -1,0 +1,30 @@
+{{- if .Values.grafana.dashboard.enabled }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-dashboard
+  namespace: {{ .Values.grafana.namespace | default (include "kcp-observability.namespace" .) }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder | quote }}
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+  datasources:
+    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+  json: |-
+{{- /* The dashboard's namespace and pod_regex constants must track the same values
+       the footprint alert rules template in, or those panels go silently empty on a
+       non-default install while the alerts keep working (audit finding). Targeted
+       string replace — full tpl would choke on Grafana's own {{pod}} legend syntax.
+       NOTE: the job constants (shard/proxy/etcd/syncagent) still assume the default
+       job values; override the dashboard JSON if you change those. The replacement
+       values must not contain double quotes or backslashes (they land in JSON). */}}
+{{ .Files.Get "files/kcp_grafana_dashboard.json"
+   | replace "(.*-kcp-.*|frontproxy-.*|root-proxy-.*|root-[0-9]+|services-.*|system-.*)" .Values.kcp.podRegex
+   | replace "kcp-config" (include "kcp-observability.namespace" .)
+   | indent 4 }}
+{{- end }}
