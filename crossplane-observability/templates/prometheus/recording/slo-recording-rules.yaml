@@ -25,17 +25,26 @@ spec:
         # actually have resources (`exists > 0`); an installed-but-empty CRD reports
         # exists=0/ready=0 and must NOT produce a 0 ratio (that manufactured ~97% false
         # MRNotReady alerts in validation — see tests/reports). Empty GVKs → no series here.
+        #
+        # AGGREGATE WITH max BY (gvk), NEVER sum. Every replica of a provider reports the
+        # same cluster-wide count for the GVKs it serves — they duplicate, they do not
+        # shard. Verified on eu-2: two provider-aws-s3 pods each report 12 for
+        # `s3.aws.upbound.io/v1beta1, Kind=Bucket` and the API holds exactly 12. `sum`
+        # therefore multiplies by the replica count (2119 vs the true 2049 fleet-wide),
+        # and it does so ONLY for providers that are scaled out, so the error is uneven
+        # across kinds and invisible in the numbers themselves.
         - record: crossplane:managed_resource_ready:ratio
           expr: |
-            sum by (gvk) (crossplane_managed_resource_ready{job="{{ $prov }}"})
+            max by (gvk) (crossplane_managed_resource_ready{job="{{ $prov }}"})
             /
-            sum by (gvk) (crossplane_managed_resource_exists{job="{{ $prov }}"} > 0)
-        # Story 1.1 SLI — fleet-wide ready ratio (rolls 4.1 up into 1.1).
+            max by (gvk) (crossplane_managed_resource_exists{job="{{ $prov }}"} > 0)
+        # Story 1.1 SLI — fleet-wide ready ratio (rolls 4.1 up into 1.1). Dedupe per GVK
+        # first, then sum across GVKs.
         - record: crossplane:managed_resource_ready:ratio:fleet
           expr: |
-            sum (crossplane_managed_resource_ready{job="{{ $prov }}"})
+            sum (max by (gvk) (crossplane_managed_resource_ready{job="{{ $prov }}"}))
             /
-            clamp_min(sum (crossplane_managed_resource_exists{job="{{ $prov }}"}), 1)
+            clamp_min(sum (max by (gvk) (crossplane_managed_resource_exists{job="{{ $prov }}"})), 1)
         # Story 1.2 SLI — p95 first-time-to-readiness (seconds), per GVK.
         - record: crossplane:managed_resource_ttr_seconds:p95
           expr: |
@@ -68,8 +77,10 @@ spec:
     # customer-facing XR/Claim units via the dashboard, not here — see docs/billing.md.)
     - name: crossplane.inventory.counts
       rules:
+        # max by (gvk) before summing — provider replicas each report the same per-GVK
+        # count, so a plain sum() bills the fleet once per replica. See the note above.
         - record: crossplane:managed_resource:total
-          expr: sum(crossplane_managed_resource_exists{job="{{ $prov }}"})
+          expr: sum(max by (gvk) (crossplane_managed_resource_exists{job="{{ $prov }}"}))
 {{- if .Values.crossplane.inventory.enabled }}
     # Story 4.1 SLI — Composite (XR) ready ratio per kind, from the inventory exporter's
     # one-hot condition metric. count(Ready/True series) = total XRs of that kind;

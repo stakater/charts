@@ -2,5 +2,5 @@ apiVersion: v2
 name: crossplane-observability
 description: A Helm chart for Crossplane observability (ServiceMonitor + PrometheusRule + Grafana dashboard), integrated with OpenShift user-workload monitoring.
 type: application
-version: 0.1.12
+version: 0.1.13
 appVersion: "0.0.1"

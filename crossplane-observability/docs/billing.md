@@ -4,7 +4,8 @@ Two different numbers, two different sources:
 
 - **Capacity** — how many leaf cloud resources we manage. From the provider metric
   `crossplane_managed_resource_exists` (per `gvk`). Works as a UWM recording rule
-  (`crossplane:managed_resource:total`) + dashboard.
+  (`crossplane:managed_resource:total`) + dashboard. **Dedupe per GVK before summing** —
+  see [Capacity: never `sum()` the exists gauge](#capacity-never-sum-the-exists-gauge).
 - **Billing (MRU)** — the customer-facing **XR / Claim** units you charge for. From the
   inventory exporter (`ksm-crossplane`). **This is what you bill on, confirmed.**
 
@@ -38,6 +39,27 @@ count by (namespace, crossplane_kind) ({__name__=~"kube_customresource_crossplan
 
 These are the **Billing — MRU (XR / Claim)** dashboard row (total, by-kind, by-tenant,
 by-tenant-and-kind), with `$billable` (kind regex) and `$tenant` (namespace) variables.
+
+## Capacity: never `sum()` the exists gauge
+
+`crossplane_managed_resource_exists` (and `_ready` / `_synced`) is a **per-GVK count emitted by
+every replica of the provider that serves that GVK**. The replicas duplicate the count — they do
+not shard it — so a plain `sum()` multiplies scaled-out providers by their replica count.
+
+```promql
+sum(max by (gvk) (crossplane_managed_resource_exists))   # correct — dedupe, then sum
+sum(crossplane_managed_resource_exists)                  # WRONG — bills each replica
+count(count by (gvk) (crossplane_managed_resource_exists > 0))  # distinct kinds
+count(crossplane_managed_resource_exists > 0)                   # WRONG — counts series
+```
+
+Measured on eu-2 (2026-09-08): two `provider-aws-s3` pods each reported `12` for
+`s3.aws.upbound.io/v1beta1, Kind=Bucket` while the API held exactly 12 Buckets. Fleet-wide the
+naive form gave **2119** against a true **2049**, and distinct kinds **62** against a true **54**.
+
+The overcount is **uneven** — it applies only to providers that happen to be scaled out — so it
+cannot be corrected with a flat factor, and nothing in the number itself reveals it. Ready/synced
+*ratios* are unaffected, since numerator and denominator inflate together.
 
 ## ⚠️ Two things to get right
 
