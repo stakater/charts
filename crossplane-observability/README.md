@@ -232,8 +232,8 @@ These need cluster/Grafana context an agent can't safely guess:
 | `crossplane.inventory.enabled` | `false` | Enable Claim/inventory rules (needs an exporter — see [example](docs/resource-state-metrics-example.yaml)). |
 | `crossplane.inventory.conditionMetricPattern` | `kube_customresource_crossplane_xr_.+_condition` | Regex (PromQL `__name__=~`) matching the exporter's one-hot condition metrics across **all** XR kinds (Story 4.1). |
 | `upjet.enabled` | `false` | Upjet providers present — enables Story 6.1 and the more-accurate Upjet TTR (Story 1.2). |
-| `billing.billableKinds` | `".+"` | Regex on `gvk` selecting billable MRU kinds (see [docs/billing.md](docs/billing.md)). |
-| `billing.perTenant.enabled` | `false` | Per-tenant MRU — needs an exporter metric carrying a tenant label (docs/billing.md). |
+| `billing.unitMetricPattern` | `kube_customresource_crossplane_(xr\|claim)_.+_condition` | Regex (PromQL `__name__=~`) matching the exporter's per-object condition metrics — the billable-unit family (see [docs/billing.md](docs/billing.md)). |
+| `billing.tenantLabel` | `namespace` | Label carrying the tenant workspace on those series. |
 | `grafana.folder` | `Crossplane Observability` | Grafana folder for the dashboard. |
 | `grafana.dashboard.enabled` | `true` | Create the GrafanaDashboard. |
 | `grafana.compositeAlerts.enabled` | `false` | Story 4.1 composite alerts as **Grafana-managed** rules (use on UWM instead of the PrometheusRule composite alerts). |
@@ -292,8 +292,26 @@ Emitted as one `PrometheusRule` (`role: recording-rules`) when
 | `crossplane:claim_tree_ttr_seconds:p95` | Story 1.3 — headline composite (add claim layer once 4.1 lands) |
 | `crossplane:reconcile_errors:ratio` | Story 2.1 — reconcile error ratio per controller |
 | `crossplane:reconcile_time_seconds:p99` | Story 2.2 — p99 reconcile duration per controller |
-| `crossplane:managed_resource:total` | Inventory — live total managed-resource count |
-| `crossplane:mru_billable:total` | Billing — total billable MRUs (`billing.billableKinds`) |
+| `crossplane:managed_resource:total` | Inventory — live total managed-resource count (deduped per GVK; see below) |
+
+### Counting managed resources: `max by (gvk)`, never `sum`
+
+`crossplane_managed_resource_exists` / `_ready` / `_synced` are **per-GVK counts, reported
+independently by every replica of the provider that serves the GVK**. Replicas duplicate the
+count; they do not shard it. Verified on eu-2: two `provider-aws-s3` pods each report `12` for
+`s3.aws.upbound.io/v1beta1, Kind=Bucket`, and the cluster holds exactly 12 Buckets.
+
+So any fleet total must dedupe per GVK first:
+
+```promql
+sum(max by (gvk) (crossplane_managed_resource_exists))   # correct
+sum(crossplane_managed_resource_exists)                  # multiplies scaled-out providers
+```
+
+On eu-2 the naive form reported **2119** against a true **2049**, and `count(… > 0)` reported
+**62** distinct kinds against a true **54** — it was counting series, one per replica. The error
+only affects providers that are scaled out, so it is uneven across kinds and invisible in the
+numbers themselves. Ratios (ready/exists) are unaffected, because both sides inflate equally.
 
 ## Dashboard
 

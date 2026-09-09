@@ -410,7 +410,7 @@
         {
           "refId": "A",
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "sum(crossplane_managed_resource_exists{gvk=~\"$gvk\"} - crossplane_managed_resource_ready{gvk=~\"$gvk\"}) or vector(0)"
+          "expr": "sum(max by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - max by (gvk) (crossplane_managed_resource_ready{gvk=~\"$gvk\"})) or vector(0)"
         }
       ]
     },
@@ -446,14 +446,14 @@
           "format": "table",
           "instant": true,
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "sum by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - sum by (gvk) (crossplane_managed_resource_ready{gvk=~\"$gvk\"}) > 0"
+          "expr": "max by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - max by (gvk) (crossplane_managed_resource_ready{gvk=~\"$gvk\"}) > 0"
         },
         {
           "refId": "B",
           "format": "table",
           "instant": true,
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "sum by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - sum by (gvk) (crossplane_managed_resource_synced{gvk=~\"$gvk\"}) > 0"
+          "expr": "max by (gvk) (crossplane_managed_resource_exists{gvk=~\"$gvk\"}) - max by (gvk) (crossplane_managed_resource_synced{gvk=~\"$gvk\"}) > 0"
         }
       ],
       "fieldConfig": {
@@ -1527,7 +1527,7 @@
         "y": 62
       },
       "id": 81,
-      "description": "Live count of all managed resources (sum of crossplane_managed_resource_exists).",
+      "description": "Live count of all managed resources: sum(max by (gvk) (crossplane_managed_resource_exists)). Deduped per GVK because every provider replica reports the same per-GVK count.",
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -1621,7 +1621,7 @@
         "y": 62
       },
       "id": 83,
-      "description": "Number of managed-resource kinds that currently have at least one resource.",
+      "description": "Number of managed-resource kinds that currently have at least one resource. Counted as distinct gvk values, not series \u2014 a scaled-out provider emits one series per replica.",
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -1653,7 +1653,7 @@
         {
           "refId": "A",
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "count(crossplane_managed_resource_exists > 0)"
+          "expr": "count(count by (gvk) (crossplane_managed_resource_exists > 0))"
         }
       ]
     },
@@ -1765,14 +1765,14 @@
       "options": {
         "showHeader": true
       },
-      "description": "Live MR count per kind, the basis for per-kind MRU billing.",
+      "description": "Live MR count per kind, the basis for per-kind MRU billing. Deduped with max by (gvk): provider replicas each report the same count, so a raw series list shows one row per replica.",
       "targets": [
         {
           "refId": "A",
           "format": "table",
           "instant": true,
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "sort_desc(crossplane_managed_resource_exists > 0)"
+          "expr": "sort_desc(max by (gvk) (crossplane_managed_resource_exists > 0))"
         }
       ]
     },

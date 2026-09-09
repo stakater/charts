@@ -287,6 +287,74 @@ print(f"{len(overridden)} Grafana CR(s): override replaces cleanly, unset resolv
 PY_SEL
 green "instanceSelector overrides replace the default instead of unioning with it"
 
+step "5e. managed-resource counts are DEDUPED — provider replicas must not be summed"
+# crossplane_managed_resource_{exists,ready,synced} is a per-GVK COUNT reported independently by
+# EVERY replica of the provider serving that GVK. Replicas duplicate the count; they do not shard
+# it (verified on eu-2: two provider-aws-s3 pods each report 12 Buckets and the API holds 12). So
+# sum() multiplies scaled-out providers by their replica count, and count(x > 0) counts series
+# rather than kinds. The error is invisible in the result and uneven across kinds — it hits only
+# providers that happen to be scaled out — so it cannot be corrected downstream. Every use must
+# dedupe with `max by (gvk)` first. Asserted on rendered rules AND dashboard panel queries.
+python3 - <<'PY_MRU' "${RENDER_DIR}/all.yaml" "${CHART}/files/crossplane_grafana_dashboard.json"
+import json, re, sys, yaml
+
+GAUGE = re.compile(r"crossplane_managed_resource_(?:exists|ready|synced)\b")
+# The metric must open a per-GVK group. Two aggregators are safe and they are safe for different
+# reasons:
+#   max by (gvk)   — collapses the replicas' identical counts back to the one true value.
+#   count by (gvk) — yields one GROUP per gvk, so an outer count() counts kinds. Its VALUE is the
+#                    replica count, which is meaningless, so it is only allowed under count().
+# `sum by (gvk)` is exactly the bug and must never appear.
+DEDUPED = re.compile(r"(max|count)\s+by\s*\(\s*gvk\s*\)\s*\(\s*$")
+
+def check(expr, where, fail):
+    for m in GAUGE.finditer(expr):
+        opened = DEDUPED.search(expr[:m.start()])
+        if not opened:
+            fail.append(f"{where}: `{m.group(0)}` is aggregated without `max by (gvk)` -> "
+                        f"provider replicas are double-counted\n      {expr.strip()[:150]}")
+        elif opened.group(1) == "count" and not expr.lstrip().startswith("count("):
+            fail.append(f"{where}: `count by (gvk)` counts SERIES (one per replica); its value is "
+                        f"only meaningful under an outer count()\n      {expr.strip()[:150]}")
+
+fail, checked = [], 0
+for d in yaml.safe_load_all(open(sys.argv[1])):
+    if not d or d.get("kind") != "PrometheusRule":
+        continue
+    for g in d["spec"]["groups"]:
+        for r in g["rules"]:
+            name = r.get("record") or r.get("alert")
+            expr = str(r.get("expr", ""))
+            if GAUGE.search(expr):
+                checked += 1
+                check(expr, f"rule {name}", fail)
+
+dash = json.load(open(sys.argv[2]))
+def walk(o):
+    global checked
+    if isinstance(o, dict):
+        for t in (o.get("targets") or []):
+            expr = t.get("expr", "")
+            if GAUGE.search(expr):
+                checked += 1
+                check(expr, f"panel {o.get('id')} {o.get('title', '')!r}", fail)
+        for v in o.values():
+            walk(v)
+    elif isinstance(o, list):
+        for v in o:
+            walk(v)
+walk(dash)
+
+if not checked:
+    fail.append("no expression used the gauges at all — this guard would pass vacuously")
+if fail:
+    for f in fail:
+        print("  " + f)
+    sys.exit(1)
+print(f"{checked} expression(s) use the MR count gauges, all deduped with max by (gvk)")
+PY_MRU
+green "managed-resource counts dedupe provider replicas"
+
 step "6. kubeconform — CRD schema validation (monitors, rules, dashboard)"
 # Strict, NO -ignore-missing-schemas: every rendered object must validate against a schema,
 # using the CRD schemas vendored under tests/schemas/ (ServiceMonitor/PodMonitor/
