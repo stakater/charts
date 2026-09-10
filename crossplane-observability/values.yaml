@@ -97,23 +97,17 @@ upjet:
 
 # ---------------------------------------------------------------------------
 # Inventory & billing (Managed Resource Units).
-#   Capacity (leaf cloud resources): crossplane_managed_resource_exists (per gvk).
-#   Billing (customer-facing units):  count the inventory exporter's per-object _info metric
-#     for XRs/Claims — these carry `crossplane_kind` and (claims + namespaced XRs) a
-#     `namespace` = the tenant workspace. See docs/billing.md.
+#   Capacity (leaf cloud resources): crossplane_managed_resource_exists (per gvk) — the
+#     recording rule crossplane:managed_resource:total and the "Inventory & capacity" row.
+#   Billing (MRUs):                   1 Claim = 1 MRU. The "Billing — MRUs" row counts Claim
+#     objects from the inventory exporter (crossplane.inventory.*), narrowed by the dashboard's
+#     $billable variable (regex on crossplane_kind). Managed resources are NOT MRUs, and the XR a
+#     Claim creates is the same unit and is never counted. See docs/billing.md.
 # Billing numbers are DASHBOARD panels (raw cross-namespace queries via thanos-querier), not
 # UWM recording rules: the inventory series carry tenant namespaces and a UWM rule would be
 # namespace-enforced to empty (same as the composite alerts, README "Inventory rules on UWM").
+# There are deliberately no billing.* values: the only knob is $billable, set in Grafana.
 # ---------------------------------------------------------------------------
-billing:
-  # Regex (__name__=~) matching the exporter's per-object condition metrics. We count the
-  # `{type="Ready",status="True"}` series — exactly one per object — to get the unit count.
-  # Default counts both XRs and Claims — pick ONE layer per kind to avoid double-counting (a
-  # Claim and the XR it creates are the same unit). The dashboard $billable variable narrows by
-  # `crossplane_kind`; $tenant narrows by `namespace` (claims + namespaced XRs carry it).
-  unitMetricPattern: "kube_customresource_crossplane_(xr|claim)_.+_condition"
-  # The label identifying the tenant / service-provider customer (workspace namespace).
-  tenantLabel: "namespace"
 
 # ---------------------------------------------------------------------------
 # Grafana dashboard (managed via grafana-operator GrafanaDashboard CR).
