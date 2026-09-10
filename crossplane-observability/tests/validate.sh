@@ -355,6 +355,45 @@ print(f"{checked} expression(s) use the MR count gauges, all deduped with max by
 PY_MRU
 green "managed-resource counts dedupe provider replicas"
 
+step "5f. MRU panels count CLAIMS only — 1 Claim = 1 MRU"
+# Ruled 2026-09-09: an MRU is one Crossplane Claim. The XR a Claim creates is the same unit, so a
+# billing query that matches `xr_` families (or `(xr|claim)`) counts every claimed unit twice.
+# Every panel in the billing row must match only `kube_customresource_crossplane_claim_` series.
+python3 - <<'PY_MRU_CLAIM' "${CHART}/files/crossplane_grafana_dashboard.json"
+import json, re, sys
+dash = json.load(open(sys.argv[1]))
+BAD = re.compile(r"kube_customresource_crossplane_(?:\(xr\|claim\)|xr)_")
+fail, checked = [], 0
+def check(panel):
+    global checked
+    for t in (panel.get("targets") or []):
+        expr = t.get("expr", "")
+        if "kube_customresource_crossplane_" in expr:
+            checked += 1
+            if BAD.search(expr):
+                fail.append(f"panel {panel.get('id')} {panel.get('title', '')!r} counts XRs as MRUs:\n      {expr[:150]}")
+# Select by TITLE, not by row: the headline "Billable MRUs" stat lives in the capacity row, and a
+# row-scoped check silently skipped it. Any panel that calls itself an MRU / billable figure is
+# held to the rule wherever it sits. Grafana lays panels out flat while a row is expanded and
+# under row.panels[] while collapsed, so look in both places.
+MRU_TITLE = re.compile(r"MRU|billable", re.I)
+def panels(items):
+    for p in items:
+        yield p
+        yield from panels(p.get("panels") or [])
+for p in panels(dash.get("panels", [])):
+    if p.get("type") != "row" and MRU_TITLE.search(str(p.get("title", ""))):
+        check(p)
+if not checked:
+    fail.append("no MRU/billable panel queried the inventory exporter — guard would pass vacuously")
+if fail:
+    for f in fail:
+        print("  " + f)
+    sys.exit(1)
+print(f"{checked} MRU panel quer(ies) count claim_ series only")
+PY_MRU_CLAIM
+green "MRU panels count Claims, never XRs"
+
 step "6. kubeconform — CRD schema validation (monitors, rules, dashboard)"
 # Strict, NO -ignore-missing-schemas: every rendered object must validate against a schema,
 # using the CRD schemas vendored under tests/schemas/ (ServiceMonitor/PodMonitor/

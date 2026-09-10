@@ -1565,7 +1565,7 @@
     },
     {
       "type": "stat",
-      "title": "Billable units (XR/Claim)",
+      "title": "Billable MRUs",
       "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 4,
@@ -1574,7 +1574,7 @@
         "y": 62
       },
       "id": 82,
-      "description": "Count of customer-facing XR/Claim units (billing.unitMetricPattern), filtered by the $billable kind. Raw cross-namespace query (works under UWM).",
+      "description": "1 Claim = 1 MRU. Counts Claim objects (one Ready/True condition series each), narrowed to the kinds in $billable. Raw cross-namespace query \u2014 works under UWM because the dashboard queries thanos-querier directly.",
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -1606,7 +1606,7 @@
         {
           "refId": "A",
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "count({__name__=~\"kube_customresource_crossplane_(xr|claim)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
+          "expr": "count({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
         }
       ]
     },
@@ -1753,7 +1753,7 @@
     },
     {
       "type": "table",
-      "title": "Managed resources by kind (MRU basis)",
+      "title": "Managed resources by kind",
       "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
@@ -1765,7 +1765,7 @@
       "options": {
         "showHeader": true
       },
-      "description": "Live MR count per kind, the basis for per-kind MRU billing. Deduped with max by (gvk): provider replicas each report the same count, so a raw series list shows one row per replica.",
+      "description": "Live managed-resource count per kind (capacity, not MRUs \u2014 an MRU is a Claim). Deduped with max by (gvk): provider replicas each report the same count, so a raw series list shows one row per replica.",
       "targets": [
         {
           "refId": "A",
@@ -1797,7 +1797,7 @@
         },
         "overrides": []
       },
-      "description": "Fleet growth trend \u2014 capacity planning + billing trend.",
+      "description": "Fleet growth trend \u2014 capacity planning.",
       "targets": [
         {
           "refId": "A",
@@ -1809,7 +1809,7 @@
     },
     {
       "type": "row",
-      "title": "Billing \u2014 MRU (XR / Claim)",
+      "title": "Billing \u2014 MRUs (1 Claim = 1 MRU)",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1821,7 +1821,7 @@
     },
     {
       "type": "table",
-      "title": "Billable units by kind",
+      "title": "MRUs by kind",
       "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
@@ -1830,7 +1830,7 @@
         "y": 75
       },
       "id": 91,
-      "description": "Per-kind billable unit count. NOTE: counts XRs and Claims \u2014 narrow $billable and avoid counting both a Claim and the XR it creates.",
+      "description": "MRUs per Claim kind. Claims only \u2014 the XR a Claim creates is the same unit and is never counted.",
       "options": {
         "showHeader": true
       },
@@ -1840,13 +1840,13 @@
           "format": "table",
           "instant": true,
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "count by (crossplane_kind) ({__name__=~\"kube_customresource_crossplane_(xr|claim)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
+          "expr": "count by (crossplane_kind) ({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
         }
       ]
     },
     {
       "type": "table",
-      "title": "Billable claims by tenant",
+      "title": "MRUs by tenant",
       "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,
@@ -1871,7 +1871,7 @@
     },
     {
       "type": "table",
-      "title": "Billable claims by tenant & kind",
+      "title": "MRUs by tenant & kind",
       "datasource": "${DS_PROMETHEUS}",
       "gridPos": {
         "h": 8,

@@ -232,8 +232,6 @@ These need cluster/Grafana context an agent can't safely guess:
 | `crossplane.inventory.enabled` | `false` | Enable Claim/inventory rules (needs an exporter — see [example](docs/resource-state-metrics-example.yaml)). |
 | `crossplane.inventory.conditionMetricPattern` | `kube_customresource_crossplane_xr_.+_condition` | Regex (PromQL `__name__=~`) matching the exporter's one-hot condition metrics across **all** XR kinds (Story 4.1). |
 | `upjet.enabled` | `false` | Upjet providers present — enables Story 6.1 and the more-accurate Upjet TTR (Story 1.2). |
-| `billing.unitMetricPattern` | `kube_customresource_crossplane_(xr\|claim)_.+_condition` | Regex (PromQL `__name__=~`) matching the exporter's per-object condition metrics — the billable-unit family (see [docs/billing.md](docs/billing.md)). |
-| `billing.tenantLabel` | `namespace` | Label carrying the tenant workspace on those series. |
 | `grafana.folder` | `Crossplane Observability` | Grafana folder for the dashboard. |
 | `grafana.dashboard.enabled` | `true` | Create the GrafanaDashboard. |
 | `grafana.compositeAlerts.enabled` | `false` | Story 4.1 composite alerts as **Grafana-managed** rules (use on UWM instead of the PrometheusRule composite alerts). |
@@ -333,7 +331,8 @@ moment you upgrade / enable Upjet, with no dashboard rework.
 | Composition / Functions *(Phase 2)* | 5.1, 5.2 | Function p95 · error ratio · cache hit ratio |
 | Cloud Interaction *(Upjet only)* | 6.1 | Reconcile delay vs poll interval |
 | Resource Footprint | 7.1, 7.2 | Provider restarts · memory · CPU-throttled % |
-| Inventory & Billing | — | Total MRs · **Billable MRUs** · distinct kinds · composites · tenants · MRs-by-kind table · growth — see [docs/billing.md](docs/billing.md) |
+| Inventory & capacity | — | Total managed resources · distinct kinds · MRs-by-kind table · growth. **Capacity, not billed.** |
+| Billing — MRUs | — | **1 Claim = 1 MRU.** Billable MRUs · by kind · by tenant · by tenant & kind, narrowed by the `$billable` variable. Needs the inventory exporter — see [docs/billing.md](docs/billing.md) |
 
 The dashboard JSON lives in [files/crossplane_grafana_dashboard.json](files/crossplane_grafana_dashboard.json)
 and is inlined via `.Files.Get` (so Grafana `$variables` need no Helm escaping).
