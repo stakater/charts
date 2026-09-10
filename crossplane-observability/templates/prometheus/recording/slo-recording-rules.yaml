@@ -73,8 +73,8 @@ spec:
             histogram_quantile(0.99, sum by (le, controller) (
               rate(controller_runtime_reconcile_time_seconds_bucket{job="{{ $core }}"}[5m])
             ))
-    # Inventory capacity — live count of leaf managed (cloud) resources. (Billing counts the
-    # customer-facing XR/Claim units via the dashboard, not here — see docs/billing.md.)
+    # Inventory capacity — live count of leaf managed (cloud) resources. Capacity, NOT MRUs:
+    # an MRU is one Claim, counted on the dashboard, not here — see docs/billing.md.
     - name: crossplane.inventory.counts
       rules:
         # max by (gvk) before summing — provider replicas each report the same per-GVK
