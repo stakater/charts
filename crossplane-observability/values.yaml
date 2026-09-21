@@ -99,14 +99,18 @@ upjet:
 # Inventory & billing (Managed Resource Units).
 #   Capacity (leaf cloud resources): crossplane_managed_resource_exists (per gvk) — the
 #     recording rule crossplane:managed_resource:total and the "Inventory & capacity" row.
-#   Billing (MRUs):                   1 Claim = 1 MRU. The "Billing — MRUs" row counts Claim
-#     objects from the inventory exporter (crossplane.inventory.*), narrowed by the dashboard's
-#     $billable variable (regex on crossplane_kind). Managed resources are NOT MRUs, and the XR a
-#     Claim creates is the same unit and is never counted. See docs/billing.md.
+#   Billing (MRUs):                   one user-requested unit = 1 MRU. The "Billing — MRUs" row
+#     counts billable objects from the inventory exporter (crossplane.inventory.*), narrowed by the
+#     dashboard's $billable_group (crossplane_group) and $billable (crossplane_kind) variables.
+#     Matches claim_ AND xr_ families: on this fleet every customer-facing XRD is a CLAIMLESS
+#     namespaced XR, so a claim-only query bills nothing but plumbing. $billable lists exactly one
+#     kind per XRD (Project, never XProject), which is what prevents double counting. Managed
+#     resources are NOT MRUs. See docs/billing.md.
 # Billing numbers are DASHBOARD panels (raw cross-namespace queries via thanos-querier), not
 # UWM recording rules: the inventory series carry tenant namespaces and a UWM rule would be
 # namespace-enforced to empty (same as the composite alerts, README "Inventory rules on UWM").
-# There are deliberately no billing.* values: the only knob is $billable, set in Grafana.
+# There are deliberately no billing.* values: the only knobs are $billable_group and $billable,
+# set in Grafana.
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------

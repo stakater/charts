@@ -355,23 +355,53 @@ print(f"{checked} expression(s) use the MR count gauges, all deduped with max by
 PY_MRU
 green "managed-resource counts dedupe provider replicas"
 
-step "5f. MRU panels count CLAIMS only — 1 Claim = 1 MRU"
-# Ruled 2026-09-09: an MRU is one Crossplane Claim. The XR a Claim creates is the same unit, so a
-# billing query that matches `xr_` families (or `(xr|claim)`) counts every claimed unit twice.
-# Every panel in the billing row must match only `kube_customresource_crossplane_claim_` series.
-python3 - <<'PY_MRU_CLAIM' "${CHART}/files/crossplane_grafana_dashboard.json"
+step "5f. MRU panels count each billable unit exactly ONCE (group + one kind per XRD)"
+# An MRU is one user-requested unit (ruled 2026-09-09). The literal reading — "count Claim
+# objects" — was shipped in #296 and counts NOTHING that is customer-facing: a full scan of the
+# 116 XRDs in stakater-ab/compositions (2026-09-18) found 55 with `claimNames` and NOT ONE of
+# them in a `*.cloud.stakater.com` group. Every product kind (OpenShiftCluster, VirtualMachine,
+# Postgres, S3Bucket, Vault, Group, User, Mesh, …) is a claimless namespaced XR, so a claim-only
+# query bills only Stakater's own plumbing. Billing therefore matches claim_ AND xr_ families,
+# and the no-double-count property is moved where it actually lives: the $billable list, which
+# must name exactly ONE kind per XRD — the claim kind where the XRD offers one (Project, never
+# XProject), the XR kind where it does not.
+#
+# So this guard asserts four things, all of which the old "claim_ only" guard got wrong:
+#   1. billing queries span (claim|xr) — not claim_ only (bills nothing), not xr_ only (drops
+#      the claim-backed XRDs, e.g. Project);
+#   2. they filter on crossplane_group — kind names COLLIDE across groups inside one metric
+#      family (OpenShiftCluster and VirtualMachine exist in both legacy infrastructure.stakater.com
+#      and the new *.cloud.stakater.com, and the family name is derived from the KIND), so a
+#      kind-only filter double-counts them for the length of the migration;
+#   3. they filter on crossplane_kind=~"$billable";
+#   4. $billable never lists both a claim kind and its X-prefixed XR — the structural form of
+#      the #296 double-count.
+python3 - <<'PY_MRU_UNIT' "${CHART}/files/crossplane_grafana_dashboard.json"
 import json, re, sys
 dash = json.load(open(sys.argv[1]))
-BAD = re.compile(r"kube_customresource_crossplane_(?:\(xr\|claim\)|xr)_")
+
+FAMILY_BOTH = re.compile(r"kube_customresource_crossplane_\((?:claim\|xr|xr\|claim)\)_")
+FAMILY_ONE  = re.compile(r"kube_customresource_crossplane_(claim|xr)_")
+GROUP_F     = 'crossplane_group=~"$billable_group"'
+KIND_F      = 'crossplane_kind=~"$billable"'
+
 fail, checked = [], 0
-def check(panel):
+
+def check(expr, where):
     global checked
-    for t in (panel.get("targets") or []):
-        expr = t.get("expr", "")
-        if "kube_customresource_crossplane_" in expr:
-            checked += 1
-            if BAD.search(expr):
-                fail.append(f"panel {panel.get('id')} {panel.get('title', '')!r} counts XRs as MRUs:\n      {expr[:150]}")
+    checked += 1
+    if not FAMILY_BOTH.search(expr):
+        m = FAMILY_ONE.search(expr)
+        only = m.group(1) if m else "?"
+        fail.append(
+            f"{where}: billing query matches the `{only}_` family only; it must span "
+            f"`(claim|xr)` — claim-only bills no customer-facing kind, xr-only drops the "
+            f"claim-backed XRDs\n      {expr[:150]}")
+    for needed, why in ((GROUP_F, "kind names collide across API groups in one metric family"),
+                        (KIND_F,  "billing must be narrowed to the billable kinds")):
+        if needed not in expr:
+            fail.append(f"{where}: missing `{needed}` — {why}\n      {expr[:150]}")
+
 # Select by TITLE, not by row: the headline "Billable MRUs" stat lives in the capacity row, and a
 # row-scoped check silently skipped it. Any panel that calls itself an MRU / billable figure is
 # held to the rule wherever it sits. Grafana lays panels out flat while a row is expanded and
@@ -382,17 +412,58 @@ def panels(items):
         yield p
         yield from panels(p.get("panels") or [])
 for p in panels(dash.get("panels", [])):
-    if p.get("type") != "row" and MRU_TITLE.search(str(p.get("title", ""))):
-        check(p)
+    if p.get("type") == "row" or not MRU_TITLE.search(str(p.get("title", ""))):
+        continue
+    for t in (p.get("targets") or []):
+        expr = t.get("expr", "")
+        if "kube_customresource_crossplane_" in expr:
+            check(expr, f"panel {p.get('id')} {p.get('title', '')!r}")
+
+tvars = {v.get("name"): v for v in dash.get("templating", {}).get("list", [])}
+
+# $tenant drives the per-tenant chargeback rows, so its namespace list has to be drawn from the
+# same population the panels count — otherwise the picker offers namespaces that bill zero and
+# hides ones that bill.
+tenant = tvars.get("tenant")
+if not tenant:
+    fail.append("dashboard has no $tenant variable")
+elif "kube_customresource_crossplane_" in str(tenant.get("query", "")):
+    check(str(tenant["query"]), "$tenant variable query")
+
+for name in ("billable", "billable_group"):
+    if name not in tvars:
+        fail.append(f"dashboard has no ${name} variable — the billing filters reference it")
+
+group = str(tvars.get("billable_group", {}).get("query", ""))
+if group in (".*", ".+", ""):
+    fail.append(f"$billable_group default {group!r} matches every API group, so the legacy "
+                f"infrastructure.stakater.com copies of OpenShiftCluster/VirtualMachine are "
+                f"counted alongside the *.cloud.stakater.com ones")
+
+kinds = [k for k in str(tvars.get("billable", {}).get("query", "")).split("|") if k]
+if not kinds:
+    fail.append("$billable has no kinds")
+for k in kinds:
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", k):
+        fail.append(f"$billable entry {k!r} is not a plain kind name — PromQL anchors the regex, "
+                    f"so wildcards here silently widen the invoice")
+for k in kinds:
+    # A claim and the XR it creates are ONE unit. Crossplane's convention is XFoo for the XR
+    # behind claim Foo, so listing both is the double-count, statically visible.
+    if f"X{k}" in kinds:
+        fail.append(f"$billable lists both {k!r} and its XR {'X'+k!r} — that is the same unit "
+                    f"counted twice; list the claim kind only")
+
 if not checked:
     fail.append("no MRU/billable panel queried the inventory exporter — guard would pass vacuously")
 if fail:
     for f in fail:
         print("  " + f)
     sys.exit(1)
-print(f"{checked} MRU panel quer(ies) count claim_ series only")
-PY_MRU_CLAIM
-green "MRU panels count Claims, never XRs"
+print(f"{checked} billing quer(ies) span (claim|xr) and filter on group + kind; "
+      f"$billable lists {len(kinds)} kinds, no claim/XR pair among them")
+PY_MRU_UNIT
+green "MRU panels count each billable unit exactly once"
 
 step "6. kubeconform — CRD schema validation (monitors, rules, dashboard)"
 # Strict, NO -ignore-missing-schemas: every rendered object must validate against a schema,

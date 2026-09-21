@@ -314,7 +314,7 @@ numbers themselves. Ratios (ready/exists) are unaffected, because both sides inf
 ## Dashboard
 
 Enabled with `grafana.dashboard.enabled=true`. One row per capability area, with
-`$gvk`, `$tenant`, `$billable` and `$core_job` template variables. Every panel binds to the
+`$gvk`, `$tenant`, `$billable_group`, `$billable` and `$core_job` template variables. Every panel binds to the
 datasource named by `grafana.datasources[0].datasourceName` (substituted into the JSON as
 `${DS_PROMETHEUS}`), so there is no datasource picker — the binding is explicit rather than
 left to Grafana's default. Phase 2 and Upjet rows are
@@ -332,7 +332,7 @@ moment you upgrade / enable Upjet, with no dashboard rework.
 | Cloud Interaction *(Upjet only)* | 6.1 | Reconcile delay vs poll interval |
 | Resource Footprint | 7.1, 7.2 | Provider restarts · memory · CPU-throttled % |
 | Inventory & capacity | — | Total managed resources · distinct kinds · MRs-by-kind table · growth. **Capacity, not billed.** |
-| Billing — MRUs | — | **1 Claim = 1 MRU.** Billable MRUs · by kind · by tenant · by tenant & kind, narrowed by the `$billable` variable. Needs the inventory exporter — see [docs/billing.md](docs/billing.md) |
+| Billing — MRUs | — | **One requested unit = 1 MRU.** Billable MRUs · by kind · by tenant · by tenant & kind, narrowed by `$billable_group` + `$billable`. Counts claims *and* claimless XRs — on this fleet every customer-facing XRD is claimless, so `$billable` names one kind per XRD to keep each unit counted once. Needs the inventory exporter — see [docs/billing.md](docs/billing.md) |
 
 The dashboard JSON lives in [files/crossplane_grafana_dashboard.json](files/crossplane_grafana_dashboard.json)
 and is inlined via `.Files.Get` (so Grafana `$variables` need no Helm escaping).

@@ -35,18 +35,38 @@
         "sort": 1
       },
       {
-        "name": "billable",
-        "label": "Billable kind",
+        "name": "billable_group",
+        "label": "Billable API group",
+        "description": "Regex on crossplane_group. Restricts billing to the customer-facing API surface, so the legacy infrastructure.stakater.com copies of OpenShiftCluster/VirtualMachine (same kind name, same metric family) are not counted alongside the *.cloud.stakater.com ones.",
         "type": "custom",
-        "query": ".+",
+        "query": ".*cloud\\.stakater\\.com",
         "current": {
-          "text": ".+",
-          "value": ".+"
+          "text": ".*cloud\\.stakater\\.com",
+          "value": ".*cloud\\.stakater\\.com"
         },
         "options": [
           {
-            "text": ".+",
-            "value": ".+",
+            "text": ".*cloud\\.stakater\\.com",
+            "value": ".*cloud\\.stakater\\.com",
+            "selected": true
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "billable",
+        "label": "Billable kind",
+        "description": "Regex on crossplane_kind. List exactly ONE kind per XRD — the claim kind for claim-backed XRDs (Project, not XProject), the XR kind for claimless ones (OpenShiftCluster, Vault, ...). Listing both a claim and its X-prefixed XR double-counts the same unit.",
+        "type": "custom",
+        "query": "OpenShiftCluster|VirtualMachine|WindowsVirtualMachine|Postgres|Database|S3Bucket|Vault|Group|User|TechnicalUser|Mesh|Project",
+        "current": {
+          "text": "OpenShiftCluster|VirtualMachine|WindowsVirtualMachine|Postgres|Database|S3Bucket|Vault|Group|User|TechnicalUser|Mesh|Project",
+          "value": "OpenShiftCluster|VirtualMachine|WindowsVirtualMachine|Postgres|Database|S3Bucket|Vault|Group|User|TechnicalUser|Mesh|Project"
+        },
+        "options": [
+          {
+            "text": "OpenShiftCluster|VirtualMachine|WindowsVirtualMachine|Postgres|Database|S3Bucket|Vault|Group|User|TechnicalUser|Mesh|Project",
+            "value": "OpenShiftCluster|VirtualMachine|WindowsVirtualMachine|Postgres|Database|S3Bucket|Vault|Group|User|TechnicalUser|Mesh|Project",
             "selected": true
           }
         ],
@@ -57,7 +77,7 @@
         "label": "Tenant (ns)",
         "type": "query",
         "datasource": "${DS_PROMETHEUS}",
-        "query": "label_values({__name__=~\"kube_customresource_crossplane_claim_.+_condition\"}, namespace)",
+        "query": "label_values({__name__=~\"kube_customresource_crossplane_(claim|xr)_.+_condition\", crossplane_group=~\"$billable_group\", crossplane_kind=~\"$billable\"}, namespace)",
         "refresh": 2,
         "includeAll": true,
         "multi": true,
@@ -67,7 +87,7 @@
           "value": "$__all"
         },
         "sort": 1,
-        "definition": "label_values({__name__=~\"kube_customresource_crossplane_claim_.+_condition\"}, namespace)"
+        "definition": "label_values({__name__=~\"kube_customresource_crossplane_(claim|xr)_.+_condition\", crossplane_group=~\"$billable_group\", crossplane_kind=~\"$billable\"}, namespace)"
       },
       {
         "name": "core_job",
@@ -1574,7 +1594,7 @@
         "y": 62
       },
       "id": 82,
-      "description": "1 Claim = 1 MRU. Counts Claim objects (one Ready/True condition series each), narrowed to the kinds in $billable. Raw cross-namespace query \u2014 works under UWM because the dashboard queries thanos-querier directly.",
+      "description": "One user-requested unit = 1 MRU. Counts the billable object itself (one Ready/True condition series each), narrowed by $billable_group and $billable. Matches claim_ AND xr_ families: most customer-facing XRDs on this fleet declare no claimNames, so their unit is carried by the namespaced XR, not by a Claim. $billable lists one kind per XRD, so nothing is counted twice. Raw cross-namespace query \u2014 works under UWM because the dashboard queries thanos-querier directly.",
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -1606,7 +1626,7 @@
         {
           "refId": "A",
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "count({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
+          "expr": "count({__name__=~\"kube_customresource_crossplane_(claim|xr)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_group=~\"$billable_group\", crossplane_kind=~\"$billable\"})"
         }
       ]
     },
@@ -1809,7 +1829,7 @@
     },
     {
       "type": "row",
-      "title": "Billing \u2014 MRUs (1 Claim = 1 MRU)",
+      "title": "Billing \u2014 MRUs (one requested unit = 1 MRU)",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1830,7 +1850,7 @@
         "y": 75
       },
       "id": 91,
-      "description": "MRUs per Claim kind. Claims only \u2014 the XR a Claim creates is the same unit and is never counted.",
+      "description": "MRUs per billable kind. One kind per XRD: the claim kind where the XRD offers one, the XR kind where it does not. A claim and the XR it creates are the same unit and must never both be listed in $billable.",
       "options": {
         "showHeader": true
       },
@@ -1840,7 +1860,7 @@
           "format": "table",
           "instant": true,
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "count by (crossplane_kind) ({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\"})"
+          "expr": "count by (crossplane_kind) ({__name__=~\"kube_customresource_crossplane_(claim|xr)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_group=~\"$billable_group\", crossplane_kind=~\"$billable\"})"
         }
       ]
     },
@@ -1855,7 +1875,7 @@
         "y": 75
       },
       "id": 92,
-      "description": "Per-tenant chargeback from Claims (namespace = tenant workspace).",
+      "description": "Per-tenant chargeback (namespace = tenant workspace). Both Claims and claimless namespaced XRs are namespaced, so the breakdown holds either way.",
       "options": {
         "showHeader": true
       },
@@ -1865,7 +1885,7 @@
           "format": "table",
           "instant": true,
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "count by (namespace) ({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\", namespace=~\"$tenant\"})"
+          "expr": "count by (namespace) ({__name__=~\"kube_customresource_crossplane_(claim|xr)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_group=~\"$billable_group\", crossplane_kind=~\"$billable\", namespace=~\"$tenant\"})"
         }
       ]
     },
@@ -1880,7 +1900,7 @@
         "y": 75
       },
       "id": 93,
-      "description": "Per-tenant, per-kind claim counts \u2014 the chargeback breakdown.",
+      "description": "Per-tenant, per-kind MRU counts \u2014 the chargeback breakdown.",
       "options": {
         "showHeader": true
       },
@@ -1890,7 +1910,7 @@
           "format": "table",
           "instant": true,
           "datasource": "${DS_PROMETHEUS}",
-          "expr": "count by (namespace, crossplane_kind) ({__name__=~\"kube_customresource_crossplane_claim_.+_condition\", type=\"Ready\", status=\"True\", crossplane_kind=~\"$billable\", namespace=~\"$tenant\"})"
+          "expr": "count by (namespace, crossplane_kind) ({__name__=~\"kube_customresource_crossplane_(claim|xr)_.+_condition\", type=\"Ready\", status=\"True\", crossplane_group=~\"$billable_group\", crossplane_kind=~\"$billable\", namespace=~\"$tenant\"})"
         }
       ]
     }
