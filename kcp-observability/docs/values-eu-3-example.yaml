@@ -1,0 +1,41 @@
+# values override for the eu-3 deployment of kcp-observability.
+#
+# Cluster facts verified live on eu-3 (2026-09-21) before writing this file:
+#   - kcp runs in kcp-config: rootshard `root` (Service root-kcp, component=rootshard),
+#     frontproxy-front-proxy (component=front-proxy), druid etcd `root` (3 members,
+#     Service root-client), 18 api-syncagent pods across 9 service APIs.
+#   - All four chart monitor selectors match eu-3's labels unchanged.
+#   - UWM is enabled (enableUserWorkload: true) and kcp-config had NO pre-existing
+#     ServiceMonitor/PodMonitor — no double-scrape risk (unlike us-2, which carried a
+#     hand-made kcp-front-proxy monitor that had to be removed first).
+
+grafana:
+  # eu-3's grafana-operator is OLM-installed OwnNamespace (OperatorGroup targets
+  # stakater-grafana-operator only) — a dashboard CR anywhere else is never
+  # reconciled. Land the CR in the operator's namespace.
+  namespace: stakater-grafana-operator
+  # NOTE: unlike us-2, eu-3's Grafana instance carries the SAAP default label
+  # app=grafana, so the chart's default instanceSelector matches as-is. No
+  # `app: null` override needed here.
+
+prometheus:
+  monitors:
+    shardServiceMonitor:
+      enabled: true
+      # Prerequisite applied on eu-3: cert-manager Certificate kcp-metrics-scraper-cert
+      # issued by the shard's `root-client-ca` issuer (CN=kcp-metrics-scraper,
+      # O=system:kcp:admin) — see docs/shard-metrics-cert-example.yaml.
+      # Verified live: /metrics is 403 anonymous, 200 with this cert (17020 lines).
+      certSecret: kcp-metrics-scraper-cert
+    frontProxyServiceMonitor:
+      enabled: true
+    etcdServiceMonitor:
+      enabled: true
+      # druid-created secrets, both present in kcp-config on eu-3.
+      clientCertSecret: etcd-client-tls
+      caSecret: etcd-ca-tls
+    syncAgentPodMonitor:
+      # eu-3's api-syncagent v0.5.0 releases already pass --metrics-address=0.0.0.0:8085
+      # (verified in the Deployment args), and declare NO containerPort — so the
+      # chart's __address__-relabel-to-podIP:8085 approach applies unchanged.
+      enabled: true
