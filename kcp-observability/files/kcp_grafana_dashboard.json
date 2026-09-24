@@ -447,7 +447,8 @@
         "w": 4,
         "x": 16,
         "y": 10
-      }
+      },
+      "description": "p95 of edge requests that completed within 60s, i.e. long-running watches EXCLUDED. Watches sit in the +Inf bucket and carry no label to filter on, so a quantile over the full bucket set pins to the top finite boundary as soon as watches pass ~5% of traffic (measured on eu-3: 7.6% watches, p95 stuck at a constant 60). The recording rule re-bases the histogram on the sub-60s population; the same eu-3 data then reads 0.048s."
     },
     {
       "id": 10,
@@ -938,7 +939,8 @@
         "w": 12,
         "x": 12,
         "y": 19
-      }
+      },
+      "description": "Edge latency quantiles over requests that completed within 60s — long-running watches EXCLUDED, since they would otherwise pin both quantiles to the top finite bucket permanently. This is the readable view of edge speed; the alert keys off the slow-request ratio panel below, not off these lines."
     },
     {
       "id": 20,
@@ -982,11 +984,60 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 27
       },
       "description": "Alert threshold 0.5%."
+    },
+    {
+      "id": 61,
+      "type": "timeseries",
+      "title": "Edge slow-request ratio (watches excluded)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "kcp:front_proxy_slow_ratio:rate5m",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "slower than budget"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          },
+          "unit": "percentunit",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 27
+      },
+      "description": "What KcpFrontProxyLatencyHigh actually alerts on: the fraction of NON-WATCH edge requests slower than the latency budget, measured entirely within the sub-60s population so the open-watch count cannot skew it. Gaps mean an idle edge (0/0 = NaN), which correctly does not alert. The latency panel next to this one is the human-readable view; this is the one tied to the alert threshold."
     },
     {
       "id": 21,
@@ -1030,8 +1081,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 8,
         "y": 27
       }
     },
@@ -1170,7 +1221,7 @@
           "legendFormat": "inflight {{request_kind}}"
         },
         {
-          "expr": "sum(rate(apiserver_flowcontrol_rejected_requests_total{job=~\"$shard_job\"}[5m]))",
+          "expr": "sum(rate(apiserver_flowcontrol_rejected_requests_total{job=~\"$shard_job\"}[5m])) or vector(0)",
           "refId": "B",
           "datasource": {
             "type": "prometheus",
@@ -1204,7 +1255,8 @@
         "w": 8,
         "x": 16,
         "y": 36
-      }
+      },
+      "description": "Concurrent requests in flight per kind, and the APF rejection rate. A flat 0 rejection line is the healthy state: apiserver_flowcontrol_rejected_requests_total is a labelled counter that kcp only materialises on the FIRST rejection, so before any rejection the series does not exist at all. `or vector(0)` pins the line at 0 so an untripped APF is visually distinct from a broken scrape (verified on eu-3: 451k dispatched requests, zero rejected, series absent)."
     },
     {
       "id": 26,
@@ -2621,7 +2673,8 @@
             "lineWidth": 1,
             "fillOpacity": 8,
             "showPoints": "never"
-          }
+          },
+          "noValue": "0"
         },
         "overrides": []
       },
@@ -2641,7 +2694,7 @@
         "x": 16,
         "y": 130
       },
-      "description": "1 = this container's LAST termination was an OOM kill (the reason persists until the next termination). Pairs with the KcpPodOOMKilled alert, which additionally requires a restart in the last 30m so it auto-resolves; this panel keeps the history visible after the alert clears."
+      "description": "1 = this container's LAST termination was an OOM kill (the reason persists until the next termination). Pairs with the KcpPodOOMKilled alert, which additionally requires a restart in the last 30m so it auto-resolves; this panel keeps the history visible after the alert clears. An EMPTY panel is the healthy state and renders as 0, not \"No data\": kube-state-metrics only emits this series once a container has actually terminated with reason=OOMKilled, so no series means no kcp container has ever been OOM-killed. `or vector(0)` is deliberately NOT used here — it would fabricate an unlabelled series that renders as a blank \"/\" legend entry on a per-pod panel."
     },
     {
       "id": 60,
