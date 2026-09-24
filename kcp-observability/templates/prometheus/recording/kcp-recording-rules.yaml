@@ -28,12 +28,43 @@ spec:
             sum(rate(proxy_request_duration_seconds_count{job=~"{{ .Values.kcp.frontProxy.job }}", code=~"5.."}[5m]))
             /
             clamp_min(sum(rate(proxy_request_duration_seconds_count{job=~"{{ .Values.kcp.frontProxy.job }}"}[5m])), 1e-10)
+        # Edge latency quantiles, EXCLUDING long-running watches.
+        #
+        # proxy_request_duration_seconds counts watches alongside ordinary requests and
+        # has no verb/path/scope label to tell them apart. Watches sit in the +Inf
+        # bucket, so a naive histogram_quantile over the full bucket set returns the
+        # top finite boundary the moment watches exceed (1 - quantile) of traffic --
+        # measured on eu-3: 7.6% watches, p95 and p99 both pinned at a constant 60.
+        #
+        # Dropping +Inf and promoting the highest finite boundary to +Inf re-bases the
+        # histogram on "requests that completed within longRunningBucket", which is
+        # exactly the non-watch population. Same eu-3 data: 60 -> 0.048s p95, a real
+        # number. The alert deliberately does NOT key off these (see slow_ratio below);
+        # they are the human-readable signal for panels.
         - record: kcp:front_proxy_latency_seconds:p95
           expr: |
-            histogram_quantile(0.95, sum by (le) (rate(proxy_request_duration_seconds_bucket{job=~"{{ .Values.kcp.frontProxy.job }}"}[5m])))
+            histogram_quantile(0.95, sum by (le) (label_replace(
+              rate(proxy_request_duration_seconds_bucket{job=~"{{ .Values.kcp.frontProxy.job }}", le!="+Inf"}[5m]),
+              "le", "+Inf", "le", "{{ .Values.kcp.frontProxy.longRunningBucket }}")))
         - record: kcp:front_proxy_latency_seconds:p99
           expr: |
-            histogram_quantile(0.99, sum by (le) (rate(proxy_request_duration_seconds_bucket{job=~"{{ .Values.kcp.frontProxy.job }}"}[5m])))
+            histogram_quantile(0.99, sum by (le) (label_replace(
+              rate(proxy_request_duration_seconds_bucket{job=~"{{ .Values.kcp.frontProxy.job }}", le!="+Inf"}[5m]),
+              "le", "+Inf", "le", "{{ .Values.kcp.frontProxy.longRunningBucket }}")))
+        # Fraction of non-watch edge requests slower than the latency budget. This is
+        # what KcpFrontProxyLatencyHigh alerts on: a ratio taken entirely INSIDE the
+        # sub-longRunningBucket population, so it cannot be skewed by how many watches
+        # happen to be open. No clamp_min guard on the denominator on purpose -- with
+        # zero traffic this yields 0/0 = NaN, and NaN > threshold is false, so the alert
+        # stays quiet. Clamping would make it read 1.0 (100% slow) on an idle edge and
+        # fire continuously.
+        - record: kcp:front_proxy_slow_ratio:rate5m
+          expr: |
+            1 - (
+              sum(rate(proxy_request_duration_seconds_bucket{job=~"{{ .Values.kcp.frontProxy.job }}", le="{{ .Values.kcp.frontProxy.latencyBudgetBucket }}"}[5m]))
+              /
+              sum(rate(proxy_request_duration_seconds_bucket{job=~"{{ .Values.kcp.frontProxy.job }}", le="{{ .Values.kcp.frontProxy.longRunningBucket }}"}[5m]))
+            )
 
         # --- Area 2: shard apiserver --------------------------------------------------
         - record: kcp:shard_error_ratio:rate5m

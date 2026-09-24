@@ -21,6 +21,19 @@ kcp:
     job: ".*-kcp"
   frontProxy:
     job: "frontproxy-front-proxy"
+    # Bucket boundaries of proxy_request_duration_seconds, given as the EXACT `le`
+    # label strings the histogram exposes. These are matched verbatim — a value that
+    # is not a real boundary silently selects NOTHING and makes every front-proxy
+    # latency rule permanently absent, so verify against a live scrape before changing:
+    #   ./tests/thanos-query.sh 'group by (le) (proxy_request_duration_seconds_bucket)'
+    # Verified on eu-3 and us-2 (kcp v0.32.x): boundaries are "1.0" ... "60.0", "+Inf".
+    # NOTE the ".0" suffix: "1" and "60" match nothing.
+    #
+    # longRunningBucket is the highest FINITE boundary. Everything above it is a
+    # long-running watch, and excluding those is the whole point (see below).
+    longRunningBucket: "60.0"
+    # The edge latency budget: requests slower than this count as "slow".
+    latencyBudgetBucket: "1.0"
   etcd:
     # druid's client Service is <etcd-name>-client.
     job: ".*-client"
@@ -111,8 +124,17 @@ prometheus:
         enabled: true
         for: 30m
         severity: warning
-        # p95 seconds (placeholder — calibrate)
-        p95Seconds: 1
+        # Fraction of NON-WATCH edge requests slower than kcp.frontProxy.latencyBudgetBucket.
+        #
+        # This is deliberately NOT a p95-seconds threshold. proxy_request_duration_seconds
+        # mixes long-running watches in with ordinary requests and carries no verb/path
+        # label to separate them, so once watches exceed 5% of traffic the p95 lands in
+        # the +Inf bucket and histogram_quantile returns the top finite boundary FOREVER
+        # (measured on eu-3: 7.6% watches, p95 pinned at a constant 60). Any seconds
+        # threshold below 60 then fires permanently and one above it can never fire.
+        # A ratio taken *within* the sub-60s population is immune to the watch mix.
+        # eu-3 standing value: 0.
+        threshold: 0.05
     # Area 2 — shard apiserver
     shard:
       down:

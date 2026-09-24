@@ -29,7 +29,45 @@ alerts.
 | --- | --- | --- | --- | --- |
 | `KcpFrontProxyDown` | critical / 2m | `up{job=frontproxy} == 0` | When the front-proxy is down, *every tenant loses every workspace at once* — the maximum-severity event the platform has. The most aggressive setting in the chart: there is no tolerable duration. | A total outage, discovered by customer tickets instead of a page. Shard and etcd can be perfectly healthy while the door is closed. |
 | `KcpFrontProxyErrorRateHigh` | warning / 10m / 0.5% | Edge 5xx ratio (`kcp:front_proxy_error_ratio:rate5m`) over budget | A climbing edge 5xx rate is the earliest *customer-visible* sign anything behind the proxy broke — it aggregates every backend failure into the one number tenants experience. | Partial degradations (one shard erroring, an auth regression) staying invisible until a component alert trips — customers notice first. |
-| `KcpFrontProxyLatencyHigh` | warning / 30m / p95 > 1s | Edge p95 latency above SLO, sustained | Slow is the new down — a hanging `kubectl` is a support ticket even when nothing has "failed"; no error-based alert can ever fire for it. | The platform degrading to unusable-but-technically-up with zero pages. The only latency promise the customer contract has. |
+| `KcpFrontProxyLatencyHigh` | warning / 30m / >5% slow | `kcp:front_proxy_slow_ratio:rate5m` — share of **non-watch** edge requests slower than the 1s budget | Slow is the new down — a hanging `kubectl` is a support ticket even when nothing has "failed"; no error-based alert can ever fire for it. | The platform degrading to unusable-but-technically-up with zero pages. The only latency promise the customer contract has. |
+
+### Why this alert is a ratio and not a p95 in seconds
+
+It used to be `kcp:front_proxy_latency_seconds:p95 > 1`. That form is **unusable on this
+metric**, and the failure is silent-by-construction:
+
+`proxy_request_duration_seconds` counts long-running watches alongside ordinary requests
+and exposes only `code` and `method` — there is no `verb`, `path` or `scope` label to
+separate them. Watches land in the `+Inf` bucket, so as soon as they exceed
+`1 - quantile` of traffic the p95 falls in `+Inf` and `histogram_quantile` returns the
+highest *finite* boundary, forever. Measured on eu-3: 7.6% of requests over 60s, p95
+pinned at a constant **60**. Every threshold below 60 then fires permanently, and any
+threshold above it can never fire at all — the alert carries no information either way.
+
+The fix has two halves:
+
+1. **The quantiles were re-based on the non-watch population.** The recording rules drop
+   `+Inf` and promote the highest finite boundary to `+Inf` via `label_replace`, which
+   makes the histogram describe "requests that completed within
+   `kcp.frontProxy.longRunningBucket`". Same eu-3 data: 60 → **0.048s**, a real number.
+   These feed the panels.
+2. **The alert moved to a ratio taken entirely inside that population** —
+   `kcp:front_proxy_slow_ratio:rate5m`, the share of sub-60s requests over the budget
+   bucket. A ratio between two buckets of the same population cannot be skewed by how
+   many watches happen to be open, so it is immune to the original defect rather than
+   merely tuned around it.
+
+Two things to know when changing it:
+
+- `kcp.frontProxy.latencyBudgetBucket` and `longRunningBucket` are matched as **exact `le`
+  label strings**. On kcp v0.32.x they are `"1.0"` and `"60.0"` — note the `.0`; `"1"` and
+  `"60"` match nothing and would make the rule permanently absent, recreating the same
+  class of silent failure. Verify against a live scrape before editing:
+  `./tests/thanos-query.sh 'group by (le) (proxy_request_duration_seconds_bucket)'`
+- The denominator is deliberately **not** `clamp_min`-guarded. On an idle edge the ratio
+  is `0/0 = NaN` and `NaN > threshold` is false, so it stays quiet; clamping would make it
+  read `1.0` (100% slow) and page continuously on a quiet cluster. A promtool test pins
+  this behaviour.
 
 ## Area 2 — Shard apiservers
 

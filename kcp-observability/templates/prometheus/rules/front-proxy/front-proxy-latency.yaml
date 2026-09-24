@@ -18,13 +18,19 @@ spec:
     - name: kcp.front_proxy
       rules:
         - alert: KcpFrontProxyLatencyHigh
+          {{- /* Ratio of slow requests WITHIN the non-watch population, not a p95 in
+                 seconds. proxy_request_duration_seconds mixes long-running watches in
+                 and offers no label to exclude them, so a seconds threshold on its p95
+                 is unusable: above a ~5% watch share the quantile pins to the top
+                 finite bucket permanently (eu-3: 7.6% watches -> constant 60). See
+                 values.yaml and docs/alerts-guide.md. */}}
           expr: |
-            kcp:front_proxy_latency_seconds:p95 > {{ $r.p95Seconds }}
+            kcp:front_proxy_slow_ratio:rate5m > {{ $r.threshold }}
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}
             rulesgroup: kcp
           annotations:
-            summary: "kcp edge p95 latency is {{`{{ $value | humanizeDuration }}`}}"
+            summary: "{{`{{ $value | humanizePercentage }}`}} of kcp edge requests are slower than {{ .Values.kcp.frontProxy.latencyBudgetBucket }}s (watches excluded)"
             description: "Sustained high latency at the front-proxy degrades every tenant interaction with the control plane."
 {{- end }}
