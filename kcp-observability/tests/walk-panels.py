@@ -39,28 +39,38 @@ def substitute(expr):
 queries = []
 def walk(panels):
     for p in panels:
+        # A panel that sets fieldConfig.defaults.noValue declares "empty is a valid,
+        # expected state, render it as this instead of 'No data'" — e.g. the OOM-kills
+        # panel, whose series kube-state-metrics only creates once a container has
+        # actually been OOM-killed. Such a panel is reported as `empty-ok` rather than
+        # EMPTY, so a permanently-and-correctly-empty panel never trains the reader to
+        # ignore this report. Panels WITHOUT noValue are still expected to have data.
+        expected_empty = "noValue" in (p.get("fieldConfig", {}).get("defaults", {}) or {})
         for t in p.get("targets", []):
             if t.get("expr"):
-                queries.append((p.get("title", "?"), t["expr"]))
+                queries.append((p.get("title", "?"), t["expr"], expected_empty))
         if p.get("panels"):
             walk(p["panels"])
 walk(dash.get("panels", []))
 
-ok = empty = err = 0
-for title, expr in queries:
+ok = empty = empty_ok = err = 0
+for title, expr, expected_empty in queries:
     q = substitute(expr)
     url = f"https://{HOST}/api/v1/query?query={urllib.parse.quote(q)}"
     try:
         req = urllib.request.Request(url, headers={"Authorization": f"Bearer {TOKEN}"})
         d = json.load(urllib.request.urlopen(req, context=CTX, timeout=25))
         if d.get("status") != "success":
-            err += 1; print(f"ERROR  | {title} | {d.get('error','?')[:90]}")
+            err += 1; print(f"ERROR    | {title} | {d.get('error','?')[:90]}")
         elif d["data"]["result"]:
-            ok += 1; print(f"data   | {title} | {len(d['data']['result'])} series")
+            ok += 1; print(f"data     | {title} | {len(d['data']['result'])} series")
+        elif expected_empty:
+            empty_ok += 1; print(f"empty-ok | {title} | no data, panel renders noValue")
         else:
-            empty += 1; print(f"EMPTY  | {title} | {q[:120]}")
+            empty += 1; print(f"EMPTY    | {title} | {q[:120]}")
     except Exception as e:
-        err += 1; print(f"ERROR  | {title} | {e}")
+        err += 1; print(f"ERROR    | {title} | {e}")
 
-print(f"\nTOTAL {len(queries)} queries: {ok} with data, {empty} empty, {err} errors")
+print(f"\nTOTAL {len(queries)} queries: {ok} with data, {empty_ok} expected-empty, "
+      f"{empty} unexpectedly empty, {err} errors")
 sys.exit(1 if err else 0)
