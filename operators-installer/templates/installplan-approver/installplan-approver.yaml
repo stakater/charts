@@ -56,10 +56,16 @@ spec:
               currentCSV=$(sub '{.status.currentCSV}')
               ipName=$(sub '{.status.installPlanRef.name}')
 
-              # 1. Pin already installed -> nothing to do. A newer pending
-              #    InstallPlan is intentionally left unapproved (that is the point
-              #    of a Manual pin). Idempotent on every Argo re-sync.
-              if [ "${installedCSV}" = "${SUBSCRIPTION_CSV}" ]; then
+              # 1. strict only: pin already installed -> nothing to do. A newer
+              #    pending InstallPlan is intentionally left unapproved (that is
+              #    the point of a Manual pin). Idempotent on every Argo re-sync.
+              #    Under track this shortcut MUST NOT run: after the first install
+              #    installedCSV equals csv forever, so it would exit here on every
+              #    later sync and the channel head would never be approved again
+              #    (the verifier then waits on the unapproved plan until its
+              #    deadline and the Argo sync fails). track falls through to
+              #    step 4, which is idempotent on its own.
+              if [ "${PIN_POLICY}" != "track" ] && [ "${installedCSV}" = "${SUBSCRIPTION_CSV}" ]; then
                 echo "Pinned csv ${SUBSCRIPTION_CSV} already installed. Nothing to approve."
                 exit 0
               fi

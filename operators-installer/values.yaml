@@ -41,7 +41,12 @@ annotations:
 #              point of a Manual pin) and the approver exits 0.
 #     track  - approve/verify whatever OLM resolved from the channel (the head),
 #              regardless of whether it equals `csv`. Use when you want
-#              gated-but-current rather than a hard version pin.
+#              gated-but-current rather than a hard version pin. This is
+#              continuous: on EVERY sync the approver approves the InstallPlan
+#              OLM currently designates, including when the installed csv
+#              equals `csv` (the strict "already installed" shortcut is skipped
+#              under track). `csv` still names the Jobs/SA and documents the
+#              build the entry was written for; it is not a ceiling.
 #              track also OMITS `startingCSV` from the Subscription, because
 #              startingCSV constrains OLM's *resolver*: leaving it set makes the
 #              Subscription fail resolution outright (ResolutionFailed -> no
