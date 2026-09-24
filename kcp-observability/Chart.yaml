@@ -2,5 +2,5 @@ apiVersion: v2
 name: kcp-observability
 description: Prometheus alerts, recording rules, and a Grafana dashboard for a kcp.io control plane (shards, front-proxy, cache server, workspace/APIExport controllers) on Stakater Cloud.
 type: application
-version: 0.0.1
+version: 0.0.2
 appVersion: "0.0.1"

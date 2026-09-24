@@ -426,8 +426,8 @@ tests:
     input_series:
       - series: 'up{job="frontproxy-front-proxy", pod="frontproxy-a"}'
         values: '1x40'
-      - series: 'kcp:front_proxy_latency_seconds:p95{job="frontproxy-front-proxy"}'
-        values: '0.2x40'
+      - series: 'kcp:front_proxy_slow_ratio:rate5m{job="frontproxy-front-proxy"}'
+        values: '0.01x40'
     alert_rule_test:
       - eval_time: 10m
         alertname: KcpFrontProxyDown
@@ -436,11 +436,11 @@ tests:
         alertname: KcpFrontProxyLatencyHigh
         exp_alerts: []
 
-  # Edge p95 above the 1s SLO for 30m -> warning.
+  # 12% of non-watch edge requests over the 1s budget for 30m -> warning.
   - interval: 1m
     input_series:
-      - series: 'kcp:front_proxy_latency_seconds:p95{job="frontproxy-front-proxy"}'
-        values: '2x40'
+      - series: 'kcp:front_proxy_slow_ratio:rate5m{job="frontproxy-front-proxy"}'
+        values: '0.12x40'
     alert_rule_test:
       - eval_time: 35m
         alertname: KcpFrontProxyLatencyHigh
@@ -450,8 +450,28 @@ tests:
               rulesgroup: kcp
               job: frontproxy-front-proxy
             exp_annotations:
-              summary: "kcp edge p95 latency is 2s"
+              summary: "12% of kcp edge requests are slower than 1.0s (watches excluded)"
               description: "Sustained high latency at the front-proxy degrades every tenant interaction with the control plane."
+
+  # REGRESSION GUARD for the watch-skew defect (SA-9075), driven from the RAW buckets
+  # so the recording rule itself is under test rather than a hand-fed result.
+  #
+  # Flat counters => rate 0 on both buckets => 0/0 = NaN => NaN > threshold is false,
+  # so an idle edge stays quiet. A clamp_min guard on the denominator would instead
+  # read 1.0 here (100% slow) and page continuously on a quiet cluster.
+  - interval: 1m
+    input_series:
+      - series: 'proxy_request_duration_seconds_bucket{job="frontproxy-front-proxy", le="1.0"}'
+        values: '100x40'
+      - series: 'proxy_request_duration_seconds_bucket{job="frontproxy-front-proxy", le="60.0"}'
+        values: '100x40'
+    # (No promql_expr_test on the ratio itself: it evaluates to NaN here, and promtool
+    # compares sample values with ==, which is always false for NaN. The alert-level
+    # assertion below is the one that matters anyway.)
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: KcpFrontProxyLatencyHigh
+        exp_alerts: []
 
   # --- Area 2: shard ------------------------------------------------------
   # Shard target down 2m -> critical; healthy shard stays quiet.
