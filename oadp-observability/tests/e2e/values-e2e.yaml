@@ -1,0 +1,19 @@
+# Chart overrides for the kind e2e run. Everything on; TIMINGS SHORTENED so every alert can
+# be driven to firing and back within minutes. The expressions are unchanged — only the
+# budget/for/window values differ from production defaults (25h / 15m / 12h).
+prometheus:
+  monitors:
+    veleroServiceMonitor: {enabled: true, interval: 15s}
+  rules:
+    velero:
+      backupStale: {for: 1m, maxAgeHours: 0.05}      # 3 minutes
+      noSuccessfulBackup: {for: 1m}
+      bslUnavailable: {for: 1m}
+      backupFailed: {for: 0m, window: 5m}
+    watchdog:
+      metricsAbsent: {for: 1m}
+      targetDown: {for: 1m}
+stateExporter:
+  enabled: true
+  runAsUser: 65534       # kind has no SCC to assign one
+  interval: 15s

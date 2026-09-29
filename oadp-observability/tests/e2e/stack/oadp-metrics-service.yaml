@@ -1,0 +1,23 @@
+# Emulates the Service the OADP operator creates for every DataProtectionApplication
+# (oadp-operator@oadp-1.5 internal/controller/monitor.go + velero.go getAppLabels):
+# same name, port name/number and labels, so the chart's ServiceMonitor is exercised
+# UNMODIFIED. Selector targets the upstream Velero chart's server pod.
+apiVersion: v1
+kind: Service
+metadata:
+  name: openshift-adp-velero-metrics-svc
+  namespace: openshift-adp
+  labels:
+    app.kubernetes.io/name: velero
+    app.kubernetes.io/component: server
+    app.kubernetes.io/managed-by: oadp-operator
+    app.kubernetes.io/instance: dpa
+spec:
+  selector:
+    app.kubernetes.io/name: velero
+    app.kubernetes.io/instance: velero
+    name: velero
+  ports:
+    - name: monitoring
+      port: 8085
+      targetPort: 8085

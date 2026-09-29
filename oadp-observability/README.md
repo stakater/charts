@@ -12,7 +12,7 @@ alert clears on its own once a backup succeeds again.
 Sibling of [`../oadp-operator`](../oadp-operator) and [`../oadp-instance`](../oadp-instance),
 which install OADP. This chart only observes it.
 
-> **Status:** built and tested offline and on kind. The Velero metric names are pinned from the
+> **Status:** built and tested offline and end-to-end on kind. The Velero metric names are pinned from the
 > Velero 1.16 source, and a **live capture must confirm them before the first release**
 > ([`tests/METRICS-CAPTURE.md`](tests/METRICS-CAPTURE.md)).
 
@@ -51,6 +51,22 @@ permissions, and troubleshooting.
   `weekly-etcd-backup` in namespace `etcd-backup`), read from kube-state-metrics'
   `kube_cronjob_status_last_successful_time`. They're empty if you don't run such CronJobs.
 
+### Screenshots
+
+Taken by the end-to-end suite ([`tests/e2e/`](tests/e2e/README.md)) on kind, with real Velero 1.16.2,
+the chart installed as-is, and alert timings shortened (a 3-minute budget instead of 25h).
+The etcd tiles are fed by demo CronJobs.
+
+**During an outage.** The bucket is unreachable (BSL `Unavailable`), one schedule's last success
+is past the budget, and a new schedule has **never** succeeded:
+
+![OADP / Backup Status during an outage](docs/images/dashboard-failing.png)
+
+**After recovery.** The bucket is fixed and fresh backups exist. Every alert resolved by itself,
+and the charts still show the outage window:
+
+![OADP / Backup Status after recovery](docs/images/dashboard-healthy.png)
+
 ## Install
 
 ```bash
@@ -80,5 +96,10 @@ PrometheusRule.
   `promtool test` (alert logic and dashboard tile logic), that every metric is captured or
   cited, that runbook anchors resolve, the dashboard (required panels, JSON, PromQL parse), and
   runs strict kubeconform against vendored CRD schemas.
+- `./tests/e2e/` stands up the full stack on kind (Prometheus Operator, Alertmanager,
+  grafana-operator, real Velero 1.16.2) and drives **every alert to firing, delivered to
+  Alertmanager, and back to resolved**, including the never-succeeded and the
+  expired-and-restarted cases. See [`tests/e2e/README.md`](tests/e2e/README.md) and the latest
+  report in [`tests/reports/`](tests/reports/).
 - `./tests/component/state-exporter.sh` runs the exporter on a throwaway kind cluster
   (isolated kubeconfig) against the real Velero 1.16 CRDs and asserts its output.

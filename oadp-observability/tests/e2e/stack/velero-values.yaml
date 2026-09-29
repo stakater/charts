@@ -1,0 +1,30 @@
+# Real Velero 1.16.2 (what OADP 1.5 ships) in openshift-adp, backed by the in-cluster bucket.
+image: {repository: velero/velero, tag: v1.16.2}
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.12.2
+    volumeMounts: [{mountPath: /target, name: plugins}]
+configuration:
+  backupStorageLocation:
+    - name: dpa-1          # OADP's naming: <dpa>-<n>
+      provider: aws
+      bucket: velero
+      default: true
+      validationFrequency: 30s
+      config: {region: us-east-1, s3ForcePathStyle: "true", s3Url: "http://seaweedfs.s3.svc:8333"}
+  volumeSnapshotLocation: []
+snapshotsEnabled: false
+deployNodeAgent: false
+credentials:
+  useSecret: true
+  secretContents:
+    cloud: |
+      [default]
+      aws_access_key_id=e2e
+      aws_secret_access_key=e2e
+metrics:
+  enabled: true
+  serviceMonitor: {enabled: false, autodetect: false}   # we scrape via the OADP-shaped Service only
+# The chart's CRD-upgrade hook pulls bitnamilegacy/kubectl:<cluster version>, which does not
+# exist for recent kind node versions. CRDs are installed from the chart's crds/ anyway.
+upgradeCRDs: false

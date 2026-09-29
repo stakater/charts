@@ -24,3 +24,5 @@
 # Docs/screenshots (not part of the packaged chart)
 docs/
 *.png
+# test harness (validate, component, e2e) is not part of the published chart
+tests/

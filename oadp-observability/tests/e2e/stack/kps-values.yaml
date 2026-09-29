@@ -1,0 +1,21 @@
+# Prometheus Operator + Prometheus + Alertmanager + kube-state-metrics. Grafana comes from
+# the grafana-operator instead (the chart ships a GrafanaDashboard CR). Selectors open so
+# the chart's ServiceMonitors/PrometheusRules in openshift-adp are picked up as on OpenShift UWM.
+fullnameOverride: kps
+grafana: {enabled: false}
+nodeExporter: {enabled: false}
+defaultRules: {create: false}
+kubeEtcd: {enabled: false}
+kubeControllerManager: {enabled: false}
+kubeScheduler: {enabled: false}
+kubeProxy: {enabled: false}
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    retention: 6h
+alertmanager:
+  alertmanagerSpec: {}
