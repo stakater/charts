@@ -52,6 +52,11 @@ naive rule.
   `schedules`). For the exporter it checks the *data* series, because kube-state-metrics can be
   up and still export nothing (RBAC denied, nothing to report).
 - `OadpTargetDown`: a scrape target exists but fails.
+- **Detection latency of `OadpMetricsAbsent`:** when a series disappears *without* Prometheus
+  writing a staleness marker, its last sample stays visible for the query lookback (5 minutes by
+  default), so `absent()` turns true up to 5 minutes late. Worst case is **5m + `for`**, which
+  is about 15 minutes with the default `for: 10m`. The kind e2e run observed both the fast path
+  (90s) and this worst case.
 
 ## Deployment choices
 
