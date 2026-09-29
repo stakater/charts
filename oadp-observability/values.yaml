@@ -62,6 +62,17 @@ grafana:
       datasourceName: Prometheus
   dashboard:
     enabled: true
+    # Optional section for CronJob-based etcd backups (e.g. a hosting cluster's
+    # daily/weekly etcd snapshot CronJobs), read from kube-state-metrics'
+    # kube_cronjob_status_last_successful_time. Off by default: this chart is about OADP,
+    # and on clusters without such CronJobs the panels would only show "no data".
+    etcdBackup:
+      enabled: false
+      namespace: etcd-backup
+      dailyCronJob: daily-etcd-backup
+      weeklyCronJob: weekly-etcd-backup
+      dailyMaxAgeHours: 25       # tile turns red after this
+      weeklyMaxAgeHours: 192     # 8 days
 
 prometheus:
   # ServiceMonitor/PodMonitor per component. Default OFF — the operator opts in per cluster.

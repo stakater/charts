@@ -2,8 +2,8 @@
 # Per-cluster backup status — Velero last success per schedule, etcd daily/
 # weekly last success, BSL phase — so a manual check needs no `oc`. The JSON is loaded
 # verbatim with .Files.Get (not templated), so Grafana's double-brace legends need no
-# escaping. The optional etcd panels assume CronJob-based etcd backups named
-# daily-etcd-backup / weekly-etcd-backup in namespace "etcd-backup" (empty otherwise).
+# escaping. The optional etcd section (grafana.dashboard.etcdBackup) lives in
+# files/oadp_grafana_dashboard_etcd.json and is appended only when enabled.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -20,15 +20,35 @@ spec:
     {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
   datasources:
     {{- toYaml .Values.grafana.datasources | nindent 4 }}
-  {{- /* The Velero tile (panel 1) and the age-vs-RPO line (panel 6) turn red at the SAME
-         budget as OadpBackupStale. Set here, not hardcoded in the JSON: a fixed 25h left the
-         tile green while the alert fired whenever maxAgeHours changed (found by the kind e2e).
-         fromJson/toPrettyJson, never tpl: Grafana's own double-brace legends must stay verbatim. */}}
+  {{- /* Budgets are injected at render time so the dashboard turns red exactly where the
+         alerts fire (a hardcoded 25h once left the dashboard green while OadpBackupStale fired).
+         fromJson/toPrettyJson, never tpl: Grafana's own double-brace legends must stay verbatim.
+         Panel 1 = Velero status table (Status mapping: OK below the budget, STALE above);
+         panel 6 = Velero age-vs-RPO line; panel 5 = alerts-firing tile. */}}
   {{- $budget := .Values.prometheus.rules.velero.backupStale.maxAgeHours }}
+  {{- $budgetS := mulf $budget 3600 }}
   {{- $dash := .Files.Get "files/oadp_grafana_dashboard.json" | fromJson }}
+  {{- $e := .Values.grafana.dashboard.etcdBackup }}
   {{- range $p := $dash.panels }}
-  {{- if eq (int $p.id) 1 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (mulf $budget 3600) }}{{ end }}
+  {{- if eq (int $p.id) 1 }}
+  {{- range $o := $p.fieldConfig.overrides }}{{- if eq $o.matcher.options "Status" }}{{- range $prop := $o.properties }}{{- if eq $prop.id "mappings" }}
+  {{- $_ := set (index $prop.value 1).options "to" $budgetS }}
+  {{- $_ := set (index $prop.value 2).options "from" $budgetS }}
+  {{- end }}{{- end }}{{- end }}{{- end }}
+  {{- end }}
   {{- if eq (int $p.id) 6 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (float64 $budget) }}{{ end }}
+  {{- if and (eq (int $p.id) 5) $e.enabled }}{{ $_ := set (index $p.targets 0) "expr" "count(ALERTS{alertstate=\"firing\", alertname=~\"Oadp.*|(?i:.*etcd.*backup.*)\"}) or vector(0)" }}{{ end }}
+  {{- end }}
+  {{- /* Optional etcd section: appended as its own row, names and budgets from values. */}}
+  {{- if $e.enabled }}
+  {{- $raw := .Files.Get "files/oadp_grafana_dashboard_etcd.json" | replace "__ETCD_NS__" $e.namespace | replace "__ETCD_DAILY__" $e.dailyCronJob | replace "__ETCD_WEEKLY__" $e.weeklyCronJob }}
+  {{- range $p := ($raw | fromJson).panels }}
+  {{- if eq (int $p.id) 21 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (mulf $e.dailyMaxAgeHours 3600) }}{{ end }}
+  {{- if eq (int $p.id) 22 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (mulf $e.weeklyMaxAgeHours 3600) }}{{ end }}
+  {{- if eq (int $p.id) 23 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (float64 $e.dailyMaxAgeHours) }}{{ end }}
+  {{- if eq (int $p.id) 24 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (divf $e.weeklyMaxAgeHours 24) }}{{ end }}
+  {{- $_ := set $dash "panels" (append $dash.panels $p) }}
+  {{- end }}
   {{- end }}
   json: |-
 {{ toPrettyJson $dash | indent 4 }}

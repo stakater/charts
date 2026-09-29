@@ -122,7 +122,7 @@ def load_dashboard_exprs(path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--rules", required=True)
-    ap.add_argument("--dashboard", help="GrafanaDashboard JSON (optional until a dashboard exists)")
+    ap.add_argument("--dashboard", action="append", default=[], help="dashboard JSON file(s); repeatable")
     ap.add_argument("--allowlist", action="append", default=[],
                     help="CAPTURED metric set (real /metrics from the pinned fixtures). Repeatable.")
     ap.add_argument("--documented", action="append", default=[],
@@ -132,7 +132,7 @@ def main():
     a = ap.parse_args()
 
     rule_exprs, defined = load_rule_exprs(a.rules)
-    dash_exprs = load_dashboard_exprs(a.dashboard) if a.dashboard else []
+    dash_exprs = [e for f in a.dashboard for e in load_dashboard_exprs(f)]
     all_exprs = rule_exprs + dash_exprs
 
     external, internal, unknown_funcs = set(), set(), set()
