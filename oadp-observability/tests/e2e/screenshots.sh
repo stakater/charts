@@ -6,7 +6,7 @@
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 NAME="${1:?usage: screenshots.sh <name>}"
-OUT="${CHART}/docs/images/dashboard-${NAME}.png"
+OUT="${OUT:-${CHART}/docs/images/dashboard-${NAME}.png}"
 CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 mkdir -p "$(dirname "$OUT")"
 
@@ -23,6 +23,6 @@ curl -sf "$GRAFANA/api/dashboards/uid/oadp-backup-status" >/dev/null || { red "d
 # kiosk: no Grafana chrome; 1h window so the incident + recovery are visible.
 URL="$GRAFANA/d/oadp-backup-status/?orgId=1&kiosk&from=now-1h&to=now"
 "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
-  --window-size=1600,945 --virtual-time-budget=30000 --run-all-compositor-stages-before-draw \
+  --window-size=1600,"${HEIGHT:-945}" --virtual-time-budget=30000 --run-all-compositor-stages-before-draw \
   --screenshot="$OUT" "$URL" >/dev/null 2>&1
 [ -s "$OUT" ] && green "wrote $OUT ($(du -h "$OUT" | cut -f1))" || { red "screenshot failed"; exit 1; }

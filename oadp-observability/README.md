@@ -42,23 +42,41 @@ permissions, and troubleshooting.
 
 ## Dashboard
 
-**OADP / Backup Status** (`grafana.dashboard.enabled`, on by default):
-- **Status tiles:** Velero's last *successful* backup per schedule, BSL phase, and backup
-  alerts firing. `NEVER` (red) means the schedule exists but no success is visible.
-- **Charts:** backup age against the 25h budget, Velero outcomes per hour, and BSL availability
+**OADP / Backup Status** (`grafana.dashboard.enabled`, on by default) answers "can this cluster
+be restored?" without `oc`:
+- **Velero status table:** one row per schedule, worst first, with the age of its last
+  *successful* backup and a status of `OK`, `STALE` (older than `maxAgeHours`, the same budget
+  as `OadpBackupStale`) or `NEVER` (the schedule exists but no success is visible). It stays
+  readable with many schedules.
+- **Tiles:** BSL phase per location, and backup alerts firing.
+- **Charts:** backup age against the budget, Velero outcomes over time, and BSL availability
   over time.
-- **Optional etcd panels:** CronJob-based etcd backups (`daily-etcd-backup` /
-  `weekly-etcd-backup` in namespace `etcd-backup`), read from kube-state-metrics'
-  `kube_cronjob_status_last_successful_time`. They're empty if you don't run such CronJobs.
+- **Optional etcd section** (`grafana.dashboard.etcdBackup.enabled`, **off by default**): for
+  clusters that back up etcd with CronJobs. It shows the daily and weekly last-*successful*-run
+  age from kube-state-metrics' `kube_cronjob_status_last_successful_time`, with configurable
+  namespace, CronJob names, and budgets:
+
+  ```yaml
+  grafana:
+    dashboard:
+      etcdBackup:
+        enabled: true
+        namespace: etcd-backup
+        dailyCronJob: daily-etcd-backup
+        weeklyCronJob: weekly-etcd-backup
+        dailyMaxAgeHours: 25
+        weeklyMaxAgeHours: 192
+  ```
 
 ### Screenshots
 
 Taken by the end-to-end suite ([`tests/e2e/`](tests/e2e/README.md)) on kind, with real Velero 1.16.2,
 the chart installed as-is, and alert timings shortened (a 3-minute budget instead of 25h).
-The etcd tiles are fed by demo CronJobs.
+The dashboard is shown in its default configuration, with the optional etcd section off.
 
-**During an outage.** The bucket is unreachable (BSL `Unavailable`), one schedule's last success
-is past the budget, and a new schedule has **never** succeeded:
+**During an outage.** The bucket is unreachable (BSL `Unavailable`), one schedule is `STALE`
+(its last success is past the budget), and a new schedule has `NEVER` succeeded. The status
+table sorts worst first:
 
 ![OADP / Backup Status during an outage](docs/images/dashboard-failing.png)
 

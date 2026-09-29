@@ -61,6 +61,6 @@ the cause.
   isn't exercised (all objects share `openshift-adp`, which is what that enforcement needs).
 - Velero's `Failed` / `PartiallyFailed` phases aren't produced here. They're covered by
   `tests/unit/rules.test.yaml`.
-- The etcd tiles on the dashboard are fed by **demo** CronJobs
+- The optional etcd section is enabled in `values-e2e.yaml` so it renders for real. Its tiles are fed by **demo** CronJobs
   ([`stack/demo-etcd-cronjobs.yaml`](stack/demo-etcd-cronjobs.yaml)): daily succeeds, weekly
   always fails.
