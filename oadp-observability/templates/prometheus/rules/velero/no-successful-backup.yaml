@@ -1,0 +1,41 @@
+{{- $r := .Values.prometheus.rules.velero.noSuccessfulBackup }}
+{{- $budget := .Values.prometheus.rules.velero.backupStale.maxAgeHours }}
+{{- if and ($r) ($r.enabled) (.Values.stateExporter.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-no-successful-backup
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: oadp.backup-outcome
+      rules:
+        - alert: OadpBackupNoSuccessfulBackup
+          # The never-succeeded shape: a Schedule has existed longer than the RPO budget and
+          # NO Completed backup of it is visible — never succeeded, every success expired by
+          # TTL, or Velero is not being scraped. The success timestamp is ABSENT in all of
+          # these, so OadpBackupStale is blind; this rule is its complement.
+          # Anchored on the Schedule CR's age from the chart's state exporter — NOT on
+          # velero_backup_last_status (Velero's Schedule controller resets it to 1 every
+          # minute via InitSchedule, schedule_controller.go:111) and NOT on
+          # velero_backup_attempt_total (FailedValidation never registers an attempt).
+          # A new Schedule gets one full budget before it can fire.
+          expr: |
+            time() - max by (namespace, schedule) (kube_customresource_schedule_created) > {{ $budget }} * 3600
+            unless on (namespace, schedule)
+            max by (namespace, schedule) (velero_backup_last_successful_timestamp{schedule!=""})
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: oadp
+          annotations:
+            summary: "No successful Velero backup is visible for schedule {{`{{ $labels.schedule }}`}}"
+            description: "Schedule {{`{{ $labels.schedule }}`}} has existed for more than {{ $budget }}h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n {{`{{ $labels.namespace }}`}} get backupstoragelocations.velero.io; oc -n {{`{{ $labels.namespace }}`}} get backups.velero.io -l velero.io/schedule-name={{`{{ $labels.schedule }}`}}"
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#oadpbackupnosuccessfulbackup"
+{{- end }}

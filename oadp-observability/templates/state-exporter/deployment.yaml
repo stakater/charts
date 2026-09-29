@@ -1,0 +1,78 @@
+{{- if .Values.stateExporter.enabled }}
+{{- $e := .Values.stateExporter }}
+# kube-state-metrics in custom-resource-state-only mode: it watches nothing but the
+# BackupStorageLocations and Schedules in configmap.yaml. Probes/ports/securityContext follow the
+# upstream v2.20.0 example, minus the fixed runAsUser: OpenShift restricted-v2 assigns one;
+# vanilla Kubernetes needs stateExporter.runAsUser (the image user is non-numeric "nobody").
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-state-exporter
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: state-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "oadp-observability.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: state-exporter
+  template:
+    metadata:
+      labels:
+        {{- include "oadp-observability.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: state-exporter
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/state-exporter/configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "oadp-observability.fullname" . }}-state-exporter
+      containers:
+        - name: kube-state-metrics
+          image: "{{ $e.image.repository }}:{{ $e.image.tag }}"
+          imagePullPolicy: {{ $e.image.pullPolicy }}
+          args:
+            - --port=8080
+            - --telemetry-port=8081
+            - --custom-resource-state-only=true
+            - --custom-resource-state-config-file=/etc/ksm/crs.yaml
+            - --namespaces={{ include "oadp-observability.namespace" . }}
+          ports:
+            - containerPort: 8080
+              name: http-metrics
+            - containerPort: 8081
+              name: telemetry
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http-metrics
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: telemetry
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml $e.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            {{- with $e.runAsUser }}
+            runAsUser: {{ . }}
+            {{- end }}
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: crs-config
+              mountPath: /etc/ksm
+              readOnly: true
+      volumes:
+        - name: crs-config
+          configMap:
+            name: {{ include "oadp-observability.fullname" . }}-state-exporter
+{{- end }}

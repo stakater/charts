@@ -1,0 +1,390 @@
+# promtool unit tests for oadp-observability rule LOGIC.
+# Runs against tests/.rendered/rules.yaml (all groups merged, chart defaults).
+# Why each alert is shaped this way: docs/design.md.
+# Series carry namespace="openshift-adp" (where OADP runs; the rules group by it).
+rule_files:
+  - ../.rendered/rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # ------------------------------------------------------------ backup outcome
+  # Schedule creation times are negative (months before t=0) so "older than 25h" holds
+  # from the first sample. kube_customresource_schedule_created comes from the chart's own
+  # state exporter.
+  #
+  # T1 — never-succeeded replay: every run ends FailedValidation, no Completed backup has ever existed
+  # (no timestamp series). velero_backup_last_status is modelled as it REALLY behaves:
+  # clobbered back to 1 every minute by the Schedule controller's InitSchedule — so this
+  # test is the regression guard against re-anchoring on last_status (the first build did,
+  # and it could never fire).
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '-8000000x60'
+      - series: 'velero_backup_last_status{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '1x60'
+      - series: 'velero_backup_validation_failure_total{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '89x60'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+            exp_annotations:
+              summary: "No successful Velero backup is visible for schedule default-object-schedule"
+              description: "Schedule default-object-schedule has existed for more than 25h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
+      - eval_time: 30m
+        alertname: OadpBackupStale
+        exp_alerts: []
+
+  # T2 — healthy daily schedule: the success timestamp keeps up with time -> silent.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '-8000000x60'
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '0+60x60'
+    alert_rule_test:
+      - eval_time: 60m
+        alertname: OadpBackupStale
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts: []
+
+  # T3 — stale: last success at t=0, every run since has failed. At 27h the success is
+  # older than the 25h budget -> OadpBackupStale. NoSuccessful stays silent: a success
+  # still exists (the alerts are mutually exclusive by construction).
+  # 1m samples (not 1h): sparser samples fall outside the 5m lookback and reset `for`.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '-8000000x1700'
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '0x1700'
+    alert_rule_test:
+      - eval_time: 24h
+        alertname: OadpBackupStale
+        exp_alerts: []
+      - eval_time: 27h
+        alertname: OadpBackupStale
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+            exp_annotations:
+              summary: "No successful Velero backup for schedule default-object-schedule in over 25h"
+              description: "The newest Completed backup of schedule default-object-schedule is 1d 3h 0m 0s old (budget 25h), so the cluster cannot be restored to within its RPO. Recent runs are failing or not running. First: oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule --sort-by=.metadata.creationTimestamp; oc -n openshift-adp get backupstoragelocations.velero.io"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupstale"
+      - eval_time: 27h
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts: []
+
+  # T4 — recovery: the never-succeeded state for 30m, then a backup Completes (the
+  # timestamp appears). Fires first, then resolves with no human action.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '-8000000x60'
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '_x30 1800x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+            exp_annotations:
+              summary: "No successful Velero backup is visible for schedule default-object-schedule"
+              description: "Schedule default-object-schedule has existed for more than 25h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
+      - eval_time: 45m
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts: []
+      - eval_time: 45m
+        alertname: OadpBackupStale
+        exp_alerts: []
+
+  # T5 — expired then restarted: the last success aged out (TTL GC) and Velero restarted,
+  # so the timestamp series is GONE (not stale). A bare `time() - ts` rule is blind here.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '-8000000x60'
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '0x10 stale'
+    alert_rule_test:
+      - eval_time: 50m
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+            exp_annotations:
+              summary: "No successful Velero backup is visible for schedule default-object-schedule"
+              description: "Schedule default-object-schedule has existed for more than 25h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
+
+  # T6 — fresh install : the Schedule is created at t=0 and nothing ever
+  # succeeds. Silent while the first run can still be pending; pages once the Schedule is
+  # older than the 25h budget with no success.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '0x1700'
+    alert_rule_test:
+      - eval_time: 20h
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts: []
+      - eval_time: 26h
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+            exp_annotations:
+              summary: "No successful Velero backup is visible for schedule default-object-schedule"
+              description: "Schedule default-object-schedule has existed for more than 25h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
+
+  # T7 — ad-hoc / NonAdminBackup backups (schedule=""): no RPO promise -> silent. Stale
+  # filters schedule!=""; NoSuccessful is anchored on Schedule CRs, which ad-hoc has none of.
+  - interval: 1m
+    input_series:
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", pod="velero-a", schedule=""}'
+        values: '0x1700'
+    alert_rule_test:
+      - eval_time: 27h
+        alertname: OadpBackupStale
+        exp_alerts: []
+      - eval_time: 27h
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts: []
+
+  # ------------------------------------------------------------ cause alerts
+  # T8 — the CAUSE: BSL dpa-1 Unavailable (e.g. S3 403 AccessDenied) -> page within 15m,
+  # ~a day before any outcome alert could.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_backupstoragelocation_status_phase{namespace="openshift-adp", name="dpa-1", phase="Available", customresource_group="velero.io", customresource_kind="BackupStorageLocation", customresource_version="v1"}'
+        values: '0x30'
+      - series: 'kube_customresource_backupstoragelocation_status_phase{namespace="openshift-adp", name="dpa-1", phase="Unavailable", customresource_group="velero.io", customresource_kind="BackupStorageLocation", customresource_version="v1"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: OadpBackupStorageLocationUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              name: dpa-1
+            exp_annotations:
+              summary: "Velero BackupStorageLocation dpa-1 is not Available"
+              description: "Every backup that targets dpa-1 will end FailedValidation until this is fixed. Usual causes: rejected bucket credentials (e.g. S3 403 AccessDenied), a deleted bucket, or no network path. First: oc -n openshift-adp get backupstoragelocations.velero.io dpa-1 -o jsonpath='{.status.message}'"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupstoragelocationunavailable"
+
+  # T9 — BSL fixed (credentials rotated) after 30m -> resolves on its own (A2).
+  # T10 is the tail: once Available=1 the alert is silent.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_backupstoragelocation_status_phase{namespace="openshift-adp", name="dpa-1", phase="Available"}'
+        values: '0x30 1x30'
+      - series: 'kube_customresource_backupstoragelocation_status_phase{namespace="openshift-adp", name="dpa-1", phase="Unavailable"}'
+        values: '1x30 0x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: OadpBackupStorageLocationUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              name: dpa-1
+            exp_annotations:
+              summary: "Velero BackupStorageLocation dpa-1 is not Available"
+              description: "Every backup that targets dpa-1 will end FailedValidation until this is fixed. Usual causes: rejected bucket credentials (e.g. S3 403 AccessDenied), a deleted bucket, or no network path. First: oc -n openshift-adp get backupstoragelocations.velero.io dpa-1 -o jsonpath='{.status.message}'"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupstoragelocationunavailable"
+      - eval_time: 50m
+        alertname: OadpBackupStorageLocationUnavailable
+        exp_alerts: []
+
+  # T11 — a daily run failing validation: validation_failure_total +1 -> OadpBackupFailed with
+  # phase=FailedValidation (the cause, stated). T13 is the tail: once 12h pass with no
+  # new failure, the windowed increase is 0 and it resolves.
+  - interval: 1m
+    input_series:
+      - series: 'velero_backup_validation_failure_total{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '0x10 1x900'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpBackupFailed
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+              phase: FailedValidation
+            exp_annotations:
+              summary: "A Velero backup of schedule default-object-schedule ended FailedValidation"
+              description: "At least one backup of schedule default-object-schedule ended FailedValidation in the last 12h. FailedValidation: the backup spec or its storage location is invalid, so check the BSL first. PartiallyFailed: some items or volumes were not backed up. Failed: the backup run itself errored. First: oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,REASON:.status.failureReason,ERRORS:.status.validationErrors"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupfailed"
+      - eval_time: 800m
+        alertname: OadpBackupFailed
+        exp_alerts: []
+
+  # T12 — a PartiallyFailed run (e.g. a volume snapshot failed) -> phase=PartiallyFailed.
+  - interval: 1m
+    input_series:
+      - series: 'velero_backup_partial_failure_total{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '0x10 1x50'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpBackupFailed
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+              phase: PartiallyFailed
+            exp_annotations:
+              summary: "A Velero backup of schedule default-object-schedule ended PartiallyFailed"
+              description: "At least one backup of schedule default-object-schedule ended PartiallyFailed in the last 12h. FailedValidation: the backup spec or its storage location is invalid, so check the BSL first. PartiallyFailed: some items or volumes were not backed up. Failed: the backup run itself errored. First: oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,REASON:.status.failureReason,ERRORS:.status.validationErrors"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupfailed"
+
+  # ------------------------------------------------------------ blindness watchdog
+  # T14 — nothing is measured: no Velero target, no BSL phase series, no Schedule series.
+  # Every outcome/cause alert is silently disarmed here — the watchdog must say so.
+  - interval: 1m
+    input_series:
+      - series: 'unrelated_metric{namespace="openshift-adp"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: OadpMetricsAbsent
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              target: velero
+              job: openshift-adp-velero-metrics-svc
+            exp_annotations:
+              summary: "Backup monitoring is blind: no velero metrics"
+              description: "The velero metrics this chart alerts on have NO series. Every alert that depends on them is silently disarmed, and backups may be failing unseen. Likely causes: the scrape target vanished (ServiceMonitor or Service deleted, selector drift), or the state exporter lost RBAC or has nothing to report."
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpmetricsabsent"
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              target: backupstoragelocations
+            exp_annotations:
+              summary: "Backup monitoring is blind: no backupstoragelocations metrics"
+              description: "The backupstoragelocations metrics this chart alerts on have NO series. Every alert that depends on them is silently disarmed, and backups may be failing unseen. Likely causes: the scrape target vanished (ServiceMonitor or Service deleted, selector drift), or the state exporter lost RBAC or has nothing to report."
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpmetricsabsent"
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              target: schedules
+            exp_annotations:
+              summary: "Backup monitoring is blind: no schedules metrics"
+              description: "The schedules metrics this chart alerts on have NO series. Every alert that depends on them is silently disarmed, and backups may be failing unseen. Likely causes: the scrape target vanished (ServiceMonitor or Service deleted, selector drift), or the state exporter lost RBAC or has nothing to report."
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpmetricsabsent"
+
+  # T15 — Velero target exists but is down.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="openshift-adp-velero-metrics-svc", namespace="openshift-adp", pod="velero-a"}'
+        values: '0x15'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: OadpTargetDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              target: velero
+              job: openshift-adp-velero-metrics-svc
+              namespace: openshift-adp
+              pod: velero-a
+            exp_annotations:
+              summary: "velero metrics target velero-a is down"
+              description: "Prometheus cannot scrape velero-a. While it is down, backup alerts that depend on its metrics cannot fire. If it is the Velero server, scheduled backups are also not running."
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadptargetdown"
+
+  # T16 — healthy: targets up, BSL phase present -> watchdog silent.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="openshift-adp-velero-metrics-svc", namespace="openshift-adp", pod="velero-a"}'
+        values: '1x30'
+      - series: 'up{job="oadp-oadp-observability-state-exporter", namespace="openshift-adp", pod="bsl-a"}'
+        values: '1x30'
+      - series: 'kube_customresource_backupstoragelocation_status_phase{namespace="openshift-adp", name="dpa-1", phase="Available"}'
+        values: '1x30'
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '-8000000x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: OadpMetricsAbsent
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: OadpTargetDown
+        exp_alerts: []
+
+  # ------------------------------------------------------------ dashboard tile logic
+  # The status tiles' "NEVER" branches (value -1 -> mapped to "NEVER" in red). Expressions
+  # copied verbatim from files/oadp_grafana_dashboard.json — keep them in sync.
+  # T17 — never-succeeded shape on the Velero tile: Schedule exists, no success -> B = -1, A empty.
+  #        Healthy schedule alongside -> A = its age, no B.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{schedule="default-object-schedule"}'
+        values: '0x10'
+      - series: 'kube_customresource_schedule_created{schedule="hourly"}'
+        values: '0x10'
+      - series: 'velero_backup_last_successful_timestamp{schedule="hourly"}'
+        values: '0x10'
+    promql_expr_test:
+      - expr: (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})) * 0 - 1
+        eval_time: 10m
+        exp_samples:
+          - labels: '{schedule="default-object-schedule"}'
+            value: -1
+      - expr: time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})
+        eval_time: 10m
+        exp_samples:
+          - labels: '{schedule="hourly"}'
+            value: 600
+
+  # T18 — never-succeeded shape on the etcd daily tile: the CronJob exists and has never succeeded
+  # (no last_successful_time) -> -1 "NEVER"; once a success lands the NEVER branch is empty.
+  - interval: 1m
+    input_series:
+      - series: 'kube_cronjob_info{namespace="etcd-backup", cronjob="daily-etcd-backup"}'
+        values: '1x20'
+      - series: 'kube_cronjob_status_last_successful_time{namespace="etcd-backup", cronjob="daily-etcd-backup"}'
+        values: '_x10 600x10'
+    promql_expr_test:
+      - expr: (max(kube_cronjob_info{namespace="etcd-backup", cronjob="daily-etcd-backup"}) unless max(kube_cronjob_status_last_successful_time{namespace="etcd-backup", cronjob="daily-etcd-backup"})) * 0 - 1
+        eval_time: 5m
+        exp_samples:
+          - labels: '{}'
+            value: -1
+      - expr: (max(kube_cronjob_info{namespace="etcd-backup", cronjob="daily-etcd-backup"}) unless max(kube_cronjob_status_last_successful_time{namespace="etcd-backup", cronjob="daily-etcd-backup"})) * 0 - 1
+        eval_time: 15m
+        exp_samples: []

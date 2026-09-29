@@ -1,0 +1,25 @@
+{{- if .Values.grafana.dashboard.enabled }}
+# Per-cluster backup status — Velero last success per schedule, etcd daily/
+# weekly last success, BSL phase — so a manual check needs no `oc`. The JSON is loaded
+# verbatim with .Files.Get (not templated), so Grafana's double-brace legends need no
+# escaping. The optional etcd panels assume CronJob-based etcd backups named
+# daily-etcd-backup / weekly-etcd-backup in namespace "etcd-backup" (empty otherwise).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-dashboard
+  namespace: {{ .Values.grafana.namespace | default (include "oadp-observability.namespace" .) }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder | quote }}
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+  datasources:
+    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+  json: |-
+{{ .Files.Get "files/oadp_grafana_dashboard.json" | indent 4 }}
+{{- end }}

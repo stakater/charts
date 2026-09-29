@@ -1,0 +1,5 @@
+# metrics-allowlist.captured.txt — metric families PROVEN to exist, extracted from
+# tests/fixtures/*-metrics.txt (real /metrics scrapes; provenance in fixtures/README.md).
+# Regenerate with ./tests/generate-allowlist.sh — validate.sh fails if out of sync.
+kube_customresource_backupstoragelocation_status_phase
+kube_customresource_schedule_created

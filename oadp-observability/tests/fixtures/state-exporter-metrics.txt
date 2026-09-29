@@ -1,0 +1,11 @@
+# state-exporter-metrics.txt — REAL scrape of this chart's state exporter
+# (kube-state-metrics v2.20.0, config templates/state-exporter/configmap.yaml)
+# on kind with Velero 1.16 CRDs; captured by tests/component/state-exporter.sh.
+# Provenance is kind, not OpenShift: it proves OUR exporter's output shape.
+# HELP kube_customresource_backupstoragelocation_status_phase Velero BackupStorageLocation phase (1 for the current phase).
+# TYPE kube_customresource_backupstoragelocation_status_phase gauge
+kube_customresource_backupstoragelocation_status_phase{customresource_group="velero.io",customresource_kind="BackupStorageLocation",customresource_version="v1",name="dpa-1",phase="Available"} 0
+kube_customresource_backupstoragelocation_status_phase{customresource_group="velero.io",customresource_kind="BackupStorageLocation",customresource_version="v1",name="dpa-1",phase="Unavailable"} 1
+# HELP kube_customresource_schedule_created Velero Schedule creation time (unix seconds).
+# TYPE kube_customresource_schedule_created gauge
+kube_customresource_schedule_created{customresource_group="velero.io",customresource_kind="Schedule",customresource_version="v1",schedule="default-object-schedule"} 1.7e+09

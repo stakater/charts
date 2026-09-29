@@ -1,0 +1,20 @@
+{{- if .Values.stateExporter.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-state-exporter
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: state-exporter
+spec:
+  endpoints:
+    - interval: {{ .Values.stateExporter.interval }}
+      path: /metrics
+      port: http-metrics
+      scheme: http
+  selector:
+    matchLabels:
+      {{- include "oadp-observability.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: state-exporter
+{{- end }}

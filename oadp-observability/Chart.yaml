@@ -1,0 +1,6 @@
+apiVersion: v2
+name: oadp-observability
+description: Outcome-based Prometheus alerts, an optional state exporter, and a Grafana dashboard for OADP (OpenShift API for Data Protection / Velero) backups.
+type: application
+version: 0.0.1
+appVersion: "0.0.1"

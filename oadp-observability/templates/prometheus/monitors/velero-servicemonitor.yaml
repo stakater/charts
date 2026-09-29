@@ -1,0 +1,33 @@
+{{- if and (.Values.prometheus.monitors.veleroServiceMonitor) (.Values.prometheus.monitors.veleroServiceMonitor.enabled) }}
+{{- $m := .Values.prometheus.monitors.veleroServiceMonitor }}
+# Scrapes the Velero server through the metrics Service the OADP operator creates for
+# every DataProtectionApplication (oadp-operator@oadp-1.5 internal/controller/monitor.go:
+# openshift-adp-velero-metrics-svc, port "monitoring" = 8085, plain http; labels from
+# getAppLabels in velero.go). The component=server label keeps node-agent pods out.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-velero
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - interval: {{ $m.interval }}
+      path: /metrics
+      port: monitoring
+      scheme: http
+      metricRelabelings:
+        # velero_csi_snapshot_* carry a per-backup `backupName` label: a new series for
+        # every backup, forever. Dropping just the label would make those series collide
+        # (duplicate samples, rejected at ingest), so drop the family. No rule or panel uses
+        # it; the per-schedule velero_volume_snapshot_* counters remain.
+        - action: drop
+          sourceLabels: [__name__]
+          regex: velero_csi_snapshot_.*
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: velero
+      app.kubernetes.io/component: server
+      app.kubernetes.io/managed-by: oadp-operator
+{{- end }}

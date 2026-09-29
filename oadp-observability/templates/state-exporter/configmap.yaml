@@ -1,0 +1,53 @@
+{{- if .Values.stateExporter.enabled }}
+# kube-state-metrics custom-resource-state config (docs/state-exporter.md):
+#   BackupStorageLocation .status.phase -> StateSet (Velero 1.16 has no BSL metric)
+#     kube_customresource_backupstoragelocation_status_phase{name, phase} 1|0
+#     (no series until status.phase is set — the watchdog treats that as "blind")
+#   Schedule .metadata.creationTimestamp -> Gauge (RFC3339 parsed to unix seconds)
+#     kube_customresource_schedule_created{schedule}
+#     (the "never succeeded" anchor; velero_backup_last_status is reset to 1 every
+#     minute by Velero's InitSchedule and cannot carry a failure)
+# No namespace label from path: UWM enforces the target's namespace (openshift-adp) and a
+# second one would become exported_namespace.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-state-exporter
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: state-exporter
+data:
+  crs.yaml: |
+    kind: CustomResourceStateMetrics
+    spec:
+      resources:
+        - groupVersionKind:
+            group: velero.io
+            version: v1
+            kind: BackupStorageLocation
+          labelsFromPath:
+            name: [metadata, name]
+          metrics:
+            - name: backupstoragelocation_status_phase
+              help: "Velero BackupStorageLocation phase (1 for the current phase)."
+              each:
+                type: StateSet
+                stateSet:
+                  labelName: phase
+                  path: [status, phase]
+                  list: [Available, Unavailable]
+        - groupVersionKind:
+            group: velero.io
+            version: v1
+            kind: Schedule
+          labelsFromPath:
+            schedule: [metadata, name]
+          metrics:
+            - name: schedule_created
+              help: "Velero Schedule creation time (unix seconds)."
+              each:
+                type: Gauge
+                gauge:
+                  path: [metadata, creationTimestamp]
+{{- end }}

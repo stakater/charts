@@ -1,0 +1,41 @@
+# metrics-allowlist.documented.txt — metrics the chart references that are REAL per upstream
+# SOURCE but are not yet in tests/fixtures/ (no live capture yet — tests/METRICS-CAPTURE.md).
+# Every entry cites where it is defined. RELEASE GATE: before the first publish, each entry
+# below must be confirmed by a capture and move to metrics-allowlist.captured.txt (or be
+# removed with its rule). Entries are added only as a rule/panel starts referencing them.
+#
+# Source pin: vmware-tanzu/velero@release-1.16 (OADP 1.5.5 ships Velero 1.16)
+#   pkg/metrics/metrics.go — names (lines 34 to 75), namespace "velero" (line 31), label "schedule" (line 81)
+
+# --- backup outcome (Velero server, openshift-adp-velero-metrics-svc :8085) ---
+# Gauge{schedule}: completion time of the newest Completed Backup CR per schedule.
+# Recomputed every 1m from live Backup CRs (backup_controller.go lines 157 to 181), Completed only.
+velero_backup_last_successful_timestamp
+# --- cause counters (Velero server). Zero-initialised per schedule by InitSchedule
+# (metrics.go InitSchedule), so increase() sees the first failure.
+velero_backup_failure_total
+velero_backup_validation_failure_total
+velero_backup_partial_failure_total
+
+# NOT used, deliberately: velero_backup_last_status. Velero's Schedule controller re-runs
+# InitSchedule every minute (schedule_controller.go:111, scheduleSyncPeriod) which Set(1)s
+# it — a failure's 0 survives <1m. Do not add it back to any rule.
+
+# (The state exporter's kube_customresource_* series are CAPTURED, not documented: see
+# tests/fixtures/state-exporter-metrics.txt from tests/component/state-exporter.sh.)
+
+# --- Prometheus built-in (synthesized per scrape target) ---
+up
+
+# --- dashboard ---
+# Counter{schedule}: backups that ended Completed (Velero 1.16 metrics.go:37; zero-initialised
+# per schedule by InitSchedule).
+velero_backup_success_total
+# kube-state-metrics v2.20.0 docs/metrics/workload/cronjob-metrics.md — cluster KSM, not in
+# our fixtures. The etcd-backup CronJobs (namespace etcd-backup) are what they describe.
+#   last_successful_time = status.lastSuccessfulTime: the OUTCOME (vs last_schedule_time,
+#   which only says the cron fired — a proxy, not the outcome).
+kube_cronjob_status_last_successful_time
+kube_cronjob_info
+# Prometheus built-in (synthesized by the rule engine): the "alerts firing" tile.
+ALERTS

@@ -1,0 +1,118 @@
+# oadp-observability values.
+#
+# Metric names are pinned from the Velero 1.16 / OADP 1.5 source (cited in
+# tests/metrics-allowlist.documented.txt) and must be confirmed by a live capture before
+# release (tests/METRICS-CAPTURE.md). Do not add a rule that references a metric which is
+# not in tests/fixtures/ (captured) or the documented allowlist. tests/validate.sh enforces this.
+
+nameOverride: ""
+fullnameOverride: ""
+# Namespace the monitoring objects land in. Must be the namespace OADP runs in
+# (openshift-adp by default) so UWM can resolve the scrape targets. Defaults to the
+# release namespace.
+namespaceOverride: ""
+
+# --- What we are observing -------------------------------------------------------------
+# The Velero server's metrics Service, created by the OADP operator for every DPA
+# (oadp-operator@oadp-1.5 internal/controller/monitor.go): openshift-adp-velero-metrics-svc,
+# port "monitoring" (8085, plain http). Confirm against the live capture before release.
+oadp:
+  velero:
+    # UWM sets job=<Service name> for ServiceMonitor targets.
+    job: "openshift-adp-velero-metrics-svc"
+
+# --- OADP state exporter (see docs/state-exporter.md) ------------------------------------
+# A kube-state-metrics instance in custom-resource-state-only mode exporting what Velero's
+# own metrics lack or get wrong:
+#   kube_customresource_backupstoragelocation_status_phase{name, phase="Available|Unavailable"}
+#     — Velero has no BSL metric (an Unavailable BSL fails every backup).
+#   kube_customresource_schedule_created{schedule}
+#     — the "never succeeded" anchor for OadpBackupNoSuccessfulBackup. Velero's own
+#       velero_backup_last_status is reset to 1 every minute by its Schedule controller
+#       (InitSchedule), so it cannot carry a failure.
+# REQUIRED for OadpBackupNoSuccessfulBackup and OadpBackupStorageLocationUnavailable.
+# Default OFF like the monitors (it is a new Deployment in openshift-adp); enable per cluster.
+stateExporter:
+  enabled: false
+  image:
+    repository: registry.k8s.io/kube-state-metrics/kube-state-metrics
+    tag: v2.20.0
+    pullPolicy: IfNotPresent
+  interval: 30s
+  # Leave unset on OpenShift: restricted-v2 assigns a UID from the namespace range (a fixed
+  # one outside it is rejected). On vanilla Kubernetes set it (e.g. 65534): the KSM image's
+  # user is the non-numeric "nobody", which runAsNonRoot cannot verify without it.
+  runAsUser: null
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
+
+grafana:
+  namespace: ""                          # where the Grafana CR lives; defaults per-cluster
+  folder: "OADP Observability"
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: Prometheus
+  dashboard:
+    enabled: true
+
+prometheus:
+  # ServiceMonitor/PodMonitor per component. Default OFF — the operator opts in per cluster.
+  monitors:
+    veleroServiceMonitor:
+      enabled: false
+      interval: 30s
+  # One block per alert (one PrometheusRule file each). See docs/runbook.md.
+  rules:
+    # Alertmanager routing / ruleSelector labels merged into every PrometheusRule.
+    labels: {}
+    # Base URL of the runbook; each alert appends #<alertname-lowercased>.
+    runbookBaseURL: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md"
+    # The backup OUTCOME: is there a recent Completed backup per schedule?
+    # The two alerts are mutually exclusive: Stale needs a success timestamp to exist,
+    # NoSuccessfulBackup needs it to be absent. Ad-hoc backups (schedule="") are excluded.
+    velero:
+      backupStale:
+        enabled: true
+        for: 15m
+        severity: critical
+        # default-object-schedule runs daily at 01:00; 25h = one interval + 1h grace.
+        maxAgeHours: 25
+      # Needs stateExporter.enabled (Schedule age). Fires when a Schedule is older than
+      # backupStale.maxAgeHours and no Completed backup of it is visible.
+      noSuccessfulBackup:
+        enabled: true
+        for: 15m
+        severity: critical
+      # Causes: the page must state WHAT is broken.
+      # The BSL (bucket) failed validation, e.g. credentials rejected. Needs stateExporter.enabled.
+      bslUnavailable:
+        enabled: true
+        for: 15m
+        severity: critical
+      # A backup ended Failed / FailedValidation / PartiallyFailed (label `phase`).
+      # A cause NOTIFICATION: resolves once `window` passes without a new failure; the
+      # outcome alerts above keep paging until a backup actually succeeds.
+      backupFailed:
+        enabled: true
+        for: 0m
+        severity: warning
+        window: 12h
+    # Blindness: if the metrics vanish, every alert above is silently disarmed.
+    # Rendered only for ENABLED components, so a disabled one never fires them.
+    watchdog:
+      metricsAbsent:
+        enabled: true
+        for: 10m
+        severity: warning
+      targetDown:
+        enabled: true
+        for: 5m
+        severity: critical
