@@ -148,6 +148,21 @@ if miss:
 print(f"required panels present ({len(titles)} panels)")
 PY2
 
+step "5c. dashboard thresholds follow the alert budget (maxAgeHours)"
+# The Velero tile and the age-vs-RPO line must turn red where OadpBackupStale fires; a
+# hardcoded 25h made the tile stay green while the alert fired (found by the kind e2e).
+helm template oadp "$CHART" --set prometheus.rules.velero.backupStale.maxAgeHours=2 \
+  -s templates/grafana/oadp-dashboard.yaml | python3 -c '
+import sys, yaml, json
+d = json.loads(yaml.safe_load(sys.stdin)["spec"]["json"])
+p = {x["id"]: x for x in d["panels"]}
+tile = p[1]["fieldConfig"]["defaults"]["thresholds"]["steps"][1]["value"]
+line = p[6]["fieldConfig"]["defaults"]["thresholds"]["steps"][1]["value"]
+ok = tile == 7200 and line == 2
+print(f"velero tile red at {tile}s (want 7200), age line at {line}h (want 2)")
+sys.exit(0 if ok else 1)' || { red "dashboard thresholds do not follow maxAgeHours"; exit 1; }
+green "dashboard thresholds follow maxAgeHours"
+
 if [ -f "$DASH" ]; then
 step "5. dashboard JSON"
 jq -e . "$DASH" >/dev/null
