@@ -40,7 +40,7 @@
       "id": 1,
       "type": "stat",
       "title": "Velero: last successful backup",
-      "description": "Age of the newest Completed Velero backup, per schedule. Red after 25h (the RPO budget; OadpBackupStale). NEVER = the schedule exists but no Completed backup is visible (OadpBackupNoSuccessfulBackup).",
+      "description": "Age of the newest Completed Velero backup, per schedule. Red after the RPO budget (prometheus.rules.velero.backupStale.maxAgeHours, default 25h \u2014 the same budget as OadpBackupStale). NEVER = the schedule exists but no Completed backup is visible (OadpBackupNoSuccessfulBackup).",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
@@ -69,7 +69,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "dtdurations",
+          "unit": "s",
           "decimals": 1,
           "mappings": [
             {
@@ -111,7 +111,11 @@
         "colorMode": "background",
         "textMode": "value_and_name",
         "justifyMode": "center",
-        "orientation": "auto"
+        "orientation": "auto",
+        "text": {
+          "titleSize": 14,
+          "valueSize": 26
+        }
       },
       "gridPos": {
         "h": 6,
@@ -153,7 +157,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "dtdurations",
+          "unit": "s",
           "decimals": 1,
           "mappings": [
             {
@@ -195,7 +199,11 @@
         "colorMode": "background",
         "textMode": "value_and_name",
         "justifyMode": "center",
-        "orientation": "auto"
+        "orientation": "auto",
+        "text": {
+          "titleSize": 14,
+          "valueSize": 26
+        }
       },
       "gridPos": {
         "h": 6,
@@ -237,7 +245,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "dtdurations",
+          "unit": "s",
           "decimals": 1,
           "mappings": [
             {
@@ -279,7 +287,11 @@
         "colorMode": "background",
         "textMode": "value_and_name",
         "justifyMode": "center",
-        "orientation": "auto"
+        "orientation": "auto",
+        "text": {
+          "titleSize": 14,
+          "valueSize": 26
+        }
       },
       "gridPos": {
         "h": 6,
@@ -425,7 +437,7 @@
       "id": 6,
       "type": "timeseries",
       "title": "Backup age vs RPO (hours)",
-      "description": "Hours since the last successful Velero backup (per schedule) and daily etcd backup. The dashed line is the 25h budget: a line crossing it is an RPO breach. A gap means no success is visible at all.",
+      "description": "Hours since the last successful Velero backup (per schedule) and daily etcd backup. The dashed line is the RPO budget (maxAgeHours): a line crossing it is an RPO breach. A gap means no success is visible at all.",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
@@ -514,7 +526,7 @@
             "uid": "$datasource"
           },
           "legendFormat": "Completed",
-          "interval": "1h"
+          "interval": "5m"
         },
         {
           "expr": "sum(increase(velero_backup_partial_failure_total{schedule!=\"\"}[$__interval]))",
@@ -524,7 +536,7 @@
             "uid": "$datasource"
           },
           "legendFormat": "PartiallyFailed",
-          "interval": "1h"
+          "interval": "5m"
         },
         {
           "expr": "sum(increase(velero_backup_failure_total{schedule!=\"\"}[$__interval]))",
@@ -534,7 +546,7 @@
             "uid": "$datasource"
           },
           "legendFormat": "Failed",
-          "interval": "1h"
+          "interval": "5m"
         },
         {
           "expr": "sum(increase(velero_backup_validation_failure_total{schedule!=\"\"}[$__interval]))",
@@ -544,7 +556,7 @@
             "uid": "$datasource"
           },
           "legendFormat": "FailedValidation",
-          "interval": "1h"
+          "interval": "5m"
         }
       ],
       "fieldConfig": {
@@ -696,7 +708,8 @@
                 "value": 8
               }
             ]
-          }
+          },
+          "noValue": "No successful weekly run (or no weekly CronJob)"
         },
         "overrides": []
       },
