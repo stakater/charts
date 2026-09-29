@@ -1,0 +1,49 @@
+# S3-compatible bucket for Velero on kind: SeaweedFS (MinIO no longer publishes images).
+# No identities configured -> S3 auth is disabled, so any access key works.
+apiVersion: v1
+kind: Namespace
+metadata: {name: s3}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: seaweedfs, namespace: s3}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: seaweedfs}}
+  template:
+    metadata: {labels: {app: seaweedfs}}
+    spec:
+      containers:
+        - name: seaweedfs
+          image: chrislusf/seaweedfs:4.48
+          # volume.max must exceed the 7 volumes SeaweedFS grows per new collection; small volumes keep
+          # the emptyDir tiny.
+          args: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-volume.max=50", "-master.volumeSizeLimitMB=64"]
+          ports: [{containerPort: 8333, name: s3}]
+          readinessProbe: {tcpSocket: {port: 8333}, periodSeconds: 5}
+          volumeMounts: [{name: data, mountPath: /data}]
+      volumes: [{name: data, emptyDir: {}}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: seaweedfs, namespace: s3}
+spec:
+  selector: {app: seaweedfs}
+  ports: [{name: s3, port: 8333, targetPort: s3}]
+---
+apiVersion: batch/v1
+kind: Job
+metadata: {name: create-bucket, namespace: s3}
+spec:
+  backoffLimit: 20
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: aws
+          image: amazon/aws-cli:2.27.0
+          env:
+            - {name: AWS_ACCESS_KEY_ID, value: e2e}
+            - {name: AWS_SECRET_ACCESS_KEY, value: e2e}
+            - {name: AWS_DEFAULT_REGION, value: us-east-1}
+          args: ["--endpoint-url", "http://seaweedfs.s3.svc:8333", "s3", "mb", "s3://velero"]
