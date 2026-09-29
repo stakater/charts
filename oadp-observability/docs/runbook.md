@@ -129,6 +129,15 @@ oc -n openshift-adp get servicemonitors,svc,pods
 oc -n openshift-adp logs deploy/<release>-oadp-observability-state-exporter --tail=50
 ```
 
+**Timing:** this can fire up to about 5 minutes after `for` has elapsed. Prometheus keeps a
+vanished series visible for its 5-minute lookback unless it wrote a staleness marker.
+
+**Special case, `target="schedules"`:** this also fires when **no Velero Schedule exists at
+all**. The exporter is fine but has nothing to report, which means nothing is being backed up
+on a schedule. Check with `oc -n openshift-adp get schedules.velero.io`. If that's
+intentional, disable the alert (`prometheus.rules.watchdog.metricsAbsent.enabled=false`) or
+leave the exporter off.
+
 **Clears when:** the series exist again.
 
 ## OadpTargetDown
