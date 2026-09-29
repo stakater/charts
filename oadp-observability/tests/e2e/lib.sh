@@ -97,9 +97,13 @@ expect_resolved() {
   red "  $(ts) TIMEOUT waiting for $a $m to resolve"; record "$sc" "$a $m" resolved "❌ still $(alert_state "$a" "$m") after ${t}s"; FAILED=1; return 1
 }
 # expect_inactive <scenario> <alert> <matcher-json>: must NOT be pending/firing right now
+# expect_inactive <scenario> <alert> <matcher-json>: must NOT be firing right now. A transient
+# `pending` is noted, not failed: that is exactly what `for` absorbs (seen once on a freshly
+# built stack — one evaluation of absent(up) before Velero's first scrape).
 expect_inactive() {
   local s; s="$(alert_state "$2" "$3")"
   if [ "$s" = inactive ]; then green "  $(ts) quiet   $2 $3"; record "$1" "$2 $3" quiet "✅ quiet"
+  elif [ "$s" = pending ]; then green "  $(ts) quiet   $2 $3 (transiently pending)"; record "$1" "$2 $3" quiet "✅ not firing (transiently pending; \`for\` absorbs it)"
   else red "  $(ts) UNEXPECTED $2 $3 is $s"; record "$1" "$2 $3" quiet "❌ $s"; FAILED=1; fi
 }
 

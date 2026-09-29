@@ -17,3 +17,7 @@ stateExporter:
   enabled: true
   runAsUser: 65534       # kind has no SCC to assign one
   interval: 15s
+grafana:
+  dashboard:
+    etcdBackup:
+      enabled: true      # render the optional section for real; fed by stack/demo-etcd-cronjobs.yaml
