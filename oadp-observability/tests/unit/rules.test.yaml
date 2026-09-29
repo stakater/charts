@@ -347,10 +347,10 @@ tests:
         exp_alerts: []
 
   # ------------------------------------------------------------ dashboard tile logic
-  # The status tiles' "NEVER" branches (value -1 -> mapped to "NEVER" in red). Expressions
-  # copied verbatim from files/oadp_grafana_dashboard.json — keep them in sync.
-  # T17 — never-succeeded shape on the Velero tile: Schedule exists, no success -> B = -1, A empty.
-  #        Healthy schedule alongside -> A = its age, no B.
+  # Dashboard logic. Expressions copied from files/oadp_grafana_dashboard*.json (etcd with
+  # the default names substituted) — keep them in sync.
+  # T17 — the Velero status TABLE's single expression: age for schedules with a success,
+  #        the 1e15 NEVER sentinel for schedules with none (sorts worst-first).
   - interval: 1m
     input_series:
       - series: 'kube_customresource_schedule_created{schedule="default-object-schedule"}'
@@ -360,16 +360,13 @@ tests:
       - series: 'velero_backup_last_successful_timestamp{schedule="hourly"}'
         values: '0x10'
     promql_expr_test:
-      - expr: (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})) * 0 - 1
-        eval_time: 10m
-        exp_samples:
-          - labels: '{schedule="default-object-schedule"}'
-            value: -1
-      - expr: time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})
+      - expr: (time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})) or (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})) * 0 + 1e15
         eval_time: 10m
         exp_samples:
           - labels: '{schedule="hourly"}'
             value: 600
+          - labels: '{schedule="default-object-schedule"}'
+            value: 1e15
 
   # T18 — never-succeeded shape on the etcd daily tile: the CronJob exists and has never succeeded
   # (no last_successful_time) -> -1 "NEVER"; once a success lands the NEVER branch is empty.

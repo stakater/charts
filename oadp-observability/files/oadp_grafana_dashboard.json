@@ -7,7 +7,7 @@
     "etcd",
     "backup"
   ],
-  "description": "Can this cluster be restored? Velero (OADP) backups and, optionally, CronJob-based etcd backups \u2014 last SUCCESS, not last attempt. Runbook: https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md",
+  "description": "Can this cluster be restored? Velero (OADP) backups \u2014 last SUCCESS, not last attempt. Optional etcd-backup section via grafana.dashboard.etcdBackup. Runbook: https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md",
   "schemaVersion": 39,
   "editable": true,
   "graphTooltip": 1,
@@ -38,265 +38,188 @@
   "panels": [
     {
       "id": 1,
-      "type": "stat",
+      "type": "table",
       "title": "Velero: last successful backup",
-      "description": "Age of the newest Completed Velero backup, per schedule. Red after the RPO budget (prometheus.rules.velero.backupStale.maxAgeHours, default 25h \u2014 the same budget as OadpBackupStale). NEVER = the schedule exists but no Completed backup is visible (OadpBackupNoSuccessfulBackup).",
+      "description": "One row per Velero schedule, worst first. Status: OK while the newest Completed backup is younger than the RPO budget (prometheus.rules.velero.backupStale.maxAgeHours, default 25h \u2014 the same budget as OadpBackupStale); STALE once older (OadpBackupStale); NEVER when the schedule exists but no Completed backup is visible (OadpBackupNoSuccessfulBackup). NEVER needs the state exporter.",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "targets": [
         {
-          "expr": "time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})",
+          "expr": "(time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) or (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) * 0 + 1e15",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "$datasource"
           },
-          "legendFormat": "{{schedule}}",
-          "instant": true
+          "format": "table",
+          "instant": true,
+          "legendFormat": ""
         },
         {
-          "expr": "(max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) * 0 - 1",
+          "expr": "(time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) or (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) * 0 + 1e15",
           "refId": "B",
           "datasource": {
             "type": "prometheus",
             "uid": "$datasource"
           },
-          "legendFormat": "{{schedule}}",
-          "instant": true
+          "format": "table",
+          "instant": true,
+          "legendFormat": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "schedule",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true
+            },
+            "indexByName": {
+              "schedule": 0,
+              "Value #B": 1,
+              "Value #A": 2
+            },
+            "renameByName": {
+              "schedule": "Schedule",
+              "Value #A": "Last successful backup (age)",
+              "Value #B": "Status"
+            }
+          }
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
-          "decimals": 1,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "-1": {
-                  "text": "NEVER (no successful backup visible)",
-                  "color": "red",
-                  "index": 0
-                }
-              }
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
             }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+          },
+          "noValue": "No schedules (Velero not scraped?)"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
               {
-                "color": "green",
-                "value": null
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "range",
+                    "options": {
+                      "from": 100000000000000.0,
+                      "to": 1e+16,
+                      "result": {
+                        "text": "NEVER",
+                        "color": "red",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "range",
+                    "options": {
+                      "from": 0,
+                      "to": 90000,
+                      "result": {
+                        "text": "OK",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  },
+                  {
+                    "type": "range",
+                    "options": {
+                      "from": 90000,
+                      "to": 100000000000000.0,
+                      "result": {
+                        "text": "STALE",
+                        "color": "red",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
               },
               {
-                "color": "red",
-                "value": 90000
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 110
               }
             ]
           },
-          "noValue": "No data (not scraped?)"
-        },
-        "overrides": []
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last successful backup (age)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "range",
+                    "options": {
+                      "from": 100000000000000.0,
+                      "to": 1e+16,
+                      "result": {
+                        "text": "\u2014",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "values": false
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
         },
-        "graphMode": "none",
-        "colorMode": "background",
-        "textMode": "value_and_name",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "text": {
-          "titleSize": 14,
-          "valueSize": 26
-        }
+        "sortBy": [
+          {
+            "displayName": "Last successful backup (age)",
+            "desc": true
+          }
+        ]
       },
       "gridPos": {
-        "h": 6,
-        "w": 6,
+        "h": 7,
+        "w": 12,
         "x": 0,
-        "y": 0
-      }
-    },
-    {
-      "id": 2,
-      "type": "stat",
-      "title": "etcd daily: last successful backup",
-      "description": "Age of the last SUCCESSFUL run of the daily-etcd-backup CronJob (not the last time it fired: a cron that fires and fails daily must show red). Red after 25h. NEVER = the CronJob exists but has never succeeded.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "targets": [
-        {
-          "expr": "time() - max(kube_cronjob_status_last_successful_time{namespace=\"etcd-backup\", cronjob=\"daily-etcd-backup\"})",
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "legendFormat": "daily",
-          "instant": true
-        },
-        {
-          "expr": "(max(kube_cronjob_info{namespace=\"etcd-backup\", cronjob=\"daily-etcd-backup\"}) unless max(kube_cronjob_status_last_successful_time{namespace=\"etcd-backup\", cronjob=\"daily-etcd-backup\"})) * 0 - 1",
-          "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "legendFormat": "daily",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "decimals": 1,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "-1": {
-                  "text": "NEVER (no successful backup visible)",
-                  "color": "red",
-                  "index": 0
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 90000
-              }
-            ]
-          },
-          "noValue": "No data (not scraped?)"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "values": false
-        },
-        "graphMode": "none",
-        "colorMode": "background",
-        "textMode": "value_and_name",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "text": {
-          "titleSize": 14,
-          "valueSize": 26
-        }
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 5,
-        "x": 6,
-        "y": 0
-      }
-    },
-    {
-      "id": 3,
-      "type": "stat",
-      "title": "etcd weekly: last successful backup",
-      "description": "Age of the last SUCCESSFUL run of the weekly-etcd-backup CronJob. Red after 8 days. NEVER = the CronJob exists but has never succeeded.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "targets": [
-        {
-          "expr": "time() - max(kube_cronjob_status_last_successful_time{namespace=\"etcd-backup\", cronjob=\"weekly-etcd-backup\"})",
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "legendFormat": "weekly",
-          "instant": true
-        },
-        {
-          "expr": "(max(kube_cronjob_info{namespace=\"etcd-backup\", cronjob=\"weekly-etcd-backup\"}) unless max(kube_cronjob_status_last_successful_time{namespace=\"etcd-backup\", cronjob=\"weekly-etcd-backup\"})) * 0 - 1",
-          "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "legendFormat": "weekly",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "decimals": 1,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "-1": {
-                  "text": "NEVER (no successful backup visible)",
-                  "color": "red",
-                  "index": 0
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 691200
-              }
-            ]
-          },
-          "noValue": "No data (not scraped?)"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "values": false
-        },
-        "graphMode": "none",
-        "colorMode": "background",
-        "textMode": "value_and_name",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "text": {
-          "titleSize": 14,
-          "valueSize": 26
-        }
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 5,
-        "x": 11,
         "y": 0
       }
     },
@@ -370,9 +293,9 @@
         "justifyMode": "center"
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 16,
+        "h": 7,
+        "w": 6,
+        "x": 12,
         "y": 0
       }
     },
@@ -380,14 +303,14 @@
       "id": 5,
       "type": "stat",
       "title": "Backup alerts firing",
-      "description": "Backup alerts currently firing: this chart's Oadp* alerts plus any etcd-backup alerts.",
+      "description": "Backup alerts currently firing: this chart's Oadp* alerts (plus etcd-backup alerts when the etcd section is enabled).",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "targets": [
         {
-          "expr": "count(ALERTS{alertstate=\"firing\", alertname=~\"Oadp.*|(?i:.*etcd.*backup.*)\"}) or vector(0)",
+          "expr": "count(ALERTS{alertstate=\"firing\", alertname=~\"Oadp.*\"}) or vector(0)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -427,17 +350,17 @@
         "textMode": "value"
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 20,
+        "h": 7,
+        "w": 6,
+        "x": 18,
         "y": 0
       }
     },
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Backup age vs RPO (hours)",
-      "description": "Hours since the last successful Velero backup (per schedule) and daily etcd backup. The dashed line is the RPO budget (maxAgeHours): a line crossing it is an RPO breach. A gap means no success is visible at all.",
+      "title": "Velero backup age vs RPO (hours)",
+      "description": "Hours since the last successful Velero backup, per schedule. The dashed line is the RPO budget (maxAgeHours): a line crossing it is an RPO breach. A gap means no success is visible at all.",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
@@ -451,15 +374,6 @@
             "uid": "$datasource"
           },
           "legendFormat": "velero {{schedule}}"
-        },
-        {
-          "expr": "(time() - max(kube_cronjob_status_last_successful_time{namespace=\"etcd-backup\", cronjob=\"daily-etcd-backup\"})) / 3600",
-          "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "legendFormat": "etcd daily"
         }
       ],
       "fieldConfig": {
@@ -505,7 +419,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 6
+        "y": 7
       }
     },
     {
@@ -661,74 +575,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 6
-      }
-    },
-    {
-      "id": 8,
-      "type": "timeseries",
-      "title": "etcd weekly backup age (days)",
-      "description": "Days since the last successful weekly-etcd-backup run. Dashed line: the 8-day budget. Separate from the hourly chart because the scale differs.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "targets": [
-        {
-          "expr": "(time() - max(kube_cronjob_status_last_successful_time{namespace=\"etcd-backup\", cronjob=\"weekly-etcd-backup\"})) / 86400",
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "legendFormat": "etcd weekly"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "d",
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 0,
-            "showPoints": "never",
-            "spanNulls": false,
-            "thresholdsStyle": {
-              "mode": "dashed"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 8
-              }
-            ]
-          },
-          "noValue": "No successful weekly run (or no weekly CronJob)"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 14
+        "y": 7
       }
     },
     {
@@ -801,10 +648,10 @@
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 14
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 15
       }
     }
   ]

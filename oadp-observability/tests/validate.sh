@@ -121,58 +121,37 @@ PY2
 
 step "4b. metric-reality gate (captured fixtures + documented-upstream)"
 DASH="${CHART}/files/oadp_grafana_dashboard.json"
-DASH_ARGS=(); [ -f "$DASH" ] && DASH_ARGS=(--dashboard "$DASH")
+DASH_ETCD="${CHART}/files/oadp_grafana_dashboard_etcd.json"
+DASH_ARGS=(); [ -f "$DASH" ] && DASH_ARGS=(--dashboard "$DASH" --dashboard "$DASH_ETCD")
 python3 "${T}/check_metrics.py" \
   --rules "${RENDER_DIR}/all.yaml" "${DASH_ARGS[@]+"${DASH_ARGS[@]}"}" \
   --allowlist "${T}/metrics-allowlist.captured.txt" \
   --documented "${T}/metrics-allowlist.documented.txt"
 
-step "5a. dashboard exists and carries SA-9126's required status panels"
-# The ticket's dashboard acceptance: last successful Velero backup, etcd daily and weekly,
-# per BSL -- so someone checking by hand does not need oc.
-python3 - "$DASH" <<'PY2'
-import json, sys, os
-p = sys.argv[1]
-if not os.path.exists(p):
-    print(f"MISSING dashboard: {p}"); sys.exit(1)
-titles = set()
-def walk(ps):
-    for x in ps or []:
-        titles.add(x.get("title", "")); walk(x.get("panels"))
-walk(json.load(open(p)).get("panels"))
-need = ["Velero: last successful backup", "etcd daily: last successful backup",
-        "etcd weekly: last successful backup", "Backup storage locations"]
-miss = [t for t in need if t not in titles]
-if miss:
-    print("MISSING required panels:", miss); sys.exit(1)
-print(f"required panels present ({len(titles)} panels)")
-PY2
-
-step "5c. dashboard thresholds follow the alert budget (maxAgeHours)"
-# The Velero tile and the age-vs-RPO line must turn red where OadpBackupStale fires; a
-# hardcoded 25h made the tile stay green while the alert fired (found by the kind e2e).
-helm template oadp "$CHART" --set prometheus.rules.velero.backupStale.maxAgeHours=2 \
-  -s templates/grafana/oadp-dashboard.yaml | python3 -c '
-import sys, yaml, json
-d = json.loads(yaml.safe_load(sys.stdin)["spec"]["json"])
-p = {x["id"]: x for x in d["panels"]}
-tile = p[1]["fieldConfig"]["defaults"]["thresholds"]["steps"][1]["value"]
-line = p[6]["fieldConfig"]["defaults"]["thresholds"]["steps"][1]["value"]
-ok = tile == 7200 and line == 2
-print(f"velero tile red at {tile}s (want 7200), age line at {line}h (want 2)")
-sys.exit(0 if ok else 1)' || { red "dashboard thresholds do not follow maxAgeHours"; exit 1; }
-green "dashboard thresholds follow maxAgeHours"
+step "5a. rendered dashboard: Velero status table, budgets, optional etcd section"
+R="${RENDER_DIR}"
+helm template oadp "$CHART" -s templates/grafana/oadp-dashboard.yaml > "$R/dash-default.yaml"
+helm template oadp "$CHART" -s templates/grafana/oadp-dashboard.yaml \
+  --set prometheus.rules.velero.backupStale.maxAgeHours=2 > "$R/dash-budget.yaml"
+helm template oadp "$CHART" -s templates/grafana/oadp-dashboard.yaml \
+  --set grafana.dashboard.etcdBackup.enabled=true --set grafana.dashboard.etcdBackup.namespace=backup-x \
+  --set grafana.dashboard.etcdBackup.dailyCronJob=d-bk --set grafana.dashboard.etcdBackup.weeklyCronJob=w-bk \
+  --set grafana.dashboard.etcdBackup.dailyMaxAgeHours=30 --set grafana.dashboard.etcdBackup.weeklyMaxAgeHours=100 \
+  > "$R/dash-etcd.yaml"
+python3 "${T}/check_dashboard.py" "$R/dash-default.yaml" "$R/dash-budget.yaml" "$R/dash-etcd.yaml" \
+  || { red "rendered dashboard checks failed"; exit 1; }
+green "rendered dashboard checks pass"
 
 if [ -f "$DASH" ]; then
 step "5. dashboard JSON"
-jq -e . "$DASH" >/dev/null
+jq -e . "$DASH" >/dev/null && jq -e . "$DASH_ETCD" >/dev/null
 DUP=$(jq '[.. | objects | select(has("gridPos")) | .id] | (length) as $n | (unique|length) as $u | $n-$u' "$DASH")
 [ "$DUP" = "0" ] && green "valid JSON, panel ids unique" || { red "duplicate panel ids"; exit 1; }
 
 step "5b. dashboard PromQL parses"
-python3 - "$DASH" "${RENDER_DIR}/dash-exprs.yaml" <<'PY'
+python3 - "$DASH" "${RENDER_DIR}/dash-exprs.yaml" "$DASH_ETCD" <<'PY'
 import json, sys
-dash, out = sys.argv[1], sys.argv[2]
+dash, out, extra = sys.argv[1], sys.argv[2], sys.argv[3]
 exprs = []
 def walk(panels):
     for p in panels or []:
@@ -184,7 +163,7 @@ def walk(panels):
                     e = e.replace(v, "5m")
                 exprs.append(e)
         walk(p.get("panels"))
-walk(json.load(open(dash)).get("panels", []))
+walk(json.load(open(dash)).get("panels", [])); walk(json.load(open(extra)).get("panels", []))
 rules = "\n".join(f"    - record: dash_{i}\n      expr: |\n        {e}" for i, e in enumerate(exprs))
 open(out, "w").write("groups:\n  - name: dashboard.exprs\n    rules:\n" + rules + "\n")
 print(f"extracted {len(exprs)} panel queries")
