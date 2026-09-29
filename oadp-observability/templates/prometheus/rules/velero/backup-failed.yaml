@@ -1,0 +1,39 @@
+{{- $r := .Values.prometheus.rules.velero.backupFailed }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-backup-failed
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: oadp.backup-cause
+      rules:
+        - alert: OadpBackupFailed
+          # A CAUSE notification, one series per failure type (label `phase`): a backup of
+          # a schedule ended Failed / FailedValidation / PartiallyFailed within `window`.
+          # Counters are zero-initialised per schedule by Velero's InitSchedule, so
+          # increase() sees the first failure. Windowed on purpose: it resolves once
+          # `window` passes without a new failure (auto-resolve, A2), while the outcome
+          # alerts keep paging until a backup actually succeeds.
+          expr: |
+            label_replace(sum by (namespace, schedule) (increase(velero_backup_failure_total{schedule!=""}[{{ $r.window }}])) > 0, "phase", "Failed", "", "")
+            or
+            label_replace(sum by (namespace, schedule) (increase(velero_backup_validation_failure_total{schedule!=""}[{{ $r.window }}])) > 0, "phase", "FailedValidation", "", "")
+            or
+            label_replace(sum by (namespace, schedule) (increase(velero_backup_partial_failure_total{schedule!=""}[{{ $r.window }}])) > 0, "phase", "PartiallyFailed", "", "")
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: oadp
+          annotations:
+            summary: "A Velero backup of schedule {{`{{ $labels.schedule }}`}} ended {{`{{ $labels.phase }}`}}"
+            description: "At least one backup of schedule {{`{{ $labels.schedule }}`}} ended {{`{{ $labels.phase }}`}} in the last {{ $r.window }}. FailedValidation: the backup spec or its storage location is invalid, so check the BSL first. PartiallyFailed: some items or volumes were not backed up. Failed: the backup run itself errored. First: oc -n {{`{{ $labels.namespace }}`}} get backups.velero.io -l velero.io/schedule-name={{`{{ $labels.schedule }}`}} -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,REASON:.status.failureReason,ERRORS:.status.validationErrors"
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#oadpbackupfailed"
+{{- end }}

@@ -1,0 +1,19 @@
+{{- if .Values.stateExporter.enabled }}
+# Its name becomes the scrape `job` label (see the watchdog's target-down rule).
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-state-exporter
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: state-exporter
+spec:
+  selector:
+    {{- include "oadp-observability.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: state-exporter
+  ports:
+    - name: http-metrics
+      port: 8080
+      targetPort: http-metrics
+{{- end }}

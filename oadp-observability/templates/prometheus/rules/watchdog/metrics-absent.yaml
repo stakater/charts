@@ -1,0 +1,47 @@
+{{- $r := .Values.prometheus.rules.watchdog.metricsAbsent }}
+{{- if and ($r) ($r.enabled) }}
+{{- $targets := list }}
+{{- if and .Values.prometheus.monitors.veleroServiceMonitor .Values.prometheus.monitors.veleroServiceMonitor.enabled }}
+{{- $targets = append $targets (dict "target" "velero" "expr" (printf "absent(up{job=\"%s\"})" .Values.oadp.velero.job)) }}
+{{- end }}
+{{- if .Values.stateExporter.enabled }}
+{{- $targets = append $targets (dict "target" "backupstoragelocations" "expr" "absent(kube_customresource_backupstoragelocation_status_phase)") }}
+{{- $targets = append $targets (dict "target" "schedules" "expr" "absent(kube_customresource_schedule_created)") }}
+{{- end }}
+{{- if $targets }}
+# The blindness watchdog (alerts that silently don't fire). Every outcome
+# and cause alert needs its series to EXIST; when a scrape target vanishes, or the state
+# exporter loses RBAC / has nothing to report, those alerts are disarmed and backups can
+# fail unseen. One absent() per ENABLED component, so a disabled one never fires. For the
+# exporter the check is on the data series, not up: KSM can be up yet export nothing.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-metrics-absent
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: oadp.watchdog
+      rules:
+        {{- range $t := $targets }}
+        - alert: OadpMetricsAbsent
+          expr: |
+            {{ $t.expr }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: oadp
+            target: {{ $t.target }}
+          annotations:
+            summary: "Backup monitoring is blind: no {{ $t.target }} metrics"
+            description: "The {{ $t.target }} metrics this chart alerts on have NO series. Every alert that depends on them is silently disarmed, and backups may be failing unseen. Likely causes: the scrape target vanished (ServiceMonitor or Service deleted, selector drift), or the state exporter lost RBAC or has nothing to report."
+            runbook_url: "{{ $.Values.prometheus.rules.runbookBaseURL }}#oadpmetricsabsent"
+        {{- end }}
+{{- end }}
+{{- end }}
