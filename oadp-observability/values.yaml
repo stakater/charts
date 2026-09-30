@@ -111,6 +111,14 @@ prometheus:
         for: 0m
         severity: warning
         window: 12h
+      # A RESTORE ended Failed / PartiallyFailed / FailedValidation (label `phase`; `schedule`
+      # only for restores created --from-schedule). All restores are included: they are
+      # deliberate, and most name a backup directly (schedule="").
+      restoreFailed:
+        enabled: true
+        for: 0m
+        severity: warning
+        window: 12h
     # Blindness: if the metrics vanish, every alert above is silently disarmed.
     # Rendered only for ENABLED components, so a disabled one never fires them.
     watchdog:

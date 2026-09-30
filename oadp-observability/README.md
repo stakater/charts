@@ -26,6 +26,7 @@ which install OADP. This chart only observes it.
 | `OadpBackupNoSuccessfulBackup` | A Schedule is older than its budget and **no** Completed backup of it is visible (never succeeded, all expired, or Velero isn't scraped) | critical | state exporter |
 | `OadpBackupStorageLocationUnavailable` | A BackupStorageLocation isn't `Available` for 15m, so every backup to it will fail | critical | state exporter |
 | `OadpBackupFailed` | A backup ended `Failed` / `FailedValidation` / `PartiallyFailed` within `window` (12h). The `phase` label says which. | warning | Velero scrape |
+| `OadpRestoreFailed` | A restore ended `Failed` / `FailedValidation` / `PartiallyFailed` within `window` (12h). Includes every restore (most carry no `schedule` label). | warning | Velero scrape |
 | `OadpMetricsAbsent` | The series these alerts depend on don't exist (`target`: velero, backupstoragelocations, schedules) | warning | per enabled component |
 | `OadpTargetDown` | The Velero or state-exporter scrape target is down | critical | per enabled component |
 

@@ -54,6 +54,14 @@ dashboard read it, so a budget is configured exactly once, next to the schedule 
   itself. The outcome alerts keep paging until a backup succeeds. The window stays short
   because user-workload monitoring keeps 24h by default.
 
+**Restores:**
+- `OadpRestoreFailed` (warning): a restore ended `Failed` / `FailedValidation` / `PartiallyFailed`
+  within 12h (`phase` label). Velero labels restore metrics with the *restore's*
+  `spec.scheduleName`, which is set only by `--from-schedule`, so most restores carry
+  `schedule=""`. All restores are included: a restore is always deliberate, so there's no test
+  noise to filter. Windowed like
+  `OadpBackupFailed`.
+
 **Blindness (the watchdog):**
 - `OadpMetricsAbsent`: `absent()` per enabled component (`velero`, `backupstoragelocations`,
   `schedules`). For the exporter it checks the *data* series, because kube-state-metrics can be

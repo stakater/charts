@@ -1,0 +1,41 @@
+{{- $r := .Values.prometheus.rules.velero.restoreFailed }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-restore-failed
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: oadp.restore
+      rules:
+        - alert: OadpRestoreFailed
+          # A restore ended Failed / FailedValidation / PartiallyFailed within `window`, one
+          # series per failure type (label `phase`). The `schedule` label is the RESTORE's
+          # spec.scheduleName (restore_controller.go: RegisterRestore*(restore.Spec.ScheduleName)),
+          # set only for `--from-schedule`; a restore of a named backup has schedule="" whatever
+          # the backup's origin. That is the common case, so schedule="" is INCLUDED (unlike the
+          # backup alerts); restores are deliberate, so there is no test-noise to filter. The counters are zero-initialised per
+          # schedule (seen on a live OADP 1.5.8 capture), so increase() sees the first failure.
+          # Windowed on purpose: it resolves once `window` passes without a new failure.
+          expr: |
+            label_replace(sum by (namespace, schedule) (increase(velero_restore_failed_total[{{ $r.window }}])) > 0, "phase", "Failed", "", "")
+            or
+            label_replace(sum by (namespace, schedule) (increase(velero_restore_validation_failed_total[{{ $r.window }}])) > 0, "phase", "FailedValidation", "", "")
+            or
+            label_replace(sum by (namespace, schedule) (increase(velero_restore_partial_failure_total[{{ $r.window }}])) > 0, "phase", "PartiallyFailed", "", "")
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: oadp
+          annotations:
+            summary: "A Velero restore ended {{`{{ $labels.phase }}`}}"
+            description: "At least one restore ended {{`{{ $labels.phase }}`}} in the last {{ $r.window }} ({{`{{ if $labels.schedule }}restored via schedule {{ $labels.schedule }}{{ else }}restored from a named backup{{ end }}`}}). A restore is usually run during an incident, so its result matters now: the data you meant to bring back may be missing. Failed: the restore run errored. PartiallyFailed: some items were not restored. FailedValidation: the restore spec, its backup, or the storage location is invalid. First: oc -n {{`{{ $labels.namespace }}`}} get restores.velero.io --sort-by=.metadata.creationTimestamp -o custom-columns=NAME:.metadata.name,BACKUP:.spec.backupName,PHASE:.status.phase,ERRORS:.status.errors,WARNINGS:.status.warnings"
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#oadprestorefailed"
+{{- end }}

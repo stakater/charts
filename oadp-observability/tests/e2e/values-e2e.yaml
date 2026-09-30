@@ -10,6 +10,7 @@ prometheus:
       noSuccessfulBackup: {for: 1m}
       bslUnavailable: {for: 1m}
       backupFailed: {for: 0m, window: 5m}
+      restoreFailed: {for: 0m, window: 5m}
     watchdog:
       metricsAbsent: {for: 1m}
       targetDown: {for: 1m}

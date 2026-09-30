@@ -75,7 +75,7 @@ schedule "$SCHED" 0.05   # its own budget: 3 minutes (the chart default in value
 run_backup "$SCHED" --wait
 echo "  latest ${SCHED} backup: $(last_phase "$SCHED")"
 sleep 60   # scrape + rule evaluation
-for a in OadpBackupStale OadpBackupNoSuccessfulBackup OadpBackupStorageLocationUnavailable OadpBackupFailed OadpMetricsAbsent OadpTargetDown; do
+for a in OadpBackupStale OadpBackupNoSuccessfulBackup OadpBackupStorageLocationUnavailable OadpBackupFailed OadpRestoreFailed OadpMetricsAbsent OadpTargetDown; do
   expect_inactive "0 baseline" "$a" '{}'
 done
 fi
@@ -173,10 +173,25 @@ k -n "$NS" patch servicemonitor ${EXPORTER_SVC} --type json \
 expect_resolved "6d target down" OadpTargetDown '{"target":"state-exporter"}' 300
 fi
 
+if want 8; then
+step "8. restore failure: a restore from a backup that does not exist -> FailedValidation"
+# Created as a Restore OBJECT, as GitOps/automation would: the velero CLI refuses a missing
+# backup client-side, so it never reaches the server. A named-backup restore carries
+# schedule="" (the restore's spec.scheduleName) -> no schedule label on the alert.
+k apply -f - >/dev/null <<EOF
+apiVersion: velero.io/v1
+kind: Restore
+metadata: {name: e2e-bad-restore-$(date +%H%M%S), namespace: ${NS}}
+spec: {backupName: no-such-backup}
+EOF
+expect_firing   "8 restore" OadpRestoreFailed '{"phase":"FailedValidation"}' 240
+expect_resolved "8 restore" OadpRestoreFailed '{"phase":"FailedValidation"}' 600
+fi
+
 if want 7; then
 step "7. healthy again: fresh backups -> nothing firing"
 run_backup "$SCHED" --wait; run_backup "$NEVER" --wait
-for a in OadpBackupStale OadpBackupNoSuccessfulBackup OadpBackupStorageLocationUnavailable OadpBackupFailed OadpMetricsAbsent OadpTargetDown; do
+for a in OadpBackupStale OadpBackupNoSuccessfulBackup OadpBackupStorageLocationUnavailable OadpBackupFailed OadpRestoreFailed OadpMetricsAbsent OadpTargetDown; do
   expect_resolved "7 healthy" "$a" '{}' 300
 done
 "${E2E}/screenshots.sh" healthy || FAILED=1
