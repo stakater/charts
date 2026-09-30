@@ -36,10 +36,10 @@ the cause.
 
 | # | Breakage (real, on Velero or the scrape path) | Must fire | Then |
 | --- | --- | --- | --- |
-| 0 | none: one schedule, one Completed backup | nothing | — |
-| 1 | no new backups for longer than the budget | `OadpBackupStale` | — |
+| 0 | none: one schedule (annotated with a 3-minute budget), one Completed backup | nothing | — |
+| 1 | no new backups for longer than the schedule's **own** budget (3m; the default is 6m, so a missed annotation would miss the 300s deadline) | `OadpBackupStale`, and `oadp:schedule_budget_seconds` = 180 | — |
 | 2 | the BSL points at a missing bucket; a run fails validation | `OadpBackupStorageLocationUnavailable`, `OadpBackupFailed{phase="FailedValidation"}` | — |
-| 3 | a new schedule whose every run fails | `OadpBackupNoSuccessfulBackup` (not `Stale`) | screenshot `failing` |
+| 3 | a new **unannotated** schedule whose every run fails (default 6m budget) | `OadpBackupNoSuccessfulBackup` (not `Stale`), budget = 360 | screenshot `failing` |
 | 4 | Completed backups deleted and Velero restarted (success series **absent**) | `OadpBackupNoSuccessfulBackup`; `Stale` resolves | — |
 | 5 | fix the bucket, run the schedules | — | all of the above resolve |
 | 6a | the Velero scrape target fails (wrong port) | `OadpTargetDown{target="velero"}` and, by design, `OadpBackupNoSuccessfulBackup` | resolves on fix |
@@ -55,8 +55,8 @@ the cause.
   `prometheus_rule_group_iterations_missed_total`, extend the wait once, and mark the row, so
   a stall isn't mistaken for a rule failure.
 
-- **Timings are shortened** (budget 3m instead of 25h, `for` 1m instead of 15m, failure window 5m
-  instead of 12h). The expressions are the production ones.
+- **Timings are shortened** (default budget 6m instead of 25h with the baseline schedule annotated
+  3m, `for` 1m instead of 15m, failure window 5m instead of 12h). The expressions are the production ones.
 - It's plain Prometheus, not OpenShift user-workload monitoring, so UWM's namespace enforcement
   isn't exercised (all objects share `openshift-adp`, which is what that enforcement needs).
 - Velero's `Failed` / `PartiallyFailed` phases aren't produced here. They're covered by

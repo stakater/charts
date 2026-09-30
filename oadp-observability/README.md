@@ -21,8 +21,8 @@ which install OADP. This chart only observes it.
 
 | Alert | Fires when | Severity | Needs |
 | --- | --- | --- | --- |
-| `OadpBackupStale` | The newest Completed backup of a schedule is older than `maxAgeHours` (25h) | critical | Velero scrape |
-| `OadpBackupNoSuccessfulBackup` | A Schedule is older than 25h and **no** Completed backup of it is visible (never succeeded, all expired, or Velero isn't scraped) | critical | state exporter |
+| `OadpBackupStale` | The newest Completed backup of a schedule is older than **that schedule's budget** (see below; default 25h) | critical | Velero scrape |
+| `OadpBackupNoSuccessfulBackup` | A Schedule is older than its budget and **no** Completed backup of it is visible (never succeeded, all expired, or Velero isn't scraped) | critical | state exporter |
 | `OadpBackupStorageLocationUnavailable` | A BackupStorageLocation isn't `Available` for 15m, so every backup to it will fail | critical | state exporter |
 | `OadpBackupFailed` | A backup ended `Failed` / `FailedValidation` / `PartiallyFailed` within `window` (12h). The `phase` label says which. | warning | Velero scrape |
 | `OadpMetricsAbsent` | The series these alerts depend on don't exist (`target`: velero, backupstoragelocations, schedules) | warning | per enabled component |
@@ -32,12 +32,42 @@ which install OADP. This chart only observes it.
 excluded. Velero's own `velero_backup_last_status` is deliberately **not** used: Velero resets it
 to 1 every minute. See [`docs/design.md`](docs/design.md) for why each alert is shaped this way.
 
+## Per-schedule budgets: the RPO travels with the Schedule
+
+Different schedules have different RPOs: a daily platform backup can be 25h late before it
+matters, an hourly database backup cannot. So the budget is declared **on the Schedule**, by
+whoever owns it, in the same manifest, and no chart values need to change when schedules are
+added:
+
+```yaml
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: db-hourly
+  annotations:
+    oadp-observability.stakater.com/max-age-hours: "2"   # hours, plain decimal, no unit
+spec:
+  schedule: "0 * * * *"
+```
+
+- The state exporter reads the annotation into `kube_customresource_schedule_max_age_hours`.
+- The recording rule `oadp:schedule_budget_seconds` resolves every schedule's budget: the
+  annotation if present, else `prometheus.rules.velero.backupStale.maxAgeHours` (25h).
+- `OadpBackupStale`, `OadpBackupNoSuccessfulBackup`, and the dashboard's status table all
+  compare each schedule against its own budget.
+- **Value format:** hours as a plain decimal (`"2"`, `"0.5"`). Not `"30m"` or `"1h"`: the
+  exporter parses Kubernetes quantities, so `30m` would mean 0.03 hours and `1h` would be
+  ignored. A wrong value shows up as a wrong Budget column and an early or late alert, never
+  as silence.
+- Without the state exporter, every schedule uses the default.
+
 ## The state exporter
 
-Velero doesn't publish whether its backup bucket is reachable, nor how long a schedule has
-existed. Both are needed: the first names the most common cause, and the second catches a
-schedule that has *never* succeeded. The chart can run a stock **kube-state-metrics** (read-only,
-one small pod) that turns those two object fields into metrics. It's off by default; see
+Velero doesn't publish whether its backup bucket is reachable, how long a schedule has existed,
+or a schedule's RPO budget. All three are needed: the first names the most common cause, the
+second catches a schedule that has *never* succeeded, and the third makes budgets per schedule.
+The chart can run a stock **kube-state-metrics** (read-only, one small pod) that turns those
+object fields into metrics. It's off by default; see
 [`docs/state-exporter.md`](docs/state-exporter.md) for what it is, what it exports, its
 permissions, and troubleshooting.
 
@@ -46,12 +76,12 @@ permissions, and troubleshooting.
 **OADP / Backup Status** (`grafana.dashboard.enabled`, on by default) shows, per schedule, whether
 backups are succeeding on time, without `oc`:
 - **Velero status table:** one row per schedule, worst first, with the age of its last
-  *successful* backup and a status of `OK`, `STALE` (older than `maxAgeHours`, the same budget
-  as `OadpBackupStale`) or `NEVER` (the schedule exists but no success is visible). It stays
-  readable with many schedules.
+  *successful* backup, the schedule's own budget, and a status of `OK`, `STALE` (age over
+  budget, the same test as `OadpBackupStale`) or `NEVER` (the schedule exists but no success is
+  visible). It stays readable with many schedules.
 - **Tiles:** BSL phase per location, and backup alerts firing.
-- **Charts:** backup age against the budget, Velero outcomes over time, and BSL availability
-  over time.
+- **Charts:** backup age as a fraction of each schedule's budget (1 = breach), Velero outcomes
+  over time, and BSL availability over time.
 - **Optional etcd section** (`grafana.dashboard.etcdBackup.enabled`, **off by default**): for
   clusters that back up etcd with CronJobs. It shows the daily and weekly last-*successful*-run
   age from kube-state-metrics' `kube_cronjob_status_last_successful_time`, with configurable

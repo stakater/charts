@@ -19,6 +19,7 @@ matter for "is every schedule producing successful backups on time?":
 | Gap | Where the fact lives | Why it matters |
 | --- | --- | --- |
 | **Is the backup bucket reachable?** | Velero validates each BackupStorageLocation (BSL) every minute and writes `Available` / `Unavailable` to `.status.phase` (`oc get backupstoragelocations`). Velero publishes **no metric** for it. | An Unavailable BSL makes **every** backup end `FailedValidation`. Without this, the only signal is "no successful backup for 25h", which arrives a day late and doesn't say why. |
+| **What is each schedule's RPO budget?** | An annotation on the Schedule, set by whoever owns it (`oadp-observability.stakater.com/max-age-hours`). | An hourly database backup and a daily platform backup can't share one 25h budget. Reading it here keeps the budget with the schedule instead of in a values file that drifts. |
 | **How long has a schedule existed?** | `Schedule.metadata.creationTimestamp`. It isn't a metric. | Needed to detect a schedule that has **never** succeeded. Velero's "last successful backup" metric only appears *after* a first success, so "older than 25h" can't fire on a series that never existed. Velero's own `velero_backup_last_status` can't stand in either: Velero resets it to 1 ("success") every minute (see `design.md`). |
 
 ```mermaid
@@ -39,6 +40,7 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | `kube_customresource_backupstoragelocation_status_phase` | `name`, `phase` (`Available` / `Unavailable`) | `1` for the current phase, `0` for the other | `BackupStorageLocation.status.phase` | `OadpBackupStorageLocationUnavailable`, the dashboard BSL panels, `OadpMetricsAbsent{target="backupstoragelocations"}` |
 | `kube_customresource_schedule_created` | `schedule` | Unix seconds | `Schedule.metadata.creationTimestamp` | `OadpBackupNoSuccessfulBackup`, the dashboard "NEVER" tile, `OadpMetricsAbsent{target="schedules"}` |
+| `kube_customresource_schedule_max_age_hours` | `schedule` | hours (from the annotation string) | `Schedule.metadata.annotations["oadp-observability.stakater.com/max-age-hours"]`; **no series if unannotated** | the `oadp:schedule_budget_seconds` recording rule, hence `OadpBackupStale`, `OadpBackupNoSuccessfulBackup`, the table's Budget/Status columns |
 
 Every series also carries `customresource_group`, `customresource_kind`, and
 `customresource_version`. They deliberately carry **no** `namespace` label: user-workload
@@ -54,7 +56,9 @@ kube_customresource_schedule_created{…,schedule="default-object-schedule"} 1.7
 ```
 
 A BSL whose `.status.phase` isn't set yet produces **no** series (kube-state-metrics behaviour).
-The watchdog treats that as "blind", not as healthy.
+The watchdog treats that as "blind", not as healthy. Likewise an unannotated Schedule produces no
+budget series, and the recording rule supplies the default. The annotation value is parsed as a
+Kubernetes quantity, so write hours as a plain decimal (`"2"`, `"0.5"`), never `"30m"` or `"1h"`.
 
 ## Enabling it
 
@@ -97,7 +101,7 @@ filesystem, `RuntimeDefault` seccomp. It fits OpenShift's `restricted-v2` SCC un
 
 | Still works | Doesn't exist |
 | --- | --- |
-| `OadpBackupStale`, `OadpBackupFailed` (including `phase="FailedValidation"`), the Velero watchdog, the dashboard's Velero and etcd tiles | `OadpBackupStorageLocationUnavailable` (the bucket cause, within 15m), `OadpBackupNoSuccessfulBackup` (**never succeeded / all expired**), the dashboard's BSL and NEVER tiles |
+| `OadpBackupStale` (every schedule at the default budget), `OadpBackupFailed` (including `phase="FailedValidation"`), the Velero watchdog, the dashboard's Velero rows | `OadpBackupStorageLocationUnavailable` (the bucket cause, within 15m), `OadpBackupNoSuccessfulBackup` (**never succeeded / all expired**), per-schedule budgets, the dashboard's BSL panels and NEVER rows |
 
 The second column holds exactly the alerts for the failure where nothing ever succeeds. That's
 why we recommend enabling it.

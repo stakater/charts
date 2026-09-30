@@ -28,11 +28,18 @@ naive rule.
 
 ## The alerts
 
+**Budgets are per schedule.** A schedule declares its RPO with the
+`oadp-observability.stakater.com/max-age-hours` annotation (hours), which the state exporter
+exports. The recording rule `oadp:schedule_budget_seconds` resolves each schedule's budget:
+the annotation, else the chart default (`maxAgeHours`, 25h). It also supplies the default for
+schedules only visible through a success timestamp (exporter off). Both outcome alerts and the
+dashboard read it, so a budget is configured exactly once, next to the schedule it belongs to.
+
 **Outcome (critical, these page):**
-- `OadpBackupStale`: `time() - last_successful_timestamp > 25h`. A success exists but is too
-  old.
-- `OadpBackupNoSuccessfulBackup`: the Schedule is older than 25h **unless** a success timestamp
-  exists. It's anchored on the Schedule's creation time from the
+- `OadpBackupStale`: `time() - last_successful_timestamp > budget`. A success exists but is too
+  old for that schedule.
+- `OadpBackupNoSuccessfulBackup`: the Schedule is older than its budget **unless** a success
+  timestamp exists. It's anchored on the Schedule's creation time from the
   [state exporter](state-exporter.md), not on F2 or F3. This covers never-succeeded,
   all-expired (F1), and Velero-unscraped, and gives a new Schedule one full budget first.
 - The two are **mutually exclusive by construction** (one needs the timestamp, the other its
@@ -72,8 +79,8 @@ naive rule.
 - The Velero metric names are pinned from source and confirmed by the component test only for
   the exporter. A live capture (`tests/METRICS-CAPTURE.md`) is the release gate for the Velero
   series.
-- The 25h budget is a single value, because one daily schedule is the expected setup. Add
-  per-schedule budgets if you run more.
+- A schedule's budget can only come from its annotation or the default. Nothing derives it from
+  the cron expression, and a wrong annotation gives an early or late alert (visible), not silence.
 - `OadpBackupFailed` clears 12h after the last failure even if the next run hasn't happened yet.
   That's by design, since it's a cause notification, not the page.
 

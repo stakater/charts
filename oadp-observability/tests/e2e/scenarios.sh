@@ -24,11 +24,16 @@ SCHED=default-object-schedule
 # "never succeeded" (seen on a re-run: Stale fired instead, correctly).
 NEVER="never-succeeds-$(date +%H%M)"
 
-schedule() {  # schedule <name>: OADP-like daily schedule; runs are triggered by hand
+schedule() {  # schedule <name> [budget-hours]: OADP-like daily schedule; runs are triggered by hand.
+  # With a budget, the schedule carries its own RPO via the annotation the state exporter reads.
+  local ann=""; [ -n "${2:-}" ] && ann="
+  annotations: {oadp-observability.stakater.com/max-age-hours: \"$2\"}"
   k apply -f - >/dev/null <<EOF
 apiVersion: velero.io/v1
 kind: Schedule
-metadata: {name: $1, namespace: ${NS}}
+metadata:
+  name: $1
+  namespace: ${NS}${ann}
 spec:
   schedule: "0 1 * * *"
   template: {includedNamespaces: [demo], storageLocation: dpa-1, ttl: 48h0m0s}
@@ -63,10 +68,10 @@ echo "  leftover alerts: ${n:-?}"
 fi
 
 if want 0; then
-step "0. baseline: one daily schedule, one Completed backup -> everything quiet"
+step "0. baseline: one daily schedule (annotated 3m budget), one Completed backup -> everything quiet"
 k create namespace demo --dry-run=client -o yaml | k apply -f - >/dev/null
 k -n demo create configmap app-config --from-literal=k=v --dry-run=client -o yaml | k apply -f - >/dev/null
-schedule "$SCHED"
+schedule "$SCHED" 0.05   # its own budget: 3 minutes (the chart default in values-e2e is 6)
 run_backup "$SCHED" --wait
 echo "  latest ${SCHED} backup: $(last_phase "$SCHED")"
 sleep 60   # scrape + rule evaluation
@@ -76,8 +81,10 @@ done
 fi
 
 if want 1; then
-step "1. stale: the last success ages past the budget (3m)"
-expect_firing   "1 stale" OadpBackupStale "{\"schedule\":\"$SCHED\"}" 480
+step "1. stale: the last success ages past the schedule's OWN budget (3m, from its annotation)"
+expect_value  "1 stale" "oadp:schedule_budget_seconds{schedule=\"$SCHED\"}" 180
+# 300s deadline discriminates: had the annotation been ignored, the 6m default + 1m for = 7m.
+expect_firing   "1 stale" OadpBackupStale "{\"schedule\":\"$SCHED\"}" 300
 expect_inactive "1 stale" OadpBackupNoSuccessfulBackup "{\"schedule\":\"$SCHED\"}"
 fi
 
@@ -91,10 +98,11 @@ expect_firing "2 bucket" OadpBackupFailed "{\"schedule\":\"$SCHED\",\"phase\":\"
 fi
 
 if want 3; then
-step "3. never succeeded: a new schedule whose every run fails validation"
+step "3. never succeeded: a new UNANNOTATED schedule (default 6m budget) whose every run fails validation"
 schedule "$NEVER"
 run_backup "$NEVER"
-expect_firing   "3 never" OadpBackupNoSuccessfulBackup "{\"schedule\":\"$NEVER\"}" 480
+expect_value  "3 never" "oadp:schedule_budget_seconds{schedule=\"$NEVER\"}" 360
+expect_firing   "3 never" OadpBackupNoSuccessfulBackup "{\"schedule\":\"$NEVER\"}" 600
 expect_inactive "3 never" OadpBackupStale "{\"schedule\":\"$NEVER\"}"
 "${E2E}/screenshots.sh" failing || FAILED=1
 fi
@@ -185,7 +193,7 @@ REPORT="${CHART}/tests/reports/e2e-kind-$(date -u +%F)${SUFFIX}.md"
   echo "grafana-operator v5.25.0, **Velero 1.16.2** (what OADP 1.5 ships) with a SeaweedFS S3 bucket,"
   echo "the OADP-shaped metrics Service, and this chart with \`tests/e2e/values-e2e.yaml\`."
   echo
-  echo "> **Timings are shortened** for the run (budget 3m instead of 25h, \`for\` 1m instead of 15m,"
+  echo "> **Timings are shortened** for the run (default budget 6m instead of 25h with the baseline schedule annotated 3m, \`for\` 1m instead of 15m,"
   echo "> failure window 5m instead of 12h). The rule expressions are the production ones."
   [ "$STALLS" -gt 0 ] && echo "> **Environment:** Prometheus stalled ${STALLS} time(s) during this run (missed rule iterations — the Docker VM pausing); affected waits were extended once and are marked in the table." && echo ">"
   echo "> Not exercised here: OpenShift user-workload monitoring's namespace enforcement, and the"
