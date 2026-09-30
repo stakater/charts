@@ -37,7 +37,7 @@ tests:
               schedule: default-object-schedule
             exp_annotations:
               summary: "No successful Velero backup is visible for schedule default-object-schedule"
-              description: "Schedule default-object-schedule has existed for more than 25h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
+              description: "Schedule default-object-schedule has existed for longer than its RPO budget (the oadp-observability.stakater.com/max-age-hours annotation, or the chart default), but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
               runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
       - eval_time: 30m
         alertname: OadpBackupStale
@@ -81,8 +81,8 @@ tests:
               namespace: openshift-adp
               schedule: default-object-schedule
             exp_annotations:
-              summary: "No successful Velero backup for schedule default-object-schedule in over 25h"
-              description: "The newest Completed backup of schedule default-object-schedule is 1d 3h 0m 0s old (budget 25h), so the cluster cannot be restored to within its RPO. Recent runs are failing or not running. First: oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule --sort-by=.metadata.creationTimestamp; oc -n openshift-adp get backupstoragelocations.velero.io"
+              summary: "No successful Velero backup for schedule default-object-schedule within its budget"
+              description: "The newest Completed backup of schedule default-object-schedule is older than the schedule's RPO budget (the oadp-observability.stakater.com/max-age-hours annotation, or the chart default), so the cluster cannot be restored to within its RPO. Recent runs are failing or not running. First: oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule --sort-by=.metadata.creationTimestamp; oc -n openshift-adp get backupstoragelocations.velero.io"
               runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupstale"
       - eval_time: 27h
         alertname: OadpBackupNoSuccessfulBackup
@@ -107,7 +107,7 @@ tests:
               schedule: default-object-schedule
             exp_annotations:
               summary: "No successful Velero backup is visible for schedule default-object-schedule"
-              description: "Schedule default-object-schedule has existed for more than 25h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
+              description: "Schedule default-object-schedule has existed for longer than its RPO budget (the oadp-observability.stakater.com/max-age-hours annotation, or the chart default), but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
               runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
       - eval_time: 45m
         alertname: OadpBackupNoSuccessfulBackup
@@ -135,7 +135,7 @@ tests:
               schedule: default-object-schedule
             exp_annotations:
               summary: "No successful Velero backup is visible for schedule default-object-schedule"
-              description: "Schedule default-object-schedule has existed for more than 25h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
+              description: "Schedule default-object-schedule has existed for longer than its RPO budget (the oadp-observability.stakater.com/max-age-hours annotation, or the chart default), but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
               runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
 
   # T6 — fresh install : the Schedule is created at t=0 and nothing ever
@@ -159,7 +159,7 @@ tests:
               schedule: default-object-schedule
             exp_annotations:
               summary: "No successful Velero backup is visible for schedule default-object-schedule"
-              description: "Schedule default-object-schedule has existed for more than 25h, but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
+              description: "Schedule default-object-schedule has existed for longer than its RPO budget (the oadp-observability.stakater.com/max-age-hours annotation, or the chart default), but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule"
               runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
 
   # T7 — ad-hoc / NonAdminBackup backups (schedule=""): no RPO promise -> silent. Stale
@@ -175,6 +175,92 @@ tests:
       - eval_time: 27h
         alertname: OadpBackupNoSuccessfulBackup
         exp_alerts: []
+
+  # ------------------------------------------------------------ per-schedule budgets
+  # The budget travels with the Schedule: the state exporter reads the
+  # oadp-observability.stakater.com/max-age-hours annotation into
+  # kube_customresource_schedule_max_age_hours; schedules without it get the chart default
+  # (maxAgeHours=25 -> 90000s). The recording rule oadp:schedule_budget_seconds resolves it,
+  # and also covers the exporter-off case (a success timestamp but no Schedule series).
+  # R1 — budget resolution: annotated 2h, unannotated default, exporter-off default.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="db-hourly"}'
+        values: '-8000000x10'
+      - series: 'kube_customresource_schedule_max_age_hours{namespace="openshift-adp", schedule="db-hourly"}'
+        values: '2x10'
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule"}'
+        values: '-8000000x10'
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", pod="velero-a", schedule="legacy-no-exporter"}'
+        values: '0x10'
+    promql_expr_test:
+      - expr: oadp:schedule_budget_seconds
+        eval_time: 5m
+        exp_samples:
+          - labels: '{__name__="oadp:schedule_budget_seconds", namespace="openshift-adp", schedule="db-hourly"}'
+            value: 7200
+          - labels: '{__name__="oadp:schedule_budget_seconds", namespace="openshift-adp", schedule="default-object-schedule"}'
+            value: 90000
+          - labels: '{__name__="oadp:schedule_budget_seconds", namespace="openshift-adp", schedule="legacy-no-exporter"}'
+            value: 90000
+
+  # T3b — an hourly schedule annotated with a 2h budget goes STALE at 2h, while an
+  # unannotated daily schedule with the same last success stays quiet (25h default).
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="db-hourly"}'
+        values: '-8000000x200'
+      - series: 'kube_customresource_schedule_max_age_hours{namespace="openshift-adp", schedule="db-hourly"}'
+        values: '2x200'
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", pod="velero-a", schedule="db-hourly"}'
+        values: '0x200'
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '-8000000x200'
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '0x200'
+    alert_rule_test:
+      - eval_time: 110m
+        alertname: OadpBackupStale
+        exp_alerts: []
+      - eval_time: 140m
+        alertname: OadpBackupStale
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: db-hourly
+            exp_annotations:
+              summary: "No successful Velero backup for schedule db-hourly within its budget"
+              description: "The newest Completed backup of schedule db-hourly is older than the schedule's RPO budget (the oadp-observability.stakater.com/max-age-hours annotation, or the chart default), so the cluster cannot be restored to within its RPO. Recent runs are failing or not running. First: oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=db-hourly --sort-by=.metadata.creationTimestamp; oc -n openshift-adp get backupstoragelocations.velero.io"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupstale"
+
+  # T6b — a NEW annotated schedule (0.1h budget) that never succeeds pages after 6m + for
+  # (15m default), not after the 25h default; a new unannotated one is still quiet then.
+  - interval: 1m
+    input_series:
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="db-hourly"}'
+        values: '0x40'
+      - series: 'kube_customresource_schedule_max_age_hours{namespace="openshift-adp", schedule="db-hourly"}'
+        values: '0.1x40'
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule", customresource_group="velero.io", customresource_kind="Schedule", customresource_version="v1"}'
+        values: '0x40'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: OadpBackupNoSuccessfulBackup
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: db-hourly
+            exp_annotations:
+              summary: "No successful Velero backup is visible for schedule db-hourly"
+              description: "Schedule db-hourly has existed for longer than its RPO budget (the oadp-observability.stakater.com/max-age-hours annotation, or the chart default), but no Completed backup of it is visible. It never succeeded, every success has expired, or Velero's metrics are not being scraped (check OadpTargetDown and OadpMetricsAbsent). Nothing restorable may exist for this schedule. If every run ends FailedValidation, the BackupStorageLocation is usually Unavailable. First: oc -n openshift-adp get backupstoragelocations.velero.io; oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=db-hourly"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupnosuccessfulbackup"
 
   # ------------------------------------------------------------ cause alerts
   # T8 — the CAUSE: BSL dpa-1 Unavailable (e.g. S3 403 AccessDenied) -> page within 15m,
@@ -349,24 +435,33 @@ tests:
   # ------------------------------------------------------------ dashboard tile logic
   # Dashboard logic. Expressions copied from files/oadp_grafana_dashboard*.json (etcd with
   # the default names substituted) — keep them in sync.
-  # T17 — the Velero status TABLE's single expression: age for schedules with a success,
-  #        the 1e15 NEVER sentinel for schedules with none (sorts worst-first).
+  # T17 — the Velero status TABLE: Status = age / the schedule's own budget (annotated 2h
+  #        vs default 25h), the 1e15 NEVER sentinel for schedules with no success.
   - interval: 1m
     input_series:
-      - series: 'kube_customresource_schedule_created{schedule="default-object-schedule"}'
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="default-object-schedule"}'
         values: '0x10'
-      - series: 'kube_customresource_schedule_created{schedule="hourly"}'
+      - series: 'kube_customresource_schedule_created{namespace="openshift-adp", schedule="db-hourly"}'
         values: '0x10'
-      - series: 'velero_backup_last_successful_timestamp{schedule="hourly"}'
+      - series: 'kube_customresource_schedule_max_age_hours{namespace="openshift-adp", schedule="db-hourly"}'
+        values: '2x10'
+      - series: 'velero_backup_last_successful_timestamp{namespace="openshift-adp", schedule="db-hourly"}'
         values: '0x10'
     promql_expr_test:
-      - expr: (time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})) or (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})) * 0 + 1e15
+      - expr: ((time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})) / on (schedule) max by (schedule) (oadp:schedule_budget_seconds)) or (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})) * 0 + 1e15
         eval_time: 10m
         exp_samples:
-          - labels: '{schedule="hourly"}'
-            value: 600
+          - labels: '{schedule="db-hourly"}'
+            value: 0.08333333333333333
           - labels: '{schedule="default-object-schedule"}'
             value: 1e15
+      - expr: max by (schedule) (oadp:schedule_budget_seconds)
+        eval_time: 10m
+        exp_samples:
+          - labels: '{schedule="db-hourly"}'
+            value: 7200
+          - labels: '{schedule="default-object-schedule"}'
+            value: 90000
 
   # T18 — never-succeeded shape on the etcd daily tile: the CronJob exists and has never succeeded
   # (no last_successful_time) -> -1 "NEVER"; once a success lands the NEVER branch is empty.

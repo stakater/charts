@@ -20,23 +20,13 @@ spec:
     {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
   datasources:
     {{- toYaml .Values.grafana.datasources | nindent 4 }}
-  {{- /* Budgets are injected at render time so the dashboard turns red exactly where the
-         alerts fire (a hardcoded 25h once left the dashboard green while OadpBackupStale fired).
-         fromJson/toPrettyJson, never tpl: Grafana's own double-brace legends must stay verbatim.
-         Panel 1 = Velero status table (Status mapping: OK below the budget, STALE above);
-         panel 6 = Velero age-vs-RPO line; panel 5 = alerts-firing tile. */}}
-  {{- $budget := .Values.prometheus.rules.velero.backupStale.maxAgeHours }}
-  {{- $budgetS := mulf $budget 3600 }}
+  {{- /* The Velero table and the age/budget chart read each schedule's budget from the
+         oadp:schedule_budget_seconds recording rule, so nothing budget-related is baked into
+         the JSON. Only the etcd section (below) gets values injected.
+         fromJson/toPrettyJson, never tpl: Grafana's own double-brace legends must stay verbatim. */}}
   {{- $dash := .Files.Get "files/oadp_grafana_dashboard.json" | fromJson }}
   {{- $e := .Values.grafana.dashboard.etcdBackup }}
   {{- range $p := $dash.panels }}
-  {{- if eq (int $p.id) 1 }}
-  {{- range $o := $p.fieldConfig.overrides }}{{- if eq $o.matcher.options "Status" }}{{- range $prop := $o.properties }}{{- if eq $prop.id "mappings" }}
-  {{- $_ := set (index $prop.value 1).options "to" $budgetS }}
-  {{- $_ := set (index $prop.value 2).options "from" $budgetS }}
-  {{- end }}{{- end }}{{- end }}{{- end }}
-  {{- end }}
-  {{- if eq (int $p.id) 6 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (float64 $budget) }}{{ end }}
   {{- if and (eq (int $p.id) 5) $e.enabled }}{{ $_ := set (index $p.targets 0) "expr" "count(ALERTS{alertstate=\"firing\", alertname=~\"Oadp.*|(?i:.*etcd.*backup.*)\"}) or vector(0)" }}{{ end }}
   {{- end }}
   {{- /* Optional etcd section: appended as its own row, names and budgets from values. */}}

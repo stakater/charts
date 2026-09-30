@@ -40,7 +40,7 @@
       "id": 1,
       "type": "table",
       "title": "Velero: last successful backup",
-      "description": "One row per Velero schedule, worst first. Status: OK while the newest Completed backup is younger than the RPO budget (prometheus.rules.velero.backupStale.maxAgeHours, default 25h \u2014 the same budget as OadpBackupStale); STALE once older (OadpBackupStale); NEVER when the schedule exists but no Completed backup is visible (OadpBackupNoSuccessfulBackup). NEVER needs the state exporter.",
+      "description": "One row per Velero schedule, worst first. Status compares the age of the newest Completed backup with THAT schedule's RPO budget (its oadp-observability.stakater.com/max-age-hours annotation, else the chart default): OK below the budget, STALE above it (OadpBackupStale), NEVER when the schedule exists but no Completed backup is visible (OadpBackupNoSuccessfulBackup). Budget comes from the oadp:schedule_budget_seconds recording rule. NEVER needs the state exporter.",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
@@ -58,8 +58,19 @@
           "legendFormat": ""
         },
         {
-          "expr": "(time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) or (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) * 0 + 1e15",
+          "expr": "((time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) / on (schedule) max by (schedule) (oadp:schedule_budget_seconds)) or (max by (schedule) (kube_customresource_schedule_created) unless on (schedule) max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) * 0 + 1e15",
           "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "format": "table",
+          "instant": true,
+          "legendFormat": ""
+        },
+        {
+          "expr": "max by (schedule) (oadp:schedule_budget_seconds)",
+          "refId": "C",
           "datasource": {
             "type": "prometheus",
             "uid": "$datasource"
@@ -83,17 +94,20 @@
             "excludeByName": {
               "Time": true,
               "Time 1": true,
-              "Time 2": true
+              "Time 2": true,
+              "Time 3": true
             },
             "indexByName": {
               "schedule": 0,
               "Value #B": 1,
-              "Value #A": 2
+              "Value #A": 2,
+              "Value #C": 3
             },
             "renameByName": {
               "schedule": "Schedule",
               "Value #A": "Last successful backup (age)",
-              "Value #B": "Status"
+              "Value #B": "Status",
+              "Value #C": "Budget"
             }
           }
         }
@@ -134,7 +148,7 @@
                     "type": "range",
                     "options": {
                       "from": 0,
-                      "to": 90000,
+                      "to": 1,
                       "result": {
                         "text": "OK",
                         "color": "green",
@@ -145,7 +159,7 @@
                   {
                     "type": "range",
                     "options": {
-                      "from": 90000,
+                      "from": 1,
                       "to": 100000000000000.0,
                       "result": {
                         "text": "STALE",
@@ -198,6 +212,26 @@
                     }
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Budget"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 110
               }
             ]
           }
@@ -359,26 +393,26 @@
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Velero backup age vs RPO (hours)",
-      "description": "Hours since the last successful Velero backup, per schedule. The dashed line is the RPO budget (maxAgeHours): a line crossing it is an RPO breach. A gap means no success is visible at all.",
+      "title": "Velero backup age / RPO budget",
+      "description": "Age of the newest Completed backup divided by the schedule's own RPO budget, per schedule. 1 (dashed line) = the budget: a line crossing it is an RPO breach, whatever the schedule's interval. A gap means no success is visible at all.",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "targets": [
         {
-          "expr": "(time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) / 3600",
+          "expr": "((time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=\"\"})) / on (schedule) max by (schedule) (oadp:schedule_budget_seconds))",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "$datasource"
           },
-          "legendFormat": "velero {{schedule}}"
+          "legendFormat": "{{schedule}}"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "h",
+          "unit": "none",
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 0,
@@ -397,10 +431,11 @@
               },
               {
                 "color": "red",
-                "value": 25
+                "value": 1
               }
             ]
-          }
+          },
+          "decimals": 2
         },
         "overrides": []
       },

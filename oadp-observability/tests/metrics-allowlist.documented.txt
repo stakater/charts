@@ -23,6 +23,7 @@ velero_backup_partial_failure_total
 
 # (The state exporter's kube_customresource_* series are CAPTURED, not documented: see
 # tests/fixtures/state-exporter-metrics.txt from tests/component/state-exporter.sh.)
+# That fixture also covers kube_customresource_schedule_max_age_hours (the budget annotation).
 
 # --- Prometheus built-in (synthesized per scrape target) ---
 up

@@ -16,20 +16,22 @@ spec:
     - name: oadp.backup-outcome
       rules:
         - alert: OadpBackupStale
-          # The OUTCOME, not a proxy: the newest Completed backup per schedule is
-          # older than the RPO budget. The timestamp is recomputed every minute from live
-          # Completed Backup CRs (Velero 1.16 backup_controller.go:157-181), so it survives
-          # Velero restarts. When NO Completed backup exists the series is absent, so this
-          # rule cannot fire; OadpBackupNoSuccessfulBackup covers that case.
+          # The OUTCOME, not a proxy: the newest Completed backup per schedule is older than
+          # THAT schedule's RPO budget (oadp:schedule_budget_seconds: the schedule's
+          # annotation, else the chart default). The timestamp is recomputed every minute from
+          # live Completed Backup CRs (Velero 1.16 backup_controller.go:157-181), so it
+          # survives Velero restarts. When NO Completed backup exists the series is absent, so
+          # this rule cannot fire; OadpBackupNoSuccessfulBackup covers that case.
           # max by: one series per schedule even while two Velero pods are scraped.
           expr: |
-            time() - max by (namespace, schedule) (velero_backup_last_successful_timestamp{schedule!=""}) > {{ $r.maxAgeHours }} * 3600
+            (time() - max by (namespace, schedule) (velero_backup_last_successful_timestamp{schedule!=""}))
+              > on (namespace, schedule) oadp:schedule_budget_seconds
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}
             rulesgroup: oadp
           annotations:
-            summary: "No successful Velero backup for schedule {{`{{ $labels.schedule }}`}} in over {{ $r.maxAgeHours }}h"
-            description: "The newest Completed backup of schedule {{`{{ $labels.schedule }}`}} is {{`{{ $value | humanizeDuration }}`}} old (budget {{ $r.maxAgeHours }}h), so the cluster cannot be restored to within its RPO. Recent runs are failing or not running. First: oc -n {{`{{ $labels.namespace }}`}} get backups.velero.io -l velero.io/schedule-name={{`{{ $labels.schedule }}`}} --sort-by=.metadata.creationTimestamp; oc -n {{`{{ $labels.namespace }}`}} get backupstoragelocations.velero.io"
+            summary: "No successful Velero backup for schedule {{`{{ $labels.schedule }}`}} within its budget"
+            description: "The newest Completed backup of schedule {{`{{ $labels.schedule }}`}} is older than the schedule's RPO budget (the {{ $.Values.oadp.velero.budgetAnnotation }} annotation, or the chart default), so the cluster cannot be restored to within its RPO. Recent runs are failing or not running. First: oc -n {{`{{ $labels.namespace }}`}} get backups.velero.io -l velero.io/schedule-name={{`{{ $labels.schedule }}`}} --sort-by=.metadata.creationTimestamp; oc -n {{`{{ $labels.namespace }}`}} get backupstoragelocations.velero.io"
             runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#oadpbackupstale"
 {{- end }}

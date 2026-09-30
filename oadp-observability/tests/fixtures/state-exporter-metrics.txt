@@ -9,3 +9,7 @@ kube_customresource_backupstoragelocation_status_phase{customresource_group="vel
 # HELP kube_customresource_schedule_created Velero Schedule creation time (unix seconds).
 # TYPE kube_customresource_schedule_created gauge
 kube_customresource_schedule_created{customresource_group="velero.io",customresource_kind="Schedule",customresource_version="v1",schedule="default-object-schedule"} 1.7e+09
+kube_customresource_schedule_created{customresource_group="velero.io",customresource_kind="Schedule",customresource_version="v1",schedule="db-hourly"} 1.7e+09
+# HELP kube_customresource_schedule_max_age_hours Velero Schedule RPO budget in hours, from its budget annotation.
+# TYPE kube_customresource_schedule_max_age_hours gauge
+kube_customresource_schedule_max_age_hours{customresource_group="velero.io",customresource_kind="Schedule",customresource_version="v1",schedule="db-hourly"} 2
