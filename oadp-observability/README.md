@@ -59,6 +59,10 @@ spec:
   exporter parses Kubernetes quantities, so `30m` would mean 0.03 hours and `1h` would be
   ignored. A wrong value shows up as a wrong Budget column and an early or late alert, never
   as silence.
+- **Existing schedules need no change.** A schedule without the annotation simply gets the
+  default. That includes the platform-wide `default-object-schedule` that [`../oadp-instance`](../oadp-instance)
+  ships: it runs daily, and the 25h default fits it. Add the annotation only where a schedule's
+  RPO differs from the default.
 - Without the state exporter, every schedule uses the default.
 
 ## The state exporter

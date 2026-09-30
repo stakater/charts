@@ -33,7 +33,8 @@ credentials (see the failure scenario below).
 **Means:** the newest *Completed* backup of the schedule is older than **that schedule's** RPO
 budget: its `oadp-observability.stakater.com/max-age-hours` annotation, or the chart default
 (25h). Runs are failing, or not running at all. The dashboard's Budget column shows the budget
-in force; if it's wrong, fix the annotation on the Schedule.
+in force; if it's wrong, fix (or add) the annotation on the Schedule. Unannotated schedules use
+the chart default (25h), which is right for a daily schedule and too slow for an hourly one.
 
 **At risk:** restoring to within the RPO. Older backups may still exist and be restorable.
 
