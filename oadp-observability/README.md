@@ -4,8 +4,9 @@ Prometheus alerts, a small state exporter, and a Grafana dashboard for **OADP** 
 for Data Protection, i.e. Velero on OpenShift), built for OpenShift user-workload monitoring and
 the grafana-operator.
 
-It answers one question: **can this cluster be restored?** It alerts on the *outcome* (time since
-the last **successful** backup, including "never succeeded"), not on proxies. It names the cause
+For every backup schedule it answers: **is it producing successful backups on time, and if not,
+why?** It alerts on the *outcome* per schedule (time since the last **successful** backup, including
+"never succeeded"), not on proxies. It names the cause
 (an unreachable bucket, failed runs), and warns when the monitoring itself goes blind. Every
 alert clears on its own once a backup succeeds again.
 
@@ -42,8 +43,8 @@ permissions, and troubleshooting.
 
 ## Dashboard
 
-**OADP / Backup Status** (`grafana.dashboard.enabled`, on by default) answers "can this cluster
-be restored?" without `oc`:
+**OADP / Backup Status** (`grafana.dashboard.enabled`, on by default) shows, per schedule, whether
+backups are succeeding on time, without `oc`:
 - **Velero status table:** one row per schedule, worst first, with the age of its last
   *successful* backup and a status of `OK`, `STALE` (older than `maxAgeHours`, the same budget
   as `OadpBackupStale`) or `NEVER` (the schedule exists but no success is visible). It stays

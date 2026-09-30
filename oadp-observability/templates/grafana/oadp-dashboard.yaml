@@ -1,5 +1,5 @@
 {{- if .Values.grafana.dashboard.enabled }}
-# Per-cluster backup status — Velero last success per schedule, etcd daily/
+# Backup status — Velero last success per schedule, etcd daily/
 # weekly last success, BSL phase — so a manual check needs no `oc`. The JSON is loaded
 # verbatim with .Files.Get (not templated), so Grafana's double-brace legends need no
 # escaping. The optional etcd section (grafana.dashboard.etcdBackup) lives in
