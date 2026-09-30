@@ -14,7 +14,7 @@ and two of this chart's most important alerts depend on them.
 ## Why it exists
 
 Prometheus can only alert on numbers it scrapes. Velero's `/metrics` endpoint has two gaps that
-matter for "can this cluster be restored?":
+matter for "is every schedule producing successful backups on time?":
 
 | Gap | Where the fact lives | Why it matters |
 | --- | --- | --- |

@@ -7,7 +7,7 @@
     "etcd",
     "backup"
   ],
-  "description": "Can this cluster be restored? Velero (OADP) backups \u2014 last SUCCESS, not last attempt. Optional etcd-backup section via grafana.dashboard.etcdBackup. Runbook: https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md",
+  "description": "Is every Velero (OADP) backup schedule producing successful backups on time? Per schedule \u2014 last SUCCESS, not last attempt. Optional etcd-backup section via grafana.dashboard.etcdBackup. Runbook: https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md",
   "schemaVersion": 39,
   "editable": true,
   "graphTooltip": 1,
