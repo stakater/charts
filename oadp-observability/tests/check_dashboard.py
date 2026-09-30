@@ -65,14 +65,18 @@ def ranges(maps):
     return sorted((m["options"]["from"], m["options"]["to"], m["options"]["result"]["text"])
                   for m in maps if m["type"] == "range")
 
-print("budget render (maxAgeHours=2)")
+print("budgets are per schedule (recording rule), not baked into the dashboard")
 r = ranges(status_mapping(budget))
-check(any(f == 0 and to == 7200 and txt == "OK" for f, to, txt in r), f"status OK up to 7200s (got {r})")
-check(any(f == 7200 and txt == "STALE" for f, to, txt in r), "status STALE from 7200s")
+check(any(f == 0 and to == 1 and txt == "OK" for f, to, txt in r), f"status OK while age/budget < 1 (got {r})")
+check(any(f == 1 and txt == "STALE" for f, to, txt in r), "status STALE from age/budget >= 1")
 # NEVER is a 1e15 sentinel (not -1) so "worst first" sorting puts never-succeeded on top.
 check(any(f <= 1e15 <= to and txt == "NEVER" for f, to, txt in r), "status NEVER for the 1e15 sentinel")
-age = by_title(budget, "Velero backup age vs RPO (hours)")
-check(age["fieldConfig"]["defaults"]["thresholds"]["steps"][1]["value"] == 2, "age-vs-RPO budget line at 2h")
+tbl = by_title(budget, "Velero: last successful backup")
+check(sum("oadp:schedule_budget_seconds" in t["expr"] for t in tbl["targets"]) == 2, "table's Status and Budget columns read oadp:schedule_budget_seconds")
+age = by_title(budget, "Velero backup age / RPO budget")
+check(age is not None and "oadp:schedule_budget_seconds" in age["targets"][0]["expr"], "age chart is age/budget per schedule")
+check(age["fieldConfig"]["defaults"]["thresholds"]["steps"][1]["value"] == 1, "age chart's line is at 1 (= the budget)")
+check(json.dumps(budget) == json.dumps(default), "maxAgeHours changes the recording rule only; the rendered dashboard is identical")
 
 print("etcd render (enabled, custom names/budgets)")
 e = exprs(etcd)

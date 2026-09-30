@@ -1,0 +1,29 @@
+{{- $v := .Values.prometheus.rules.velero }}
+{{- if or (and $v.backupStale $v.backupStale.enabled) (and $v.noSuccessfulBackup $v.noSuccessfulBackup.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-schedule-budget
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: oadp.recording
+      rules:
+        # Each schedule's RPO budget in seconds. The budget travels with the Schedule: its
+        # {{ .Values.oadp.velero.budgetAnnotation }} annotation (hours), exported by the state
+        # exporter. Fallbacks, in order: schedules known to the exporter but unannotated get
+        # the chart default; schedules only visible through a success timestamp (exporter
+        # off) get the default too. Used by OadpBackupStale, OadpBackupNoSuccessfulBackup,
+        # and the dashboard's status table.
+        - record: oadp:schedule_budget_seconds
+          expr: |
+            (max by (namespace, schedule) (kube_customresource_schedule_max_age_hours) * 3600)
+            or (max by (namespace, schedule) (kube_customresource_schedule_created) * 0 + {{ $v.backupStale.maxAgeHours }} * 3600)
+            or (max by (namespace, schedule) (velero_backup_last_successful_timestamp{schedule!=""}) * 0 + {{ $v.backupStale.maxAgeHours }} * 3600)
+{{- end }}

@@ -20,6 +20,11 @@ oadp:
   velero:
     # UWM sets job=<Service name> for ServiceMonitor targets.
     job: "openshift-adp-velero-metrics-svc"
+    # A Schedule declares its own RPO budget with this annotation, in HOURS as a plain
+    # decimal ("2", "0.5"; no unit suffix). The state exporter reads it; OadpBackupStale and
+    # OadpBackupNoSuccessfulBackup compare each schedule against its own budget. Schedules
+    # without it use prometheus.rules.velero.backupStale.maxAgeHours.
+    budgetAnnotation: "oadp-observability.stakater.com/max-age-hours"
 
 # --- OADP state exporter (see docs/state-exporter.md) ------------------------------------
 # A kube-state-metrics instance in custom-resource-state-only mode exporting what Velero's
@@ -94,10 +99,11 @@ prometheus:
         enabled: true
         for: 15m
         severity: critical
-        # default-object-schedule runs daily at 01:00; 25h = one interval + 1h grace.
+        # DEFAULT budget, for schedules without the budget annotation (oadp.velero.budgetAnnotation).
+        # 25h fits a daily schedule: one interval + 1h grace.
         maxAgeHours: 25
-      # Needs stateExporter.enabled (Schedule age). Fires when a Schedule is older than
-      # backupStale.maxAgeHours and no Completed backup of it is visible.
+      # Needs stateExporter.enabled (Schedule age). Fires when a Schedule is older than its
+      # budget (annotation, else backupStale.maxAgeHours) and no Completed backup is visible.
       noSuccessfulBackup:
         enabled: true
         for: 15m

@@ -5,6 +5,7 @@
 #     (no series until status.phase is set — the watchdog treats that as "blind")
 #   Schedule .metadata.creationTimestamp -> Gauge (RFC3339 parsed to unix seconds)
 #     kube_customresource_schedule_created{schedule}
+#   Schedule budget annotation -> Gauge kube_customresource_schedule_max_age_hours{schedule}
 #     (the "never succeeded" anchor; velero_backup_last_status is reset to 1 every
 #     minute by Velero's InitSchedule and cannot carry a failure)
 # No namespace label from path: UWM enforces the target's namespace (openshift-adp) and a
@@ -50,4 +51,12 @@ data:
                 type: Gauge
                 gauge:
                   path: [metadata, creationTimestamp]
+            # The schedule's own RPO budget, from its annotation (hours, plain decimal).
+            # No annotation -> no series -> the recording rule falls back to the default.
+            - name: schedule_max_age_hours
+              help: "Velero Schedule RPO budget in hours, from its budget annotation."
+              each:
+                type: Gauge
+                gauge:
+                  path: [metadata, annotations, "{{ .Values.oadp.velero.budgetAnnotation }}"]
 {{- end }}

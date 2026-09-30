@@ -66,8 +66,19 @@ metadata: {name: default-object-schedule, namespace: ${NS}}
 spec:
   schedule: "0 1 * * *"
   template: {includedNamespaces: ["*"]}
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: db-hourly
+  namespace: ${NS}
+  annotations:
+    oadp-observability.stakater.com/max-age-hours: "2"   # the schedule's own RPO budget
+spec:
+  schedule: "0 * * * *"
+  template: {includedNamespaces: ["db"]}
 EOF
-green "BSL dpa-1 (Unavailable) + Schedule default-object-schedule created"
+green "BSL dpa-1 (Unavailable) + Schedules default-object-schedule (unannotated), db-hourly (budget 2h) created"
 
 step "3. deploy the chart's state exporter (no ServiceMonitor: no prometheus-operator here)"
 # runAsUser: kind has no SCC to assign a UID and the KSM image user is non-numeric.
@@ -89,6 +100,7 @@ PF_PID=$!
 METRICS=""
 for _ in $(seq 1 30); do
   METRICS="$(curl -sf localhost:18080/metrics || true)"
+  echo "$METRICS" | grep -q '^kube_customresource_schedule_max_age_hours' && \
   echo "$METRICS" | grep -q '^kube_customresource_schedule_created' && \
   echo "$METRICS" | grep -q '^kube_customresource_backupstoragelocation_status_phase' && break
   sleep 2
@@ -105,6 +117,14 @@ check "BSL dpa-1 phase=Available is 0 (what OadpBackupStorageLocationUnavailable
   '^kube_customresource_backupstoragelocation_status_phase\{.*name="dpa-1".*phase="Available".*\} 0$'
 check "Schedule created carries schedule= label" \
   '^kube_customresource_schedule_created\{.*schedule="default-object-schedule".*\} '
+# The budget annotation is a STRING ("2"); KSM must turn it into a numeric gauge.
+check "annotated schedule exports its budget: schedule_max_age_hours{schedule=db-hourly} 2" \
+  '^kube_customresource_schedule_max_age_hours\{.*schedule="db-hourly".*\} 2$'
+if echo "$METRICS" | grep -Eq '^kube_customresource_schedule_max_age_hours\{.*schedule="default-object-schedule"'; then
+  red "  FAIL: unannotated schedule must NOT export a budget series (the recording rule supplies the default)"; fail=1
+else
+  green "  ok: unannotated schedule exports no budget series"
+fi
 # RFC3339 must be parsed to unix seconds (within an hour of now), not 0 / an error.
 CREATED="$(echo "$METRICS" | grep -E '^kube_customresource_schedule_created\{' | awk '{print $NF}' | head -1)"
 NOW="$(date +%s)"
