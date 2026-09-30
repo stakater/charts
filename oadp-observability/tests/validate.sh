@@ -121,37 +121,31 @@ PY2
 
 step "4b. metric-reality gate (captured fixtures + documented-upstream)"
 DASH="${CHART}/files/oadp_grafana_dashboard.json"
-DASH_ETCD="${CHART}/files/oadp_grafana_dashboard_etcd.json"
-DASH_ARGS=(); [ -f "$DASH" ] && DASH_ARGS=(--dashboard "$DASH" --dashboard "$DASH_ETCD")
+DASH_ARGS=(); [ -f "$DASH" ] && DASH_ARGS=(--dashboard "$DASH")
 python3 "${T}/check_metrics.py" \
   --rules "${RENDER_DIR}/all.yaml" "${DASH_ARGS[@]+"${DASH_ARGS[@]}"}" \
   --allowlist "${T}/metrics-allowlist.captured.txt" \
   --documented "${T}/metrics-allowlist.documented.txt"
 
-step "5a. rendered dashboard: Velero status table, budgets, optional etcd section"
+step "5a. rendered dashboard: Velero status table, budgets, OADP only"
 R="${RENDER_DIR}"
 helm template oadp "$CHART" -s templates/grafana/oadp-dashboard.yaml > "$R/dash-default.yaml"
 helm template oadp "$CHART" -s templates/grafana/oadp-dashboard.yaml \
   --set prometheus.rules.velero.backupStale.maxAgeHours=2 > "$R/dash-budget.yaml"
-helm template oadp "$CHART" -s templates/grafana/oadp-dashboard.yaml \
-  --set grafana.dashboard.etcdBackup.enabled=true --set grafana.dashboard.etcdBackup.namespace=backup-x \
-  --set grafana.dashboard.etcdBackup.dailyCronJob=d-bk --set grafana.dashboard.etcdBackup.weeklyCronJob=w-bk \
-  --set grafana.dashboard.etcdBackup.dailyMaxAgeHours=30 --set grafana.dashboard.etcdBackup.weeklyMaxAgeHours=100 \
-  > "$R/dash-etcd.yaml"
-python3 "${T}/check_dashboard.py" "$R/dash-default.yaml" "$R/dash-budget.yaml" "$R/dash-etcd.yaml" \
+python3 "${T}/check_dashboard.py" "$R/dash-default.yaml" "$R/dash-budget.yaml" "${CHART}/values.yaml" \
   || { red "rendered dashboard checks failed"; exit 1; }
 green "rendered dashboard checks pass"
 
 if [ -f "$DASH" ]; then
 step "5. dashboard JSON"
-jq -e . "$DASH" >/dev/null && jq -e . "$DASH_ETCD" >/dev/null
+jq -e . "$DASH" >/dev/null
 DUP=$(jq '[.. | objects | select(has("gridPos")) | .id] | (length) as $n | (unique|length) as $u | $n-$u' "$DASH")
 [ "$DUP" = "0" ] && green "valid JSON, panel ids unique" || { red "duplicate panel ids"; exit 1; }
 
 step "5b. dashboard PromQL parses"
-python3 - "$DASH" "${RENDER_DIR}/dash-exprs.yaml" "$DASH_ETCD" <<'PY'
+python3 - "$DASH" "${RENDER_DIR}/dash-exprs.yaml" <<'PY'
 import json, sys
-dash, out, extra = sys.argv[1], sys.argv[2], sys.argv[3]
+dash, out = sys.argv[1], sys.argv[2]
 exprs = []
 def walk(panels):
     for p in panels or []:
@@ -163,7 +157,7 @@ def walk(panels):
                     e = e.replace(v, "5m")
                 exprs.append(e)
         walk(p.get("panels"))
-walk(json.load(open(dash)).get("panels", [])); walk(json.load(open(extra)).get("panels", []))
+walk(json.load(open(dash)).get("panels", []))
 rules = "\n".join(f"    - record: dash_{i}\n      expr: |\n        {e}" for i, e in enumerate(exprs))
 open(out, "w").write("groups:\n  - name: dashboard.exprs\n    rules:\n" + rules + "\n")
 print(f"extracted {len(exprs)} panel queries")

@@ -4,10 +4,9 @@
   "tags": [
     "oadp",
     "velero",
-    "etcd",
     "backup"
   ],
-  "description": "Is every Velero (OADP) backup schedule producing successful backups on time? Per schedule \u2014 last SUCCESS, not last attempt. Optional etcd-backup section via grafana.dashboard.etcdBackup. Runbook: https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md",
+  "description": "Is every Velero (OADP) backup schedule producing successful backups on time? Per schedule \u2014 last SUCCESS, not last attempt. Runbook: https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md",
   "schemaVersion": 39,
   "editable": true,
   "graphTooltip": 1,
@@ -337,7 +336,7 @@
       "id": 5,
       "type": "stat",
       "title": "Backup alerts firing",
-      "description": "Backup alerts currently firing: this chart's Oadp* alerts (plus etcd-backup alerts when the etcd section is enabled).",
+      "description": "Backup alerts currently firing: this chart's Oadp* alerts.",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"

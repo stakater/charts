@@ -1,9 +1,8 @@
 {{- if .Values.grafana.dashboard.enabled }}
-# Backup status — Velero last success per schedule, etcd daily/
+# Backup status — Velero last success per schedule, BSL phase, history,
 # weekly last success, BSL phase — so a manual check needs no `oc`. The JSON is loaded
 # verbatim with .Files.Get (not templated), so Grafana's double-brace legends need no
-# escaping. The optional etcd section (grafana.dashboard.etcdBackup) lives in
-# files/oadp_grafana_dashboard_etcd.json and is appended only when enabled.
+# escaping.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -22,24 +21,9 @@ spec:
     {{- toYaml .Values.grafana.datasources | nindent 4 }}
   {{- /* The Velero table and the age/budget chart read each schedule's budget from the
          oadp:schedule_budget_seconds recording rule, so nothing budget-related is baked into
-         the JSON. Only the etcd section (below) gets values injected.
+         the JSON.
          fromJson/toPrettyJson, never tpl: Grafana's own double-brace legends must stay verbatim. */}}
   {{- $dash := .Files.Get "files/oadp_grafana_dashboard.json" | fromJson }}
-  {{- $e := .Values.grafana.dashboard.etcdBackup }}
-  {{- range $p := $dash.panels }}
-  {{- if and (eq (int $p.id) 5) $e.enabled }}{{ $_ := set (index $p.targets 0) "expr" "count(ALERTS{alertstate=\"firing\", alertname=~\"Oadp.*|(?i:.*etcd.*backup.*)\"}) or vector(0)" }}{{ end }}
-  {{- end }}
-  {{- /* Optional etcd section: appended as its own row, names and budgets from values. */}}
-  {{- if $e.enabled }}
-  {{- $raw := .Files.Get "files/oadp_grafana_dashboard_etcd.json" | replace "__ETCD_NS__" $e.namespace | replace "__ETCD_DAILY__" $e.dailyCronJob | replace "__ETCD_WEEKLY__" $e.weeklyCronJob }}
-  {{- range $p := ($raw | fromJson).panels }}
-  {{- if eq (int $p.id) 21 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (mulf $e.dailyMaxAgeHours 3600) }}{{ end }}
-  {{- if eq (int $p.id) 22 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (mulf $e.weeklyMaxAgeHours 3600) }}{{ end }}
-  {{- if eq (int $p.id) 23 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (float64 $e.dailyMaxAgeHours) }}{{ end }}
-  {{- if eq (int $p.id) 24 }}{{ $_ := set (index $p.fieldConfig.defaults.thresholds.steps 1) "value" (divf $e.weeklyMaxAgeHours 24) }}{{ end }}
-  {{- $_ := set $dash "panels" (append $dash.panels $p) }}
-  {{- end }}
-  {{- end }}
   json: |-
 {{ toPrettyJson $dash | indent 4 }}
 {{- end }}

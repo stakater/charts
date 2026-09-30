@@ -5,7 +5,6 @@
 #   -> grafana-operator + Grafana + Prometheus datasource -> S3 bucket (SeaweedFS)
 #   -> real Velero 1.16.2 in openshift-adp + the OADP-shaped metrics Service
 #   -> this chart (monitors, state exporter, rules, dashboard) with values-e2e.yaml
-#   -> demo etcd-backup CronJobs (dashboard's optional etcd panels).
 # Idempotent. Uses an isolated kubeconfig (see lib.sh). Then run scenarios.sh / screenshots.sh.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
@@ -47,9 +46,7 @@ step "6. oadp-observability (this chart) with values-e2e.yaml"
 helm --kube-context "$CTX" upgrade --install oadp-observability "$CHART" -n "$NS" \
   -f "${E2E}/values-e2e.yaml" --wait --timeout 5m
 
-step "7. demo etcd-backup CronJobs"
-k apply -f "${S}/demo-etcd-cronjobs.yaml"
 
-step "8. sanity"
+step "7. sanity"
 k -n "$NS" get servicemonitor,prometheusrule,grafanadashboard,deploy
 green "stack is up. KUBECONFIG=${KUBECONFIG}"
