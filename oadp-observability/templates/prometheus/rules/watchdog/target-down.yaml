@@ -4,6 +4,9 @@
 {{- if and .Values.prometheus.monitors.veleroServiceMonitor .Values.prometheus.monitors.veleroServiceMonitor.enabled }}
 {{- $targets = append $targets (dict "target" "velero" "job" .Values.oadp.velero.job) }}
 {{- end }}
+{{- if and .Values.prometheus.monitors.nodeAgentPodMonitor .Values.prometheus.monitors.nodeAgentPodMonitor.enabled }}
+{{- $targets = append $targets (dict "target" "node-agent" "job" (printf "%s/%s-node-agent" (include "oadp-observability.namespace" .) (include "oadp-observability.fullname" .))) }}
+{{- end }}
 {{- if .Values.stateExporter.enabled }}
 {{- $targets = append $targets (dict "target" "state-exporter" "job" (printf "%s-state-exporter" (include "oadp-observability.fullname" .))) }}
 {{- end }}

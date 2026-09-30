@@ -75,7 +75,7 @@ schedule "$SCHED" 0.05   # its own budget: 3 minutes (the chart default in value
 run_backup "$SCHED" --wait
 echo "  latest ${SCHED} backup: $(last_phase "$SCHED")"
 sleep 60   # scrape + rule evaluation
-for a in OadpBackupStale OadpBackupNoSuccessfulBackup OadpBackupStorageLocationUnavailable OadpBackupFailed OadpRestoreFailed OadpMetricsAbsent OadpTargetDown; do
+for a in OadpBackupStale OadpBackupNoSuccessfulBackup OadpBackupStorageLocationUnavailable OadpBackupFailed OadpRestoreFailed OadpDataMoverFailed OadpNodeAgentUnavailable OadpMetricsAbsent OadpTargetDown; do
   expect_inactive "0 baseline" "$a" '{}'
 done
 fi
@@ -188,10 +188,39 @@ expect_firing   "8 restore" OadpRestoreFailed '{"phase":"FailedValidation"}' 240
 expect_resolved "8 restore" OadpRestoreFailed '{"phase":"FailedValidation"}' 600
 fi
 
+if want 9; then
+step "9. volume data: a file-system backup of a pod volume through the node-agent (Kopia)"
+k create namespace demo-vol --dry-run=client -o yaml | k apply -f - >/dev/null
+# emptyDir, not a PVC: kind's local-path PVs are hostPath volumes, which Velero's file-system
+# backup skips by design (seen: backup Completed, zero PodVolumeBackups). emptyDir is supported.
+k -n demo-vol apply -f - >/dev/null <<EOF
+apiVersion: v1
+kind: Pod
+metadata: {name: writer}
+spec:
+  containers:
+    - {name: writer, image: "busybox:1.37", command: ["sh","-c","echo hello > /data/f; sleep 36000"], volumeMounts: [{name: data, mountPath: /data}]}
+  volumes: [{name: data, emptyDir: {}}]
+EOF
+k -n demo-vol wait --for=condition=Ready pod/writer --timeout=180s >/dev/null
+velero backup create "fs-$(date +%H%M%S)" --include-namespaces demo-vol --default-volumes-to-fs-backup --wait >/dev/null 2>&1 || true
+echo "  PodVolumeBackups: $(k -n "$NS" get podvolumebackups.velero.io -o jsonpath='{range .items[*]}{.status.phase}{" "}{end}')"
+# Proof the PodMonitor scrapes the node-agent and its counters move with real work:
+expect_positive "9 volume" 'sum(podVolume_pod_volume_backup_dequeue_count)' 180
+expect_inactive "9 volume" OadpDataMoverFailed '{}'
+
+step "9b. node-agent unavailable: its image can't be pulled"
+k -n "$NS" set image ds/node-agent node-agent=velero/velero:no-such-tag >/dev/null
+expect_firing   "9b node-agent" OadpNodeAgentUnavailable '{"daemonset":"node-agent"}' 300
+k -n "$NS" rollout undo ds/node-agent >/dev/null && k -n "$NS" rollout status ds/node-agent --timeout=180s >/dev/null
+expect_resolved "9b node-agent" OadpNodeAgentUnavailable '{"daemonset":"node-agent"}' 300
+k delete namespace demo-vol --wait=false >/dev/null
+fi
+
 if want 7; then
 step "7. healthy again: fresh backups -> nothing firing"
 run_backup "$SCHED" --wait; run_backup "$NEVER" --wait
-for a in OadpBackupStale OadpBackupNoSuccessfulBackup OadpBackupStorageLocationUnavailable OadpBackupFailed OadpRestoreFailed OadpMetricsAbsent OadpTargetDown; do
+for a in OadpBackupStale OadpBackupNoSuccessfulBackup OadpBackupStorageLocationUnavailable OadpBackupFailed OadpRestoreFailed OadpDataMoverFailed OadpNodeAgentUnavailable OadpMetricsAbsent OadpTargetDown; do
   expect_resolved "7 healthy" "$a" '{}' 300
 done
 "${E2E}/screenshots.sh" healthy || FAILED=1

@@ -62,6 +62,17 @@ dashboard read it, so a budget is configured exactly once, next to the schedule 
   noise to filter. Windowed like
   `OadpBackupFailed`.
 
+**Volume data (node-agent):**
+Velero backs up Kubernetes objects itself; *volume data* is moved by the node-agent DaemonSet
+using Kopia (file-system backups and the data mover). It's opt-in through the
+`nodeAgentPodMonitor`, because it only matters where volume data is backed up.
+- `OadpDataMoverFailed` (warning, windowed): `podVolume_data_{upload,download}_failure_total`
+  per node. The counters are zero-initialised per node.
+- `OadpNodeAgentUnavailable` (warning): node-agent pods not ready, from kube-state-metrics, so it
+  needs no scrape and stays silent where there's no node-agent.
+- There's deliberately no "file-system backup failed" alert: Velero has no counter for it, and
+  such a failure already makes its backup `PartiallyFailed` (`OadpBackupFailed`).
+
 **Blindness (the watchdog):**
 - `OadpMetricsAbsent`: `absent()` per enabled component (`velero`, `backupstoragelocations`,
   `schedules`). For the exporter it checks the *data* series, because kube-state-metrics can be

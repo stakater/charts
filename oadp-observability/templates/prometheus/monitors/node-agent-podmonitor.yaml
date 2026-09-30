@@ -1,0 +1,29 @@
+{{- if and (.Values.prometheus.monitors.nodeAgentPodMonitor) (.Values.prometheus.monitors.nodeAgentPodMonitor.enabled) }}
+{{- $m := .Values.prometheus.monitors.nodeAgentPodMonitor }}
+# Scrapes the Velero node-agent pods (DaemonSet created by the OADP operator when the DPA enables
+# nodeAgent). They expose podVolume_* on the container port named "metrics" (8085, plain http);
+# pod labels name=node-agent, component=velero (seen on a live OADP 1.5.8 cluster). No Service
+# fronts them, hence a PodMonitor. Its scrape job is "<namespace>/<this PodMonitor's name>".
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-node-agent
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+spec:
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: {{ $m.interval }}
+      metricRelabelings:
+        # podVolume_pod_volume_operation_latency_seconds* carry per-backup labels (backupName,
+        # pod_volume_backup): a new series per backup, forever. No rule uses it; drop the family.
+        - action: drop
+          sourceLabels: [__name__]
+          regex: podVolume_pod_volume_operation_latency_seconds.*
+  selector:
+    matchLabels:
+      name: {{ .Values.oadp.nodeAgent.daemonset }}
+      component: velero
+{{- end }}

@@ -122,5 +122,18 @@ expect_value() {
   else red "  $(ts) WRONG VALUE $q = $got (want $want)"; record "$sc" "\`$q\`" "= $want" "❌ $got"; FAILED=1; fi
 }
 
+# expect_positive <scenario> <promql> <timeout-s>: the instant query must return a value > 0
+expect_positive() {
+  local sc="$1" q="$2" t="${3:-180}" got start=$SECONDS
+  while :; do
+    got=$(curl -sf "$PROM/api/v1/query" --data-urlencode "query=$q" | python3 -c 'import json,sys;r=json.load(sys.stdin)["data"]["result"];print(r[0]["value"][1] if r else "none")')
+    python3 -c "import sys; sys.exit(0 if '$got'!='none' and float('$got')>0 else 1)" && break
+    (( SECONDS - start >= t )) && break; sleep 10
+  done
+  if python3 -c "import sys; sys.exit(0 if '$got'!='none' and float('$got')>0 else 1)"; then
+    green "  $(ts) value   $q = $got"; record "$sc" "\`$q\`" "> 0" "✅ $got"
+  else red "  $(ts) NOT POSITIVE $q = $got"; record "$sc" "\`$q\`" "> 0" "❌ $got"; FAILED=1; fi
+}
+
 # velero CLI inside the server pod (the pattern the OADP docs use)
 velero() { k -n "$NS" exec deploy/velero -c velero -- /velero "$@"; }

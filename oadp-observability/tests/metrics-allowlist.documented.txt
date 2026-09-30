@@ -35,3 +35,8 @@ up
 # per schedule by InitSchedule).
 # Prometheus built-in (synthesized by the rule engine): the "alerts firing" tile.
 ALERTS
+
+# --- node-agent availability (kube-state-metrics, platform scrape; not in our fixtures) ---
+# kube-state-metrics docs/metrics/workload/daemonset-metrics.md; queried live on OADP 1.5.8
+# (daemonset="node-agent", namespace="openshift-adp").
+kube_daemonset_status_number_unavailable

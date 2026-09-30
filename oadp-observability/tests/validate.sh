@@ -26,6 +26,7 @@ step()  { printf "\n\033[1m== %s ==\033[0m\n" "$*"; }
 ALL_FLAGS=(
   --set prometheus.monitors.veleroServiceMonitor.enabled=true
   --set stateExporter.enabled=true
+  --set prometheus.monitors.nodeAgentPodMonitor.enabled=true
 )
 
 run_promtool() {

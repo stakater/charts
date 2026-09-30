@@ -1,0 +1,37 @@
+{{- $r := .Values.prometheus.rules.velero.dataMoverFailed }}
+{{- $m := .Values.prometheus.monitors.nodeAgentPodMonitor }}
+{{- if and ($r) ($r.enabled) ($m) ($m.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-data-mover-failed
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: oadp.volume-data
+      rules:
+        - alert: OadpDataMoverFailed
+          # The data mover (Kopia, in the node-agent) failed to UPLOAD volume data to the bucket
+          # (a backup) or DOWNLOAD it (a restore), per node. Counters are zero-initialised per
+          # node (live OADP 1.5.8 capture), so the first failure is seen. Windowed: it resolves
+          # once `window` passes without a new failure. The backup such an upload belonged to
+          # also ends PartiallyFailed (OadpBackupFailed); this alert names the node and direction.
+          expr: |
+            label_replace(sum by (namespace, node) (increase(podVolume_data_upload_failure_total[{{ $r.window }}])) > 0, "direction", "upload", "", "")
+            or
+            label_replace(sum by (namespace, node) (increase(podVolume_data_download_failure_total[{{ $r.window }}])) > 0, "direction", "download", "", "")
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: oadp
+          annotations:
+            summary: "Velero data mover {{`{{ $labels.direction }}`}} failed on node {{`{{ $labels.node }}`}}"
+            description: "At least one data mover {{`{{ $labels.direction }}`}} ({{`{{ if eq $labels.direction \"upload\" }}volume data to the bucket, during a backup{{ else }}volume data from the bucket, during a restore{{ end }}`}}) failed on node {{`{{ $labels.node }}`}} in the last {{ $r.window }}. The backup or restore it belonged to is missing that volume's data. First: oc -n {{`{{ $labels.namespace }}`}} get datauploads.velero.io,datadownloads.velero.io -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,NODE:.status.node,MSG:.status.message; oc -n {{`{{ $labels.namespace }}`}} logs -l name={{ .Values.oadp.nodeAgent.daemonset }} --tail=200 | grep -i -E 'error|fail'"
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#oadpdatamoverfailed"
+{{- end }}

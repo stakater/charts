@@ -4,6 +4,9 @@
 {{- if and .Values.prometheus.monitors.veleroServiceMonitor .Values.prometheus.monitors.veleroServiceMonitor.enabled }}
 {{- $targets = append $targets (dict "target" "velero" "expr" (printf "absent(up{job=\"%s\"})" .Values.oadp.velero.job)) }}
 {{- end }}
+{{- if and .Values.prometheus.monitors.nodeAgentPodMonitor .Values.prometheus.monitors.nodeAgentPodMonitor.enabled }}
+{{- $targets = append $targets (dict "target" "node-agent" "expr" (printf "absent(up{job=\"%s/%s-node-agent\"})" (include "oadp-observability.namespace" .) (include "oadp-observability.fullname" .))) }}
+{{- end }}
 {{- if .Values.stateExporter.enabled }}
 {{- $targets = append $targets (dict "target" "backupstoragelocations" "expr" "absent(kube_customresource_backupstoragelocation_status_phase)") }}
 {{- $targets = append $targets (dict "target" "schedules" "expr" "absent(kube_customresource_schedule_created)") }}

@@ -47,6 +47,7 @@ the cause.
 | 6c | the state exporter is scaled to 0 | `OadpMetricsAbsent{target="backupstoragelocations"}`, `{target="schedules"}` | resolves on fix |
 | 6d | the state exporter's scrape fails (the ServiceMonitor path returns 404) | `OadpTargetDown{target="state-exporter"}` | resolves on fix |
 | 8 | a restore from a backup that doesn't exist (Velero: `FailedValidation`) | `OadpRestoreFailed{phase="FailedValidation"}` | resolves after the window |
+| 9 | a file-system backup of a pod volume (emptyDir; kind's PVCs are hostPath, which Velero skips) through the node-agent (Kopia), then the node-agent image broken | node-agent counters move (the PodMonitor scrapes); `OadpNodeAgentUnavailable` fires and resolves | — |
 | 7 | fresh backups | nothing | screenshot `healthy` |
 
 ## Honest limits

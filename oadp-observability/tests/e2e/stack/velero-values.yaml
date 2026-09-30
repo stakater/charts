@@ -14,7 +14,8 @@ configuration:
       config: {region: us-east-1, s3ForcePathStyle: "true", s3Url: "http://seaweedfs.s3.svc:8333"}
   volumeSnapshotLocation: []
 snapshotsEnabled: false
-deployNodeAgent: false
+# node-agent (Kopia) for file-system backups; reshaped to OADP's labels/port name by up.sh.
+deployNodeAgent: true
 credentials:
   useSecret: true
   secretContents:
