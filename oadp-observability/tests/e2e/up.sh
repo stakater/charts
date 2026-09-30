@@ -37,6 +37,13 @@ step "5. Velero 1.16.2 in ${NS} + OADP-shaped metrics Service"
 helm --kube-context "$CTX" upgrade --install velero vmware-tanzu/velero --version 10.1.3 \
   -n "$NS" --create-namespace -f "${S}/velero-values.yaml" --wait --timeout 10m
 k apply -f "${S}/oadp-metrics-service.yaml"
+# Reshape the upstream chart's node-agent to what OADP creates (seen live on OADP 1.5.8): pod
+# label component=velero and container port named "metrics", so the chart's PodMonitor runs
+# unmodified. The upstream chart uses no component label and names the port http-monitoring.
+k -n "$NS" patch ds node-agent --type json -p '[
+  {"op":"add","path":"/spec/template/metadata/labels/component","value":"velero"},
+  {"op":"replace","path":"/spec/template/spec/containers/0/ports/0/name","value":"metrics"}]' >/dev/null
+k -n "$NS" rollout status ds/node-agent --timeout=180s
 for _ in $(seq 1 30); do
   [ "$(k -n "$NS" get bsl dpa-1 -o jsonpath='{.status.phase}' 2>/dev/null)" = Available ] && break; sleep 5
 done

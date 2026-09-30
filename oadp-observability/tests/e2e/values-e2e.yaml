@@ -4,6 +4,7 @@
 prometheus:
   monitors:
     veleroServiceMonitor: {enabled: true, interval: 15s}
+    nodeAgentPodMonitor: {enabled: true, interval: 15s}
   rules:
     velero:
       backupStale: {for: 1m, maxAgeHours: 0.1}       # DEFAULT budget 6 minutes; the baseline schedule is annotated with 0.05 (3 minutes)
@@ -11,6 +12,8 @@ prometheus:
       bslUnavailable: {for: 1m}
       backupFailed: {for: 0m, window: 5m}
       restoreFailed: {for: 0m, window: 5m}
+      dataMoverFailed: {for: 0m, window: 5m}
+      nodeAgentUnavailable: {for: 1m}
     watchdog:
       metricsAbsent: {for: 1m}
       targetDown: {for: 1m}

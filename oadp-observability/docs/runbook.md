@@ -20,6 +20,8 @@ pattern Red Hat's OADP docs use.
 | [OadpBackupStorageLocationUnavailable](#oadpbackupstoragelocationunavailable) | Can Velero reach its bucket? | critical |
 | [OadpBackupFailed](#oadpbackupfailed) | Did a run just fail, and how? | warning |
 | [OadpRestoreFailed](#oadprestorefailed) | Did a restore just fail? | warning |
+| [OadpDataMoverFailed](#oadpdatamoverfailed) | Did moving volume data to or from the bucket fail? | warning |
+| [OadpNodeAgentUnavailable](#oadpnodeagentunavailable) | Can volume data be backed up on every node? | warning |
 | [OadpMetricsAbsent](#oadpmetricsabsent) | Are we blind? | warning |
 | [OadpTargetDown](#oadptargetdown) | Is a scrape target down? | critical |
 
@@ -145,6 +147,40 @@ namespace on the target, or restore hooks failing.
 
 **Clears when:** the window passes with no new failed restore. Re-running the restore
 successfully doesn't clear it sooner; it's a notification, not a state.
+
+## OadpDataMoverFailed
+
+**Means:** the data mover (Kopia, running in the node-agent pod on the `node` label's node)
+failed to move volume data within the window (12h). `direction="upload"` means volume data from a
+backup didn't reach the bucket; `direction="download"` means a restore couldn't fetch it.
+
+**At risk:** that volume's data in the affected backup, or in the restore. The backup itself also
+shows up as `PartiallyFailed` (`OadpBackupFailed`); this alert tells you which node and direction.
+
+**First:**
+
+```bash
+oc -n openshift-adp get datauploads.velero.io,datadownloads.velero.io \
+  -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,NODE:.status.node,MSG:.status.message
+oc -n openshift-adp logs -l name=node-agent --tail=200 | grep -i -E 'error|fail'
+```
+
+**Common causes:** bucket credentials or network from that node, the node-agent out of memory
+during a large Kopia upload (check restarts), a CSI snapshot that couldn't be exposed to the node,
+or the node going away mid-transfer.
+
+**Clears when:** the window passes with no new failure.
+
+## OadpNodeAgentUnavailable
+
+**Means:** some node-agent DaemonSet pods aren't ready. On those nodes, file-system backups and
+the data mover can't back up or restore volume data, so backups that need it end
+`PartiallyFailed`.
+
+**First:** `oc -n openshift-adp get pods -l name=node-agent -o wide`, then `describe` the pod that
+isn't ready (image pull, scheduling, SCC, or hostPath mount problems are typical).
+
+**Clears when:** every node-agent pod is ready again.
 
 ## OadpMetricsAbsent
 

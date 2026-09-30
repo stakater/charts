@@ -463,6 +463,89 @@ tests:
         alertname: OadpRestoreFailed
         exp_alerts: []
 
+  # ------------------------------------------------------------ node-agent / data mover
+  # Counters from the node-agent DaemonSet (podVolume_*, label node), zero-initialised per node
+  # (live capture). Scraped by the opt-in node-agent PodMonitor.
+  # N1 — a data mover UPLOAD fails (backing up volume data) -> fires; resolves after the window.
+  - interval: 1m
+    input_series:
+      - series: 'podVolume_data_upload_failure_total{namespace="openshift-adp", pod="node-agent-a", node="node-a"}'
+        values: '0x10 1x900'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpDataMoverFailed
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              namespace: openshift-adp
+              node: node-a
+              direction: upload
+            exp_annotations:
+              summary: "Velero data mover upload failed on node node-a"
+              description: "At least one data mover upload (volume data to the bucket, during a backup) failed on node node-a in the last 12h. The backup or restore it belonged to is missing that volume's data. First: oc -n openshift-adp get datauploads.velero.io,datadownloads.velero.io -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,NODE:.status.node,MSG:.status.message; oc -n openshift-adp logs -l name=node-agent --tail=200 | grep -i -E 'error|fail'"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpdatamoverfailed"
+      - eval_time: 800m
+        alertname: OadpDataMoverFailed
+        exp_alerts: []
+
+  # N2 — a data mover DOWNLOAD fails (restoring volume data) -> direction=download.
+  - interval: 1m
+    input_series:
+      - series: 'podVolume_data_download_failure_total{namespace="openshift-adp", pod="node-agent-a", node="node-a"}'
+        values: '0x10 1x50'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpDataMoverFailed
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              namespace: openshift-adp
+              node: node-a
+              direction: download
+            exp_annotations:
+              summary: "Velero data mover download failed on node node-a"
+              description: "At least one data mover download (volume data from the bucket, during a restore) failed on node node-a in the last 12h. The backup or restore it belonged to is missing that volume's data. First: oc -n openshift-adp get datauploads.velero.io,datadownloads.velero.io -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,NODE:.status.node,MSG:.status.message; oc -n openshift-adp logs -l name=node-agent --tail=200 | grep -i -E 'error|fail'"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpdatamoverfailed"
+
+  # N3 — only successes -> quiet.
+  - interval: 1m
+    input_series:
+      - series: 'podVolume_data_upload_success_total{namespace="openshift-adp", pod="node-agent-a", node="node-a"}'
+        values: '0x10 5x50'
+      - series: 'podVolume_data_upload_failure_total{namespace="openshift-adp", pod="node-agent-a", node="node-a"}'
+        values: '0x60'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpDataMoverFailed
+        exp_alerts: []
+
+  # N4 — node-agent pods unavailable for longer than `for` (15m) -> fires; recovered -> resolves.
+  - interval: 1m
+    input_series:
+      - series: 'kube_daemonset_status_number_unavailable{namespace="openshift-adp", daemonset="node-agent", job="kube-state-metrics"}'
+        values: '1x40 0x20'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: OadpNodeAgentUnavailable
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: OadpNodeAgentUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              namespace: openshift-adp
+              daemonset: node-agent
+            exp_annotations:
+              summary: "1 Velero node-agent pod(s) unavailable"
+              description: "The node-agent DaemonSet node-agent has 1 unavailable pod(s). On those nodes, file-system backups and the data mover cannot back up or restore volume data; backups that need it end PartiallyFailed. First: oc -n openshift-adp get pods -l name=node-agent -o wide; oc -n openshift-adp describe ds node-agent | tail -20"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpnodeagentunavailable"
+      - eval_time: 55m
+        alertname: OadpNodeAgentUnavailable
+        exp_alerts: []
+
   # ------------------------------------------------------------ blindness watchdog
   # T14 — nothing is measured: no Velero target, no BSL phase series, no Schedule series.
   # Every outcome/cause alert is silently disarmed here — the watchdog must say so.
@@ -499,6 +582,15 @@ tests:
               summary: "Backup monitoring is blind: no schedules metrics"
               description: "The schedules metrics this chart alerts on have NO series. Every alert that depends on them is silently disarmed, and backups may be failing unseen. Likely causes: the scrape target vanished (ServiceMonitor or Service deleted, selector drift), or the state exporter lost RBAC or has nothing to report."
               runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpmetricsabsent"
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              target: node-agent
+              job: default/oadp-oadp-observability-node-agent
+            exp_annotations:
+              summary: "Backup monitoring is blind: no node-agent metrics"
+              description: "The node-agent metrics this chart alerts on have NO series. Every alert that depends on them is silently disarmed, and backups may be failing unseen. Likely causes: the scrape target vanished (ServiceMonitor or Service deleted, selector drift), or the state exporter lost RBAC or has nothing to report."
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpmetricsabsent"
 
   # T15 — Velero target exists but is down.
   - interval: 1m
@@ -527,6 +619,8 @@ tests:
       - series: 'up{job="openshift-adp-velero-metrics-svc", namespace="openshift-adp", pod="velero-a"}'
         values: '1x30'
       - series: 'up{job="oadp-oadp-observability-state-exporter", namespace="openshift-adp", pod="bsl-a"}'
+        values: '1x30'
+      - series: 'up{job="default/oadp-oadp-observability-node-agent", namespace="openshift-adp", pod="node-agent-a"}'
         values: '1x30'
       - series: 'kube_customresource_backupstoragelocation_status_phase{namespace="openshift-adp", name="dpa-1", phase="Available"}'
         values: '1x30'

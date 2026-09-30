@@ -1,8 +1,18 @@
 # S3-compatible bucket for Velero on kind: SeaweedFS (MinIO no longer publishes images).
-# No identities configured -> S3 auth is disabled, so any access key works.
+# One S3 identity (e2e/e2e, throwaway test credentials): with auth disabled, SeaweedFS accepts
+# Velero's object uploads but rejects Kopia's signed requests ("Signed request requires setting
+# up SeaweedFS S3 authentication"), which broke file-system backups.
 apiVersion: v1
 kind: Namespace
 metadata: {name: s3}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: seaweedfs-s3, namespace: s3}
+data:
+  config.json: |
+    {"identities": [{"name": "e2e", "credentials": [{"accessKey": "e2e", "secretKey": "e2e"}],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]}]}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -18,11 +28,11 @@ spec:
           image: chrislusf/seaweedfs:4.48
           # volume.max must exceed the 7 volumes SeaweedFS grows per new collection; small volumes keep
           # the emptyDir tiny.
-          args: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-volume.max=50", "-master.volumeSizeLimitMB=64"]
+          args: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-s3.config=/etc/s3/config.json", "-volume.max=50", "-master.volumeSizeLimitMB=64"]
           ports: [{containerPort: 8333, name: s3}]
           readinessProbe: {tcpSocket: {port: 8333}, periodSeconds: 5}
-          volumeMounts: [{name: data, mountPath: /data}]
-      volumes: [{name: data, emptyDir: {}}]
+          volumeMounts: [{name: data, mountPath: /data}, {name: s3config, mountPath: /etc/s3}]
+      volumes: [{name: data, emptyDir: {}}, {name: s3config, configMap: {name: seaweedfs-s3}}]
 ---
 apiVersion: v1
 kind: Service

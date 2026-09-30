@@ -1,0 +1,33 @@
+{{- $r := .Values.prometheus.rules.velero.nodeAgentUnavailable }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "oadp-observability.fullname" . }}-node-agent-unavailable
+  namespace: {{ include "oadp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "oadp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: oadp.volume-data
+      rules:
+        - alert: OadpNodeAgentUnavailable
+          # node-agent pods not ready: on those nodes no file-system backup or data mover transfer
+          # can run, so backups needing volume data end PartiallyFailed. From kube-state-metrics,
+          # no scrape of our own needed; where the DPA doesn't enable the node-agent there is no
+          # DaemonSet and no series, so this stays silent.
+          expr: |
+            max by (namespace, daemonset) (kube_daemonset_status_number_unavailable{daemonset="{{ .Values.oadp.nodeAgent.daemonset }}"}) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: oadp
+          annotations:
+            summary: "{{`{{ $value }}`}} Velero node-agent pod(s) unavailable"
+            description: "The node-agent DaemonSet {{`{{ $labels.daemonset }}`}} has {{`{{ $value }}`}} unavailable pod(s). On those nodes, file-system backups and the data mover cannot back up or restore volume data; backups that need it end PartiallyFailed. First: oc -n {{`{{ $labels.namespace }}`}} get pods -l name={{`{{ $labels.daemonset }}`}} -o wide; oc -n {{`{{ $labels.namespace }}`}} describe ds {{`{{ $labels.daemonset }}`}} | tail -20"
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#oadpnodeagentunavailable"
+{{- end }}

@@ -25,6 +25,11 @@ oadp:
     # OadpBackupNoSuccessfulBackup compare each schedule against its own budget. Schedules
     # without it use prometheus.rules.velero.backupStale.maxAgeHours.
     budgetAnnotation: "oadp-observability.stakater.com/max-age-hours"
+  # The node-agent DaemonSet (the OADP operator creates it when the DPA enables nodeAgent). It
+  # runs Kopia to move VOLUME data: file-system backups and the data mover. Its pods expose
+  # podVolume_* on port "metrics" (8085); there is no Service, so the chart uses a PodMonitor.
+  nodeAgent:
+    daemonset: node-agent
 
 # --- OADP state exporter (see docs/state-exporter.md) ------------------------------------
 # A kube-state-metrics instance in custom-resource-state-only mode exporting what Velero's
@@ -74,6 +79,11 @@ prometheus:
     veleroServiceMonitor:
       enabled: false
       interval: 30s
+    # Scrapes the node-agent pods (podVolume_*). Enables OadpDataMoverFailed and the node-agent
+    # watchdog. Only useful where volume data is backed up (file-system backup / data mover).
+    nodeAgentPodMonitor:
+      enabled: false
+      interval: 30s
   # One block per alert (one PrometheusRule file each). See docs/runbook.md.
   rules:
     # Alertmanager routing / ruleSelector labels merged into every PrometheusRule.
@@ -119,6 +129,20 @@ prometheus:
         for: 0m
         severity: warning
         window: 12h
+      # A data mover UPLOAD (backup) or DOWNLOAD (restore) of volume data failed on a node
+      # (labels `node`, `direction`). Needs nodeAgentPodMonitor.
+      dataMoverFailed:
+        enabled: true
+        for: 0m
+        severity: warning
+        window: 12h
+      # node-agent pods not ready: volume data can't be backed up/restored on those nodes.
+      # From kube-state-metrics (kube_daemonset_status_number_unavailable); no scrape needed,
+      # and silent where the DPA doesn't enable the node-agent (no DaemonSet, no series).
+      nodeAgentUnavailable:
+        enabled: true
+        for: 15m
+        severity: warning
     # Blindness: if the metrics vanish, every alert above is silently disarmed.
     # Rendered only for ENABLED components, so a disabled one never fires them.
     watchdog:
