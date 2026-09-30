@@ -19,6 +19,7 @@ pattern Red Hat's OADP docs use.
 | [OadpBackupNoSuccessfulBackup](#oadpbackupnosuccessfulbackup) | Is there **no** good backup at all? | critical |
 | [OadpBackupStorageLocationUnavailable](#oadpbackupstoragelocationunavailable) | Can Velero reach its bucket? | critical |
 | [OadpBackupFailed](#oadpbackupfailed) | Did a run just fail, and how? | warning |
+| [OadpRestoreFailed](#oadprestorefailed) | Did a restore just fail? | warning |
 | [OadpMetricsAbsent](#oadpmetricsabsent) | Are we blind? | warning |
 | [OadpTargetDown](#oadptargetdown) | Is a scrape target down? | critical |
 
@@ -115,6 +116,35 @@ via `oc -n openshift-adp exec deploy/velero -c velero --`.
 
 **Clears when:** the window passes with no new failure. It's a cause notification. The outcome
 alerts keep paging until a backup succeeds.
+
+## OadpRestoreFailed
+
+**Means:** a restore ended in the `phase` label's state within the window (12h). The `schedule`
+label is set only for restores created with `--from-schedule`. A restore of a named backup has no
+`schedule` label, whatever that backup's origin; that's the common case. All restores are included
+(unlike the backup alerts), because a restore is always deliberate.
+- `Failed`: the restore run itself errored.
+- `PartiallyFailed`: some items were not restored. The workload may be incomplete.
+- `FailedValidation`: the restore spec, the backup it references, or the storage location is
+  invalid.
+
+**At risk:** the data someone meant to bring back, usually during an incident.
+
+**First:**
+
+```bash
+oc -n openshift-adp get restores.velero.io --sort-by=.metadata.creationTimestamp \
+  -o custom-columns=NAME:.metadata.name,BACKUP:.spec.backupName,PHASE:.status.phase,ERRORS:.status.errors,WARNINGS:.status.warnings
+oc -n openshift-adp exec deploy/velero -c velero -- ./velero restore describe <restore> --details
+oc -n openshift-adp exec deploy/velero -c velero -- ./velero restore logs <restore>
+```
+
+**Common causes:** the source backup was itself `PartiallyFailed` (check it with
+`velero backup describe`), resources already exist in the target namespace, a missing CRD or
+namespace on the target, or restore hooks failing.
+
+**Clears when:** the window passes with no new failed restore. Re-running the restore
+successfully doesn't clear it sooner; it's a notification, not a state.
 
 ## OadpMetricsAbsent
 

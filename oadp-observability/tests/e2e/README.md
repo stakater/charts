@@ -46,6 +46,7 @@ the cause.
 | 6b | the Velero metrics Service is deleted | `OadpMetricsAbsent{target="velero"}` | resolves on fix |
 | 6c | the state exporter is scaled to 0 | `OadpMetricsAbsent{target="backupstoragelocations"}`, `{target="schedules"}` | resolves on fix |
 | 6d | the state exporter's scrape fails (the ServiceMonitor path returns 404) | `OadpTargetDown{target="state-exporter"}` | resolves on fix |
+| 8 | a restore from a backup that doesn't exist (Velero: `FailedValidation`) | `OadpRestoreFailed{phase="FailedValidation"}` | resolves after the window |
 | 7 | fresh backups | nothing | screenshot `healthy` |
 
 ## Honest limits

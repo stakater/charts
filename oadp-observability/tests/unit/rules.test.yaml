@@ -387,6 +387,82 @@ tests:
               description: "At least one backup of schedule default-object-schedule ended PartiallyFailed in the last 12h. FailedValidation: the backup spec or its storage location is invalid, so check the BSL first. PartiallyFailed: some items or volumes were not backed up. Failed: the backup run itself errored. First: oc -n openshift-adp get backups.velero.io -l velero.io/schedule-name=default-object-schedule -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,REASON:.status.failureReason,ERRORS:.status.validationErrors"
               runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadpbackupfailed"
 
+  # ------------------------------------------------------------ restores
+  # T19 — a restore created --from-schedule partially fails -> OadpRestoreFailed{phase=PartiallyFailed}.
+  - interval: 1m
+    input_series:
+      - series: 'velero_restore_partial_failure_total{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '0x10 1x50'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpRestoreFailed
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+              phase: PartiallyFailed
+            exp_annotations:
+              summary: "A Velero restore ended PartiallyFailed"
+              description: "At least one restore ended PartiallyFailed in the last 12h (restored via schedule default-object-schedule). A restore is usually run during an incident, so its result matters now: the data you meant to bring back may be missing. Failed: the restore run errored. PartiallyFailed: some items were not restored. FailedValidation: the restore spec, its backup, or the storage location is invalid. First: oc -n openshift-adp get restores.velero.io --sort-by=.metadata.creationTimestamp -o custom-columns=NAME:.metadata.name,BACKUP:.spec.backupName,PHASE:.status.phase,ERRORS:.status.errors,WARNINGS:.status.warnings"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadprestorefailed"
+
+  # T20 — a restore from a NAMED backup (--from-backup: schedule="", whatever the backup's
+  # origin) fails. That's the common restore, so schedule="" is NOT excluded.
+  - interval: 1m
+    input_series:
+      - series: 'velero_restore_failed_total{namespace="openshift-adp", pod="velero-a", schedule=""}'
+        values: '0x10 1x50'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpRestoreFailed
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              namespace: openshift-adp
+              phase: Failed
+            exp_annotations:
+              summary: "A Velero restore ended Failed"
+              description: "At least one restore ended Failed in the last 12h (restored from a named backup). A restore is usually run during an incident, so its result matters now: the data you meant to bring back may be missing. Failed: the restore run errored. PartiallyFailed: some items were not restored. FailedValidation: the restore spec, its backup, or the storage location is invalid. First: oc -n openshift-adp get restores.velero.io --sort-by=.metadata.creationTimestamp -o custom-columns=NAME:.metadata.name,BACKUP:.spec.backupName,PHASE:.status.phase,ERRORS:.status.errors,WARNINGS:.status.warnings"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadprestorefailed"
+
+  # T21 — FailedValidation, then no further failure: fires, and resolves once the 12h window passes.
+  - interval: 1m
+    input_series:
+      - series: 'velero_restore_validation_failed_total{namespace="openshift-adp", pod="velero-a", schedule="default-object-schedule"}'
+        values: '0x10 1x900'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpRestoreFailed
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: oadp
+              namespace: openshift-adp
+              schedule: default-object-schedule
+              phase: FailedValidation
+            exp_annotations:
+              summary: "A Velero restore ended FailedValidation"
+              description: "At least one restore ended FailedValidation in the last 12h (restored via schedule default-object-schedule). A restore is usually run during an incident, so its result matters now: the data you meant to bring back may be missing. Failed: the restore run errored. PartiallyFailed: some items were not restored. FailedValidation: the restore spec, its backup, or the storage location is invalid. First: oc -n openshift-adp get restores.velero.io --sort-by=.metadata.creationTimestamp -o custom-columns=NAME:.metadata.name,BACKUP:.spec.backupName,PHASE:.status.phase,ERRORS:.status.errors,WARNINGS:.status.warnings"
+              runbook_url: "https://github.com/stakater/charts/blob/main/oadp-observability/docs/runbook.md#oadprestorefailed"
+      - eval_time: 800m
+        alertname: OadpRestoreFailed
+        exp_alerts: []
+
+  # T22 — successful restores only -> quiet.
+  - interval: 1m
+    input_series:
+      - series: 'velero_restore_success_total{namespace="openshift-adp", pod="velero-a", schedule=""}'
+        values: '0x10 1x50'
+      - series: 'velero_restore_failed_total{namespace="openshift-adp", pod="velero-a", schedule=""}'
+        values: '0x60'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OadpRestoreFailed
+        exp_alerts: []
+
   # ------------------------------------------------------------ blindness watchdog
   # T14 — nothing is measured: no Velero target, no BSL phase series, no Schedule series.
   # Every outcome/cause alert is silently disarmed here — the watchdog must say so.
