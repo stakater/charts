@@ -4,7 +4,8 @@
 confirmed against metrics that **actually exist, with the labels they actually have**. Today
 the Velero series are pinned from the Velero 1.16 source (`tests/metrics-allowlist.documented.txt`,
 with citations). A capture moves them to `tests/fixtures/`, where the metric gate counts them as
-*captured*. **This is the release gate.**
+*captured*. **This was the release gate: done 2026-09-30** on OADP 1.5.8 (Velero v1.16.1-OADP);
+re-run it when upgrading OADP.
 
 The state exporter's series are already captured, by `tests/component/state-exporter.sh`.
 
