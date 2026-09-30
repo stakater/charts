@@ -13,9 +13,10 @@ alert clears on its own once a backup succeeds again.
 Sibling of [`../oadp-operator`](../oadp-operator) and [`../oadp-instance`](../oadp-instance),
 which install OADP. This chart only observes it.
 
-> **Status:** built and tested offline and end-to-end on kind. The Velero metric names are pinned from the
-> Velero 1.16 source, and a **live capture must confirm them before the first release**
-> ([`tests/METRICS-CAPTURE.md`](tests/METRICS-CAPTURE.md)).
+> **Status:** built, tested offline and end-to-end on kind, and **validated against a live OADP
+> 1.5.8 cluster** (2026-09-30): the real Velero `/metrics` is in `tests/fixtures/velero-metrics.txt`,
+> the metrics Service matches the chart's ServiceMonitor, and replaying the live state through
+> the rules fires exactly the expected alert (`tests/unit/rules.test.yaml`, L1).
 
 ## Alerts
 
