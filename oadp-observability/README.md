@@ -87,28 +87,10 @@ backups are succeeding on time, without `oc`:
 - **Tiles:** BSL phase per location, and backup alerts firing.
 - **Charts:** backup age as a fraction of each schedule's budget (1 = breach), Velero outcomes
   over time, and BSL availability over time.
-- **Optional etcd section** (`grafana.dashboard.etcdBackup.enabled`, **off by default**): for
-  clusters that back up etcd with CronJobs. It shows the daily and weekly last-*successful*-run
-  age from kube-state-metrics' `kube_cronjob_status_last_successful_time`, with configurable
-  namespace, CronJob names, and budgets:
-
-  ```yaml
-  grafana:
-    dashboard:
-      etcdBackup:
-        enabled: true
-        namespace: etcd-backup
-        dailyCronJob: daily-etcd-backup
-        weeklyCronJob: weekly-etcd-backup
-        dailyMaxAgeHours: 25
-        weeklyMaxAgeHours: 192
-  ```
-
 ### Screenshots
 
 Taken by the end-to-end suite ([`tests/e2e/`](tests/e2e/README.md)) on kind, with real Velero 1.16.2,
-the chart installed as-is, and alert timings shortened (a 3-minute budget instead of 25h).
-The dashboard is shown in its default configuration, with the optional etcd section off.
+the chart installed as-is, and alert timings shortened (minutes instead of 25h).
 
 **During an outage.** The bucket is unreachable (BSL `Unavailable`), one schedule is `STALE`
 (its last success is past the budget), and a new schedule has `NEVER` succeeded. The status

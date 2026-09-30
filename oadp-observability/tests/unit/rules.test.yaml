@@ -465,8 +465,7 @@ tests:
         exp_alerts: []
 
   # ------------------------------------------------------------ dashboard tile logic
-  # Dashboard logic. Expressions copied from files/oadp_grafana_dashboard*.json (etcd with
-  # the default names substituted) — keep them in sync.
+  # Dashboard logic. Expressions copied from files/oadp_grafana_dashboard.json — keep in sync.
   # T17 — the Velero status TABLE: Status = age / the schedule's own budget (annotated 2h
   #        vs default 25h), the 1e15 NEVER sentinel for schedules with no success.
   - interval: 1m
@@ -495,20 +494,3 @@ tests:
           - labels: '{schedule="default-object-schedule"}'
             value: 90000
 
-  # T18 — never-succeeded shape on the etcd daily tile: the CronJob exists and has never succeeded
-  # (no last_successful_time) -> -1 "NEVER"; once a success lands the NEVER branch is empty.
-  - interval: 1m
-    input_series:
-      - series: 'kube_cronjob_info{namespace="etcd-backup", cronjob="daily-etcd-backup"}'
-        values: '1x20'
-      - series: 'kube_cronjob_status_last_successful_time{namespace="etcd-backup", cronjob="daily-etcd-backup"}'
-        values: '_x10 600x10'
-    promql_expr_test:
-      - expr: (max(kube_cronjob_info{namespace="etcd-backup", cronjob="daily-etcd-backup"}) unless max(kube_cronjob_status_last_successful_time{namespace="etcd-backup", cronjob="daily-etcd-backup"})) * 0 - 1
-        eval_time: 5m
-        exp_samples:
-          - labels: '{}'
-            value: -1
-      - expr: (max(kube_cronjob_info{namespace="etcd-backup", cronjob="daily-etcd-backup"}) unless max(kube_cronjob_status_last_successful_time{namespace="etcd-backup", cronjob="daily-etcd-backup"})) * 0 - 1
-        eval_time: 15m
-        exp_samples: []
