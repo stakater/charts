@@ -30,8 +30,10 @@ credentials (see the failure scenario below).
 
 ## OadpBackupStale
 
-**Means:** the newest *Completed* backup of the schedule is older than the budget (25h for the
-daily `default-object-schedule`). Runs are failing, or not running at all.
+**Means:** the newest *Completed* backup of the schedule is older than **that schedule's** RPO
+budget: its `oadp-observability.stakater.com/max-age-hours` annotation, or the chart default
+(25h). Runs are failing, or not running at all. The dashboard's Budget column shows the budget
+in force; if it's wrong, fix the annotation on the Schedule.
 
 **At risk:** restoring to within the RPO. Older backups may still exist and be restorable.
 
@@ -55,8 +57,8 @@ oc -n openshift-adp get schedules.velero.io <schedule> -o jsonpath='{.spec.pause
 
 ## OadpBackupNoSuccessfulBackup
 
-**Means:** the Schedule has existed for longer than the budget, and **no** Completed backup of
-it is visible. Either it never succeeded, every success has expired (TTL 48h), or Velero's
+**Means:** the Schedule has existed for longer than its budget (annotation, else the 25h
+default), and **no** Completed backup of it is visible. Either it never succeeded, every success has expired (TTL 48h), or Velero's
 metrics aren't scraped (then `OadpTargetDown`/`OadpMetricsAbsent` fire too).
 
 **At risk:** everything the schedule covers. There may be **nothing** to restore.

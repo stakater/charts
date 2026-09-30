@@ -107,5 +107,20 @@ expect_inactive() {
   else red "  $(ts) UNEXPECTED $2 $3 is $s"; record "$1" "$2 $3" quiet "❌ $s"; FAILED=1; fi
 }
 
+# expect_value <scenario> <promql> <expected>: an instant query must return exactly this value
+# Polls up to 90s: a series for a just-created object needs a scrape (15s) plus a rule
+# evaluation (15s) before it exists (an instant check raced that once).
+expect_value() {
+  local sc="$1" q="$2" want="$3" got start=$SECONDS
+  while :; do
+    got=$(curl -sf "$PROM/api/v1/query" --data-urlencode "query=$q" | python3 -c 'import json,sys;r=json.load(sys.stdin)["data"]["result"];print(r[0]["value"][1] if r else "none")')
+    python3 -c "import sys; sys.exit(0 if '$got'!='none' and abs(float('$got')-float('$want'))<1e-6 else 1)" && break
+    (( SECONDS - start >= 90 )) && break; sleep 5
+  done
+  if python3 -c "import sys; sys.exit(0 if '$got'!='none' and abs(float('$got')-float('$want'))<1e-6 else 1)"; then
+    green "  $(ts) value   $q = $got"; record "$sc" "\`$q\`" "= $want" "✅ $got"
+  else red "  $(ts) WRONG VALUE $q = $got (want $want)"; record "$sc" "\`$q\`" "= $want" "❌ $got"; FAILED=1; fi
+}
+
 # velero CLI inside the server pod (the pattern the OADP docs use)
 velero() { k -n "$NS" exec deploy/velero -c velero -- /velero "$@"; }

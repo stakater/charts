@@ -6,7 +6,7 @@ prometheus:
     veleroServiceMonitor: {enabled: true, interval: 15s}
   rules:
     velero:
-      backupStale: {for: 1m, maxAgeHours: 0.05}      # 3 minutes
+      backupStale: {for: 1m, maxAgeHours: 0.1}       # DEFAULT budget 6 minutes; the baseline schedule is annotated with 0.05 (3 minutes)
       noSuccessfulBackup: {for: 1m}
       bslUnavailable: {for: 1m}
       backupFailed: {for: 0m, window: 5m}
