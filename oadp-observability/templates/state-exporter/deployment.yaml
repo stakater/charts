@@ -42,9 +42,13 @@ spec:
               name: http-metrics
             - containerPort: 8081
               name: telemetry
+          # /healthz, not the upstream example's /livez: kube-state-metrics' /livez proxies
+          # a request to the kube-apiserver, and on a busy hub that took 6-15s (measured with the
+          # same image and flags), over the 5s timeout, so kubelet killed a healthy
+          # exporter every ~40s (CrashLoopBackOff). /healthz answers from the process alone.
           livenessProbe:
             httpGet:
-              path: /livez
+              path: /healthz
               port: http-metrics
             initialDelaySeconds: 5
             timeoutSeconds: 5
