@@ -53,17 +53,18 @@ stateExporter:
   # one outside it is rejected). On vanilla Kubernetes set it (e.g. 65534): the KSM image's
   # user is the non-numeric "nobody", which runAsNonRoot cannot verify without it.
   runAsUser: null
-  # kube-state-metrics v2.20.0 in CRS-only mode on a 48-core OpenShift node measured 111-118Mi RSS
-  # (working set up to ~127Mi) for two watched CRDs: Go sizes its heap and per-P caches by
-  # GOMAXPROCS, which follows the node's cores when there is no CPU limit. At the old 128Mi limit
-  # the process sat on its cgroup ceiling and stalled (health probes timing out, no OOM kill),
-  # so the pod restarted every ~40s. 256Mi leaves headroom; it used ~70Mi on a small host.
+  # kube-state-metrics in CRS mode runs a CRD informer, and the exporter's ClusterRole lets it
+  # list/watch ALL CRDs, so its memory scales with the cluster's CRD count, not with the two
+  # Velero kinds it exports. Measured on a hub with 2023 CRDs (165Mi of JSON): ~290Mi RSS once
+  # loaded, 341Mi peak working set; it fills any smaller limit within seconds. At 128Mi it was
+  # OOM-killed or stalled on its cgroup ceiling (health probes timing out), at 256Mi it still
+  # crash-looped. 768Mi was stable. Raise it further on a cluster with many more CRDs.
   resources:
     requests:
       cpu: 10m
-      memory: 96Mi
+      memory: 384Mi
     limits:
-      memory: 256Mi
+      memory: 768Mi
 
 grafana:
   namespace: ""                          # where the Grafana CR lives; defaults per-cluster
