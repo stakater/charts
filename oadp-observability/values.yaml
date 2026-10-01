@@ -53,12 +53,17 @@ stateExporter:
   # one outside it is rejected). On vanilla Kubernetes set it (e.g. 65534): the KSM image's
   # user is the non-numeric "nobody", which runAsNonRoot cannot verify without it.
   runAsUser: null
+  # kube-state-metrics v2.20.0 in CRS-only mode on a 48-core OpenShift node measured 111-118Mi RSS
+  # (working set up to ~127Mi) for two watched CRDs: Go sizes its heap and per-P caches by
+  # GOMAXPROCS, which follows the node's cores when there is no CPU limit. At the old 128Mi limit
+  # the process sat on its cgroup ceiling and stalled (health probes timing out, no OOM kill),
+  # so the pod restarted every ~40s. 256Mi leaves headroom; it used ~70Mi on a small host.
   resources:
     requests:
       cpu: 10m
-      memory: 32Mi
+      memory: 96Mi
     limits:
-      memory: 128Mi
+      memory: 256Mi
 
 grafana:
   namespace: ""                          # where the Grafana CR lives; defaults per-cluster

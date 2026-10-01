@@ -77,7 +77,7 @@ helm upgrade --install oadp-observability . -n openshift-adp \
 | `stateExporter.image.repository` / `.tag` | `registry.k8s.io/kube-state-metrics/kube-state-metrics` / `v2.20.0` | Mirror it if your clusters can't reach `registry.k8s.io`. |
 | `stateExporter.interval` | `30s` | Scrape interval. |
 | `stateExporter.runAsUser` | unset | **Leave unset on OpenShift**, where `restricted-v2` assigns a UID from the namespace range and rejects a fixed one outside it. **Set it on vanilla Kubernetes** (for example `65534`): the image's user is the non-numeric `nobody`, which `runAsNonRoot` can't verify otherwise. |
-| `stateExporter.resources` | 10m CPU / 32Mi request, 128Mi limit | It watches a handful of objects. |
+| `stateExporter.resources` | 10m CPU / 96Mi request, 256Mi limit | It watches a handful of objects, but measured 111-118Mi RSS on a 48-core node (heap follows GOMAXPROCS); 128Mi left it stalling on its cgroup ceiling. |
 
 **Objects it creates** (all named `<release>-oadp-observability-state-exporter`): a ConfigMap
 (the custom-resource-state config), ServiceAccount, ClusterRole, ClusterRoleBinding,
