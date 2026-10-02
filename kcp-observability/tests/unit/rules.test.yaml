@@ -196,6 +196,47 @@ tests:
         alertname: KcpEtcdBackupStale
         exp_alerts: []
 
+  # Snapshot series entirely absent (sidecar down / backups never configured): the
+  # stale alert matches nothing here, so the watchdog must fire.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="root-client"}'
+        values: '1x300'
+    alert_rule_test:
+      - eval_time: 2h
+        alertname: KcpEtcdBackupMetricsAbsent
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              kind: Full
+            exp_annotations:
+              summary: "kcp etcd backup monitoring is blind: no Full snapshot timestamp exists"
+              description: "etcdbr_snapshot_latest_timestamp{kind=\"Full\"} has NO series, so KcpEtcdBackupStale cannot fire. The etcd-backup-restore sidecar is down or not scraped, or backups were never configured. Treat the control plane as having no verified backup until this clears."
+      - eval_time: 2h
+        alertname: KcpEtcdBackupStale
+        exp_alerts: []
+
+  # Series missing for the first 2h -> watchdog fires; it resolves once the series returns.
+  - interval: 1m
+    input_series:
+      - series: 'etcdbr_snapshot_latest_timestamp{job="root-client", kind="Full", pod="root-0"}'
+        values: '_x120 0+60x300'
+    alert_rule_test:
+      - eval_time: 90m
+        alertname: KcpEtcdBackupMetricsAbsent
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: kcp
+              kind: Full
+            exp_annotations:
+              summary: "kcp etcd backup monitoring is blind: no Full snapshot timestamp exists"
+              description: "etcdbr_snapshot_latest_timestamp{kind=\"Full\"} has NO series, so KcpEtcdBackupStale cannot fire. The etcd-backup-restore sidecar is down or not scraped, or backups were never configured. Treat the control plane as having no verified backup until this clears."
+      - eval_time: 3h
+        alertname: KcpEtcdBackupMetricsAbsent
+        exp_alerts: []
+
   # ------------------------------------------------------- Area 4: workspaces
   # Workspaces and logical clusters alert SEPARATELY (team feedback: a combined
   # "10 workspaces not ready" was actually 0 workspaces + 10 logical clusters —

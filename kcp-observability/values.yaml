@@ -205,6 +205,11 @@ prometheus:
         # 26h leaves headroom) and of the last incremental.
         fullMaxAgeHours: 26
         incrMaxAgeMinutes: 60
+      # Watchdog for backupStale: the stale alert cannot fire if the series is gone.
+      backupMetricsAbsent:
+        enabled: true
+        for: 1h
+        severity: critical
     # Area 4 — workspace lifecycle (workspaces and logical clusters alert separately
     # so the signal names the resource that is stuck)
     workspaces:

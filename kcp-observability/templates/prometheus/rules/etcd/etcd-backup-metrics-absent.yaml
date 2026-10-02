@@ -1,0 +1,32 @@
+{{- $r := .Values.prometheus.rules.etcd.backupMetricsAbsent }}
+{{- if and ($r) ($r.enabled) }}
+# Blindness watchdog for KcpEtcdBackupStale: that alert compares a value, so it matches
+# nothing when the series itself is gone (sidecar down, metrics port dropped, backup never
+# configured) and the platform looks green. KcpMetricsAbsent does not cover this: it
+# watches up{}, and the etcd target can be up while the sidecar's etcdbr_* series are missing.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kcp-observability.fullname" . }}-etcd-backup-metrics-absent
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kcp.etcd
+      rules:
+        - alert: KcpEtcdBackupMetricsAbsent
+          expr: |
+            absent(etcdbr_snapshot_latest_timestamp{kind="Full", job=~"{{ .Values.kcp.etcd.job }}"})
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: kcp
+          annotations:
+            summary: "kcp etcd backup monitoring is blind: no Full snapshot timestamp exists"
+            description: "etcdbr_snapshot_latest_timestamp{kind=\"Full\"} has NO series, so KcpEtcdBackupStale cannot fire. The etcd-backup-restore sidecar is down or not scraped, or backups were never configured. Treat the control plane as having no verified backup until this clears."
+{{- end }}
