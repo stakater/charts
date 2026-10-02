@@ -20,10 +20,20 @@ the cluster Prometheus / `thanos-ruler-user-workload`).
   none**. So the `version:` you commit is overwritten and never published, and nothing fails if
   it is "unbumped". Keep it roughly in step for readability, but do not rely on it:
   committing `0.0.3` over a latest tag of `0.0.1` publishes `0.0.2`.
+- **The tag lookup is a substring match.** `next_semver.sh` runs an unanchored
+  `git tag -l | grep "<chart>"`, so a chart whose name is contained in another chart's name also
+  considers that chart's tags and may bump from the wrong chart's version. Today this affects
+  `slo-observability` (it also sees the `childshift-slo-observability-*` tags); the two currently
+  share the same highest version, so nothing is mis-versioned yet. Check this before naming a
+  new chart, and prefer fixing the script to anchor on `^<chart>-<semver>$`.
 - **Before pinning a chart version anywhere** (an ArgoCD `targetRevision`, a downstream
   version pin, a values file), read the version that was actually published, not the one in
-  `Chart.yaml`: the `NEXT_VERSION` line in the push job log, the GitHub release / git tag
-  `<chart>-X.Y.Z`, or `helm show chart oci://ghcr.io/stakater/charts/<chart> --version X.Y.Z`.
+  `Chart.yaml`. The authoritative evidence is that the push succeeded: the
+  `Pushed: ghcr.io/stakater/charts/<chart>:X.Y.Z` line in the push job's `helm push` step, the
+  GitHub release / git tag `<chart>-X.Y.Z`, or
+  `helm show chart oci://ghcr.io/stakater/charts/<chart> --version X.Y.Z`. The `NEXT_VERSION`
+  shown in the push job's step environment (and the `Show version` step of the `next-version`
+  job) is only the version it *intended* to publish, not proof that it did.
   Testing from a local checkout or `helm package` of the source hides this: it renders fine
   and the registry pull then fails with `not found`.
 - Use the `minor` / `major` label deliberately when a change warrants it; an unlabelled PR is a
