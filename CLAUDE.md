@@ -12,8 +12,35 @@ the cluster Prometheus / `thanos-ruler-user-workload`).
 ## Repo rules (from README — enforced by CI)
 
 - **One chart per PR.** Touching more than one chart fails the pipeline.
-- **Bump `version:` in `Chart.yaml`** whenever you change a chart. The push pipeline
-  publishes by version; an unbumped version fails publish.
+- **The published version does NOT come from `Chart.yaml`.** On merge, the pipeline takes the
+  highest existing `<chart>-X.Y.Z` git tag, adds one bump, and `sed`s that number into
+  `Chart.yaml` inside the runner before `helm package` / `helm push` (see
+  `.github/workflows/next_version.yaml`, `.github/scripts/next_semver.sh` and `push.yaml`). The
+  bump is the PR label (`major` / `minor` / `patch`), and **defaults to `patch` when the PR has
+  none**. So the `version:` you commit is overwritten and never published, and nothing fails if
+  it is "unbumped". Keep it roughly in step for readability, but do not rely on it:
+  committing `0.0.3` over a latest tag of `0.0.1` publishes `0.0.2`.
+- **The tag lookup is a substring match.** `next_semver.sh` runs an unanchored
+  `git tag -l | grep "<chart>"`, so a chart whose name is contained in another chart's name also
+  considers that chart's tags and may bump from the wrong chart's version. Today this affects
+  `slo-observability` (it also sees the `childshift-slo-observability-*` tags). As of 2026-10-02
+  `slo-observability` is at 0.0.14 and `childshift-slo-observability` at 0.0.9, so the larger one
+  wins and nothing is mis-versioned yet; it goes wrong as soon as the child chart's highest tag
+  passes the other's (for example a `minor` release of it to 0.1.0 would make
+  `slo-observability` bump from 0.1.0). Check this before naming a new chart, and prefer fixing
+  the script to anchor on `^<chart>-<semver>$`.
+- **Before pinning a chart version anywhere** (an ArgoCD `targetRevision`, a downstream
+  version pin, a values file), read the version that was actually published, not the one in
+  `Chart.yaml`. The authoritative evidence is that the push succeeded: the
+  `Pushed: ghcr.io/stakater/charts/<chart>:X.Y.Z` line in the push job's `helm push` step, the
+  GitHub release / git tag `<chart>-X.Y.Z`, or
+  `helm show chart oci://ghcr.io/stakater/charts/<chart> --version X.Y.Z`. The `NEXT_VERSION`
+  shown in the push job's step environment (and the `Show version` step of the `next-version`
+  job) is only the version it *intended* to publish, not proof that it did.
+  Testing from a local checkout or `helm package` of the source hides this: it renders fine
+  and the registry pull then fails with `not found`.
+- Use the `minor` / `major` label deliberately when a change warrants it; an unlabelled PR is a
+  patch.
 - Merge PRs with **Rebase and Merge** — *not* Merge. Plain Merge breaks the push pipeline.
 - CI only lints. It does **not** render/deploy — test locally before opening a PR.
 - `CODEOWNERS`: everything is owned by `@stakater/stakater-admin`.
