@@ -95,6 +95,7 @@ recoverability guard.
 | `KcpEtcdDBSizeHigh` | warning / 15m / > 80% of quota | DB crosses the act-soon line | At 100% etcd goes **read-only** — a self-inflicted total outage with an avoidable cause. 80% = schedule compaction/defrag/quota raise. | — (see next row) |
 | `KcpEtcdDBSizeCritical` | critical / 5m / > 95% of quota | DB crosses the act-now line | Two stages because the correct responses differ; 95% means do it now. | The most preventable full-platform outage in the book, discoverable only by hitting it. |
 | `KcpEtcdBackupStale` | critical / 15m / Full > 26h, Incr > 60m | *Cluster-latest* snapshot (max across members) over its age budget | The restore-point objective as an alert; 26h gives the daily druid full snapshot 2h grace. A control plane without a recent backup is one incident from unrecoverable. | Backup rot, discovered during a disaster — i.e. never in time. etcd can be green for months while backups quietly fail. |
+| `KcpEtcdBackupMetricsAbsent` | critical / 1h / no `etcdbr_snapshot_latest_timestamp{kind="Full"}` series | Watchdog for `KcpEtcdBackupStale`: the Full-snapshot series does not exist | `KcpEtcdBackupStale` compares a value, so it is silent when the series vanishes. `KcpMetricsAbsent` watches `up{}` and cannot see this: the etcd target can be up while the backup sidecar's series are missing. | A control plane that looks backed up because nothing is measured. |
 
 **Hardening notes (us-2):**
 - `KcpEtcdNoLeader` fired on all 3 *healthy* members: the backup-restore sidecar exports its
