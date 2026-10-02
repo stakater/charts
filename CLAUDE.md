@@ -23,9 +23,12 @@ the cluster Prometheus / `thanos-ruler-user-workload`).
 - **The tag lookup is a substring match.** `next_semver.sh` runs an unanchored
   `git tag -l | grep "<chart>"`, so a chart whose name is contained in another chart's name also
   considers that chart's tags and may bump from the wrong chart's version. Today this affects
-  `slo-observability` (it also sees the `childshift-slo-observability-*` tags); the two currently
-  share the same highest version, so nothing is mis-versioned yet. Check this before naming a
-  new chart, and prefer fixing the script to anchor on `^<chart>-<semver>$`.
+  `slo-observability` (it also sees the `childshift-slo-observability-*` tags). As of 2026-10-02
+  `slo-observability` is at 0.0.14 and `childshift-slo-observability` at 0.0.9, so the larger one
+  wins and nothing is mis-versioned yet; it goes wrong as soon as the child chart's highest tag
+  passes the other's (for example a `minor` release of it to 0.1.0 would make
+  `slo-observability` bump from 0.1.0). Check this before naming a new chart, and prefer fixing
+  the script to anchor on `^<chart>-<semver>$`.
 - **Before pinning a chart version anywhere** (an ArgoCD `targetRevision`, a downstream
   version pin, a values file), read the version that was actually published, not the one in
   `Chart.yaml`. The authoritative evidence is that the push succeeded: the
