@@ -108,6 +108,8 @@ recoverability guard.
   bad (SRE finding F1) but *chronic*, so the us-2 values raise thresholds to 0.5s/1.0s to
   page on degradation-from-baseline instead of firing forever. The finding is tracked in the
   validation report, not silenced.
+  eu-3 runs ~50ms typical with short spikes to ~200ms and is set to 0.2s/0.15s from a
+  14-day baseline. Calibrate each cluster from its own history, never a snapshot.
 
 ## Area 4 — Workspace lifecycle (the kcp differentiator)
 

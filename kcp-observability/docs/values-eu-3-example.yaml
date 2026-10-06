@@ -39,3 +39,14 @@ prometheus:
       # (verified in the Deployment args), and declare NO containerPort — so the
       # chart's __address__-relabel-to-podIP:8085 approach applies unchanged.
       enabled: true
+  rules:
+    etcd:
+      diskSlow:
+        # Calibrated 2026-10-06 from 14 days of recorded p99s (2m resolution), see
+        # tests/reports/validation-eu-3-2026-09-21.md §7a. Typical ~50ms, p99-of-p99
+        # ~180-215ms in short spikes; worst value held for a full 15m was 175ms fsync /
+        # 126ms commit. These thresholds would have fired 0 times in that window while
+        # still sitting only ~3-4x above the typical baseline. The defaults (10ms/25ms)
+        # fired continuously on all three members.
+        fsyncP99Seconds: 0.2
+        commitP99Seconds: 0.15

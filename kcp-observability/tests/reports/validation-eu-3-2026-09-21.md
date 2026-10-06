@@ -159,6 +159,23 @@ not a transient: `fsyncP99Seconds: 0.15`, `commitP99Seconds: 0.06` (≈2× the o
 worst member, leaving room to detect real degradation). Treat the 25–70 ms baseline
 itself as an SRE storage observation for eu-3, as was done for us-2.
 
+**Addendum 2026-10-06 — calibrated from 14 days, the suggestion above was wrong.** The
+single snapshot understated eu-3: over 2026-09-22 → 2026-10-06 (2m resolution) the
+recorded p99s run much closer to us-2's than the snapshot implied.
+
+| Over 14 days | fsync p99 | commit p99 |
+| --- | --- | --- |
+| median | ~51 ms | ~54 ms |
+| p95 | 102–108 ms | 104–109 ms |
+| p99 | 192–214 ms | 178–200 ms |
+| worst value held for a full 15m | 109–175 ms | 115–126 ms |
+
+Simulated `for: 15m` episodes per member over the window: defaults 10ms/25ms → firing the
+whole 14 days; 0.06/0.06 (≈ the suggestion above) → ~85; 0.1/0.1 → 3–5; 0.15/0.15 → 1.
+Set to **`fsyncP99Seconds: 0.2`, `commitP99Seconds: 0.15`** in
+`docs/values-eu-3-example.yaml`: 0 episodes in the window, still only ~3–4× the median, and
+well below us-2's 0.5/1.0.
+
 ### 7b. `KcpFrontProxyLatencyHigh` — **chart defect, not a threshold problem**
 
 `kcp:front_proxy_latency_seconds:p95` reads exactly **60** — the top finite bucket of
@@ -245,9 +262,8 @@ Both changes verified in the live `GrafanaDashboard` CR after `helm upgrade` (re
 
 ## Open items
 
-**O1 — set eu-3 `KcpEtcdDiskSlow` thresholds.** Baseline measured (§7a); confirm over ≥24h,
-then set `prometheus.rules.etcd.diskSlow.fsyncP99Seconds` / `commitP99Seconds` to eu-3's
-own numbers. Do not reuse us-2's.
+**O1 — set eu-3 `KcpEtcdDiskSlow` thresholds.** **Done 2026-10-06** — calibrated from 14 days
+to `0.2` / `0.15` (§7a addendum).
 
 **O2 — `KcpFrontProxyLatencyHigh` is structurally broken (§7b).** Affects **every** cluster,
 not just eu-3, and also invalidates the p95/p99 front-proxy latency dashboard panels.
