@@ -29,4 +29,5 @@ spec:
           annotations:
             summary: "kcp etcd backup monitoring is blind: no Full snapshot timestamp exists"
             description: "etcdbr_snapshot_latest_timestamp{kind=\"Full\"} has NO series, so KcpEtcdBackupStale cannot fire. The etcd-backup-restore sidecar is down or not scraped, or backups were never configured. Treat the control plane as having no verified backup until this clears."
+            runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-kcp-etcd-backups"
 {{- end }}

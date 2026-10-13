@@ -180,6 +180,7 @@ tests:
             exp_annotations:
               summary: "kcp etcd backups are stale (Full snapshot too old)"
               description: "A control plane without a recent backup is one incident away from unrecoverable. Check the etcd-backup-restore sidecar and the backup bucket."
+              runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-kcp-etcd-backups"
 
   # Cluster-latest snapshot fresh on one member -> stale timestamps on the other
   # members must NOT fire.
@@ -213,6 +214,7 @@ tests:
             exp_annotations:
               summary: "kcp etcd backup monitoring is blind: no Full snapshot timestamp exists"
               description: "etcdbr_snapshot_latest_timestamp{kind=\"Full\"} has NO series, so KcpEtcdBackupStale cannot fire. The etcd-backup-restore sidecar is down or not scraped, or backups were never configured. Treat the control plane as having no verified backup until this clears."
+              runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-kcp-etcd-backups"
       - eval_time: 2h
         alertname: KcpEtcdBackupStale
         exp_alerts: []
@@ -233,6 +235,7 @@ tests:
             exp_annotations:
               summary: "kcp etcd backup monitoring is blind: no Full snapshot timestamp exists"
               description: "etcdbr_snapshot_latest_timestamp{kind=\"Full\"} has NO series, so KcpEtcdBackupStale cannot fire. The etcd-backup-restore sidecar is down or not scraped, or backups were never configured. Treat the control plane as having no verified backup until this clears."
+              runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-kcp-etcd-backups"
       - eval_time: 3h
         alertname: KcpEtcdBackupMetricsAbsent
         exp_alerts: []
