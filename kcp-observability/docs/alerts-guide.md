@@ -125,7 +125,7 @@ exports `etcdbr_snapshot_latest_timestamp{kind="Full"|"Incr"}`, and the alerts t
 across members.
 
 **Read the per-member ages correctly.** Only the snapshotting member is fresh; the others keep
-their own last-leadership time. Healthy eu-3 on 2026-10-13: `root-2` Full snapshot 168s old,
+their own last-leadership time. Example from a healthy cluster: `root-2` Full snapshot 168s old,
 `root-0` about 6 days, `root-1` about 15 days. Judge by the cluster maximum, never one member:
 
 ```promql
@@ -167,7 +167,7 @@ The alert exists so that silence is never mistaken for health.
 ```bash
 kubectl -n $NS get pods root-0 root-1 root-2                        # is the backup-restore sidecar running?
 kubectl -n $NS get etcds.druid.gardener.cloud root \
-  -o jsonpath='{.spec.backup.port}{"\n"}'                           # the sidecar's metrics port (8080 on eu-3)
+  -o jsonpath='{.spec.backup.port}{"\n"}'                           # the sidecar's metrics port (8080 here)
 ```
 
 ```promql
