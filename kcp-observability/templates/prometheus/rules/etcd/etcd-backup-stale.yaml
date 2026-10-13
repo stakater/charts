@@ -29,4 +29,5 @@ spec:
           annotations:
             summary: "kcp etcd backups are stale ({{`{{ $labels.kind }}`}} snapshot too old)"
             description: "A control plane without a recent backup is one incident away from unrecoverable. Check the etcd-backup-restore sidecar and the backup bucket."
+            runbook_url: "https://github.com/stakater/charts/blob/main/kcp-observability/docs/alerts-guide.md#runbook-kcp-etcd-backups"
 {{- end }}

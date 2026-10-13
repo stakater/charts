@@ -111,6 +111,75 @@ recoverability guard.
   eu-3 runs ~50ms typical with short spikes to ~200ms and is set to 0.2s/0.15s from a
   14-day baseline. Calibrate each cluster from its own history, never a snapshot.
 
+### Runbook: kcp etcd backups
+
+Covers `KcpEtcdBackupStale` and `KcpEtcdBackupMetricsAbsent`. Both are critical: treat the
+control plane as having **no verified backup** until they clear.
+
+**How the backup works.** The kcp etcd is a Druid `Etcd` custom resource (`root`, in the kcp
+namespace) with three pods, `root-0` to `root-2`. Each runs an `etcd` container and a
+`backup-restore` sidecar. Only the elected backup-restore **leader** takes snapshots: a Full
+snapshot on `spec.backup.fullSnapshotSchedule` and incrementals every
+`spec.backup.deltaSnapshotPeriod`, uploaded to the S3 store in `spec.backup.store`. Each sidecar
+exports `etcdbr_snapshot_latest_timestamp{kind="Full"|"Incr"}`, and the alerts take the maximum
+across members.
+
+**Read the per-member ages correctly.** Only the snapshotting member is fresh; the others keep
+their own last-leadership time. Healthy eu-3 on 2026-10-13: `root-2` Full snapshot 168s old,
+`root-0` about 6 days, `root-1` about 15 days. Judge by the cluster maximum, never one member:
+
+```promql
+time() - max by (kind) (etcdbr_snapshot_latest_timestamp)
+```
+
+#### KcpEtcdBackupStale
+
+**Means:** the newest snapshot across all members is older than its budget (Full > 26h or
+Incr > 60m by default). No member has taken a good snapshot recently.
+
+**First:**
+
+```bash
+NS=kcp-config        # the namespace running the kcp etcd (kcp-config on Stakater hosting clusters)
+kubectl -n $NS get etcds.druid.gardener.cloud                       # BACKUP READY must be True
+kubectl -n $NS get etcds.druid.gardener.cloud root \
+  -o jsonpath='{range .status.conditions[*]}{.type}={.status} {end}{"\n"}'
+kubectl -n $NS get pods root-0 root-1 root-2                        # 2/2 Running each?
+for p in root-0 root-1 root-2; do echo "== $p"; kubectl -n $NS logs $p -c backup-restore --tail=30; done
+kubectl -n $NS get awskcpbackupbucket                               # Stakater: the bucket claim must be Ready
+```
+
+**Look for:** `BackupReady=False` on the `Etcd`; one member logging
+`changed the state from ... to Leader` (a snapshotting leader), or none (no elected
+backup-restore leader, often because etcd itself has no leader: check `KcpEtcdNoLeader`);
+snapshot or upload errors in the `backup-restore` logs; a bucket claim that is not Ready.
+These are the places to look, not a list of causes seen in practice.
+
+**Clears when:** a new snapshot lands and the cluster maximum drops under the budget.
+
+#### KcpEtcdBackupMetricsAbsent
+
+**Means:** the Full-snapshot series does not exist at all, so `KcpEtcdBackupStale` cannot fire.
+The alert exists so that silence is never mistaken for health.
+
+**First:**
+
+```bash
+kubectl -n $NS get pods root-0 root-1 root-2                        # is the backup-restore sidecar running?
+kubectl -n $NS get etcds.druid.gardener.cloud root \
+  -o jsonpath='{.spec.backup.port}{"\n"}'                           # the sidecar's metrics port (8080 on eu-3)
+```
+
+```promql
+up{job="root-client"}                                  # per member; the job is the kcp.etcd.job value
+count by (job) (etcdbr_snapshot_latest_timestamp)      # 0 or empty = the series is gone
+```
+
+**Look for:** sidecars not running or not scraped (a ServiceMonitor or `kcp.etcd.job` mismatch),
+or backups never configured on the `Etcd` (no `spec.backup`).
+
+**Clears when:** the series returns (the alert has `for: 1h`).
+
 ## Area 4 — Workspace lifecycle (the kcp differentiator)
 
 Workspaces and logical clusters alert **separately** (team feedback: a combined count read
