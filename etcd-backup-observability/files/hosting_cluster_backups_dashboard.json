@@ -21,7 +21,11 @@
         "type": "datasource",
         "query": "prometheus",
         "label": "Data source",
-        "current": {}
+        "current": {
+          "text": "prometheus",
+          "value": "prometheus"
+        },
+        "description": "Pick the cluster's own Prometheus/Thanos (the default 'prometheus'). A federated multi-cluster store such as 'mco-prometheus' does not carry the kube_cronjob_* series, so every tile except alerts reads 0 there."
       },
       {
         "name": "cronjob_regex",
@@ -47,7 +51,7 @@
       "id": 1,
       "type": "stat",
       "title": "Backup CronJobs tracked",
-      "description": "Hosted-cluster etcd (<name>-etcd-backup) and per-org OpenBao snapshot (<org>-bao-openbao-snapshot) CronJobs that have been scheduled at least once. If this is 0 the dashboard sees nothing: check the CronJob regex variable and that kube-state-metrics exports kube_cronjob_status_last_schedule_time.",
+      "description": "Hosted-cluster etcd (<name>-etcd-backup) and per-org OpenBao snapshot (<org>-bao-openbao-snapshot) CronJobs that have been scheduled at least once. If this is 0 the dashboard sees nothing: check the CronJob regex variable and that kube-state-metrics exports kube_cronjob_status_last_schedule_time. It also reads 0 when the data source does not carry kube-state-metrics CronJob series (for example a federated multi-cluster store): use the cluster's own Prometheus/Thanos.",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
