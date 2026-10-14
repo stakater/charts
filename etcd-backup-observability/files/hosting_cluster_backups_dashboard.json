@@ -303,10 +303,10 @@
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "One row per backup CronJob, oldest success first. NEVER = scheduled but no successful run (BackupCronJobNeverSucceeded). Age is not compared to a budget here (budgets live in the alert rules); a weekly job legitimately shows days.",
+      "description": "One row per backup CronJob, oldest success first. NEVER = scheduled but no successful run (BackupCronJobNeverSucceeded). Age is not compared to a budget here (budgets live in the alert rules); a weekly job legitimately shows days. Rows are joined on namespace/cronjob, because the same CronJob name exists in several namespaces.",
       "targets": [
         {
-          "expr": "(time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"})) or (max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"}) unless on (namespace, cronjob) max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"})) * 0 + 1e15",
+          "expr": "label_join((time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"})) or (max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"}) unless on (namespace, cronjob) max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"})) * 0 + 1e15, \"key\", \"/\", \"namespace\", \"cronjob\")",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -317,7 +317,7 @@
           "instant": true
         },
         {
-          "expr": "time() - max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"})",
+          "expr": "label_join(time() - max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"}), \"key\", \"/\", \"namespace\", \"cronjob\")",
           "refId": "B",
           "datasource": {
             "type": "prometheus",
@@ -332,7 +332,7 @@
         {
           "id": "joinByField",
           "options": {
-            "byField": "cronjob",
+            "byField": "key",
             "mode": "outer"
           }
         },
@@ -343,18 +343,19 @@
               "Time": true,
               "Time 1": true,
               "Time 2": true,
-              "namespace 2": true
+              "key": true,
+              "namespace 2": true,
+              "cronjob 2": true
             },
             "indexByName": {
               "namespace 1": 0,
-              "cronjob": 1,
+              "cronjob 1": 1,
               "Value #A": 2,
               "Value #B": 3
             },
             "renameByName": {
               "namespace 1": "Namespace",
-              "namespace": "Namespace",
-              "cronjob": "CronJob",
+              "cronjob 1": "CronJob",
               "Value #A": "Last successful run (age)",
               "Value #B": "Last scheduled (age)"
             }
