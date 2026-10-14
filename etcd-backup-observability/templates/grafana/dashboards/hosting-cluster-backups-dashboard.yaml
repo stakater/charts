@@ -1,0 +1,24 @@
+# Fleet-wide backup status for the hosting cluster: hosted-cluster etcd and per-org OpenBao
+# snapshot CronJobs, last success per CronJob, and the ones that never succeeded. The JSON is
+# loaded verbatim with .Files.Get (not templated), so Grafana's double-brace legends need no
+# escaping.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: hosting-cluster-backups-dashboard
+  namespace: {{ include "etcd-backup-observability.namespace" . }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "etcd-backup-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder | quote }}
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    {{- toYaml .Values.grafana.instanceSelector | nindent 4 }}
+  datasources:
+    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+  {{- /* fromJson/toPrettyJson, never tpl: Grafana's own double-brace legends must stay verbatim. */}}
+  {{- $dash := .Files.Get "files/hosting_cluster_backups_dashboard.json" | fromJson }}
+  json: |-
+{{ toPrettyJson $dash | indent 4 }}
