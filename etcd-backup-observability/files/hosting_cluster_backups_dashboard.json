@@ -1,0 +1,544 @@
+{
+  "uid": "hosting-cluster-backups",
+  "title": "Hosting-cluster backups",
+  "tags": [
+    "backup",
+    "etcd",
+    "openbao"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Data source",
+        "current": {}
+      },
+      {
+        "name": "cronjob_regex",
+        "type": "textbox",
+        "label": "CronJob regex",
+        "query": ".+-etcd-backup|.+-openbao-snapshot",
+        "current": {
+          "text": ".+-etcd-backup|.+-openbao-snapshot",
+          "value": ".+-etcd-backup|.+-openbao-snapshot"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": ".+-etcd-backup|.+-openbao-snapshot",
+            "value": ".+-etcd-backup|.+-openbao-snapshot"
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Backup CronJobs tracked",
+      "description": "Hosted-cluster etcd (<name>-etcd-backup) and per-org OpenBao snapshot (<org>-bao-openbao-snapshot) CronJobs that have been scheduled at least once. If this is 0 the dashboard sees nothing: check the CronJob regex variable and that kube-state-metrics exports kube_cronjob_status_last_schedule_time.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "count(max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"})) or vector(0)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "",
+          "instant": true
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Never succeeded",
+      "description": "CronJobs that were scheduled but have no successful run on record (BackupCronJobNeverSucceeded). Invisible to every 'last success older than N' check, because such a CronJob has no last_successful_time series.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "count(max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"}) unless on (namespace, cronjob) max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"})) or vector(0)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "",
+          "instant": true
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Backup alerts firing",
+      "description": "Firing HostedClusterEtcdBackupStale, OpenBaoSnapshotStale and BackupCronJobNeverSucceeded. Velero and kcp etcd alerts are on their own dashboards.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "count(ALERTS{alertstate=\"firing\",alertname=~\"HostedClusterEtcdBackupStale|OpenBaoSnapshotStale|BackupCronJobNeverSucceeded\"}) or vector(0)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "",
+          "instant": true
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Oldest last success",
+      "description": "Age of the OLDEST last successful run across the CronJobs shown. Daily jobs should stay under ~1 day, weekly under ~8 days; the per-CronJob budget is the staleAfterHours of the alert rule.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "max(time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"}))",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "",
+          "instant": true
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "n/a",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 90000
+              },
+              {
+                "color": "red",
+                "value": 700000
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Backup CronJobs: last successful run",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "One row per backup CronJob, oldest success first. NEVER = scheduled but no successful run (BackupCronJobNeverSucceeded). Age is not compared to a budget here (budgets live in the alert rules); a weekly job legitimately shows days.",
+      "targets": [
+        {
+          "expr": "(time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"})) or (max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"}) unless on (namespace, cronjob) max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"})) * 0 + 1e15",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "time() - max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"})",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "cronjob",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "namespace 2": true
+            },
+            "indexByName": {
+              "namespace 1": 0,
+              "cronjob": 1,
+              "Value #A": 2,
+              "Value #B": 3
+            },
+            "renameByName": {
+              "namespace 1": "Namespace",
+              "namespace": "Namespace",
+              "cronjob": "CronJob",
+              "Value #A": "Last successful run (age)",
+              "Value #B": "Last scheduled (age)"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Last successful run (age)",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Last .*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "range",
+                    "options": {
+                      "from": 100000000000000.0,
+                      "to": 1e+16,
+                      "result": {
+                        "text": "NEVER",
+                        "color": "red",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 90000
+                    },
+                    {
+                      "color": "red",
+                      "value": 700000
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Age of last successful run",
+      "description": "Sawtooth: climbs until the next success, then drops. A line that keeps climbing past its budget is a backup that stopped working. CronJobs that never succeeded have no series here; see the table and the Never succeeded tile.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~\"$cronjob_regex\"})",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "{{namespace}}/{{cronjob}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Age of last schedule",
+      "description": "Time since the CronJob controller last started a run. A climbing line here while last success looks fine means the job stopped being scheduled (suspended CronJob, controller or clock problem).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "targets": [
+        {
+          "expr": "time() - max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time{cronjob=~\"$cronjob_regex\"})",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "legendFormat": "{{namespace}}/{{cronjob}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    }
+  ]
+}
