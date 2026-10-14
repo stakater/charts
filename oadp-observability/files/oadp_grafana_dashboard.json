@@ -21,8 +21,12 @@
         "name": "datasource",
         "type": "datasource",
         "query": "prometheus",
-        "current": {},
-        "label": "Data source"
+        "current": {
+          "text": "prometheus",
+          "value": "prometheus"
+        },
+        "label": "Data source",
+        "description": "Pick the cluster's own Prometheus/Thanos (the default 'prometheus'), which includes user-workload metrics. A federated multi-cluster store such as 'mco-prometheus' does not carry the Velero and kube_customresource_* series, so the panels read No data there."
       }
     ]
   },
