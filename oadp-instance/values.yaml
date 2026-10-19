@@ -59,6 +59,12 @@ snapshotLocations:
 
 configuration:
   velero:
+    # Run Velero with no backup storage location (DPA spec.configuration.velero.
+    # noDefaultBackupLocation), e.g. on a cluster with nowhere to store Velero backups.
+    # Set it together with `backupLocations: []`: the DPA is rendered without one and the
+    # default-object-schedule Schedule is not rendered at all. The operator and its plugins
+    # (kubevirt, csi, ...) stay installed for anything that brings its own location.
+    noDefaultBackupLocation: false
     podConfig:
       resourceAllocations:
         requests:
