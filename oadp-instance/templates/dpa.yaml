@@ -1,9 +1,21 @@
+{{- $noDefaultBSL := (((.Values.configuration).velero).noDefaultBackupLocation) }}
+{{- if and (not .Values.backupLocations) (not $noDefaultBSL) }}
+{{- fail "oadp-instance: backupLocations is empty. OADP rejects a DPA without a backup storage location unless it is confirmed: set configuration.velero.noDefaultBackupLocation: true" }}
+{{- end }}
+{{- if and .Values.backupLocations $noDefaultBSL }}
+{{- fail "oadp-instance: configuration.velero.noDefaultBackupLocation is set, so the DPA cannot have backupLocations (OADP rejects both together): set backupLocations: []" }}
+{{- end }}
 apiVersion: oadp.openshift.io/v1alpha1
 kind: DataProtectionApplication
 metadata:
   name: dpa
   namespace:  {{ include "oadp-instance.namespace" . }}
 spec:
+  {{- if $noDefaultBSL }}
+  {{- /* OADP rejects noDefaultBackupLocation while image backups are on, and an unset
+         backupImages counts as on. Image backups need a location to write to anyway. */}}
+  backupImages: false
+  {{- end }}
   configuration:
     velero:
       defaultPlugins:
@@ -13,6 +25,9 @@ spec:
       - kubevirt
       featureFlags:
         - EnableCSI
+      {{- if $noDefaultBSL }}
+      noDefaultBackupLocation: true
+      {{- end }}
       {{- with (((.Values.configuration).velero).podConfig) }}
       podConfig:
         {{- toYaml . | nindent 8 }}
@@ -36,6 +51,7 @@ spec:
           name: {{ $snapshotLocations.velero.credential.name }}
         provider: {{ $snapshotLocations.velero.provider }}
   {{- end }}
+  {{- if .Values.backupLocations }}
   backupLocations:
   {{- $top := . }}
   {{- range $backuplocation := .Values.backupLocations }}
@@ -53,4 +69,5 @@ spec:
         credential:
           name: {{ $backuplocation.velero.credential.name }}
           key: {{ $backuplocation.velero.credential.key }}
+  {{- end }}
   {{- end }}

@@ -1,0 +1,80 @@
+# A DPA without a backup storage location is valid OADP only when it says so with
+# noDefaultBackupLocation, and is what a cluster with nowhere to store Velero backups
+# should run: the operator and plugins (e.g. kubevirt, which ODF Regional-DR needs) stay
+# installed, and nothing points at a bucket that does not exist.
+suite: DPA without a backup location
+templates:
+  - templates/dpa.yaml
+  - templates/backup.yaml
+tests:
+  - it: confirms a DPA without a backup location
+    set:
+      backupLocations: []
+      snapshotLocations: []
+      configuration.velero.noDefaultBackupLocation: true
+    template: templates/dpa.yaml
+    asserts:
+      - equal:
+          path: spec.configuration.velero.noDefaultBackupLocation
+          value: true
+      - notExists:
+          path: spec.backupLocations
+
+  # OADP's validator rejects noDefaultBackupLocation while backupImages is on, and
+  # treats an unset backupImages as on.
+  - it: turns image backups off in a DPA without a backup location
+    set:
+      backupLocations: []
+      snapshotLocations: []
+      configuration.velero.noDefaultBackupLocation: true
+    template: templates/dpa.yaml
+    asserts:
+      - equal:
+          path: spec.backupImages
+          value: false
+
+  - it: leaves noDefaultBackupLocation unset by default
+    template: templates/dpa.yaml
+    asserts:
+      - notExists:
+          path: spec.configuration.velero.noDefaultBackupLocation
+      - lengthEqual:
+          path: spec.backupLocations
+          count: 1
+      - notExists:
+          path: spec.backupImages
+
+  # OADP rejects such a DPA at reconcile time; failing the render says why, where it is set.
+  - it: refuses a DPA with no backup location that does not confirm it
+    set:
+      backupLocations: []
+    template: templates/dpa.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "noDefaultBackupLocation"
+
+  # The reverse is rejected too: OADP does not accept backup locations alongside the flag.
+  - it: refuses a DPA that has backup locations and also sets noDefaultBackupLocation
+    set:
+      configuration.velero.noDefaultBackupLocation: true
+    template: templates/dpa.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "cannot have backupLocations"
+
+  # A Schedule with no location to write to fails every run.
+  - it: schedules no backup without a backup location
+    set:
+      backupLocations: []
+      snapshotLocations: []
+      configuration.velero.noDefaultBackupLocation: true
+    template: templates/backup.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: schedules backups when a backup location exists
+    template: templates/backup.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
