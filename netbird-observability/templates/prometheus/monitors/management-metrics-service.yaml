@@ -1,0 +1,24 @@
+{{- if and (.Values.prometheus.monitors.management) (.Values.prometheus.monitors.management.enabled) }}
+# The management metrics Service this chart ships (the netbird install has none: its
+# services carry only the gRPC/API ports). NetBird serves :9090/metrics by default on a
+# plain-HTTP listener, independent of the management TLS listener. The name is FIXED, not
+# release-derived: UWM sets job=<Service name>, and a fleet-stable job label is what lets
+# one set of rules and one dashboard cover every instance (see _helpers.tpl).
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "netbird-observability.managementJob" . }}
+  namespace: {{ include "netbird-observability.namespace" . }}
+  labels:
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: management-metrics
+spec:
+  type: ClusterIP
+  selector:
+    {{- toYaml .Values.netbird.management.podLabels | nindent 4 }}
+  ports:
+    - name: metrics
+      port: {{ .Values.netbird.management.metricsPort }}
+      targetPort: {{ .Values.netbird.management.metricsPort }}
+      protocol: TCP
+{{- end }}

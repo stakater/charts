@@ -1,0 +1,51 @@
+{{- $r := .Values.prometheus.rules.watchdog.metricsAbsent }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $targets := list }}
+{{- if and .Values.prometheus.monitors.management .Values.prometheus.monitors.management.enabled }}
+{{- $targets = append $targets (dict "target" "management" "job" (include "netbird-observability.managementJob" .)) }}
+{{- end }}
+{{- if and .Values.prometheus.monitors.signal .Values.prometheus.monitors.signal.enabled }}
+{{- $targets = append $targets (dict "target" "signal" "job" (include "netbird-observability.signalJob" .)) }}
+{{- end }}
+{{- if and .Values.prometheus.monitors.relay .Values.prometheus.monitors.relay.enabled }}
+{{- $targets = append $targets (dict "target" "relay" "job" (include "netbird-observability.relayJob" .)) }}
+{{- end }}
+{{- if $targets }}
+# The blindness watchdog (alerts that silently don't fire). When the up series itself
+# vanishes — ServiceMonitor or metrics Service deleted, selector drift, UWM config change —
+# every alert on this instance is disarmed and the mesh can degrade unseen. One absent()
+# per ENABLED monitor, so a disabled component never fires it. The namespace matcher keeps
+# the alert carrying this instance's namespace (absent() output holds labels fixed by
+# equality matchers).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-metrics-absent
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.watchdog
+      rules:
+        {{- range $t := $targets }}
+        - alert: NetBirdMetricsAbsent
+          expr: |
+            absent(up{job="{{ $t.job }}", namespace="{{ $ns }}"})
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+            target: {{ $t.target }}
+          annotations:
+            summary: "NetBird monitoring is blind: no {{ $t.target }} metrics in {{ $ns }}"
+            description: "The {{ $t.target }} scrape target of this NetBird instance has NO series at all. Every alert that depends on it is silently disarmed. Likely causes: the metrics Service or ServiceMonitor was deleted, the pod selector drifted, or the component was removed without disabling its monitor in this chart's values."
+            runbook_url: "{{ $.Values.prometheus.rules.runbookBaseURL }}#netbirdmetricsabsent"
+        {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,42 @@
+{{- $r := .Values.prometheus.rules.management.apiErrorRateHigh }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $job := include "netbird-observability.managementJob" . }}
+# The management HTTP API is returning server errors. The dashboard, the Crossplane
+# provider and the bootstrap automation all drive this API; a sustained 5xx ratio stalls
+# tenant provisioning and admin operations even while peers stay connected.
+#
+# management_http_request_counter_total exports an AGGREGATE series (no endpoint label)
+# alongside per-endpoint series — summing the whole family double-counts, so the
+# denominator pins endpoint="" (verified in the v0.75.0 capture, tests/fixtures/).
+# The 5xx numerator uses the aggregate-only *_code_total family.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-management-api-error-rate
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.management
+      rules:
+        - alert: NetBirdManagementApiErrorRateHigh
+          expr: |
+            sum by (namespace, job) (rate(management_http_response_counter_code_total{job="{{ $job }}", namespace="{{ $ns }}", code=~"5.."}[{{ $r.window }}]))
+            /
+            sum by (namespace, job) (rate(management_http_request_counter_total{job="{{ $job }}", namespace="{{ $ns }}", endpoint=""}[{{ $r.window }}]))
+            > {{ $r.maxErrorRatio }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird management API in {{`{{ $labels.namespace }}`}} is returning 5xx ({{`{{ $value | humanizePercentage }}`}} of requests)"
+            description: "More than {{ $r.maxErrorRatio | float64 | mulf 100 }}% of management HTTP API requests returned a server error over the last {{ $r.window }}. Dashboard, automation and provisioning against this instance are failing. Check the management pod logs and the store (PostgreSQL) health."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdmanagementapierrorratehigh"
+{{- end }}

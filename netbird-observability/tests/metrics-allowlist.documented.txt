@@ -1,0 +1,31 @@
+# Metrics the chart references that the PINNED FIXTURES do not emit, each confirmed in the
+# upstream reference (https://docs.netbird.io/selfhosted/observability/{management,signal,relay})
+# for NetBird v0.75.0. They are LAZILY REGISTERED: the capture rig (no enrolled peers, no
+# IdP) never exercised them. Promote to the captured allowlist once a live fleet capture
+# includes them. Names below are the standalone (multi-container) names — the combined
+# container prefixes signal metrics with signal_, which this chart does not cover.
+
+# management — gRPC (appear on first peer login/sync)
+management_grpc_sync_request_duration_ms_milliseconds_bucket
+management_grpc_login_request_duration_ms_milliseconds_bucket
+management_grpc_login_request_blocked_counter_total
+management_grpc_sync_request_blocked_counter_total
+
+# management — store (appear on first persistence op after traffic)
+management_store_persistence_duration_ms_milliseconds_bucket
+
+# signal — UNPREFIXED standalone names (appear on first registration/forward)
+active_peers
+registrations_total
+deregistrations_total
+registration_failures_total
+messages_forwarded_total
+message_forward_failures_total
+
+# relay — counters (appear on first relayed connection)
+relay_transfer_sent_bytes_total
+relay_transfer_received_bytes_total
+
+# not NetBird's: Prometheus synthetic series and kube-state-metrics
+up
+kube_pod_container_status_restarts_total
