@@ -8,7 +8,11 @@
 #
 # management_http_request_counter_total exports an AGGREGATE series (no endpoint label)
 # alongside per-endpoint series — summing the whole family double-counts, so the
-# denominator pins endpoint="" (verified in the v0.75.0 capture, tests/fixtures/).
+# denominator pins the aggregate (verified in the v0.75.0 capture, tests/fixtures/).
+# On-cluster the label to pin is exported_endpoint, not endpoint: prometheus-operator
+# stamps its own endpoint target label (the scrape port name) onto every series, which
+# renames NetBird's HTTP label to exported_endpoint (honor_labels is false). Caught by
+# tests/e2e — a plain endpoint="" matches nothing on a real cluster.
 # The 5xx numerator uses the aggregate-only *_code_total family.
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -29,7 +33,7 @@ spec:
           expr: |
             sum by (namespace, job) (rate(management_http_response_counter_code_total{job="{{ $job }}", namespace="{{ $ns }}", code=~"5.."}[{{ $r.window }}]))
             /
-            sum by (namespace, job) (rate(management_http_request_counter_total{job="{{ $job }}", namespace="{{ $ns }}", endpoint=""}[{{ $r.window }}]))
+            sum by (namespace, job) (rate(management_http_request_counter_total{job="{{ $job }}", namespace="{{ $ns }}", exported_endpoint=""}[{{ $r.window }}]))
             > {{ $r.maxErrorRatio }}
           for: {{ $r.for }}
           labels:

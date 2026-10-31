@@ -1,0 +1,33 @@
+# A Grafana instance managed by grafana-operator, labelled app=grafana to match the chart's
+# default grafana.instanceSelector. The datasource is NAMED "prometheus" (lowercase) to
+# match the chart's default datasources mapping — the Stakater Cloud convention.
+# Anonymous Viewer access for headless checks only.
+apiVersion: v1
+kind: Namespace
+metadata: {name: grafana}
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grafana
+  namespace: grafana
+  labels: {app: grafana}
+spec:
+  config:
+    log: {mode: console}
+    auth: {disable_login_form: "false"}
+    auth.anonymous: {enabled: "true", org_role: Viewer}
+    security: {admin_user: admin, admin_password: e2e-admin}
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata: {name: prometheus, namespace: grafana}
+spec:
+  instanceSelector: {matchLabels: {app: grafana}}
+  datasource:
+    name: prometheus
+    type: prometheus
+    access: proxy
+    url: http://kps-prometheus.monitoring.svc:9090
+    isDefault: true
+    jsonData: {timeInterval: 15s}

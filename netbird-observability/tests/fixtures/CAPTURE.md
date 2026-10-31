@@ -31,6 +31,9 @@ curl -s localhost:19092/metrics > relay-metrics.txt
 - The aggregate response-code counter is `management_http_response_counter_code_total`.
 - `management_http_request_counter_total` has an aggregate series (no `endpoint` label)
   next to per-endpoint series — totals must filter `endpoint=""`.
+- On-cluster (not visible in this docker capture): prometheus-operator's own `endpoint`
+  target label renames NetBird's HTTP `endpoint` label to `exported_endpoint` — queries
+  touching that label must use the exported name (caught by tests/e2e).
 - Most app metrics are LAZILY REGISTERED: this baseline shows none of the gRPC
   sync/login, store, updatechannel, account, signal-app or relay-counter families. Those
   live in `metrics-allowlist.documented.txt` until a capture from a live fleet instance

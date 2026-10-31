@@ -63,6 +63,10 @@ because the docs are wrong or incomplete in ways that would have produced silent
 - Standalone signal metrics are **unprefixed** (`registrations_total`, `active_peers`) —
   every signal query must be scoped by `job`, or it collides with anything else exporting
   generic names.
+- On-cluster (caught by the kind e2e, not the docker capture): prometheus-operator stamps
+  its own `endpoint` target label (the scrape port name) onto every series, renaming
+  NetBird's HTTP `endpoint` label to **`exported_endpoint`**. Queries that segment or pin
+  the HTTP endpoint must use `exported_endpoint`.
 
 Two-tier allowlist: `metrics-allowlist.captured.txt` (really scraped from the pinned
 fixtures) and `metrics-allowlist.documented.txt` (upstream-documented, lazily registered —

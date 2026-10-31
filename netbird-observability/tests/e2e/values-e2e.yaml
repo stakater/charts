@@ -1,0 +1,22 @@
+# Chart overrides for the kind e2e run. Everything on; TIMINGS SHORTENED so every alert can
+# be driven to firing and back within minutes. The expressions are unchanged — only the
+# for/window values differ from production defaults.
+prometheus:
+  monitors:
+    management: {enabled: true, interval: 15s}
+    signal: {enabled: true, interval: 15s}
+    relay: {enabled: true, interval: 15s}
+  rules:
+    management:
+      apiErrorRateHigh: {for: 1m, window: 5m, severity: warning, maxErrorRatio: 0.05}
+      apiLatencyHigh: {for: 1m, window: 5m, severity: warning, maxP95Ms: 500}
+      syncLatencyHigh: {for: 1m, window: 5m, severity: warning, maxP95Ms: 1000}
+      requestsBlocked: {for: 1m, window: 5m, severity: warning}
+      storeSlow: {for: 1m, window: 5m, severity: warning, maxP95Ms: 500}
+      peersDisconnected: {for: 1m, severity: critical, minPeers: 1, baselineWindow: 1h}
+    signal:
+      registrationFailures: {for: 1m, window: 5m, severity: warning}
+      forwardFailures: {for: 1m, window: 5m, severity: warning, maxFailureRatio: 0.10}
+    watchdog:
+      targetDown: {for: 1m, severity: critical}
+      metricsAbsent: {for: 1m, severity: warning}
