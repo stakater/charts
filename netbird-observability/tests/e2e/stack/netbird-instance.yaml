@@ -45,7 +45,7 @@ spec:
         app.kubernetes.io/instance: mesh
     spec:
       containers:
-        - name: management
+        - name: netbird-management
           image: docker.io/netbirdio/management:0.75.0
           args:
             - --port=8080
@@ -95,7 +95,7 @@ spec:
         app.kubernetes.io/instance: mesh
     spec:
       containers:
-        - name: signal
+        - name: netbird-signal
           image: docker.io/netbirdio/signal:0.75.0
           args:
             - --port=10000
@@ -136,7 +136,7 @@ spec:
         app.kubernetes.io/instance: mesh
     spec:
       containers:
-        - name: relay
+        - name: netbird-relay
           image: docker.io/netbirdio/relay:0.75.0
           env:
             - {name: NB_LOG_LEVEL, value: info}

@@ -79,6 +79,9 @@ All thresholds are **placeholders until calibrated** against 2–4 weeks of flee
 | `NetBirdManagementStoreSlow` | warning | Store persistence p95 > 500ms over 10m (the NetBird-side symptom of a slow PostgreSQL) |
 | `NetBirdSignalRegistrationFailures` | warning | Peers fail to register on the signal stream for 15m |
 | `NetBirdSignalForwardFailures` | warning | > 10% of signal messages fail to forward over 15m |
+| `NetBirdPodRestarting` | warning | A component container restarts > 2 times in 1h |
+| `NetBirdPodOOM` | warning | A component container was OOM-killed within 1h |
+| `NetBirdPodCPUThrottled` | info | A component container spends > 25% of CFS periods throttled over 15m |
 
 ## Dashboard — "NetBird Fleet Observability"
 

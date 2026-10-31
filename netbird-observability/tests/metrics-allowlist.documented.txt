@@ -26,6 +26,9 @@ message_forward_failures_total
 relay_transfer_sent_bytes_total
 relay_transfer_received_bytes_total
 
-# not NetBird's: Prometheus synthetic series and kube-state-metrics
+# not NetBird's: Prometheus synthetic series, kube-state-metrics, cadvisor
 up
 kube_pod_container_status_restarts_total
+kube_pod_container_status_last_terminated_reason
+container_cpu_cfs_throttled_periods_total
+container_cpu_cfs_periods_total

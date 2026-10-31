@@ -1,0 +1,38 @@
+{{- $r := .Values.prometheus.rules.footprint.podOOM }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+# A NetBird component container was OOM-killed (roadmap Story 5.3). Management's memory
+# grows with the account's peer count, so this is the expected way an instance outgrows
+# its sizing. kube_pod_container_status_last_terminated_reason LATCHES (it reports the
+# last termination indefinitely), so the alert is anded with recent restarts — it resolves
+# once the container has run for a full window without dying, instead of firing forever
+# about an OOM that recovery already absorbed.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-pod-oom
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.footprint
+      rules:
+        - alert: NetBirdPodOOM
+          expr: |
+            kube_pod_container_status_last_terminated_reason{namespace="{{ $ns }}", container=~"{{ .Values.netbird.footprint.containerRegex }}", reason="OOMKilled"} == 1
+            and on (namespace, pod, container)
+            increase(kube_pod_container_status_restarts_total{namespace="{{ $ns }}", container=~"{{ .Values.netbird.footprint.containerRegex }}"}[{{ $r.window }}]) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird container {{`{{ $labels.container }}`}} in {{`{{ $labels.namespace }}`}} was OOM-killed"
+            description: "Container {{`{{ $labels.container }}`}} of pod {{`{{ $labels.pod }}`}} was OOM-killed within the last {{ $r.window }}. Raise its memory limit — for management, memory grows with the account's peer count. While it restarts, peers lose the component's function."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdpodoom"
+{{- end }}

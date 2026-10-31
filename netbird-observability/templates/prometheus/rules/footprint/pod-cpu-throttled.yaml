@@ -1,0 +1,36 @@
+{{- $r := .Values.prometheus.rules.footprint.podCPUThrottled }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+# A NetBird component container spends a high share of CFS periods throttled (roadmap
+# Story 5.3): the CPU limit is under-provisioned, which slows every login/sync/forward
+# before anything "fails". Leading indicator for the latency alerts. From cadvisor.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-pod-cpu-throttled
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.footprint
+      rules:
+        - alert: NetBirdPodCPUThrottled
+          expr: |
+            sum by (namespace, pod, container) (increase(container_cpu_cfs_throttled_periods_total{namespace="{{ $ns }}", container=~"{{ .Values.netbird.footprint.containerRegex }}"}[{{ $r.window }}]))
+            /
+            sum by (namespace, pod, container) (increase(container_cpu_cfs_periods_total{namespace="{{ $ns }}", container=~"{{ .Values.netbird.footprint.containerRegex }}"}[{{ $r.window }}]))
+            > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird container {{`{{ $labels.container }}`}} in {{`{{ $labels.namespace }}`}} is CPU-throttled ({{`{{ $value | humanizePercentage }}`}} of periods)"
+            description: "Container {{`{{ $labels.container }}`}} of pod {{`{{ $labels.pod }}`}} spent more than {{ $r.threshold | float64 | mulf 100 }}% of CFS periods throttled over {{ $r.window }}. Its CPU limit is under-provisioned — peers experience this as slow logins/syncs long before anything fails outright."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdpodcputhrottled"
+{{- end }}

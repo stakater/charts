@@ -17,13 +17,15 @@ source "$(dirname "$0")/lib.sh"
 trap stop_port_forwards EXIT
 port_forwards
 FAILED=0
-ONLY="${ONLY:-0 1 2 3 4}"
+DEFAULT_ONLY="0 1 2 3 4 5 6"
+ONLY="${ONLY:-$DEFAULT_ONLY}"
 want() { [[ " $ONLY " == *" $1 "* ]]; }
 
 ALL_ALERTS=(NetBirdTargetDown NetBirdMetricsAbsent NetBirdManagementApiErrorRateHigh
   NetBirdManagementApiLatencyHigh NetBirdManagementSyncLatencyHigh
   NetBirdManagementRequestsBlocked NetBirdManagementStoreSlow NetBirdPeersDisconnected
-  NetBirdSignalRegistrationFailures NetBirdSignalForwardFailures)
+  NetBirdSignalRegistrationFailures NetBirdSignalForwardFailures
+  NetBirdPodRestarting NetBirdPodOOM NetBirdPodCPUThrottled)
 
 # Wait for the first scrape of all 6 targets before judging anything: right after up.sh
 # the ServiceMonitors exist but Prometheus has not discovered/scraped them yet, and a
@@ -109,9 +111,37 @@ if want 4; then
   expect_value "4 grafana" 'count(sum by (namespace) (management_grpc_connected_streams_ratio{job="netbird-management-metrics"}))' 2
 fi
 
+# ── 5. NetBirdPodRestarting: a REAL crashloop (relay refuses to start without its auth
+# secret) fires the footprint alert in the broken mesh only, and resolves on repair ───────
+if want 5; then
+  step "scenario 5 — relay crashloops in ${NS_B} (auth secret emptied): PodRestarting fires there only"
+  k -n "$NS_B" set env deploy/netbird-relay NB_AUTH_SECRET="" >/dev/null
+  expect_firing   "5 relay-crashloop" NetBirdPodRestarting "{\"namespace\": \"${NS_B}\", \"container\": \"netbird-relay\"}" 600
+  expect_inactive "5 relay-crashloop" NetBirdPodRestarting "{\"namespace\": \"${NS_A}\"}"
+  k -n "$NS_B" set env deploy/netbird-relay NB_AUTH_SECRET="e2e-relay-secret" >/dev/null
+  k -n "$NS_B" rollout status deploy/netbird-relay --timeout=180s >/dev/null
+  # resolves once the 5m window slides past the last crash
+  expect_resolved "5 relay-crashloop" NetBirdPodRestarting "{\"namespace\": \"${NS_B}\", \"container\": \"netbird-relay\"}" 720
+fi
+
+# ── 6. NetBirdPodOOM: a REAL OOM-kill (management squeezed to 32Mi) fires; raising the
+# limit back rolls a fresh pod and the alert resolves ─────────────────────────────────────
+if want 6; then
+  step "scenario 6 — management OOM-killed in ${NS_A} (32Mi limit): PodOOM fires there only"
+  k -n "$NS_A" patch deploy/netbird-management --type json -p '[{"op":"add","path":"/spec/template/spec/containers/0/resources","value":{"limits":{"memory":"32Mi"},"requests":{"memory":"16Mi"}}}]' >/dev/null
+  expect_firing   "6 mgmt-oom" NetBirdPodOOM "{\"namespace\": \"${NS_A}\", \"container\": \"netbird-management\"}" 600
+  expect_inactive "6 mgmt-oom" NetBirdPodOOM "{\"namespace\": \"${NS_B}\"}"
+  k -n "$NS_A" patch deploy/netbird-management --type json -p '[{"op":"remove","path":"/spec/template/spec/containers/0/resources"}]' >/dev/null
+  k -n "$NS_A" rollout status deploy/netbird-management --timeout=300s >/dev/null
+  # the OOMKilled reason latches on the OLD pod's series; the rollout replaces the pod,
+  # the stale series goes away, and the alert must resolve rather than fire forever
+  expect_resolved "6 mgmt-oom" NetBirdPodOOM "{\"namespace\": \"${NS_A}\", \"container\": \"netbird-management\"}" 720
+  expect_resolved "6 mgmt-oom" NetBirdTargetDown "{\"namespace\": \"${NS_A}\", \"target\": \"management\"}" 600
+fi
+
 # ── report ────────────────────────────────────────────────────────────────────────────────
 step "report"
-R="${CHART}/tests/reports/e2e-kind-$(date -u +%Y-%m-%d)$( [ "$ONLY" != "0 1 2 3 4" ] && echo "-only-${ONLY// /-}" ).md"
+R="${CHART}/tests/reports/e2e-kind-$(date -u +%Y-%m-%d)$( [ "$ONLY" != "$DEFAULT_ONLY" ] && echo "-only-${ONLY// /-}" ).md"
 {
   echo "# netbird-observability e2e on kind — $(date -u +%Y-%m-%dT%H:%MZ)"
   echo
@@ -135,6 +165,7 @@ R="${CHART}/tests/reports/e2e-kind-$(date -u +%Y-%m-%d)$( [ "$ONLY" != "0 1 2 3 
   echo "- NetBirdManagementSyncLatencyHigh, NetBirdManagementRequestsBlocked,"
   echo "  NetBirdManagementStoreSlow, NetBirdPeersDisconnected (baseline leg),"
   echo "  NetBirdSignalRegistrationFailures, NetBirdSignalForwardFailures"
+  echo "- NetBirdPodCPUThrottled (needs sustained CPU load against a limit; promtool-covered)"
 } > "$R"
 green "report: $R"
 

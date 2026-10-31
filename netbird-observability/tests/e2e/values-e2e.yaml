@@ -17,6 +17,10 @@ prometheus:
     signal:
       registrationFailures: {for: 1m, window: 5m, severity: warning}
       forwardFailures: {for: 1m, window: 5m, severity: warning, maxFailureRatio: 0.10}
+    footprint:
+      podRestarting: {threshold: 1, window: 5m, for: 1m, severity: warning}
+      podOOM: {window: 10m, for: 1m, severity: warning}
+      podCPUThrottled: {threshold: 0.25, window: 5m, for: 2m, severity: info}
     watchdog:
       targetDown: {for: 1m, severity: critical}
       metricsAbsent: {for: 1m, severity: warning}

@@ -37,6 +37,12 @@ netbird:
       app.kubernetes.io/name: netbird-relay
     metricsPort: 9090
     jobName: netbird-relay-metrics
+  # Container-name regex the footprint (saturation) alerts key on. kube-state-metrics and
+  # cadvisor series carry the CONTAINER name, which is stable across releases and both
+  # deployment layouts (the catalog chart and the upstream subchart name their containers
+  # netbird-management / netbird-signal / netbird-relay), unlike pod-name prefixes.
+  footprint:
+    containerRegex: "netbird-(management|signal|relay)"
 
 grafana:
   # The dashboard is fleet-capable ($namespace variable spans all instances): enable it on
@@ -155,6 +161,32 @@ prometheus:
         severity: warning
         window: 15m
         maxFailureRatio: 0.10
+
+    # Saturation (roadmap Story 5.3): the components' resource footprint. Management's
+    # memory grows with peer count — without these, an OOM crashloop surfaces only as a
+    # flapping TargetDown (symptom, not cause). From kube-state-metrics + cadvisor.
+    footprint:
+      # A component container restarts repeatedly over the lookback window.
+      podRestarting:
+        enabled: true
+        threshold: 2
+        window: 1h
+        for: 10m
+        severity: warning
+      # A component container was OOM-killed recently.
+      podOOM:
+        enabled: true
+        window: 1h
+        for: 5m
+        severity: warning
+      # Fraction of CFS periods a component container spent throttled (under-provisioned
+      # CPU limit: slows every sync/login before anything "fails").
+      podCPUThrottled:
+        enabled: true
+        threshold: 0.25
+        window: 15m
+        for: 15m
+        severity: info
 
     # Blindness: if the metrics vanish, every alert above is silently disarmed.
     # Rendered only for ENABLED monitors, so a disabled component never fires them.

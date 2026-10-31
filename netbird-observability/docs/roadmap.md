@@ -235,6 +235,10 @@ v1 shipped. Written down so they are not lost; none is built without approval.
   The chart's hook is `prometheus.rules.labels` (merged into every rule) — set the
   routing label the cluster's Alertmanager keys on, and add `NetBird*` mappings.
 - **Verification:** a routed test alert per cluster, not a config review.
+- **Status 2026-10-31:** with the platform team. The receiver gap is a pre-existing
+  cluster-level item, not NetBird-specific; this chart's alerts already carry
+  `severity` and `rulesgroup: netbird`, so severity-based routing covers them with no
+  per-family mapping once the receiver lands.
 
 ## Story 5.2 — Is every mesh in the fleet actually monitored? 📝 **(urgent)**
 
@@ -249,16 +253,23 @@ v1 shipped. Written down so they are not lost; none is built without approval.
 - Belongs in a small hub-mode toggle of this chart or in the mesh composition's
   provisioning contract (install the observability chart transactionally with the mesh).
   Decide before building.
+- **Status 2026-10-31:** decision brief with the platform team; recommendation is
+  composition-installed charts PLUS a thin cluster-scoped coverage watchdog (they catch
+  different failure modes).
 
-## Story 5.3 — Are the components resource-starved? (saturation) 📝
+## Story 5.3 — Are the components resource-starved? (saturation) ✅
 
 > **As an SRE, I want OOM-kill / crashloop / CPU-throttling alerts for management,
 > signal and relay, because management's memory grows with peer count and an OOM
 > crashloop today only surfaces as a flapping TargetDown — symptom, not cause.**
 
 - KSM + cadvisor metrics (`kube_pod_container_status_*`, `container_cpu_cfs_throttled_*`),
-  scoped to the instance namespace; same pattern as crossplane-observability's footprint
-  rules. The restarts dashboard panel exists; the alerts do not.
+  scoped to the instance namespace and keyed on the stable container names; same pattern
+  as crossplane-observability's footprint rules.
+- **Shipped 2026-10-31:** `NetBirdPodRestarting`, `NetBirdPodOOM` (anti-latch guarded —
+  the KSM reason label latches, so the alert resolves after a restart-free window),
+  `NetBirdPodCPUThrottled`. The kind e2e live-fires a real relay crashloop and a real
+  management OOM-kill to firing and back; CPU throttling is promtool-covered.
 
 ## Story 5.4 — Registered peers vs connected peers 📝
 

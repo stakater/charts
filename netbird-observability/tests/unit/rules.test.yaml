@@ -338,3 +338,86 @@ tests:
       - eval_time: 32m
         alertname: NetBirdSignalForwardFailures
         exp_alerts: []
+
+  # ── NetBirdPodRestarting: a crashlooping component fires; a stable one stays quiet ───
+  - interval: 1m
+    input_series:
+      # 4 restarts in the first 20 minutes (> threshold 2 over the 1h window)
+      - series: 'kube_pod_container_status_restarts_total{namespace="netbird-mesh", pod="relay-1", container="netbird-relay"}'
+        values: '0 1 1 2 2 3 3 4 4x60'
+      - series: 'kube_pod_container_status_restarts_total{namespace="netbird-mesh", pod="signal-1", container="netbird-signal"}'
+        values: '0x68'
+      # a non-netbird container crashing in the same namespace must NOT fire
+      - series: 'kube_pod_container_status_restarts_total{namespace="netbird-mesh", pod="other-1", container="postgres"}'
+        values: '0 2 4 6 8 10 12 14 16x60'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: NetBirdPodRestarting
+        exp_alerts:
+          - exp_labels:
+              namespace: netbird-mesh
+              pod: relay-1
+              container: netbird-relay
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird container netbird-relay in netbird-mesh is restarting"
+              description: "Container netbird-relay of pod relay-1 restarted more than 2 times in 1h. While it crashes this instance's peers lose the component's function — check the pod's logs and whether NetBirdPodOOM fires alongside (memory-bound crashloop)."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdpodrestarting"
+
+  # ── NetBirdPodOOM: recent OOM fires; a LATCHED old reason without restarts must not ──
+  - interval: 1m
+    input_series:
+      - series: 'kube_pod_container_status_last_terminated_reason{namespace="netbird-mesh", pod="mgmt-1", container="netbird-management", reason="OOMKilled"}'
+        values: '1x120'
+      # restarts happened early, then the container stayed up for over the 1h window
+      - series: 'kube_pod_container_status_restarts_total{namespace="netbird-mesh", pod="mgmt-1", container="netbird-management"}'
+        values: '0 1 2 2x118'
+    alert_rule_test:
+      # restarts within the window: fires
+      - eval_time: 10m
+        alertname: NetBirdPodOOM
+        exp_alerts:
+          - exp_labels:
+              namespace: netbird-mesh
+              pod: mgmt-1
+              container: netbird-management
+              reason: OOMKilled
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird container netbird-management in netbird-mesh was OOM-killed"
+              description: "Container netbird-management of pod mgmt-1 was OOM-killed within the last 1h. Raise its memory limit — for management, memory grows with the account's peer count. While it restarts, peers lose the component's function."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdpodoom"
+      # the reason label latches forever, but a full hour without a restart resolves it
+      - eval_time: 110m
+        alertname: NetBirdPodOOM
+        exp_alerts: []
+
+  # ── NetBirdPodCPUThrottled: heavy throttling fires; light throttling stays quiet ─────
+  - interval: 1m
+    input_series:
+      # ~50% of periods throttled
+      - series: 'container_cpu_cfs_periods_total{namespace="netbird-mesh", pod="mgmt-1", container="netbird-management"}'
+        values: '0+100x40'
+      - series: 'container_cpu_cfs_throttled_periods_total{namespace="netbird-mesh", pod="mgmt-1", container="netbird-management"}'
+        values: '0+50x40'
+      # ~1% throttled on signal: quiet
+      - series: 'container_cpu_cfs_periods_total{namespace="netbird-mesh", pod="signal-1", container="netbird-signal"}'
+        values: '0+100x40'
+      - series: 'container_cpu_cfs_throttled_periods_total{namespace="netbird-mesh", pod="signal-1", container="netbird-signal"}'
+        values: '0+1x40'
+    alert_rule_test:
+      - eval_time: 32m
+        alertname: NetBirdPodCPUThrottled
+        exp_alerts:
+          - exp_labels:
+              namespace: netbird-mesh
+              pod: mgmt-1
+              container: netbird-management
+              severity: info
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird container netbird-management in netbird-mesh is CPU-throttled (50% of periods)"
+              description: "Container netbird-management of pod mgmt-1 spent more than 25% of CFS periods throttled over 15m. Its CPU limit is under-provisioned — peers experience this as slow logins/syncs long before anything fails outright."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdpodcputhrottled"

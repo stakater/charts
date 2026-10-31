@@ -93,6 +93,36 @@ Peers cannot register on the signal stream ⇒ no new peer-to-peer connections.
 1. `kubectl -n <ns> logs deploy/<signal>` — auth/TLS errors dominate here.
 2. Check the signal TLS certificate and the LB the peers dial.
 
+## NetBirdPodRestarting
+
+A component container is crashlooping — the cause behind a flapping `NetBirdTargetDown`.
+
+1. `kubectl -n <ns> logs <pod> --previous` — the crash reason is in the previous
+   container's last lines (bad config after a change, missing secret, store unreachable).
+2. If `NetBirdPodOOM` fires alongside, it is a memory-bound crashloop: go there.
+3. A crashloop right after a rollout points at the change — diff the release.
+
+## NetBirdPodOOM
+
+The container was OOM-killed recently. For management this is the expected way an
+instance outgrows its sizing: memory grows with the account's peer count.
+
+1. Raise the container's memory limit in the netbird install's values; check the
+   instance's peer count trend on the dashboard to size it.
+2. A repeating OOM at stable peer count is a leak — capture heap/metrics before and
+   after restart and compare, consider pinning the previous image.
+3. The alert resolves once the container runs a full window without dying.
+
+## NetBirdPodCPUThrottled
+
+The container spends a high share of CFS periods throttled: its CPU limit is
+under-provisioned. Peers experience this as slow logins/syncs long before anything fails.
+
+1. Raise (or remove) the CPU limit for the component in the netbird install's values.
+2. Check whether the latency alerts (`NetBirdManagementSyncLatencyHigh`,
+   `NetBirdManagementApiLatencyHigh`) confirm user-visible impact — throttling without
+   impact at low traffic can wait for the next sizing pass.
+
 ## NetBirdSignalForwardFailures
 
 A high share of signal messages fail to forward (target peer offline, send error).
