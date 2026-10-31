@@ -70,6 +70,75 @@ Tilt-only values overlay.
 
 ---
 
+## Building a new observability chart — the method (docs → capture → tests → templates)
+
+New charts follow a docs-first, test-gated method: why → stories → approval gate → plan →
+red → green → verify → audit. Reference executions in this repo: **`kcp-observability`**
+and **`crossplane-observability`** (roadmap + full offline test gate); `oadp-observability`
+adds the component and kind-e2e layers. The archetypes further below describe the chart
+*layout*; this section is the **order of work — never start by writing templates.**
+
+### 1. Docs first — the why (`docs/roadmap.md`)
+
+- Start from the vision/value prop: who is on-call for this workload, and what should page
+  them? A story that doesn't ladder up to that gets questioned, not built.
+- `docs/roadmap.md` is organized **by user story** (copy kcp's shape). Each story:
+  *"As an SRE, I want X, because Y"* → **Metric(s) → SLI → SLO (SLA candidate or
+  internal) → Alert → Dashboard panel**.
+- Stories carry the lifecycle **📝 Draft → 👍 Approved → 🔨 In progress → ✅ Done**.
+  Approval is a **human gate** — never build an unapproved story; killing a weak Draft is
+  the method working, not a failure.
+- Numeric targets are placeholders until 2–4 weeks of live baseline — say so in the doc.
+- This repo is **public**: no internal ticket ids, customer names, internal repo names or
+  paths, or cluster internals in docs or commit messages. Internal story maps and
+  validation specifics live in a private repo; the chart keeps generic docs (oadp is the
+  precedent).
+
+### 2. Metric reality — capture before you believe
+
+Draft the roadmap from upstream docs, then **capture live `/metrics` from a real cluster**
+into `tests/fixtures/*.txt` (provenance + label shapes in `tests/fixtures/README.md` or
+`tests/METRICS-CAPTURE.md`), regenerate `tests/metrics-allowlist.captured.txt` with
+`tests/generate-allowlist.sh`, and **revise the roadmap against the capture**. Every
+metric a rule or panel uses is tagged:
+
+- **[captured]** — in the fixtures, exact labels verified;
+- **[documented]** / **[ksm]** — absent from fixtures by nature (kube-state-metrics,
+  lazily-registered counters): allowlisted in `tests/metrics-allowlist.documented.txt`
+  **with a citation**;
+- **[absent]** — looked for and not there on this version: defer the story or rebuild it
+  on a captured signal. **Never faked.**
+
+### 3. Tests — the chart's pyramid (`tests/`)
+
+Build behind `tests/validate.sh` (copy kcp's; every layer fails the script):
+
+1. `helm lint` + `helm template` (defaults AND everything-enabled);
+2. `promtool check rules` on the rendered rules — PromQL parses;
+3. `promtool test rules tests/unit/rules.test.yaml` — **unit tests: every alert fires and
+   resolves on synthetic series**. Write the test first (red → green);
+4. metric-reality gate (`tests/check_metrics.py`) — every metric referenced by a rule or
+   panel is captured or documented-with-citation; recording-rule refs resolve;
+5. dashboard JSON — valid, unique panel ids, every panel query parses;
+6. `kubeconform -strict` against the CRD schemas vendored in `tests/schemas/`.
+
+Then, where the chart warrants it:
+
+- **component** (`tests/component/`) — when the chart ships a workload of its own
+  (oadp's state exporter);
+- **e2e** (`tests/e2e/`) — kind + kube-prometheus + the real workload; scenarios drive
+  **every alert to fire and resolve** (oadp is the reference);
+- **deploy validation** — before release, validate read-only against a real cluster and
+  commit a dated report to `tests/reports/validation-<cluster>-<date>.md`
+  (procedure in `tests/DEPLOY-VALIDATION.md`).
+
+### 4. Only then: templates
+
+Bootstrap the layout (archetypes below) and build **one approved story at a time**, each
+alert and panel tracing back to its story in the roadmap.
+
+---
+
 ## Bootstrapping a new observability chart
 
 Pick the archetype that matches what you're shipping. **When in doubt, copy the closest
@@ -100,9 +169,10 @@ Just a Grafana dashboard, no metrics/alerts. Reference: **`haproxy-observability
 
 ### Archetype B — full observability (dashboard + monitors + rules)
 
-Metrics scraping and alerting. Reference: **`openbao-observability`** (the most modern,
-best-documented chart — use it as the template), also `postgres-observability`,
-`redis-observability`, `rabbitmq-observability`.
+Metrics scraping and alerting. References: **`kcp-observability`** / **`crossplane-observability`**
+(full method: `docs/roadmap.md` + `tests/` gate — the standard for new charts),
+**`openbao-observability`** (cleanest minimal template structure), also
+`postgres-observability`, `redis-observability`, `rabbitmq-observability`.
 
 ```
 <thing>-observability/
@@ -111,6 +181,9 @@ best-documented chart — use it as the template), also `postgres-observability`
 ├── README.md                   # full: prerequisites, config table, alert table, dashboard panels
 ├── values.yaml
 ├── (Tiltfile / Tiltfile-delete / values-local.yaml — optional; openbao has them, postgres/redis don't)
+├── docs/
+│   └── roadmap.md                      # the stories/why (method §1) + any guides, values examples
+├── tests/                              # validate.sh, unit/, fixtures/, allowlists, schemas/ (method §2–3)
 ├── files/                              # optional: large dashboard JSON loaded via .Files.Get
 │   └── <thing>_grafana_dashboard.json
 └── templates/
@@ -125,6 +198,9 @@ best-documented chart — use it as the template), also `postgres-observability`
 ```
 
 ### Steps
+
+These are the layout mechanics only — the order of work (roadmap → capture → tests →
+templates, with the approval gate) is the method section above.
 
 1. **Copy the closest reference chart** to `<thing>-observability/`.
 2. **Rename the helper namespace** in `templates/_helpers.tpl`: every `define` is prefixed
@@ -142,8 +218,8 @@ best-documented chart — use it as the template), also `postgres-observability`
 7. **`README.md`**: dashboard-only charts get a short one (deps + tilt). Full charts get the
    openbao-style README: prerequisites, a config table, an alert table, and a panel-by-panel
    dashboard table.
-8. Render with `helm template . -f values-local.yaml` (or `helm template .`) and confirm it
-   produces valid YAML before opening the PR.
+8. **Gate before the PR**: `./tests/validate.sh` green (archetype B — all six layers), or at
+   minimum `helm template . -f values-local.yaml` producing valid YAML (archetype A).
 
 ---
 
