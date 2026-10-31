@@ -1,12 +1,12 @@
 # HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
 # TYPE go_gc_duration_seconds summary
-go_gc_duration_seconds{quantile="0"} 3.9417e-05
-go_gc_duration_seconds{quantile="0.25"} 5.2083e-05
-go_gc_duration_seconds{quantile="0.5"} 8.4168e-05
-go_gc_duration_seconds{quantile="0.75"} 0.000151125
-go_gc_duration_seconds{quantile="1"} 0.000902875
-go_gc_duration_seconds_sum 0.004760042
-go_gc_duration_seconds_count 30
+go_gc_duration_seconds{quantile="0"} 3.7375e-05
+go_gc_duration_seconds{quantile="0.25"} 4.1875e-05
+go_gc_duration_seconds{quantile="0.5"} 5.4875e-05
+go_gc_duration_seconds{quantile="0.75"} 8.5457e-05
+go_gc_duration_seconds{quantile="1"} 0.002317624
+go_gc_duration_seconds_sum 0.005644288
+go_gc_duration_seconds_count 31
 # HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent.
 # TYPE go_gc_gogc_percent gauge
 go_gc_gogc_percent 100
@@ -15,49 +15,49 @@ go_gc_gogc_percent 100
 go_gc_gomemlimit_bytes 9.223372036854776e+18
 # HELP go_goroutines Number of goroutines that currently exist.
 # TYPE go_goroutines gauge
-go_goroutines 36
+go_goroutines 35
 # HELP go_info Information about the Go environment.
 # TYPE go_info gauge
 go_info{version="go1.25.12"} 1
 # HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
 # TYPE go_memstats_alloc_bytes gauge
-go_memstats_alloc_bytes 4.0090632e+07
+go_memstats_alloc_bytes 5.482648e+06
 # HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
 # TYPE go_memstats_alloc_bytes_total counter
-go_memstats_alloc_bytes_total 6.50588624e+08
+go_memstats_alloc_bytes_total 6.53397224e+08
 # HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
 # TYPE go_memstats_buck_hash_sys_bytes gauge
-go_memstats_buck_hash_sys_bytes 1.482028e+06
+go_memstats_buck_hash_sys_bytes 1.488956e+06
 # HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
 # TYPE go_memstats_frees_total counter
-go_memstats_frees_total 1.325986e+06
+go_memstats_frees_total 1.559905e+06
 # HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
 # TYPE go_memstats_gc_sys_bytes gauge
-go_memstats_gc_sys_bytes 4.112176e+06
+go_memstats_gc_sys_bytes 4.281136e+06
 # HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
 # TYPE go_memstats_heap_alloc_bytes gauge
-go_memstats_heap_alloc_bytes 4.0090632e+07
+go_memstats_heap_alloc_bytes 5.482648e+06
 # HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
 # TYPE go_memstats_heap_idle_bytes gauge
-go_memstats_heap_idle_bytes 1.15392512e+08
+go_memstats_heap_idle_bytes 1.36241152e+08
 # HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
 # TYPE go_memstats_heap_inuse_bytes gauge
-go_memstats_heap_inuse_bytes 4.3040768e+07
+go_memstats_heap_inuse_bytes 9.445376e+06
 # HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
 # TYPE go_memstats_heap_objects gauge
-go_memstats_heap_objects 240555
+go_memstats_heap_objects 30798
 # HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
 # TYPE go_memstats_heap_released_bytes gauge
-go_memstats_heap_released_bytes 1.00114432e+08
+go_memstats_heap_released_bytes 1.04103936e+08
 # HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
 # TYPE go_memstats_heap_sys_bytes gauge
-go_memstats_heap_sys_bytes 1.5843328e+08
+go_memstats_heap_sys_bytes 1.45686528e+08
 # HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
 # TYPE go_memstats_last_gc_time_seconds gauge
-go_memstats_last_gc_time_seconds 1.793397127574071e+09
+go_memstats_last_gc_time_seconds 1.7934599478405356e+09
 # HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
 # TYPE go_memstats_mallocs_total counter
-go_memstats_mallocs_total 1.566541e+06
+go_memstats_mallocs_total 1.590703e+06
 # HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
 # TYPE go_memstats_mcache_inuse_bytes gauge
 go_memstats_mcache_inuse_bytes 12080
@@ -66,34 +66,40 @@ go_memstats_mcache_inuse_bytes 12080
 go_memstats_mcache_sys_bytes 15704
 # HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
 # TYPE go_memstats_mspan_inuse_bytes gauge
-go_memstats_mspan_inuse_bytes 415680
+go_memstats_mspan_inuse_bytes 275520
 # HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
 # TYPE go_memstats_mspan_sys_bytes gauge
-go_memstats_mspan_sys_bytes 995520
+go_memstats_mspan_sys_bytes 734400
 # HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
 # TYPE go_memstats_next_gc_bytes gauge
-go_memstats_next_gc_bytes 5.7455482e+07
+go_memstats_next_gc_bytes 1.095865e+07
 # HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
 # TYPE go_memstats_other_sys_bytes gauge
-go_memstats_other_sys_bytes 2.07634e+06
+go_memstats_other_sys_bytes 1.964964e+06
 # HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
 # TYPE go_memstats_stack_inuse_bytes gauge
-go_memstats_stack_inuse_bytes 950272
+go_memstats_stack_inuse_bytes 1.114112e+06
 # HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
 # TYPE go_memstats_stack_sys_bytes gauge
-go_memstats_stack_sys_bytes 950272
+go_memstats_stack_sys_bytes 1.114112e+06
 # HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
 # TYPE go_memstats_sys_bytes gauge
-go_memstats_sys_bytes 1.6806532e+08
+go_memstats_sys_bytes 1.552858e+08
 # HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads.
 # TYPE go_sched_gomaxprocs_threads gauge
 go_sched_gomaxprocs_threads 10
 # HELP go_threads Number of OS threads created.
 # TYPE go_threads gauge
-go_threads 16
+go_threads 17
 # HELP management_grpc_connected_streams_ratio Number of active peer streams connected to the gRPC server
 # TYPE management_grpc_connected_streams_ratio gauge
 management_grpc_connected_streams_ratio{otel_scope_name="",otel_scope_schema_url="",otel_scope_version=""} 0
+# HELP management_grpc_key_request_counter_total Number of key gRPC requests from the peers to get the server's public WireGuard key
+# TYPE management_grpc_key_request_counter_total counter
+management_grpc_key_request_counter_total{otel_scope_name="",otel_scope_schema_url="",otel_scope_version=""} 27
+# HELP management_grpc_login_request_counter_total Number of login gRPC requests from the peers to authenticate and receive initial configuration and relay credentials
+# TYPE management_grpc_login_request_counter_total counter
+management_grpc_login_request_counter_total{otel_scope_name="",otel_scope_schema_url="",otel_scope_version=""} 27
 # HELP management_http_request_counter_total Number of incoming HTTP requests by endpoint and method
 # TYPE management_http_request_counter_total counter
 management_http_request_counter_total{otel_scope_name="",otel_scope_schema_url="",otel_scope_version=""} 6
@@ -167,28 +173,28 @@ management_http_response_counter_total{code="401",endpoint="/api/peers",method="
 management_http_response_counter_total{code="401",endpoint="/api/users",method="GET",otel_scope_name="",otel_scope_schema_url="",otel_scope_version=""} 3
 # HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
 # TYPE process_cpu_seconds_total counter
-process_cpu_seconds_total 3.07
+process_cpu_seconds_total 2.79
 # HELP process_max_fds Maximum number of open file descriptors.
 # TYPE process_max_fds gauge
 process_max_fds 1.048576e+06
 # HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
 # TYPE process_network_receive_bytes_total counter
-process_network_receive_bytes_total 7.8097276e+07
+process_network_receive_bytes_total 7.8207281e+07
 # HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
 # TYPE process_network_transmit_bytes_total counter
-process_network_transmit_bytes_total 185152
+process_network_transmit_bytes_total 475221
 # HELP process_open_fds Number of open file descriptors.
 # TYPE process_open_fds gauge
 process_open_fds 13
 # HELP process_resident_memory_bytes Resident memory size in bytes.
 # TYPE process_resident_memory_bytes gauge
-process_resident_memory_bytes 1.19877632e+08
+process_resident_memory_bytes 1.08290048e+08
 # HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
 # TYPE process_start_time_seconds gauge
-process_start_time_seconds 1.79339712005e+09
+process_start_time_seconds 1.79345981893e+09
 # HELP process_virtual_memory_bytes Virtual memory size in bytes.
 # TYPE process_virtual_memory_bytes gauge
-process_virtual_memory_bytes 2.55791104e+09
+process_virtual_memory_bytes 2.63327744e+09
 # HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
 # TYPE process_virtual_memory_max_bytes gauge
 process_virtual_memory_max_bytes 1.8446744073709552e+19

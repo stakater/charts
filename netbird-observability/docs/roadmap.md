@@ -68,6 +68,17 @@ because the docs are wrong or incomplete in ways that would have produced silent
   NetBird's HTTP `endpoint` label to **`exported_endpoint`**. Queries that segment or pin
   the HTTP endpoint must use `exported_endpoint`.
 
+**Upstream comparison** (netbirdio/netbird `infrastructure_files/observability/grafana/dashboards`,
+checked 2026-10-31): NetBird ships per-component Grafana dashboards but **no alert rules** —
+the alerts here are designed from the SRE stories below, not adapted from upstream. The
+upstream dashboards are single-instance (no fleet dimension) and several of their queries
+use metric names that do not match v0.75.0's exporter (e.g.
+`management_grpc_login_request_counter_ratio_total`, `…_sync_request_duration_ms_bucket`) —
+a live failed-login capture confirmed the docs' names (`…_login_request_counter_total`)
+over the dashboard variants. Depth panels upstream has that v2 of our dashboard could add
+once a fleet capture confirms their names: update-channel queue length, network-map object
+counts, store global-lock/transaction latency, signal forward latency, relay peer-store time.
+
 Two-tier allowlist: `metrics-allowlist.captured.txt` (really scraped from the pinned
 fixtures) and `metrics-allowlist.documented.txt` (upstream-documented, lazily registered —
 confirmed name-by-name against the docs, to be promoted to captured once a live fleet

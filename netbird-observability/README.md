@@ -84,6 +84,13 @@ All thresholds are **placeholders until calibrated** against 2–4 weeks of flee
 
 One `$namespace` variable spans the fleet; select one instance to drill down.
 
+Healthy fleet (two instances), and the same view during a management outage of one
+instance — the status matrix flags only the affected mesh (captured on the kind e2e rig;
+peer-dependent panels fill once real peers enroll):
+
+![healthy](docs/images/dashboard-healthy.png)
+![incident](docs/images/dashboard-incident.png)
+
 | Row | Panels |
 |---|---|
 | Fleet overview | instance count, fleet-wide connected peers, per-instance component status matrix, connected peers by instance |

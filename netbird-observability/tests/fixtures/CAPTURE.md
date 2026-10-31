@@ -20,6 +20,14 @@ docker run -d --name nb-relay  -p 19092:9090 \
 # exercise the management HTTP API (counters are lazily registered)
 for i in 1 2 3; do curl -s localhost:18080/api/users; curl -s localhost:18080/api/peers; done
 
+# exercise the management gRPC path with a REAL client attempting enrollment (bogus setup
+# key): failed logins register management_grpc_{login,key}_request_counter_total — and
+# confirmed the DOCS names over the upstream dashboard's *_counter_ratio_total variant.
+# The duration histograms did NOT register on failed logins (documented tier still).
+docker run -d --name nb-client --network <mgmt-network> --cap-add NET_ADMIN \
+  -e NB_SETUP_KEY=00000000-0000-0000-0000-000000000000 \
+  -e NB_MANAGEMENT_URL=http://<mgmt>:8080 netbirdio/netbird:0.75.0
+
 curl -s localhost:19090/metrics > management-metrics.txt
 curl -s localhost:19091/metrics > signal-metrics.txt
 curl -s localhost:19092/metrics > relay-metrics.txt
