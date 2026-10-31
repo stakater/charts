@@ -220,6 +220,80 @@ cannot enroll, re-authenticate, pick up network-map changes, or fall back to rel
 - **Status:** 📝 Draft — needs a live capture from an IdP-enabled instance first to
   confirm the family's real names and labels.
 
+# Capability Area 5 — Gaps found in the coverage review (2026-10-31, all 📝 Draft)
+
+A systematic sweep (golden signals × components × user journeys × fleet lifecycle) after
+v1 shipped. Written down so they are not lost; none is built without approval.
+
+## Story 5.1 — Do NetBird alerts actually reach a human? 📝 **(urgent, not a chart change)**
+
+> **As an SRE, I want every `NetBird*` alert mapped to a receiver in the cluster's
+> Alertmanager routing, because an alert that fires into a catch-all drop rule protects
+> nobody — and this exact failure has bitten this platform's alerting before.**
+
+- Not solved by this chart: it is routing configuration where Alertmanager lives.
+  The chart's hook is `prometheus.rules.labels` (merged into every rule) — set the
+  routing label the cluster's Alertmanager keys on, and add `NetBird*` mappings.
+- **Verification:** a routed test alert per cluster, not a config review.
+
+## Story 5.2 — Is every mesh in the fleet actually monitored? 📝 **(urgent)**
+
+> **As an SRE, I want to know when a NetBird instance EXISTS but this chart is not
+> installed in its namespace, because the per-instance blindness watchdog only exists
+> where the chart is installed — a mesh provisioned without it degrades invisibly, and
+> nothing in the current design can notice.**
+
+- Inherently cluster-scoped (one per cluster, not per instance): compare namespaces
+  running netbird workloads (e.g. KSM `kube_pod_container_info` on netbird images)
+  against namespaces exporting `up{job="netbird-management-metrics"}`.
+- Belongs in a small hub-mode toggle of this chart or in the mesh composition's
+  provisioning contract (install the observability chart transactionally with the mesh).
+  Decide before building.
+
+## Story 5.3 — Are the components resource-starved? (saturation) 📝
+
+> **As an SRE, I want OOM-kill / crashloop / CPU-throttling alerts for management,
+> signal and relay, because management's memory grows with peer count and an OOM
+> crashloop today only surfaces as a flapping TargetDown — symptom, not cause.**
+
+- KSM + cadvisor metrics (`kube_pod_container_status_*`, `container_cpu_cfs_throttled_*`),
+  scoped to the instance namespace; same pattern as crossplane-observability's footprint
+  rules. The restarts dashboard panel exists; the alerts do not.
+
+## Story 5.4 — Registered peers vs connected peers 📝
+
+> **As an SRE, I want "how many peers SHOULD be connected" per instance, because
+> connected-streams alone cannot distinguish a healthy quiet mesh from a half-outage —
+> today's NetBirdPeersDisconnected only catches the all-gone case, not a 50% drop.**
+
+- NetBird exports no registered-peers gauge; needs a tiny exporter against the
+  management API (`GET /api/peers` — the bootstrap PAT exists for exactly this kind of
+  service account), the oadp state-exporter pattern. Unlocks a partial-disconnect alert
+  with a real denominator.
+
+## Story 5.5 — Instance provisioning convergence (bootstrap) 📝
+
+> **As an SRE, I want to know when a mesh's zero-touch bootstrap never converges,
+> because the bootstrap CronJob retries forever by design — a tenant whose IdP client or
+> PAT never materializes is a provisioning outage that currently pages nobody.**
+
+- `kube_job_status_failed` / job age for the instance's bootstrap CronJob, or an
+  absent-PAT-Secret check via the state exporter of Story 5.4. Part of observing the
+  instance, so it belongs here — but confirm against "one chart, one mechanism" first.
+
+## Story 5.6 — Per-tenant SLO attainment and error budget 📝
+
+> **As the platform owner, I want the SLIs defined in Areas 1–3 rolled up into
+> per-tenant SLO attainment with an error budget, because the targets in this document
+> are not yet computed anywhere — they are definitions without measurement.**
+
+- Recording rules feeding the platform's existing SLO tooling; do after thresholds are
+  calibrated on fleet baseline. Also the natural place for customer-facing reporting.
+
+Also noted, smaller: the admin web dashboard (static frontend) has no metrics — its
+availability is synthetic-probe territory (platform health-check tooling, with Story 2.3);
+a fleet version-skew panel (netbird image per instance via KSM) for v2 of the dashboard.
+
 # Out of scope (deliberately)
 
 - **PostgreSQL internals** — `cloudnative-pg-observability` (one chart, one mechanism).
