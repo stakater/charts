@@ -6,8 +6,10 @@ to record. Everything is **read-only**.
 
 ## Status
 
-**Blocked / not yet captured.** No reachable cluster with MetalLB at the time the roadmap
-was drafted. `fixtures/` is empty on purpose — never fake a fixture.
+**Captured 2026-11-01 from the kind lab** (`e2e/up.sh` + `e2e/capture.sh`; provenance in
+`fixtures/README.md`). **Still pending: the real-cluster comparison** — re-run this
+procedure read-only against a cluster running the MetalLB operator and diff the surface
+(handover activity, see `e2e/README.md`).
 
 ## What to find out first (shapes the whole chart)
 
