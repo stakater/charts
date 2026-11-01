@@ -1,0 +1,26 @@
+{{- $r := .Values.prometheus.rules.metallb.bgpSessionFlapping }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-bgp-session-flapping
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.bgp
+      rules:
+        - alert: MetalLBBGPSessionFlapping
+          expr: changes(frrk8s_bgp_session_up[{{ $r.window }}]) > {{ $r.threshold }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "BGP session {{`{{ $labels.pod }}`}} → {{`{{ $labels.peer }}`}} is flapping"
+            description: "The session to {{`{{ $labels.peer }}`}} changed state {{`{{ $value }}`}} times in {{ $r.window }}. A flapping session causes intermittent reachability that the point-in-time down alert misses between evaluations — check the peer router and the link."
+{{- end }}

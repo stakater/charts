@@ -1,0 +1,44 @@
+{{- $r := .Values.prometheus.rules.watchdog.metricsAbsent }}
+{{- if and ($r) ($r.enabled) }}
+{{- $targets := list }}
+{{- if and .Values.prometheus.monitors.speakerPodMonitor .Values.prometheus.monitors.speakerPodMonitor.enabled }}
+{{- $targets = append $targets (dict "target" "speaker" "expr" (printf "absent(up{job=\"%s\"})" .Values.prometheus.monitors.speakerPodMonitor.job)) }}
+{{- end }}
+{{- if and .Values.prometheus.monitors.frrK8sPodMonitor .Values.prometheus.monitors.frrK8sPodMonitor.enabled }}
+{{- $targets = append $targets (dict "target" "frr-k8s" "expr" (printf "absent(up{job=\"%s\"})" .Values.prometheus.monitors.frrK8sPodMonitor.job)) }}
+{{- end }}
+{{- if $targets }}
+# The blindness watchdog: a scrape target that VANISHES (monitor deleted, selector
+# drift, DaemonSet gone, UWM off) leaves no up series, so the down alerts cannot fire
+# and every metric-based alert is silently disarmed. One absent() per ENABLED monitor.
+# The controller is covered by MetalLBControllerDown's own absent() clause.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-metrics-absent
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.watchdog
+      rules:
+        {{- range $t := $targets }}
+        - alert: MetalLBMetricsAbsent
+          expr: |
+            {{ $t.expr }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+            target: {{ $t.target }}
+          annotations:
+            summary: "MetalLB monitoring is blind: no {{ $t.target }} metrics"
+            description: "The {{ $t.target }} metrics this chart alerts on have NO series at all. Every alert that depends on them is silently disarmed. Likely causes: the PodMonitor or the pods vanished, selector drift, or user-workload monitoring stopped scraping the namespace."
+        {{- end }}
+{{- end }}
+{{- end }}

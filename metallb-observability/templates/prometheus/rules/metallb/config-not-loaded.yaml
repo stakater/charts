@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.metallb.configNotLoaded }}
+{{- if and ($r) ($r.enabled) }}
+# Both families: metallb_* (controller + speaker) and frrk8s_* (frr-k8s daemon).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-config-not-loaded
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.config
+      rules:
+        - alert: MetalLBConfigNotLoaded
+          expr: |
+            metallb_k8s_client_config_loaded_bool == 0
+            or frrk8s_k8s_client_config_loaded_bool == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "MetalLB pod {{`{{ $labels.pod }}`}} has never loaded a config"
+            description: "{{`{{ $labels.pod }}`}} is running without any MetalLB configuration: it allocates nothing and announces nothing while its pod reports Ready. Check the MetalLB CRs and the pod logs."
+{{- end }}

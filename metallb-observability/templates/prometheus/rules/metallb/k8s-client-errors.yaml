@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.metallb.k8sClientErrors }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-k8s-client-errors
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.config
+      rules:
+        - alert: MetalLBK8sClientErrors
+          expr: |
+            increase(metallb_k8s_client_update_errors_total[{{ $r.window }}]) > 0
+            or increase(frrk8s_k8s_client_update_errors_total[{{ $r.window }}]) > 0
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "MetalLB pod {{`{{ $labels.pod }}`}} has k8s update errors"
+            description: "{{`{{ $labels.pod }}`}} failed {{`{{ $value | printf \"%.0f\" }}`}} configuration update(s) in the last {{ $r.window }}. Repeated reconcile failures precede a stale or missing config — find the broken resource in the pod logs before the state bits flip."
+{{- end }}
