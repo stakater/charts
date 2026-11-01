@@ -1,11 +1,11 @@
 # MetalLB Observability Roadmap
 
-**Status:** 📝 **Draft, revised against a live capture (2026-11-01)** — metric names and
-label shapes below marked **[captured]** are real, from `tests/fixtures/` (provenance in
-[`../tests/fixtures/README.md`](../tests/fixtures/README.md)). Captured from the kind lab
-in `tests/e2e/`, **not yet from a production cluster** — the real-cluster comparison is a
-committed follow-up (handover activity, see `tests/e2e/README.md`). **No story is
-approved yet.**
+**Status:** ✅ **Built and e2e-verified (2026-11-01)** — every story below is implemented
+behind `tests/validate.sh` (unit-tested rule logic) and verified on the kind lab
+(`tests/reports/e2e-kind-2026-11-01.md`: every alert fired and resolved). Metric names and
+label shapes marked **[captured]** are real, from `tests/fixtures/` (provenance in
+[`../tests/fixtures/README.md`](../tests/fixtures/README.md)). **Release remains gated on
+the real-cluster comparison** (handover activity, see `tests/e2e/README.md`).
 **MetalLB version captured:** v0.15.3, **FRR-K8s mode** (frr-k8s v0.0.21, FRR 10.4.1)
 **Owner:** Platform / SRE
 
@@ -15,7 +15,8 @@ approved yet.**
 
 Organized **by user story**: need → measurement → target → alert → dashboard.
 
-Lifecycle: 📝 Draft → 👍 Approved (human gate) → 🔨 In progress → ✅ Done.
+Lifecycle: ✅ Done → 👍 Approved (human gate) → 🔨 In progress → ✅ Done. Stories below
+were approved 2026-11-01 and built the same day; Area 7 stays deferred.
 
 ### Metric reality (the discipline)
 
@@ -66,7 +67,7 @@ Lifecycle: 📝 Draft → 👍 Approved (human gate) → 🔨 In progress → �
 The controller's one job: hand every `LoadBalancer` Service an external IP from a pool.
 When a pool is full, new Services sit `<pending>` forever — silently.
 
-## Story 1.1 — Is an address pool exhausted? 📝 Draft
+## Story 1.1 — Is an address pool exhausted? ✅ Done
 
 > **As an SRE, I want to know when an address pool has no free IPs, because every new
 > `LoadBalancer` Service against it stays `<pending>` with no error anywhere a user looks.**
@@ -78,7 +79,7 @@ When a pool is full, new Services sit `<pending>` forever — silently.
 - **Alert:** `MetalLBAddressPoolExhausted` — in-use ≥ total for 5m → critical
 - **Dashboard:** per-pool used/total bar gauge; top-of-glass "pools at capacity" stat
 
-## Story 1.2 — Is a pool about to run out? 📝 Draft
+## Story 1.2 — Is a pool about to run out? ✅ Done
 
 > **As an SRE, I want a warning before a pool fills, because adding an IP range needs a
 > change window and the exhaustion alert fires only after a user is already stuck.**
@@ -96,7 +97,7 @@ When a pool is full, new Services sit `<pending>` forever — silently.
 An allocated IP is worthless until the network learns a route to it. A down BGP session
 means the peer router stopped hearing announcements from that node.
 
-## Story 2.1 — Is every BGP session up? 📝 Draft
+## Story 2.1 — Is every BGP session up? ✅ Done
 
 > **As an SRE, I want to know the moment a BGP session to a peer drops, because traffic to
 > service IPs announced over that session blackholes or loses a path, and the Services
@@ -111,7 +112,7 @@ means the peer router stopped hearing announcements from that node.
   `frrk8s_bgp_announced_prefixes_total` **[captured]** (per-node value — 0 is legitimate
   on a non-announcing node)
 
-## Story 2.2 — Is a BGP session flapping? 📝 Draft
+## Story 2.2 — Is a BGP session flapping? ✅ Done
 
 > **As an SRE, I want to catch a session that bounces, because a flapping session causes
 > intermittent reachability that a point-in-time "down" alert misses between evaluations.**
@@ -130,7 +131,7 @@ means the peer router stopped hearing announcements from that node.
 Only meaningful where BFD is configured on top of BGP (it was in the capture). On a
 cluster without BFD the series never registers, so the alert stays silent.
 
-## Story 3.1 — Is a BFD session down? 📝 Draft
+## Story 3.1 — Is a BFD session down? ✅ Done
 
 > **As an SRE, I want to know when BFD to a peer is down, because the whole point of BFD
 > is sub-second failover — without it a dead path lingers for the full BGP hold time.**
@@ -148,7 +149,7 @@ cluster without BFD the series never registers, so the alert stays silent.
 MetalLB keeps running on its last good config when a new one is rejected — invisible
 until an address or peer you *thought* you added isn't there.
 
-## Story 4.1 — Is a component running without any config? 📝 Draft
+## Story 4.1 — Is a component running without any config? ✅ Done
 
 > **As an SRE, I want to know when a MetalLB pod has never loaded a config, because it is
 > allocating nothing and announcing nothing while its pod reports Ready.**
@@ -159,7 +160,7 @@ until an address or peer you *thought* you added isn't there.
 - **Alert:** `MetalLBConfigNotLoaded` — `== 0` for 5m → critical
 - **Dashboard:** config-loaded stat per pod
 
-## Story 4.2 — Is a component running on a stale config? 📝 Draft
+## Story 4.2 — Is a component running on a stale config? ✅ Done
 
 > **As an SRE, I want to know when the latest config failed to apply, because the change
 > I just merged silently isn't live and the gap only surfaces at the next pod restart —
@@ -170,7 +171,7 @@ until an address or peer you *thought* you added isn't there.
 - **Alert:** `MetalLBConfigStale` — `== 1` for 5m → warning
 - **Dashboard:** stale-config stat per pod
 
-## Story 4.3 — Are config updates erroring? 📝 Draft
+## Story 4.3 — Are config updates erroring? ✅ Done
 
 > **As an SRE, I want the update-error rate, because repeated reconcile failures predict
 > 4.1/4.2 and point at the broken resource before the state bits flip.**
@@ -187,7 +188,7 @@ until an address or peer you *thought* you added isn't there.
 The chart ships its own PodMonitors (structural fact 3), so `up{job=<chart monitor>}` is a
 surface the chart controls.
 
-## Story 5.1 — Is the controller up? 📝 Draft
+## Story 5.1 — Is the controller up? ✅ Done
 
 > **As an SRE, I want to know when the MetalLB controller is down or unscraped, because
 > nothing allocates IPs: every new or changed `LoadBalancer` Service hangs until it's back.**
@@ -198,7 +199,7 @@ surface the chart controls.
 - **Alert:** `MetalLBControllerDown` — `up == 0` or absent for 5m → critical
 - **Dashboard:** availability tile
 
-## Story 5.2 — Is a speaker down? 📝 Draft
+## Story 5.2 — Is a speaker down? ✅ Done
 
 > **As an SRE, I want to know when a node's speaker stops, because that node withdraws /
 > stops answering for the service IPs it announced; with `externalTrafficPolicy: Local`
@@ -211,7 +212,7 @@ surface the chart controls.
   all speakers down → critical
 - **Dashboard:** speakers-up count vs nodes
 
-## Story 5.3 — Watchdog: are the metrics themselves flowing? 📝 Draft
+## Story 5.3 — Watchdog: are the metrics themselves flowing? ✅ Done
 
 > **As an SRE, I want an alert when MetalLB metrics go absent entirely, because a broken
 > scrape (cert rotation, monitor deleted, UWM off) silently disables every alert above —
@@ -230,7 +231,7 @@ The capture **un-deferred this area**: the upstream-undocumented families exist 
 v0.15.3, but **register lazily and only on the announcing speaker** — panel material and
 join material, not `absent()` material.
 
-## Story 6.1 — Which node announces which service? 📝 Draft
+## Story 6.1 — Which node announces which service? ✅ Done
 
 > **As an SRE, I want to see which speaker currently announces each service IP and over
 > which protocol, because during an incident "who owns this IP right now" is the first
@@ -241,7 +242,7 @@ join material, not `absent()` material.
 - **Dashboard:** announcement table (service → ip → node → protocol); no alert from this
   series alone (lazy registration makes absence ambiguous)
 
-## Story 6.2 — L2 announcement activity 📝 Draft
+## Story 6.2 — L2 announcement activity ✅ Done
 
 > **As an SRE on an L2 service, I want ARP/NDP request/response rates per IP, because in
 > L2 mode there is no session metric — a service nobody answers for just goes dark, and
