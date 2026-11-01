@@ -1,0 +1,348 @@
+# HELP certwatcher_read_certificate_errors_total Total number of certificate read errors
+# TYPE certwatcher_read_certificate_errors_total counter
+certwatcher_read_certificate_errors_total 0
+# HELP certwatcher_read_certificate_total Total number of certificate reads
+# TYPE certwatcher_read_certificate_total counter
+certwatcher_read_certificate_total 0
+# HELP controller_runtime_active_workers Number of currently used workers per controller
+# TYPE controller_runtime_active_workers gauge
+controller_runtime_active_workers{controller="frrnodestate"} 0
+controller_runtime_active_workers{controller="node"} 0
+# HELP controller_runtime_max_concurrent_reconciles Maximum number of concurrent reconciles per controller
+# TYPE controller_runtime_max_concurrent_reconciles gauge
+controller_runtime_max_concurrent_reconciles{controller="frrnodestate"} 1
+controller_runtime_max_concurrent_reconciles{controller="node"} 1
+# HELP controller_runtime_reconcile_errors_total Total number of reconciliation errors per controller
+# TYPE controller_runtime_reconcile_errors_total counter
+controller_runtime_reconcile_errors_total{controller="frrnodestate"} 0
+controller_runtime_reconcile_errors_total{controller="node"} 0
+# HELP controller_runtime_reconcile_panics_total Total number of reconciliation panics per controller
+# TYPE controller_runtime_reconcile_panics_total counter
+controller_runtime_reconcile_panics_total{controller="frrnodestate"} 0
+controller_runtime_reconcile_panics_total{controller="node"} 0
+# HELP controller_runtime_reconcile_time_seconds Length of time per reconciliation per controller
+# TYPE controller_runtime_reconcile_time_seconds histogram
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.005"} 4
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.01"} 5
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.025"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.05"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.1"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.15"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.2"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.25"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.3"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.35"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.4"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.45"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.5"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.6"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.7"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.8"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="0.9"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="1"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="1.25"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="1.5"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="1.75"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="2"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="2.5"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="3"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="3.5"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="4"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="4.5"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="5"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="6"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="7"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="8"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="9"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="10"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="15"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="20"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="25"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="30"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="40"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="50"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="60"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="frrnodestate",le="+Inf"} 7
+controller_runtime_reconcile_time_seconds_sum{controller="frrnodestate"} 0.034186709
+controller_runtime_reconcile_time_seconds_count{controller="frrnodestate"} 7
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.005"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.01"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.025"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.05"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.1"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.15"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.2"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.25"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.3"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.35"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.4"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.45"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.5"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.6"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.7"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.8"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="0.9"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="1"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="1.25"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="1.5"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="1.75"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="2"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="2.5"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="3"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="3.5"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="4"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="4.5"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="5"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="6"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="7"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="8"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="9"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="10"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="15"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="20"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="25"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="30"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="40"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="50"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="60"} 11
+controller_runtime_reconcile_time_seconds_bucket{controller="node",le="+Inf"} 11
+controller_runtime_reconcile_time_seconds_sum{controller="node"} 0.002158541
+controller_runtime_reconcile_time_seconds_count{controller="node"} 11
+# HELP controller_runtime_reconcile_total Total number of reconciliations per controller
+# TYPE controller_runtime_reconcile_total counter
+controller_runtime_reconcile_total{controller="frrnodestate",result="error"} 0
+controller_runtime_reconcile_total{controller="frrnodestate",result="requeue"} 0
+controller_runtime_reconcile_total{controller="frrnodestate",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="frrnodestate",result="success"} 7
+controller_runtime_reconcile_total{controller="node",result="error"} 0
+controller_runtime_reconcile_total{controller="node",result="requeue"} 0
+controller_runtime_reconcile_total{controller="node",result="requeue_after"} 0
+controller_runtime_reconcile_total{controller="node",result="success"} 11
+# HELP controller_runtime_terminal_reconcile_errors_total Total number of terminal reconciliation errors per controller
+# TYPE controller_runtime_terminal_reconcile_errors_total counter
+controller_runtime_terminal_reconcile_errors_total{controller="frrnodestate"} 0
+controller_runtime_terminal_reconcile_errors_total{controller="node"} 0
+# HELP controller_runtime_webhook_panics_total Total number of webhook panics
+# TYPE controller_runtime_webhook_panics_total counter
+controller_runtime_webhook_panics_total 0
+# HELP frrk8s_k8s_client_config_loaded_bool 1 if the MetalLB configuration was successfully loaded at least once.
+# TYPE frrk8s_k8s_client_config_loaded_bool gauge
+frrk8s_k8s_client_config_loaded_bool 1
+# HELP frrk8s_k8s_client_config_stale_bool 1 if running on a stale configuration, because the latest config failed to load.
+# TYPE frrk8s_k8s_client_config_stale_bool gauge
+frrk8s_k8s_client_config_stale_bool 0
+# HELP frrk8s_k8s_client_update_errors_total Number of k8s object updates that failed for some reason.
+# TYPE frrk8s_k8s_client_update_errors_total counter
+frrk8s_k8s_client_update_errors_total 0
+# HELP frrk8s_k8s_client_updates_total Number of k8s object updates that have been processed.
+# TYPE frrk8s_k8s_client_updates_total counter
+frrk8s_k8s_client_updates_total 11
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 2.2083e-05
+go_gc_duration_seconds{quantile="0.25"} 0.000101667
+go_gc_duration_seconds{quantile="0.5"} 0.000669583
+go_gc_duration_seconds{quantile="0.75"} 0.000819708
+go_gc_duration_seconds{quantile="1"} 0.000867666
+go_gc_duration_seconds_sum 0.003659999
+go_gc_duration_seconds_count 8
+# HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent.
+# TYPE go_gc_gogc_percent gauge
+go_gc_gogc_percent 100
+# HELP go_gc_gomemlimit_bytes Go runtime memory limit configured by the user, otherwise math.MaxInt64. This value is set by the GOMEMLIMIT environment variable, and the runtime/debug.SetMemoryLimit function. Sourced from /gc/gomemlimit:bytes.
+# TYPE go_gc_gomemlimit_bytes gauge
+go_gc_gomemlimit_bytes 9.223372036854776e+18
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 82
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.24.2"} 1
+# HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 4.819344e+06
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 1.7797968e+07
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 1.454506e+06
+# HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 122466
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 3.35876e+06
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 4.819344e+06
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 3.375104e+06
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 7.86432e+06
+# HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 22566
+# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
+# TYPE go_memstats_heap_released_bytes gauge
+go_memstats_heap_released_bytes 1.630208e+06
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 1.1239424e+07
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.7935286327536604e+09
+# HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 145032
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 12080
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system. Equals to /memory/classes/metadata/mcache/inuse:bytes + /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 15704
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 195680
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 212160
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 9.02237e+06
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 1.861918e+06
+# HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 1.343488e+06
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 1.343488e+06
+# HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 1.948596e+07
+# HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads.
+# TYPE go_sched_gomaxprocs_threads gauge
+go_sched_gomaxprocs_threads 10
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 13
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 0.36
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.073741816e+09
+# HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
+# TYPE process_network_receive_bytes_total counter
+process_network_receive_bytes_total 3.32384607e+08
+# HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
+# TYPE process_network_transmit_bytes_total counter
+process_network_transmit_bytes_total 7.4979734e+07
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 10
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 4.472832e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.79352842236e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 1.29957888e+09
+# HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
+# TYPE process_virtual_memory_max_bytes gauge
+process_virtual_memory_max_bytes 1.8446744073709552e+19
+# HELP rest_client_requests_total Number of HTTP requests, partitioned by status code, method, and host.
+# TYPE rest_client_requests_total counter
+rest_client_requests_total{code="200",host="10.96.0.1:443",method="GET"} 10
+rest_client_requests_total{code="200",host="10.96.0.1:443",method="PUT"} 3
+rest_client_requests_total{code="201",host="10.96.0.1:443",method="POST"} 1
+# HELP workqueue_adds_total Total number of adds handled by workqueue
+# TYPE workqueue_adds_total counter
+workqueue_adds_total{controller="frrnodestate",name="frrnodestate"} 7
+workqueue_adds_total{controller="node",name="node"} 11
+# HELP workqueue_depth Current depth of workqueue
+# TYPE workqueue_depth gauge
+workqueue_depth{controller="frrnodestate",name="frrnodestate"} 0
+workqueue_depth{controller="node",name="node"} 0
+# HELP workqueue_longest_running_processor_seconds How many seconds has the longest running processor for workqueue been running.
+# TYPE workqueue_longest_running_processor_seconds gauge
+workqueue_longest_running_processor_seconds{controller="frrnodestate",name="frrnodestate"} 0
+workqueue_longest_running_processor_seconds{controller="node",name="node"} 0
+# HELP workqueue_queue_duration_seconds How long in seconds an item stays in workqueue before being requested
+# TYPE workqueue_queue_duration_seconds histogram
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="9.999999999999999e-06"} 2
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="9.999999999999999e-05"} 3
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="0.001"} 4
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="0.01"} 6
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="0.1"} 6
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1"} 7
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="10"} 7
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="100"} 7
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1000"} 7
+workqueue_queue_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="+Inf"} 7
+workqueue_queue_duration_seconds_sum{controller="frrnodestate",name="frrnodestate"} 0.11108083300000002
+workqueue_queue_duration_seconds_count{controller="frrnodestate",name="frrnodestate"} 7
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="1e-08"} 0
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="1e-07"} 0
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="1e-06"} 0
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="9.999999999999999e-06"} 3
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="9.999999999999999e-05"} 5
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="0.001"} 11
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="0.01"} 11
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="0.1"} 11
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="1"} 11
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="10"} 11
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="100"} 11
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="1000"} 11
+workqueue_queue_duration_seconds_bucket{controller="node",name="node",le="+Inf"} 11
+workqueue_queue_duration_seconds_sum{controller="node",name="node"} 0.003468001
+workqueue_queue_duration_seconds_count{controller="node",name="node"} 11
+# HELP workqueue_retries_total Total number of retries handled by workqueue
+# TYPE workqueue_retries_total counter
+workqueue_retries_total{controller="frrnodestate",name="frrnodestate"} 0
+workqueue_retries_total{controller="node",name="node"} 0
+# HELP workqueue_unfinished_work_seconds How many seconds of work has been done that is in progress and hasn't been observed by work_duration. Large values indicate stuck threads. One can deduce the number of stuck threads by observing the rate at which this increases.
+# TYPE workqueue_unfinished_work_seconds gauge
+workqueue_unfinished_work_seconds{controller="frrnodestate",name="frrnodestate"} 0
+workqueue_unfinished_work_seconds{controller="node",name="node"} 0
+# HELP workqueue_work_duration_seconds How long in seconds processing an item from workqueue takes.
+# TYPE workqueue_work_duration_seconds histogram
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="9.999999999999999e-05"} 3
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="0.001"} 4
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="0.01"} 5
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="0.1"} 7
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1"} 7
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="10"} 7
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="100"} 7
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="1000"} 7
+workqueue_work_duration_seconds_bucket{controller="frrnodestate",name="frrnodestate",le="+Inf"} 7
+workqueue_work_duration_seconds_sum{controller="frrnodestate",name="frrnodestate"} 0.034260667
+workqueue_work_duration_seconds_count{controller="frrnodestate",name="frrnodestate"} 7
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="9.999999999999999e-05"} 6
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="0.001"} 11
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="0.01"} 11
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="0.1"} 11
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="1"} 11
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="10"} 11
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="100"} 11
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="1000"} 11
+workqueue_work_duration_seconds_bucket{controller="node",name="node",le="+Inf"} 11
+workqueue_work_duration_seconds_sum{controller="node",name="node"} 0.002230583
+workqueue_work_duration_seconds_count{controller="node",name="node"} 11
