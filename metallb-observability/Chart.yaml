@@ -1,0 +1,6 @@
+apiVersion: v2
+name: metallb-observability
+description: A Helm chart for MetalLB observability (PodMonitors + PrometheusRules + Grafana dashboard), integrated with OpenShift user-workload monitoring.
+type: application
+version: 0.0.1
+appVersion: "0.0.1"

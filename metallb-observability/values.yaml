@@ -1,0 +1,159 @@
+# Default values for metallb-observability.
+# Every metric referenced here is captured in tests/fixtures/ (MetalLB v0.15.3,
+# FRR-K8s mode) — see docs/roadmap.md for the story each alert serves.
+
+global:
+  # Namespace the monitoring objects are created in. Defaults to the release
+  # namespace, which must be the namespace MetalLB runs in (metallb-system on
+  # operator installs) so UWM can resolve the scrape targets.
+  namespace:
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Grafana dashboard (managed via grafana-operator GrafanaDashboard CR).
+grafana:
+  # Namespace to create the GrafanaDashboard in. Defaults to the release
+  # namespace. Set this to the Grafana instance's namespace when the
+  # grafana-operator does not honour allowCrossNamespaceImport.
+  namespace: ""
+  folder: "MetalLB Observability"
+  # Let a Grafana instance in another namespace import this dashboard.
+  allowCrossNamespaceImport: true
+  # Selects the target Grafana instance. Default matches the SAAP convention
+  # (app: grafana); override per-cluster if the live instance is labelled
+  # differently.
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
+  dashboard:
+    enabled: true
+
+# Identity of the MetalLB installation being monitored. Pod label selectors as
+# captured from the upstream helm chart (v0.15.3, FRR-K8s mode). The OpenShift
+# MetalLB operator may label pods differently (e.g. `app: metallb` +
+# `component: speaker`) — verify on the target cluster and override here.
+metallb:
+  controller:
+    selector:
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: controller
+  speaker:
+    selector:
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: speaker
+  # FRR-K8s daemon pods: the BGP/BFD metric source in FRR-K8s mode.
+  frrk8s:
+    selector:
+      app.kubernetes.io/name: frr-k8s
+      app.kubernetes.io/component: frr-k8s
+
+prometheus:
+  monitors:
+    # Controller: plain HTTP on the `monitoring` container port (7472).
+    controllerPodMonitor:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+      port: monitoring
+      # The job label is pinned by relabeling (release-name-independent); the
+      # rules and the dashboard reference it. Change both together.
+      job: metallb-controller
+    # Speaker DaemonSet: plain HTTP on the `monitoring` container port (7472).
+    # hostNetwork — the speaker answers on its node IP (= its pod IP).
+    speakerPodMonitor:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+      port: monitoring
+      job: metallb-speaker
+    # FRR-K8s DaemonSet: the raw metrics ports bind 127.0.0.1 only; the ONLY
+    # scrapeable surface is the two kube-rbac-proxy TLS ports, both named
+    # `metricshttps` (9140 = frr-k8s controller metrics, 9141 = BGP/BFD metrics).
+    # One endpoint on the shared port name scrapes both; auth is a bearer token
+    # checked by SubjectAccessReview against GET /metrics.
+    frrK8sPodMonitor:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+      port: metricshttps
+      job: metallb-frr-k8s
+      tls:
+        # The proxies serve a self-signed cert unless frr-k8s is configured
+        # with a metricsTLSSecret; verification is off by default.
+        insecureSkipVerify: true
+      # ServiceAccount + token Secret + ClusterRole/Binding (GET /metrics) that
+      # the PodMonitor authenticates with. Disable if the scraping Prometheus
+      # SA is already authorized (e.g. frr-k8s's own prometheus.rbacPrometheus).
+      metricsReader:
+        create: true
+
+  rules:
+    # Extra labels added to every PrometheusRule (e.g. for Alertmanager routing,
+    # or to match your Prometheus ruleSelector).
+    labels: {}
+    metallb:
+      # Area 1 — address allocation
+      addressPoolExhausted:
+        enabled: true
+        for: 5m
+        severity: critical
+      addressPoolNearExhaustion:
+        enabled: true
+        for: 15m
+        thresholdPercent: 90
+        severity: warning
+      # Area 2 — BGP announcement (FRR-K8s metric family)
+      bgpSessionDown:
+        enabled: true
+        for: 5m
+        severity: critical
+      bgpSessionFlapping:
+        enabled: true
+        # fires when a session's up/down state changes more than `threshold`
+        # times within `window`.
+        window: 30m
+        threshold: 3
+        severity: warning
+      # Area 3 — BFD (silent where BFD is not configured: the series never exists)
+      bfdSessionDown:
+        enabled: true
+        for: 2m
+        severity: warning
+      # Area 4 — configuration health (controller + speaker + frr-k8s)
+      configNotLoaded:
+        enabled: true
+        for: 5m
+        severity: critical
+      configStale:
+        enabled: true
+        for: 5m
+        severity: warning
+      k8sClientErrors:
+        enabled: true
+        window: 10m
+        severity: warning
+      # Area 5 — component availability. Each alert needs its PodMonitor enabled
+      # (the template renders nothing otherwise — without the scrape there is no
+      # `up` series to alert on).
+      controllerDown:
+        enabled: true
+        for: 5m
+        severity: critical
+      speakerDown:
+        enabled: true
+        for: 5m
+        severity: warning
+      frrK8sDown:
+        enabled: true
+        for: 5m
+        severity: warning
+    # Watchdog: observability-is-blind alerts (scrape targets vanished entirely).
+    watchdog:
+      metricsAbsent:
+        enabled: true
+        for: 15m
+        severity: warning

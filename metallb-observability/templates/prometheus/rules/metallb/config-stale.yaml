@@ -1,0 +1,29 @@
+{{- $r := .Values.prometheus.rules.metallb.configStale }}
+{{- if and ($r) ($r.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-config-stale
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.config
+      rules:
+        - alert: MetalLBConfigStale
+          expr: |
+            metallb_k8s_client_config_stale_bool == 1
+            or frrk8s_k8s_client_config_stale_bool == 1
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "MetalLB pod {{`{{ $labels.pod }}`}} is running on a stale config"
+            description: "The latest configuration failed to load on {{`{{ $labels.pod }}`}}; it keeps running on the last good one. The change you just applied is silently not live, and the gap surfaces loudly at the next pod restart. Check the pod logs for the rejected resource."
+{{- end }}

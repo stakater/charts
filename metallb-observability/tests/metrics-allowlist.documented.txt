@@ -1,0 +1,8 @@
+# metrics-allowlist.documented.txt — metrics the chart references that are REAL (confirmed
+# in upstream documentation) but are NOT in tests/fixtures/, with the reason. These are NOT
+# guesses.
+
+# --- Prometheus built-ins (synthesized by Prometheus itself, never in a /metrics dump) ---
+# up{job,...} — per-target scrape health; basis of the *Down and MetricsAbsent alerts.
+# https://prometheus.io/docs/concepts/jobs_instances/#automatically-generated-labels-and-time-series
+up

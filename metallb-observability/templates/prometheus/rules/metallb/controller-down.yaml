@@ -1,0 +1,33 @@
+{{- $r := .Values.prometheus.rules.metallb.controllerDown }}
+{{- $m := .Values.prometheus.monitors.controllerPodMonitor }}
+{{- if and ($r) ($r.enabled) ($m) ($m.enabled) }}
+# Rendered only while the controller PodMonitor is enabled: without the scrape there is
+# no `up` series and absent() would fire meaninglessly. The absent() clause makes the
+# alert cover "pod gone" as well as "pod failing the scrape".
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-controller-down
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.availability
+      rules:
+        - alert: MetalLBControllerDown
+          expr: |
+            up{job="{{ $m.job }}"} == 0
+            or absent(up{job="{{ $m.job }}"})
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "MetalLB controller is down"
+            description: "The MetalLB controller is down or unscrapeable. Nothing allocates LoadBalancer IPs: every new or changed LoadBalancer Service hangs <pending> until it is back. Existing allocations keep working."
+{{- end }}

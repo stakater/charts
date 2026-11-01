@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.metallb.bfdSessionDown }}
+{{- if and ($r) ($r.enabled) }}
+# Silent where BFD is not configured: the frrk8s_bfd_* series never registers there.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-bfd-session-down
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.bfd
+      rules:
+        - alert: MetalLBBFDSessionDown
+          expr: frrk8s_bfd_session_up == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "BFD session {{`{{ $labels.pod }}`}} → {{`{{ $labels.peer }}`}} is down"
+            description: "BFD to peer {{`{{ $labels.peer }}`}} is down, so sub-second failure detection is lost on that path: a dead link now lingers for the full BGP hold time before routes are withdrawn."
+{{- end }}
