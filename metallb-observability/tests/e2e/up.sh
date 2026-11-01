@@ -83,6 +83,24 @@ L2_IP="$(k -n default get svc echo-l2 -o jsonpath='{.status.loadBalancer.ingress
 docker exec "$FRR" sh -c "command -v curl >/dev/null && for i in 1 2 3; do curl -so /dev/null -w '%{http_code} ' http://${BGP_IP}/ http://${L2_IP}/; done; echo" \
   || echo "  (no curl in frr image — skipped data-path HTTP check)"
 
-step "7. sanity"
+step "7. kube-prometheus-stack 91.8.2"
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts >/dev/null 2>&1 || true
+helm repo update prometheus-community >/dev/null
+helm --kube-context "$CTX" upgrade --install kps prometheus-community/kube-prometheus-stack \
+  --version 91.8.2 -n monitoring --create-namespace -f "${S}/kps-values.yaml" --wait --timeout 10m
+
+step "8. grafana-operator v5.25.0 + Grafana + datasource"
+helm --kube-context "$CTX" upgrade --install grafana-operator oci://ghcr.io/grafana/helm-charts/grafana-operator \
+  --version 5.25.0 -n grafana-operator --create-namespace --wait --timeout 5m
+k apply -f "${S}/grafana.yaml"
+k -n grafana wait --for=condition=Available deploy/grafana-deployment --timeout=300s 2>/dev/null || \
+  { sleep 20; k -n grafana rollout status deploy/grafana-deployment --timeout=300s; }
+
+step "9. metallb-observability (this chart) with values-e2e.yaml"
+helm --kube-context "$CTX" upgrade --install metallb-observability "$CHART" -n "$NS" \
+  -f "${E2E}/values-e2e.yaml" --wait --timeout 5m
+
+step "10. sanity"
+k -n "$NS" get podmonitor,prometheusrule,grafanadashboard
 k -n "$NS" get pods -o wide
-green "stack is up. KUBECONFIG=${KUBECONFIG}  — next: ./capture.sh"
+green "stack is up. KUBECONFIG=${KUBECONFIG}  — next: ./scenarios.sh (or ./capture.sh to refresh fixtures)"

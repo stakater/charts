@@ -1,0 +1,39 @@
+# e2e overlay: all monitors on, fast scrape, and short alert windows so scenarios.sh
+# can drive every alert to fire and resolve in minutes. Values not set here keep the
+# chart defaults (severities, thresholds).
+prometheus:
+  monitors:
+    controllerPodMonitor:
+      enabled: true
+      interval: 15s
+    speakerPodMonitor:
+      enabled: true
+      interval: 15s
+    frrK8sPodMonitor:
+      enabled: true
+      interval: 15s
+  rules:
+    metallb:
+      addressPoolExhausted:
+        for: 1m
+      addressPoolNearExhaustion:
+        for: 1m
+      bgpSessionDown:
+        for: 1m
+      bgpSessionFlapping:
+        window: 5m
+      bfdSessionDown:
+        for: 1m
+      configNotLoaded:
+        for: 1m
+      configStale:
+        for: 1m
+      controllerDown:
+        for: 1m
+      speakerDown:
+        for: 1m
+      frrK8sDown:
+        for: 1m
+    watchdog:
+      metricsAbsent:
+        for: 2m
