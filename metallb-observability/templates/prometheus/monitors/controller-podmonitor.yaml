@@ -1,0 +1,30 @@
+{{- if and (.Values.prometheus.monitors.controllerPodMonitor) (.Values.prometheus.monitors.controllerPodMonitor.enabled) }}
+{{- $m := .Values.prometheus.monitors.controllerPodMonitor }}
+# Scrapes the MetalLB controller (allocator + k8s-client metrics) on the plain-HTTP
+# `monitoring` container port (7472 upstream, 29150 on the OpenShift operator — both
+# captured). Upstream ships no metrics Service, hence a PodMonitor; the OpenShift operator
+# ships its own ServiceMonitor, so this stays off there (metallb.operatorManagedMonitors).
+# The job label is pinned by relabeling to metallb.controller.job, which rules and
+# dashboard reference.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "metallb-observability.fullname" . }}-controller
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- toYaml .Values.metallb.controller.selector | nindent 6 }}
+  podMetricsEndpoints:
+    - port: {{ $m.port }}
+      path: /metrics
+      scheme: http
+      interval: {{ $m.interval }}
+      scrapeTimeout: {{ $m.scrapeTimeout }}
+      relabelings:
+        - action: replace
+          replacement: {{ .Values.metallb.controller.job | quote }}
+          targetLabel: job
+{{- end }}

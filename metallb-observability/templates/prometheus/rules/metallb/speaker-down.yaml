@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.metallb.speakerDown }}
+{{- $m := .Values.prometheus.monitors.speakerPodMonitor }}
+{{- if and ($r) ($r.enabled) (or .Values.metallb.operatorManagedMonitors (and $m $m.enabled)) }}
+# Per-target scrape failure. All speaker targets VANISHING (DaemonSet gone) is the
+# watchdog's job (MetalLBMetricsAbsent) — a deleted pod has no up series at all.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-speaker-down
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.availability
+      rules:
+        - alert: MetalLBSpeakerDown
+          expr: up{job="{{ .Values.metallb.speaker.job }}"} == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "MetalLB speaker {{`{{ $labels.pod }}`}} on {{`{{ $labels.node }}`}} is down"
+            description: "The speaker on node {{`{{ $labels.node }}`}} is failing its scrape. If the process is down, that node withdraws / stops answering for the service IPs it announced — with externalTrafficPolicy: Local or L2 leadership that can blackhole a service, not just degrade a path."
+{{- end }}

@@ -1,0 +1,613 @@
+{
+  "title": "MetalLB Observability",
+  "uid": "metallb-observability",
+  "tags": ["metallb", "networking", "load-balancer"],
+  "description": "MetalLB health: address pools, BGP/BFD sessions (FRR-K8s metric family), service announcements, L2 activity and configuration health. Ships with the metallb-observability chart; the availability tiles use the job labels the chart is configured with (metallb.*.job — the OpenShift operator's own monitors by default).",
+  "schemaVersion": 39,
+  "editable": true,
+  "graphTooltip": 1,
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "prometheus", "value": "prometheus" },
+        "label": "Data source",
+        "description": "Pick the cluster's own Prometheus/Thanos (the default 'prometheus'), which includes user-workload metrics. A federated multi-cluster store may not carry the metallb_* and frrk8s_* series, so the panels read No data there."
+      },
+      {
+        "name": "namespace",
+        "type": "query",
+        "label": "MetalLB namespace",
+        "datasource": { "type": "prometheus", "uid": "$datasource" },
+        "query": "label_values(metallb_k8s_client_updates_total, namespace)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": false,
+        "current": { "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "frr_namespace",
+        "type": "query",
+        "label": "FRR-K8s namespace",
+        "datasource": { "type": "prometheus", "uid": "$datasource" },
+        "query": "label_values(frrk8s_k8s_client_updates_total, namespace)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": false,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Controller",
+      "description": "Scrape health of the MetalLB controller (job __CONTROLLER_JOB__). Down = nothing allocates LoadBalancer IPs; new Services hang <pending>. Alert: MetalLBControllerDown.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "max(up{job=\"__CONTROLLER_JOB__\", namespace=~\"$namespace\"})",
+          "refId": "A",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": { "text": "Up", "color": "green", "index": 0 },
+                "0": { "text": "Down", "color": "red", "index": 1 }
+              }
+            }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
+          "noValue": "no scrape"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "graphMode": "none",
+        "colorMode": "background",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Speakers up",
+      "description": "Speaker targets passing their scrape (job __SPEAKER_JOB__). Should equal the number of nodes MetalLB announces from. Alert: MetalLBSpeakerDown.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "count(up{job=\"__SPEAKER_JOB__\", namespace=~\"$namespace\"} == 1) or vector(0)",
+          "refId": "A",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
+          "noValue": "no scrape"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "graphMode": "none",
+        "colorMode": "background",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "BGP sessions down",
+      "description": "FRR-K8s BGP sessions currently down, across all nodes and peers. Anything above 0 means lost or degraded reachability for announced service IPs. Alert: MetalLBBGPSessionDown.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "count(frrk8s_bgp_session_up{namespace=~\"$frr_namespace\"} == 0) or vector(0)",
+          "refId": "A",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
+          "noValue": "no BGP"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "graphMode": "none",
+        "colorMode": "background",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "BFD sessions down",
+      "description": "BFD sessions currently down. Without BFD a dead path lingers for the full BGP hold time. Empty on clusters that don't configure BFD. Alert: MetalLBBFDSessionDown.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "count(frrk8s_bfd_session_up{namespace=~\"$frr_namespace\"} == 0) or vector(0)",
+          "refId": "A",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
+          "noValue": "no BFD"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "graphMode": "none",
+        "colorMode": "background",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Pools at capacity",
+      "description": "Address pools with zero free IPs. New LoadBalancer Services on a full pool stay <pending> silently. Alert: MetalLBAddressPoolExhausted.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "count(metallb_allocator_addresses_in_use_total{namespace=~\"$namespace\"} >= metallb_allocator_addresses_total{namespace=~\"$namespace\"} and metallb_allocator_addresses_total{namespace=~\"$namespace\"} > 0) or vector(0)",
+          "refId": "A",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
+          "noValue": "no pools"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "graphMode": "none",
+        "colorMode": "background",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Stale-config pods",
+      "description": "Pods running on an old configuration because the latest one failed to load. The change you merged is silently not live. Alert: MetalLBConfigStale.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "(sum(metallb_k8s_client_config_stale_bool{namespace=~\"$namespace\"}) or vector(0)) + (sum(frrk8s_k8s_client_config_stale_bool{namespace=~\"$frr_namespace\"}) or vector(0))",
+          "refId": "A",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
+          "noValue": "no data"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "graphMode": "none",
+        "colorMode": "background",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 }
+    },
+    {
+      "id": 7,
+      "type": "bargauge",
+      "title": "Pool utilization",
+      "description": "IPs in use as a share of each pool. The near-exhaustion alert fires at 90% (default) — extend the range before a pool fills.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "100 * metallb_allocator_addresses_in_use_total{namespace=~\"$namespace\"} / metallb_allocator_addresses_total{namespace=~\"$namespace\"}",
+          "refId": "A",
+          "legendFormat": "{{pool}}",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 80 }, { "color": "red", "value": 90 } ] },
+          "noValue": "no pools"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": true },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 4 }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Addresses in use vs pool size",
+      "description": "Allocation trend per pool. A 'used' line converging on its 'total' line is the early picture behind the near-exhaustion alert.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "metallb_allocator_addresses_in_use_total{namespace=~\"$namespace\"}",
+          "refId": "A",
+          "legendFormat": "{{pool}} used",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "metallb_allocator_addresses_total{namespace=~\"$namespace\"}",
+          "refId": "B",
+          "legendFormat": "{{pool}} total",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 5, "spanNulls": true },
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".* total" },
+            "properties": [ { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } } ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 4 }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "BGP session state (per node → peer)",
+      "description": "1 = Established, 0 = down, one series per frr-k8s pod and peer. Gaps or zeros here are the mechanism behind blackholed service IPs.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "frrk8s_bgp_session_up{namespace=~\"$frr_namespace\"}",
+          "refId": "A",
+          "legendFormat": "{{pod}} → {{peer}}",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "fillOpacity": 10, "spanNulls": false },
+          "min": 0,
+          "max": 1,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Prefixes per session",
+      "description": "Prefixes announced to / received from each peer, per node. 0 announced is legitimate on a node that currently announces no service; a cluster-wide drop to 0 while LoadBalancer services exist is not.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "frrk8s_bgp_announced_prefixes_total{namespace=~\"$frr_namespace\"}",
+          "refId": "A",
+          "legendFormat": "{{pod}} → {{peer}} announced",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "frrk8s_bgp_received_prefixes_total{namespace=~\"$frr_namespace\"}",
+          "refId": "B",
+          "legendFormat": "{{pod}} ← {{peer}} received",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "fillOpacity": 5 },
+          "min": 0,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "BGP message rates",
+      "description": "UPDATE/OPEN/NOTIFICATION rates per session. An elevated OPEN or NOTIFICATION rate is the trace of a flapping session (MetalLBBGPSessionFlapping).",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "rate(frrk8s_bgp_updates_total{namespace=~\"$frr_namespace\"}[$__rate_interval])",
+          "refId": "A",
+          "legendFormat": "{{pod}} → {{peer}} updates",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "rate(frrk8s_bgp_opens_sent{namespace=~\"$frr_namespace\"}[$__rate_interval])",
+          "refId": "B",
+          "legendFormat": "{{pod}} → {{peer}} opens",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "rate(frrk8s_bgp_notifications_sent{namespace=~\"$frr_namespace\"}[$__rate_interval])",
+          "refId": "C",
+          "legendFormat": "{{pod}} → {{peer}} notifications",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 5 },
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 20 }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "BFD session state",
+      "description": "1 = up, 0 = down, per node and peer. Empty on clusters without BFD profiles.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "frrk8s_bfd_session_up{namespace=~\"$frr_namespace\"}",
+          "refId": "A",
+          "legendFormat": "{{pod}} → {{peer}}",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "fillOpacity": 10, "spanNulls": false },
+          "min": 0,
+          "max": 1,
+          "decimals": 0,
+          "noValue": "no BFD"
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 20 }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "BFD session events",
+      "description": "Session up/down transition rates. Down-event bursts pair with the BGP flapping alert to separate a flapping link from a hard failure.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "rate(frrk8s_bfd_session_down_events{namespace=~\"$frr_namespace\"}[$__rate_interval])",
+          "refId": "A",
+          "legendFormat": "{{pod}} → {{peer}} down-events",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "rate(frrk8s_bfd_session_up_events{namespace=~\"$frr_namespace\"}[$__rate_interval])",
+          "refId": "B",
+          "legendFormat": "{{pod}} → {{peer}} up-events",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 5 },
+          "unit": "ops",
+          "min": 0,
+          "noValue": "no BFD"
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 20 }
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Current announcements (who answers for which IP)",
+      "description": "Live metallb_speaker_announced: the node currently announcing each service IP and over which protocol (bgp or layer2). First question in an incident: who owns this IP right now. The series registers lazily — a service appears once a speaker announces it.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "metallb_speaker_announced{namespace=~\"$namespace\"} == 1",
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true, "Value": true, "__name__": true, "container": true,
+              "endpoint": true, "instance": true, "job": true, "namespace": true, "pod": true
+            },
+            "indexByName": { "service": 0, "ip": 1, "node": 2, "protocol": 3 },
+            "renameByName": { "service": "Service", "ip": "External IP", "node": "Announcing node", "protocol": "Protocol" }
+          }
+        }
+      ],
+      "fieldConfig": { "defaults": { "noValue": "nothing announced" }, "overrides": [] },
+      "options": { "showHeader": true, "sortBy": [ { "displayName": "Service" } ] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "L2 ARP/NDP activity",
+      "description": "Requests answered for L2-announced IPs, plus gratuitous announcements (the visible trace of an L2 failover). Series exist only on the announcing speaker, only for layer2 services.",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "rate(metallb_layer2_requests_received{namespace=~\"$namespace\"}[$__rate_interval])",
+          "refId": "A",
+          "legendFormat": "{{ip}} requests",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "rate(metallb_layer2_responses_sent{namespace=~\"$namespace\"}[$__rate_interval])",
+          "refId": "B",
+          "legendFormat": "{{ip}} responses",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "rate(metallb_layer2_gratuitous_sent{namespace=~\"$namespace\"}[$__rate_interval])",
+          "refId": "C",
+          "legendFormat": "{{ip}} gratuitous",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 5 },
+          "unit": "ops",
+          "min": 0,
+          "noValue": "no layer2 services"
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 }
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Config updates vs errors",
+      "description": "Configuration reconcile throughput and failures per pod (controller, speakers, frr-k8s). A sustained error rate precedes a stale or missing config (MetalLBK8sClientErrors).",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(metallb_k8s_client_updates_total{namespace=~\"$namespace\"}[$__rate_interval]))",
+          "refId": "A",
+          "legendFormat": "{{pod}} updates",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "sum by (pod) (rate(metallb_k8s_client_update_errors_total{namespace=~\"$namespace\"}[$__rate_interval]))",
+          "refId": "B",
+          "legendFormat": "{{pod}} errors",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "sum by (pod) (rate(frrk8s_k8s_client_updates_total{namespace=~\"$frr_namespace\"}[$__rate_interval]))",
+          "refId": "C",
+          "legendFormat": "{{pod}} updates",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "sum by (pod) (rate(frrk8s_k8s_client_update_errors_total{namespace=~\"$frr_namespace\"}[$__rate_interval]))",
+          "refId": "D",
+          "legendFormat": "{{pod}} errors",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 5 },
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".* errors" },
+            "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } } ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 }
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Config loaded / stale by pod",
+      "description": "loaded=1 is healthy; loaded=0 means a pod runs with no config at all (MetalLBConfigNotLoaded); stale=1 means the latest config failed and an old one is live (MetalLBConfigStale).",
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "metallb_k8s_client_config_loaded_bool{namespace=~\"$namespace\"} or frrk8s_k8s_client_config_loaded_bool{namespace=~\"$frr_namespace\"}",
+          "refId": "A",
+          "legendFormat": "{{pod}} loaded",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        },
+        {
+          "expr": "metallb_k8s_client_config_stale_bool{namespace=~\"$namespace\"} or frrk8s_k8s_client_config_stale_bool{namespace=~\"$frr_namespace\"}",
+          "refId": "B",
+          "legendFormat": "{{pod}} stale",
+          "datasource": { "type": "prometheus", "uid": "$datasource" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "fillOpacity": 5 },
+          "min": 0,
+          "max": 1,
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".* stale" },
+            "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } } ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 }
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{{- $m := .Values.prometheus.monitors.frrK8sPodMonitor }}
+{{- if and ($m) ($m.enabled) ($m.metricsReader) ($m.metricsReader.create) }}
+# Identity the frr-k8s PodMonitor scrapes with. The kube-rbac-proxy sidecars authorize
+# each scrape with a SubjectAccessReview on GET /metrics, so the token's ServiceAccount
+# needs that nonResourceURL. The Secret is a service-account token the control plane
+# populates; the PodMonitor references it by name.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "metallb-observability.fullname" . }}-metrics-reader
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "metallb-observability.fullname" . }}-metrics-reader-token
+  namespace: {{ include "metallb-observability.namespace" . }}
+  annotations:
+    kubernetes.io/service-account.name: {{ include "metallb-observability.fullname" . }}-metrics-reader
+  labels:
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+type: kubernetes.io/service-account-token
+---
+# Cluster-scoped; name carries the namespace to avoid collisions between installs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "metallb-observability.namespace" . }}-{{ include "metallb-observability.fullname" . }}-metrics-reader
+  labels:
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+rules:
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "metallb-observability.namespace" . }}-{{ include "metallb-observability.fullname" . }}-metrics-reader
+  labels:
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "metallb-observability.namespace" . }}-{{ include "metallb-observability.fullname" . }}-metrics-reader
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "metallb-observability.fullname" . }}-metrics-reader
+    namespace: {{ include "metallb-observability.namespace" . }}
+{{- end }}

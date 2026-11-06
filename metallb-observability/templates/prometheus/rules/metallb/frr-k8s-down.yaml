@@ -1,0 +1,30 @@
+{{- $r := .Values.prometheus.rules.metallb.frrK8sDown }}
+{{- $m := .Values.prometheus.monitors.frrK8sPodMonitor }}
+{{- if and ($r) ($r.enabled) (or .Values.metallb.operatorManagedMonitors (and $m $m.enabled)) }}
+# A failing frr-k8s metrics target silently disarms the BGP/BFD alerts for that node
+# (their series stop updating). Two targets per pod (controller + frr metrics proxies).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-frr-k8s-down
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.availability
+      rules:
+        - alert: MetalLBFRRK8sDown
+          expr: up{job="{{ .Values.metallb.frrk8s.job }}"} == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "FRR-K8s metrics target {{`{{ $labels.pod }}`}} ({{`{{ $labels.container }}`}}) is down"
+            description: "Prometheus cannot scrape the {{`{{ $labels.container }}`}} metrics endpoint of {{`{{ $labels.pod }}`}} on {{`{{ $labels.node }}`}}. While it is down, the BGP/BFD session alerts for that node are blind. Check the kube-rbac-proxy sidecars and the metrics-reader token/RBAC."
+{{- end }}

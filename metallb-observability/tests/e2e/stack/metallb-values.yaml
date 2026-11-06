@@ -1,0 +1,24 @@
+# MetalLB in FRR-K8s mode — the backend recent OpenShift MetalLB operators deploy,
+# and the mode whose metric family (frrk8s_*) the capture must pin down.
+# speaker.frr is the DEPRECATED FRR-sidecar mode and is on by default in the chart;
+# the two are mutually exclusive.
+speaker:
+  frr:
+    enabled: false
+frrk8s:
+  enabled: true
+# No ServiceMonitors from the upstream chart: the whole point is that THIS chart
+# (metallb-observability) ships the monitors later; capture scrapes the pods directly.
+prometheus:
+  serviceAccount: ""
+  namespace: ""
+# frr-k8s subchart overrides. Its two metrics TLS proxies pin
+# gcr.io/kubebuilder/kube-rbac-proxy:v0.12.0, which was deleted from gcr.io
+# (kubebuilder retired that registry) -> ImagePullBackOff. Same proxy, its
+# current official home. We keep the proxies ON because that mirrors the
+# OpenShift operator's rbac-proxied metrics surface.
+frr-k8s:
+  prometheus:
+    rbacProxy:
+      repository: quay.io/brancz/kube-rbac-proxy
+      tag: v0.18.2

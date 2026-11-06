@@ -1,0 +1,23 @@
+{{- if and (.Values.grafana.dashboard) (.Values.grafana.dashboard.enabled) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: metallb-dashboard
+  namespace: {{ .Values.grafana.namespace | default (include "metallb-observability.namespace" .) }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{ toYaml .Values.grafana.datasources | nindent 3 }}
+  # The availability tiles select by job label; the placeholders are substituted with
+  # the configured series identities (metallb.*.job) so the dashboard follows the
+  # same source as the alerts.
+  json: |-
+{{ .Files.Get "files/metallb_grafana_dashboard.json" | replace "__CONTROLLER_JOB__" .Values.metallb.controller.job | replace "__SPEAKER_JOB__" .Values.metallb.speaker.job | indent 4 }}
+{{- end }}

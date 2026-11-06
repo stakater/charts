@@ -1,0 +1,15 @@
+# 1 control-plane + 2 workers -> three speaker pods, so per-node announcement
+# signals (BGP sessions per node, speaker down) are observable.
+# Node image pinned to k8s v1.33: MetalLB <=0.15.x CRDs declare format:int32 with a
+# uint32 maximum on the BGPPeer ASN fields, which k8s >=1.34 rejects at admission
+# ("Maximum boundary value must be of type integer with format int32"); v1.33 also
+# sits closer to what OpenShift currently runs. MetalLB 0.16 fixes the CRDs (int64).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.33.4
+  - role: worker
+    image: kindest/node:v1.33.4
+  - role: worker
+    image: kindest/node:v1.33.4

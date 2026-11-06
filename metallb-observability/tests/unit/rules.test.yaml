@@ -1,0 +1,322 @@
+# promtool unit tests for metallb-observability rule LOGIC.
+# Runs against tests/.rendered/rules.yaml (all groups merged, values substituted with
+# chart defaults — operator job labels: controller-monitor-service / speaker-monitor-service /
+# frr-k8s-monitor-service; thresholds: pool 90%, flapping >3 in 30m, client errors over 10m).
+rule_files:
+  - ../.rendered/rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # ------------------------------------------------- Area 1: address allocation
+  # A full pool (10/10) for >5m -> exhausted fires; near-exhaustion fires too (100>90).
+  - interval: 1m
+    input_series:
+      - series: 'metallb_allocator_addresses_in_use_total{pool="prod"}'
+        values: '10x20'
+      - series: 'metallb_allocator_addresses_total{pool="prod"}'
+        values: '10x20'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MetalLBAddressPoolExhausted
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: metallb
+              pool: prod
+            exp_annotations:
+              summary: "MetalLB address pool prod is exhausted"
+              description: "Pool prod has no free IPs (10 in use). Every new LoadBalancer Service assigned to it stays <pending> with no error visible to the service owner. Extend the pool's address range or free allocations."
+
+  # 95% used for >15m -> near-exhaustion fires; exhausted stays quiet.
+  - interval: 1m
+    input_series:
+      - series: 'metallb_allocator_addresses_in_use_total{pool="prod"}'
+        values: '95x25'
+      - series: 'metallb_allocator_addresses_total{pool="prod"}'
+        values: '100x25'
+    alert_rule_test:
+      - eval_time: 17m
+        alertname: MetalLBAddressPoolNearExhaustion
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              pool: prod
+            exp_annotations:
+              summary: "MetalLB address pool prod is 95% used"
+              description: "Pool prod is above 90% utilization. Extend its address range before it exhausts — once full, new LoadBalancer Services hang <pending> silently."
+      - eval_time: 17m
+        alertname: MetalLBAddressPoolExhausted
+
+  # Half-used pool -> both allocation alerts quiet; and an EMPTY pool (total 0,
+  # the unused-pool shape) never alerts.
+  - interval: 1m
+    input_series:
+      - series: 'metallb_allocator_addresses_in_use_total{pool="prod"}'
+        values: '5x25'
+      - series: 'metallb_allocator_addresses_total{pool="prod"}'
+        values: '10x25'
+      - series: 'metallb_allocator_addresses_in_use_total{pool="empty"}'
+        values: '0x25'
+      - series: 'metallb_allocator_addresses_total{pool="empty"}'
+        values: '0x25'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MetalLBAddressPoolExhausted
+      - eval_time: 20m
+        alertname: MetalLBAddressPoolNearExhaustion
+
+  # ------------------------------------------------- Area 2: BGP
+  # Session down for >5m -> fires; resolves once the series is back to 1.
+  - interval: 1m
+    input_series:
+      - series: 'frrk8s_bgp_session_up{pod="frr-k8s-abc", peer="10.0.0.1", vrf="default"}'
+        values: '0x10 1x20'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MetalLBBGPSessionDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: metallb
+              pod: frr-k8s-abc
+              peer: 10.0.0.1
+              vrf: default
+            exp_annotations:
+              summary: "BGP session frr-k8s-abc → 10.0.0.1 is down"
+              description: "The BGP session from frr-k8s-abc to peer 10.0.0.1 (vrf default) is down. Service IPs announced from that node over this peer lose their route — traffic blackholes or loses a path while the Services still look healthy in Kubernetes."
+      - eval_time: 25m
+        alertname: MetalLBBGPSessionDown
+
+  # Six state changes inside the 30m window -> flapping fires (>3); a stable
+  # session does not.
+  - interval: 1m
+    input_series:
+      - series: 'frrk8s_bgp_session_up{pod="frr-k8s-abc", peer="10.0.0.1", vrf="default"}'
+        values: '1 0 1 0 1 0 1x10'
+      - series: 'frrk8s_bgp_session_up{pod="frr-k8s-def", peer="10.0.0.1", vrf="default"}'
+        values: '1x16'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: MetalLBBGPSessionFlapping
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              pod: frr-k8s-abc
+              peer: 10.0.0.1
+              vrf: default
+            exp_annotations:
+              summary: "BGP session frr-k8s-abc → 10.0.0.1 is flapping"
+              description: "The session to 10.0.0.1 changed state 6 times in 30m. A flapping session causes intermittent reachability that the point-in-time down alert misses between evaluations — check the peer router and the link."
+
+  # ------------------------------------------------- Area 3: BFD
+  - interval: 1m
+    input_series:
+      - series: 'frrk8s_bfd_session_up{pod="frr-k8s-abc", peer="10.0.0.1", vrf="default"}'
+        values: '0x5 1x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: MetalLBBFDSessionDown
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              pod: frr-k8s-abc
+              peer: 10.0.0.1
+              vrf: default
+            exp_annotations:
+              summary: "BFD session frr-k8s-abc → 10.0.0.1 is down"
+              description: "BFD to peer 10.0.0.1 is down, so sub-second failure detection is lost on that path: a dead link now lingers for the full BGP hold time before routes are withdrawn."
+      - eval_time: 12m
+        alertname: MetalLBBFDSessionDown
+
+  # ------------------------------------------------- Area 4: configuration health
+  # Never-loaded config (metallb family AND frrk8s family) -> critical.
+  - interval: 1m
+    input_series:
+      - series: 'metallb_k8s_client_config_loaded_bool{pod="metallb-controller-1"}'
+        values: '0x10'
+      - series: 'frrk8s_k8s_client_config_loaded_bool{pod="metallb-frr-k8s-x"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MetalLBConfigNotLoaded
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: metallb
+              pod: metallb-controller-1
+            exp_annotations:
+              summary: "MetalLB pod metallb-controller-1 has never loaded a config"
+              description: "metallb-controller-1 is running without any MetalLB configuration: it allocates nothing and announces nothing while its pod reports Ready. Check the MetalLB CRs and the pod logs."
+          - exp_labels:
+              severity: critical
+              rulesgroup: metallb
+              pod: metallb-frr-k8s-x
+            exp_annotations:
+              summary: "MetalLB pod metallb-frr-k8s-x has never loaded a config"
+              description: "metallb-frr-k8s-x is running without any MetalLB configuration: it allocates nothing and announces nothing while its pod reports Ready. Check the MetalLB CRs and the pod logs."
+
+  # Stale config -> warning; healthy (loaded=1, stale=0) -> both quiet.
+  - interval: 1m
+    input_series:
+      - series: 'metallb_k8s_client_config_stale_bool{pod="metallb-speaker-x"}'
+        values: '1x10 0x10'
+      - series: 'metallb_k8s_client_config_loaded_bool{pod="metallb-speaker-x"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MetalLBConfigStale
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              pod: metallb-speaker-x
+            exp_annotations:
+              summary: "MetalLB pod metallb-speaker-x is running on a stale config"
+              description: "The latest configuration failed to load on metallb-speaker-x; it keeps running on the last good one. The change you just applied is silently not live, and the gap surfaces loudly at the next pod restart. Check the pod logs for the rejected resource."
+      - eval_time: 18m
+        alertname: MetalLBConfigStale
+      - eval_time: 18m
+        alertname: MetalLBConfigNotLoaded
+
+  # Update errors increasing (1/min) -> warning with the 10m increase in the text.
+  - interval: 1m
+    input_series:
+      - series: 'metallb_k8s_client_update_errors_total{pod="metallb-controller-1"}'
+        values: '0+1x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: MetalLBK8sClientErrors
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              pod: metallb-controller-1
+            exp_annotations:
+              summary: "MetalLB pod metallb-controller-1 has k8s update errors"
+              description: "metallb-controller-1 failed 10 configuration update(s) in the last 10m. Repeated reconcile failures precede a stale or missing config — find the broken resource in the pod logs before the state bits flip."
+
+  # ------------------------------------------------- Area 5: availability
+  # Controller target failing its scrape -> critical after 5m; recovers.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="controller-monitor-service", pod="metallb-controller-1"}'
+        values: '0x10 1x10'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MetalLBControllerDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: metallb
+              job: controller-monitor-service
+              pod: metallb-controller-1
+            exp_annotations:
+              summary: "MetalLB controller is down"
+              description: "The MetalLB controller is down or unscrapeable. Nothing allocates LoadBalancer IPs: every new or changed LoadBalancer Service hangs <pending> until it is back. Existing allocations keep working."
+      - eval_time: 18m
+        alertname: MetalLBControllerDown
+
+  # Controller target GONE entirely -> the absent() clause fires with just the job label.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="unrelated"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MetalLBControllerDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: metallb
+              job: controller-monitor-service
+            exp_annotations:
+              summary: "MetalLB controller is down"
+              description: "The MetalLB controller is down or unscrapeable. Nothing allocates LoadBalancer IPs: every new or changed LoadBalancer Service hangs <pending> until it is back. Existing allocations keep working."
+
+  # One speaker failing its scrape -> warning naming pod and node; others quiet.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="speaker-monitor-service", pod="metallb-speaker-a", node="worker-1"}'
+        values: '0x10 1x10'
+      - series: 'up{job="speaker-monitor-service", pod="metallb-speaker-b", node="worker-2"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MetalLBSpeakerDown
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              job: speaker-monitor-service
+              pod: metallb-speaker-a
+              node: worker-1
+            exp_annotations:
+              summary: "MetalLB speaker metallb-speaker-a on worker-1 is down"
+              description: "The speaker on node worker-1 is failing its scrape. If the process is down, that node withdraws / stops answering for the service IPs it announced — with externalTrafficPolicy: Local or L2 leadership that can blackhole a service, not just degrade a path."
+      - eval_time: 18m
+        alertname: MetalLBSpeakerDown
+
+  # An frr-k8s metrics endpoint failing -> warning naming the container.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="frr-k8s-monitor-service", pod="metallb-frr-k8s-x", node="worker-1", container="kube-rbac-proxy-frr"}'
+        values: '0x10'
+      - series: 'up{job="frr-k8s-monitor-service", pod="metallb-frr-k8s-x", node="worker-1", container="kube-rbac-proxy"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MetalLBFRRK8sDown
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              job: frr-k8s-monitor-service
+              pod: metallb-frr-k8s-x
+              node: worker-1
+              container: kube-rbac-proxy-frr
+            exp_annotations:
+              summary: "FRR-K8s metrics target metallb-frr-k8s-x (kube-rbac-proxy-frr) is down"
+              description: "Prometheus cannot scrape the kube-rbac-proxy-frr metrics endpoint of metallb-frr-k8s-x on worker-1. While it is down, the BGP/BFD session alerts for that node are blind. Check the kube-rbac-proxy sidecars and the metrics-reader token/RBAC."
+
+  # ------------------------------------------------- watchdog: blindness
+  # Speaker and frr-k8s targets have NO series at all -> one MetricsAbsent per target
+  # after 15m. (The controller's absence is covered by MetalLBControllerDown itself.)
+  - interval: 1m
+    input_series:
+      - series: 'up{job="unrelated"}'
+        values: '1x25'
+    alert_rule_test:
+      - eval_time: 17m
+        alertname: MetalLBMetricsAbsent
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              target: speaker
+              job: speaker-monitor-service
+            exp_annotations:
+              summary: "MetalLB monitoring is blind: no speaker metrics"
+              description: "The speaker metrics this chart alerts on have NO series at all. Every alert that depends on them is silently disarmed. Likely causes: the PodMonitor or the pods vanished, selector drift, or user-workload monitoring stopped scraping the namespace."
+          - exp_labels:
+              severity: warning
+              rulesgroup: metallb
+              target: frr-k8s
+              job: frr-k8s-monitor-service
+            exp_annotations:
+              summary: "MetalLB monitoring is blind: no frr-k8s metrics"
+              description: "The frr-k8s metrics this chart alerts on have NO series at all. Every alert that depends on them is silently disarmed. Likely causes: the PodMonitor or the pods vanished, selector drift, or user-workload monitoring stopped scraping the namespace."
+
+  # Healthy scrape across the board -> watchdog quiet.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="speaker-monitor-service", pod="s-a"}'
+        values: '1x25'
+      - series: 'up{job="frr-k8s-monitor-service", pod="f-a"}'
+        values: '1x25'
+    alert_rule_test:
+      - eval_time: 17m
+        alertname: MetalLBMetricsAbsent

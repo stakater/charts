@@ -1,0 +1,28 @@
+{{- $r := .Values.prometheus.rules.metallb.bgpSessionDown }}
+{{- if and ($r) ($r.enabled) }}
+# FRR-K8s metric family (frrk8s_*, captured) — the chart targets FRR-K8s mode.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-bgp-session-down
+  namespace: {{ include "metallb-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "metallb-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: metallb.bgp
+      rules:
+        - alert: MetalLBBGPSessionDown
+          expr: frrk8s_bgp_session_up == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: metallb
+          annotations:
+            summary: "BGP session {{`{{ $labels.pod }}`}} → {{`{{ $labels.peer }}`}} is down"
+            description: "The BGP session from {{`{{ $labels.pod }}`}} to peer {{`{{ $labels.peer }}`}} (vrf {{`{{ $labels.vrf }}`}}) is down. Service IPs announced from that node over this peer lose their route — traffic blackholes or loses a path while the Services still look healthy in Kubernetes."
+{{- end }}
