@@ -46,7 +46,11 @@ Install into MetalLB's namespace (`metallb-operator` on OpenShift operator insta
 `openshift.io/cluster-monitoring=true`, so the **platform** Prometheus evaluates the
 `PrometheusRule`s (it has every MetalLB series; UWM explicitly excludes such
 namespaces). The Grafana dashboard goes wherever `grafana.namespace` points (defaults to
-the same namespace; `allowCrossNamespaceImport` is on).
+the same namespace; `allowCrossNamespaceImport` is on). **On SAAP set
+`grafana.namespace` to the grafana-operator's namespace** (`stakater-grafana-operator`):
+the operator is installed with a single-namespace `OperatorGroup`, so a
+`GrafanaDashboard` left in the MetalLB namespace is never reconciled (verified
+2026-11-06 — no status, no log line, for two hours; synced within seconds once moved).
 
 ### 4. FRR-K8s metrics auth (chart PodMonitor only)
 
