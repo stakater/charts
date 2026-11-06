@@ -1,6 +1,34 @@
-# e2e overlay: all monitors on, fast scrape, and short alert windows so scenarios.sh
-# can drive every alert to fire and resolve in minutes. Values not set here keep the
-# chart defaults (severities, thresholds).
+# e2e overlay: the UPSTREAM profile (helm-chart MetalLB: upstream pod labels, nothing
+# scrapes it, frr-k8s in the same namespace with both proxy ports named metricshttps),
+# all chart monitors on with pinned metallb-* jobs, fast scrape, and short alert windows
+# so scenarios.sh can drive every alert to fire and resolve in minutes. Values not set
+# here keep the chart defaults (severities, thresholds).
+# Helm MERGES maps: the operator's `app`/`component` keys must be nulled out explicitly
+# or the selectors would require both label sets and match nothing upstream.
+metallb:
+  operatorManagedMonitors: false
+  controller:
+    selector:
+      app: null
+      component: null
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: controller
+    job: metallb-controller
+  speaker:
+    selector:
+      app: null
+      component: null
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: speaker
+    job: metallb-speaker
+  frrk8s:
+    namespace: ""
+    selector:
+      app: null
+      component: null
+      app.kubernetes.io/name: frr-k8s
+      app.kubernetes.io/component: frr-k8s
+    job: metallb-frr-k8s
 prometheus:
   monitors:
     controllerPodMonitor:
@@ -12,6 +40,8 @@ prometheus:
     frrK8sPodMonitor:
       enabled: true
       interval: 15s
+      ports:
+        - metricshttps
   rules:
     metallb:
       addressPoolExhausted:

@@ -1,6 +1,6 @@
 {{- $r := .Values.prometheus.rules.metallb.speakerDown }}
 {{- $m := .Values.prometheus.monitors.speakerPodMonitor }}
-{{- if and ($r) ($r.enabled) ($m) ($m.enabled) }}
+{{- if and ($r) ($r.enabled) (or .Values.metallb.operatorManagedMonitors (and $m $m.enabled)) }}
 # Per-target scrape failure. All speaker targets VANISHING (DaemonSet gone) is the
 # watchdog's job (MetalLBMetricsAbsent) — a deleted pod has no up series at all.
 apiVersion: monitoring.coreos.com/v1
@@ -19,7 +19,7 @@ spec:
     - name: metallb.availability
       rules:
         - alert: MetalLBSpeakerDown
-          expr: up{job="{{ $m.job }}"} == 0
+          expr: up{job="{{ .Values.metallb.speaker.job }}"} == 0
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}

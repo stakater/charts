@@ -2,7 +2,7 @@
   "title": "MetalLB Observability",
   "uid": "metallb-observability",
   "tags": ["metallb", "networking", "load-balancer"],
-  "description": "MetalLB health: address pools, BGP/BFD sessions (FRR-K8s metric family), service announcements, L2 activity and configuration health. Ships with the metallb-observability chart; the availability tiles expect the chart's PodMonitors (jobs metallb-controller / metallb-speaker / metallb-frr-k8s).",
+  "description": "MetalLB health: address pools, BGP/BFD sessions (FRR-K8s metric family), service announcements, L2 activity and configuration health. Ships with the metallb-observability chart; the availability tiles use the job labels the chart is configured with (metallb.*.job — the OpenShift operator's own monitors by default).",
   "schemaVersion": 39,
   "editable": true,
   "graphTooltip": 1,
@@ -28,6 +28,17 @@
         "includeAll": true,
         "multi": false,
         "current": { "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "frr_namespace",
+        "type": "query",
+        "label": "FRR-K8s namespace",
+        "datasource": { "type": "prometheus", "uid": "$datasource" },
+        "query": "label_values(frrk8s_k8s_client_updates_total, namespace)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": false,
+        "current": { "text": "All", "value": "$__all" }
       }
     ]
   },
@@ -37,11 +48,11 @@
       "id": 1,
       "type": "stat",
       "title": "Controller",
-      "description": "Scrape health of the MetalLB controller (job metallb-controller). Down = nothing allocates LoadBalancer IPs; new Services hang <pending>. Alert: MetalLBControllerDown.",
+      "description": "Scrape health of the MetalLB controller (job __CONTROLLER_JOB__). Down = nothing allocates LoadBalancer IPs; new Services hang <pending>. Alert: MetalLBControllerDown.",
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "max(up{job=\"metallb-controller\", namespace=~\"$namespace\"})",
+          "expr": "max(up{job=\"__CONTROLLER_JOB__\", namespace=~\"$namespace\"})",
           "refId": "A",
           "instant": true,
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -76,11 +87,11 @@
       "id": 2,
       "type": "stat",
       "title": "Speakers up",
-      "description": "Speaker targets passing their scrape (job metallb-speaker). Should equal the number of nodes MetalLB announces from. Alert: MetalLBSpeakerDown.",
+      "description": "Speaker targets passing their scrape (job __SPEAKER_JOB__). Should equal the number of nodes MetalLB announces from. Alert: MetalLBSpeakerDown.",
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "count(up{job=\"metallb-speaker\", namespace=~\"$namespace\"} == 1) or vector(0)",
+          "expr": "count(up{job=\"__SPEAKER_JOB__\", namespace=~\"$namespace\"} == 1) or vector(0)",
           "refId": "A",
           "instant": true,
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -110,7 +121,7 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "count(frrk8s_bgp_session_up{namespace=~\"$namespace\"} == 0) or vector(0)",
+          "expr": "count(frrk8s_bgp_session_up{namespace=~\"$frr_namespace\"} == 0) or vector(0)",
           "refId": "A",
           "instant": true,
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -140,7 +151,7 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "count(frrk8s_bfd_session_up{namespace=~\"$namespace\"} == 0) or vector(0)",
+          "expr": "count(frrk8s_bfd_session_up{namespace=~\"$frr_namespace\"} == 0) or vector(0)",
           "refId": "A",
           "instant": true,
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -200,7 +211,7 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "(sum(metallb_k8s_client_config_stale_bool{namespace=~\"$namespace\"}) or vector(0)) + (sum(frrk8s_k8s_client_config_stale_bool{namespace=~\"$namespace\"}) or vector(0))",
+          "expr": "(sum(metallb_k8s_client_config_stale_bool{namespace=~\"$namespace\"}) or vector(0)) + (sum(frrk8s_k8s_client_config_stale_bool{namespace=~\"$frr_namespace\"}) or vector(0))",
           "refId": "A",
           "instant": true,
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -298,7 +309,7 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "frrk8s_bgp_session_up{namespace=~\"$namespace\"}",
+          "expr": "frrk8s_bgp_session_up{namespace=~\"$frr_namespace\"}",
           "refId": "A",
           "legendFormat": "{{pod}} → {{peer}}",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -324,13 +335,13 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "frrk8s_bgp_announced_prefixes_total{namespace=~\"$namespace\"}",
+          "expr": "frrk8s_bgp_announced_prefixes_total{namespace=~\"$frr_namespace\"}",
           "refId": "A",
           "legendFormat": "{{pod}} → {{peer}} announced",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
         },
         {
-          "expr": "frrk8s_bgp_received_prefixes_total{namespace=~\"$namespace\"}",
+          "expr": "frrk8s_bgp_received_prefixes_total{namespace=~\"$frr_namespace\"}",
           "refId": "B",
           "legendFormat": "{{pod}} ← {{peer}} received",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -355,19 +366,19 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "rate(frrk8s_bgp_updates_total{namespace=~\"$namespace\"}[$__rate_interval])",
+          "expr": "rate(frrk8s_bgp_updates_total{namespace=~\"$frr_namespace\"}[$__rate_interval])",
           "refId": "A",
           "legendFormat": "{{pod}} → {{peer}} updates",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
         },
         {
-          "expr": "rate(frrk8s_bgp_opens_sent{namespace=~\"$namespace\"}[$__rate_interval])",
+          "expr": "rate(frrk8s_bgp_opens_sent{namespace=~\"$frr_namespace\"}[$__rate_interval])",
           "refId": "B",
           "legendFormat": "{{pod}} → {{peer}} opens",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
         },
         {
-          "expr": "rate(frrk8s_bgp_notifications_sent{namespace=~\"$namespace\"}[$__rate_interval])",
+          "expr": "rate(frrk8s_bgp_notifications_sent{namespace=~\"$frr_namespace\"}[$__rate_interval])",
           "refId": "C",
           "legendFormat": "{{pod}} → {{peer}} notifications",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -392,7 +403,7 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "frrk8s_bfd_session_up{namespace=~\"$namespace\"}",
+          "expr": "frrk8s_bfd_session_up{namespace=~\"$frr_namespace\"}",
           "refId": "A",
           "legendFormat": "{{pod}} → {{peer}}",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -419,13 +430,13 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "rate(frrk8s_bfd_session_down_events{namespace=~\"$namespace\"}[$__rate_interval])",
+          "expr": "rate(frrk8s_bfd_session_down_events{namespace=~\"$frr_namespace\"}[$__rate_interval])",
           "refId": "A",
           "legendFormat": "{{pod}} → {{peer}} down-events",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
         },
         {
-          "expr": "rate(frrk8s_bfd_session_up_events{namespace=~\"$namespace\"}[$__rate_interval])",
+          "expr": "rate(frrk8s_bfd_session_up_events{namespace=~\"$frr_namespace\"}[$__rate_interval])",
           "refId": "B",
           "legendFormat": "{{pod}} → {{peer}} up-events",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -533,13 +544,13 @@
           "datasource": { "type": "prometheus", "uid": "$datasource" }
         },
         {
-          "expr": "sum by (pod) (rate(frrk8s_k8s_client_updates_total{namespace=~\"$namespace\"}[$__rate_interval]))",
+          "expr": "sum by (pod) (rate(frrk8s_k8s_client_updates_total{namespace=~\"$frr_namespace\"}[$__rate_interval]))",
           "refId": "C",
           "legendFormat": "{{pod}} updates",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
         },
         {
-          "expr": "sum by (pod) (rate(frrk8s_k8s_client_update_errors_total{namespace=~\"$namespace\"}[$__rate_interval]))",
+          "expr": "sum by (pod) (rate(frrk8s_k8s_client_update_errors_total{namespace=~\"$frr_namespace\"}[$__rate_interval]))",
           "refId": "D",
           "legendFormat": "{{pod}} errors",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
@@ -569,13 +580,13 @@
       "datasource": { "type": "prometheus", "uid": "$datasource" },
       "targets": [
         {
-          "expr": "metallb_k8s_client_config_loaded_bool{namespace=~\"$namespace\"} or frrk8s_k8s_client_config_loaded_bool{namespace=~\"$namespace\"}",
+          "expr": "metallb_k8s_client_config_loaded_bool{namespace=~\"$namespace\"} or frrk8s_k8s_client_config_loaded_bool{namespace=~\"$frr_namespace\"}",
           "refId": "A",
           "legendFormat": "{{pod}} loaded",
           "datasource": { "type": "prometheus", "uid": "$datasource" }
         },
         {
-          "expr": "metallb_k8s_client_config_stale_bool{namespace=~\"$namespace\"} or frrk8s_k8s_client_config_stale_bool{namespace=~\"$namespace\"}",
+          "expr": "metallb_k8s_client_config_stale_bool{namespace=~\"$namespace\"} or frrk8s_k8s_client_config_stale_bool{namespace=~\"$frr_namespace\"}",
           "refId": "B",
           "legendFormat": "{{pod}} stale",
           "datasource": { "type": "prometheus", "uid": "$datasource" }

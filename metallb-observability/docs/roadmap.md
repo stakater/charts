@@ -1,12 +1,16 @@
 # MetalLB Observability Roadmap
 
-**Status:** ✅ **Built and e2e-verified (2026-11-01)** — every story below is implemented
-behind `tests/validate.sh` (unit-tested rule logic) and verified on the kind lab
-(`tests/reports/e2e-kind-2026-11-01.md`: every alert fired and resolved). Metric names and
-label shapes marked **[captured]** are real, from `tests/fixtures/` (provenance in
-[`../tests/fixtures/README.md`](../tests/fixtures/README.md)). **Release remains gated on
-the real-cluster comparison** (handover activity, see `tests/e2e/README.md`).
-**MetalLB version captured:** v0.15.3, **FRR-K8s mode** (frr-k8s v0.0.21, FRR 10.4.1)
+**Status:** ✅ **Built, e2e-verified (2026-11-01) and validated against the OpenShift
+MetalLB operator (2026-11-06)** — every story below is implemented behind
+`tests/validate.sh` (unit-tested rule logic), verified on the kind lab
+(`tests/reports/e2e-kind-2026-11-01.md`: every alert fired and resolved), and the
+real-cluster comparison is done (`tests/reports/operator-openshift-2026-11-06.md`: scrape
+surface diffed, deltas folded into the chart defaults, every alert expression evaluated
+live, read-only deploy validation passed). Metric names and label shapes marked
+**[captured]** are real, from `tests/fixtures/` (provenance in
+[`../tests/fixtures/README.md`](../tests/fixtures/README.md)). **Release gate cleared.**
+**Captured:** upstream v0.15.3 FRR-K8s mode (kind) **and** OpenShift MetalLB operator
+4.22 FRR-K8s mode (OCP 4.22.13).
 **Owner:** Platform / SRE
 
 ---
@@ -20,7 +24,8 @@ were approved 2026-11-01 and built the same day; Area 7 stays deferred.
 
 ### Metric reality (the discipline)
 
-- **[captured]** — in `tests/fixtures/` with the exact labels stated.
+- **[captured]** — in `tests/fixtures/` with the exact labels stated (on both the upstream
+  and the operator capture unless a story says otherwise).
 - **[captured, lazy]** — in the fixtures, but the series **registers lazily** (only on the
   speaker currently announcing); `absent()`-style logic on it is unsafe.
 - **[documented]** — upstream-documented (<https://metallb.io/prometheus-metrics/>) but not
@@ -42,12 +47,18 @@ were approved 2026-11-01 and built the same day; Area 7 stays deferred.
    `metallb_speaker_announced{ip,node,protocol,service}` + `metallb_layer2_*{ip}`;
    *each frr-k8s pod* → `frrk8s_k8s_client_*` (port 7572) and the BGP/BFD families
    (port 7573), both per node per peer.
-3. **The chart must ship PodMonitors** **[captured]**: no metrics Services and no
-   operator-created monitors exist. Controller + speaker are plain HTTP on container port
-   `monitoring` (7472). frr-k8s raw ports bind 127.0.0.1; its only scrapeable surface is
-   kube-rbac-proxy TLS on `metricshttps` 9140/9141 (bearer token + TLS + RBAC for the
-   scraping SA). **Verify against the real OpenShift operator layout in the handover
-   comparison before freezing monitor defaults.**
+3. **Who scrapes depends on the layout** **[captured, both]**. *Upstream* (kind): no
+   metrics Services, no monitors — the chart's PodMonitors are the only scrape
+   (controller/speaker plain HTTP on `monitoring` 7472; frr-k8s only via kube-rbac-proxy
+   TLS on `metricshttps` 9140/9141). *OpenShift operator* (the default): the operator
+   ships its own ServiceMonitors into `cluster-monitoring` namespaces and the **platform**
+   Prometheus already scrapes everything under jobs `controller-monitor-service` /
+   `speaker-monitor-service` / `frr-k8s-monitor-service`; pod labels are `app` +
+   `component`, raw ports are 29150 / 7572 / 7573, every port sits behind a proxy, and
+   **FRR-K8s runs in its own namespace (`openshift-frr-k8s`)**. The chart therefore
+   targets the operator's job labels by default (`metallb.*.job`), keeps its PodMonitors
+   off (`metallb.operatorManagedMonitors: true`), and `tests/e2e/values-e2e.yaml` is the
+   upstream profile.
 4. **Per-node semantics**: BGP sessions and `announced_prefixes` are per frr-k8s pod per
    peer; a node announcing nothing legitimately reports 0 prefixes.
 
@@ -128,8 +139,9 @@ means the peer router stopped hearing announcements from that node.
 
 # Capability Area 3 — BFD (fast failover health)
 
-Only meaningful where BFD is configured on top of BGP (it was in the capture). On a
-cluster without BFD the series never registers, so the alert stays silent.
+Only meaningful where BFD is configured on top of BGP (it was in the kind capture; the
+operator cluster has no `BFDProfile` and the family is **[absent]** there). On a cluster
+without BFD the series never registers, so the alert stays silent.
 
 ## Story 3.1 — Is a BFD session down? ✅ Done
 
@@ -185,8 +197,9 @@ until an address or peer you *thought* you added isn't there.
 
 # Capability Area 5 — Component availability
 
-The chart ships its own PodMonitors (structural fact 3), so `up{job=<chart monitor>}` is a
-surface the chart controls.
+`up{job=<metallb.*.job>}` — the operator's own monitors by default, or the chart's
+PodMonitors on upstream installs (structural fact 3). The `up` alerts render whenever one
+of the two scrapes exists.
 
 ## Story 5.1 — Is the controller up? ✅ Done
 
@@ -206,8 +219,8 @@ surface the chart controls.
 > or L2 leadership that can blackhole a service, not just degrade a path.**
 
 - **Metric(s):** `up` per speaker target via the chart's speaker PodMonitor; expected
-  count via `kube_daemonset_status_desired_number_scheduled` **[ksm — verify UWM
-  visibility on the real cluster before relying on it]**
+  count via `kube_daemonset_status_desired_number_scheduled` **[ksm — verified visible
+  in the same Prometheus on the operator cluster, 2026-11-06]**
 - **Alert:** `MetalLBSpeakerDown` — a speaker target `up == 0` for 5m → warning;
   all speakers down → critical
 - **Dashboard:** speakers-up count vs nodes
@@ -238,7 +251,9 @@ join material, not `absent()` material.
 > question for both BGP (which sessions matter) and L2 (which node answers ARP).**
 
 - **Metric(s):** `metallb_speaker_announced{ip,node,protocol,service}` **[captured, lazy]**
-  (protocol `bgp`|`layer2`)
+  (protocol `bgp`|`layer2`; `service` is `<namespace>/<name>`). On the operator cluster
+  (BGP only) **every** speaker registers it for every IP — the lazy/announcer-only
+  behaviour is the L2 case.
 - **Dashboard:** announcement table (service → ip → node → protocol); no alert from this
   series alone (lazy registration makes absence ambiguous)
 
@@ -250,7 +265,8 @@ join material, not `absent()` material.
 
 - **Metric(s):** `metallb_layer2_requests_received{ip}`,
   `metallb_layer2_responses_sent{ip}`, `metallb_layer2_gratuitous_sent{ip}`
-  **[captured, lazy]**
+  **[captured, lazy]** (kind; **[absent]** on the operator cluster, which has no
+  `L2Advertisement`)
 - **Dashboard:** rates per IP; panels only, no alert (lazy + announcer-only).
 
 ---
@@ -258,8 +274,10 @@ join material, not `absent()` material.
 # Capability Area 7 — Footprint (deferred)
 
 Speaker/controller restarts, OOM, CPU throttling via **[ksm]**/cAdvisor — same shape as
-kcp's footprint rules. Deferred: generic pod alerts likely already cover the MetalLB
-namespace; revisit after the real-cluster comparison shows what baseline alerting exists.
+kcp's footprint rules. Deferred: the operator cluster had **no MetalLB-specific alerts at
+all** (the operator ships no `PrometheusRule`s), but the platform's generic
+`KubePodCrashLooping` / `KubeDaemonSetRolloutStuck` family covers the pod-footprint
+cases; revisit only if those prove too coarse.
 
 ---
 
@@ -267,8 +285,8 @@ namespace; revisit after the real-cluster comparison shows what baseline alertin
 
 Per-story: 👍 approval → rules/panels built behind `tests/validate.sh` (unit rule tests:
 every alert fires and resolves on synthetic series) → alert e2e on the kind stack
-(`tests/e2e/`, scenarios drive every alert to fire and resolve) → **real-cluster
-comparison capture** (handover activity: re-run `tests/METRICS-CAPTURE.md` read-only
-against a cluster running the MetalLB operator, diff fixtures + scrape surface, fold
-deltas into monitor defaults) → read-only deploy validation, dated report in
-`tests/reports/`.
+(`tests/e2e/`, scenarios drive every alert to fire and resolve) → ✅ **real-cluster
+comparison capture** (2026-11-06: `tests/METRICS-CAPTURE.md` re-run read-only against
+an OpenShift cluster running the MetalLB operator, fixtures + scrape surface diffed,
+deltas folded into the chart defaults) → ✅ read-only deploy validation, report
+`tests/reports/operator-openshift-2026-11-06.md`.

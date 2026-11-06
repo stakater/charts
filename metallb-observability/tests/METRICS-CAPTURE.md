@@ -6,10 +6,18 @@ to record. Everything is **read-only**.
 
 ## Status
 
-**Captured 2026-11-01 from the kind lab** (`e2e/up.sh` + `e2e/capture.sh`; provenance in
-`fixtures/README.md`). **Still pending: the real-cluster comparison** — re-run this
-procedure read-only against a cluster running the MetalLB operator and diff the surface
-(handover activity, see `e2e/README.md`).
+**Captured twice** (provenance in `fixtures/README.md`): 2026-11-01 from the kind lab
+(`e2e/up.sh` + `e2e/capture.sh`, upstream layout) and **2026-11-06 read-only from a
+production OpenShift cluster running the MetalLB operator** (`fixtures/operator/`,
+report `reports/operator-openshift-2026-11-06.md`). The operator layout is the chart's
+default; the deltas are folded into `values.yaml`.
+
+On the operator the raw ports are `29150` (controller/speaker) and `7572`/`7573`
+(frr-k8s, 127.0.0.1-bound but reachable by `port-forward` because the pods are
+hostNetwork); every port is also fronted by a kube-rbac-proxy (`9120`, `9140`, `9141`)
+that accepts any token allowed `get /metrics`. Scrub the captures before committing —
+this repo is public (node names, service IPs, tenant Service names, cluster name in the
+ingress Service).
 
 ## What to find out first (shapes the whole chart)
 

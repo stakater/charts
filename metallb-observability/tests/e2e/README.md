@@ -38,10 +38,13 @@ operator**, which may differ in exactly the ways the chart's monitors care about
 namespace labels, kube-rbac-proxy in front of the metrics ports (TLS + bearer token),
 operator-created ServiceMonitors/PodMonitors, and the shipped MetalLB/FRR-K8s versions.
 
-**Handover activity:** re-run the capture procedure (`../METRICS-CAPTURE.md`) read-only
-against a real cluster running the MetalLB operator, diff the fixtures and the scrape
-surface against this lab's, and fold any delta into the roadmap and the chart's monitor
-defaults before the chart is released.
+**Handover activity — done 2026-11-06:** the capture procedure (`../METRICS-CAPTURE.md`)
+was re-run read-only against an OpenShift cluster running the MetalLB operator
+(`../fixtures/operator/`, `../reports/operator-openshift-2026-11-06.md`). The operator
+layout became the chart's default; this lab is now the **upstream profile**, selected by
+`values-e2e.yaml` (upstream pod labels, `metallb.operatorManagedMonitors: false`,
+`metallb-*` jobs, frr-k8s in the same namespace with both proxy ports named
+`metricshttps`).
 
 ## Later: scenarios.sh
 

@@ -2,10 +2,13 @@
 {{- $m := .Values.prometheus.monitors.frrK8sPodMonitor }}
 # Scrapes the FRR-K8s daemon — the BGP/BFD metric source in FRR-K8s mode. The raw metrics
 # ports (7572 frr-k8s controller, 7573 frr translator) bind 127.0.0.1 only (captured), so
-# the only scrapeable surface is the two kube-rbac-proxy TLS sidecars. BOTH their
-# container ports are named `metricshttps` (9140/9141), so this single named-port
-# endpoint yields two targets per pod — one per metrics family. Auth: bearer token,
-# authorized by SubjectAccessReview against GET /metrics (see the metrics-reader RBAC).
+# the only scrapeable surface is the two kube-rbac-proxy TLS sidecars. One endpoint per
+# port NAME: the OpenShift operator names them `metricshttps` (9140) + `frrmetricshttps`
+# (9141); upstream names both `metricshttps`, where a single entry yields two targets per
+# pod. Auth: bearer token, authorized by SubjectAccessReview against GET /metrics (see the
+# metrics-reader RBAC). On the operator FRR-K8s runs in its own namespace
+# (metallb.frrk8s.namespace), which only the platform Prometheus can select across —
+# the operator already scrapes it there (metallb.operatorManagedMonitors), so this stays off.
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
@@ -14,11 +17,17 @@ metadata:
   labels:
     {{- include "metallb-observability.labels" . | nindent 4 }}
 spec:
+  {{- with .Values.metallb.frrk8s.namespace }}
+  namespaceSelector:
+    matchNames:
+      - {{ . }}
+  {{- end }}
   selector:
     matchLabels:
       {{- toYaml .Values.metallb.frrk8s.selector | nindent 6 }}
   podMetricsEndpoints:
-    - port: {{ $m.port }}
+    {{- range $port := $m.ports }}
+    - port: {{ $port }}
       path: /metrics
       scheme: https
       interval: {{ $m.interval }}
@@ -26,15 +35,16 @@ spec:
       authorization:
         type: Bearer
         credentials:
-          name: {{ include "metallb-observability.fullname" . }}-metrics-reader-token
+          name: {{ include "metallb-observability.fullname" $ }}-metrics-reader-token
           key: token
       tlsConfig:
         insecureSkipVerify: {{ $m.tls.insecureSkipVerify }}
       relabelings:
         - action: replace
-          replacement: {{ $m.job | quote }}
+          replacement: {{ $.Values.metallb.frrk8s.job | quote }}
           targetLabel: job
         - action: replace
           sourceLabels: [__meta_kubernetes_pod_node_name]
           targetLabel: node
+    {{- end }}
 {{- end }}

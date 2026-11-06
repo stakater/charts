@@ -2,7 +2,7 @@ load('ext://namespace', 'namespace_create', 'namespace_inject')
 
 settings = read_json('../tilt-settings.json', default={})
 
-namespace= "metallb-system"
+namespace= "metallb-operator"
 
 if settings.get("allow_k8s_contexts"):
   allow_k8s_contexts(settings.get("allow_k8s_contexts").format(namespace))

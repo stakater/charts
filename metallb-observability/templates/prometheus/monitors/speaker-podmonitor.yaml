@@ -2,9 +2,10 @@
 {{- $m := .Values.prometheus.monitors.speakerPodMonitor }}
 # Scrapes every speaker (k8s-client metrics, plus the lazily-registered
 # metallb_speaker_announced / metallb_layer2_* on whichever speaker currently announces a
-# service) on the plain-HTTP `monitoring` container port (7472, captured). The speaker is
-# hostNetwork and binds its node IP — the PodMonitor scrapes the pod IP (= node IP), which
-# works; localhost does not.
+# service) on the plain-HTTP `monitoring` container port (7472 upstream, 29150 on the
+# OpenShift operator — both captured). The speaker is hostNetwork and binds its node IP —
+# the PodMonitor scrapes the pod IP (= node IP), which works. Off by default on the
+# operator, which ships its own speaker ServiceMonitor (metallb.operatorManagedMonitors).
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
@@ -24,7 +25,7 @@ spec:
       scrapeTimeout: {{ $m.scrapeTimeout }}
       relabelings:
         - action: replace
-          replacement: {{ $m.job | quote }}
+          replacement: {{ .Values.metallb.speaker.job | quote }}
           targetLabel: job
         # per-node signal: carry the node name on every speaker series
         - action: replace

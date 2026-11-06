@@ -1,9 +1,11 @@
 {{- $r := .Values.prometheus.rules.metallb.controllerDown }}
 {{- $m := .Values.prometheus.monitors.controllerPodMonitor }}
-{{- if and ($r) ($r.enabled) ($m) ($m.enabled) }}
-# Rendered only while the controller PodMonitor is enabled: without the scrape there is
-# no `up` series and absent() would fire meaninglessly. The absent() clause makes the
-# alert cover "pod gone" as well as "pod failing the scrape".
+{{- $job := .Values.metallb.controller.job }}
+{{- if and ($r) ($r.enabled) (or .Values.metallb.operatorManagedMonitors (and $m $m.enabled)) }}
+# Rendered only while something scrapes the controller (the operator's ServiceMonitor,
+# or the chart's PodMonitor): without the scrape there is no `up` series and absent()
+# would fire meaninglessly. The absent() clause makes the alert cover "pod gone" as
+# well as "pod failing the scrape".
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -21,8 +23,8 @@ spec:
       rules:
         - alert: MetalLBControllerDown
           expr: |
-            up{job="{{ $m.job }}"} == 0
-            or absent(up{job="{{ $m.job }}"})
+            up{job="{{ $job }}"} == 0
+            or absent(up{job="{{ $job }}"})
           for: {{ $r.for }}
           labels:
             severity: {{ $r.severity }}
