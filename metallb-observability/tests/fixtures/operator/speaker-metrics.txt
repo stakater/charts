@@ -1,0 +1,248 @@
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 7.0571e-05
+go_gc_duration_seconds{quantile="0.25"} 8.8428e-05
+go_gc_duration_seconds{quantile="0.5"} 0.000103375
+go_gc_duration_seconds{quantile="0.75"} 0.000120078
+go_gc_duration_seconds{quantile="1"} 0.0052768
+go_gc_duration_seconds_sum 31.349405717
+go_gc_duration_seconds_count 173889
+# HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent.
+# TYPE go_gc_gogc_percent gauge
+go_gc_gogc_percent 100
+# HELP go_gc_gomemlimit_bytes Go runtime memory limit configured by the user, otherwise math.MaxInt64. This value is set by the GOMEMLIMIT environment variable, and the runtime/debug.SetMemoryLimit function. Sourced from /gc/gomemlimit:bytes.
+# TYPE go_gc_gomemlimit_bytes gauge
+go_gc_gomemlimit_bytes 9.223372036854776e+18
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 283
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.25.14 (Red Hat 1.25.14-1.el9) X:strictfipsruntime"} 1
+# HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 3.669672e+07
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 4.089363326824e+12
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 2.445861e+06
+# HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 3.271960222e+09
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 4.755248e+06
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 3.669672e+07
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 8.368128e+07
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 5.033984e+07
+# HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 199209
+# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
+# TYPE go_memstats_heap_released_bytes gauge
+go_memstats_heap_released_bytes 6.7764224e+07
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 1.3402112e+08
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.7939513959240274e+09
+# HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 3.272159431e+09
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 57984
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system. Equals to /memory/classes/metadata/mcache/inuse:bytes + /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 62816
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 984480
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 1.45248e+06
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 5.3142922e+07
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 1.0418355e+07
+# HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 4.390912e+06
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 4.390912e+06
+# HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 1.57546792e+08
+# HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads.
+# TYPE go_sched_gomaxprocs_threads gauge
+go_sched_gomaxprocs_threads 48
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 55
+# HELP metallb_k8s_client_config_loaded_bool 1 if the MetalLB configuration was successfully loaded at least once.
+# TYPE metallb_k8s_client_config_loaded_bool gauge
+metallb_k8s_client_config_loaded_bool 1
+# HELP metallb_k8s_client_config_stale_bool 1 if running on a stale configuration, because the latest config failed to load.
+# TYPE metallb_k8s_client_config_stale_bool gauge
+metallb_k8s_client_config_stale_bool 0
+# HELP metallb_k8s_client_update_errors_total Number of k8s object updates that failed for some reason.
+# TYPE metallb_k8s_client_update_errors_total counter
+metallb_k8s_client_update_errors_total 0
+# HELP metallb_k8s_client_updates_total Number of k8s object updates that have been processed.
+# TYPE metallb_k8s_client_updates_total counter
+metallb_k8s_client_updates_total 68966
+# HELP metallb_speaker_announced Services being announced from this node. This is desired state, it does not guarantee that the routing protocols have converged.
+# TYPE metallb_speaker_announced gauge
+metallb_speaker_announced{ip="203.0.113.50",node="node-c",protocol="bgp",service="tenant-1/lb-1"} 1
+metallb_speaker_announced{ip="203.0.113.51",node="node-c",protocol="bgp",service="hosted-cluster-1/apps"} 1
+metallb_speaker_announced{ip="203.0.113.52",node="node-c",protocol="bgp",service="hosted-cluster-1/kube-apiserver"} 1
+metallb_speaker_announced{ip="203.0.113.53",node="node-c",protocol="bgp",service="tenant-2/lb-2"} 1
+metallb_speaker_announced{ip="203.0.113.54",node="node-c",protocol="bgp",service="tenant-3/lb-3"} 1
+metallb_speaker_announced{ip="203.0.113.55",node="node-c",protocol="bgp",service="tenant-4/lb-4"} 1
+metallb_speaker_announced{ip="203.0.113.56",node="node-c",protocol="bgp",service="tenant-5/lb-5"} 1
+metallb_speaker_announced{ip="203.0.113.57",node="node-c",protocol="bgp",service="tenant-6/lb-6"} 1
+metallb_speaker_announced{ip="203.0.113.60",node="node-c",protocol="bgp",service="tenant-7/lb-7"} 1
+metallb_speaker_announced{ip="203.0.113.61",node="node-c",protocol="bgp",service="tenant-8/lb-8"} 1
+metallb_speaker_announced{ip="203.0.113.62",node="node-c",protocol="bgp",service="tenant-9/lb-9"} 1
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 15701.05
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 524287
+# HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
+# TYPE process_network_receive_bytes_total counter
+process_network_receive_bytes_total 3.9239950871669e+14
+# HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
+# TYPE process_network_transmit_bytes_total counter
+process_network_transmit_bytes_total 3.51288973106924e+14
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 22
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 9.3052928e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.79308093368e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 5.465034752e+09
+# HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
+# TYPE process_virtual_memory_max_bytes gauge
+process_virtual_memory_max_bytes 1.8446744073709552e+19
+# HELP promhttp_metric_handler_requests_in_flight Current number of scrapes being served.
+# TYPE promhttp_metric_handler_requests_in_flight gauge
+promhttp_metric_handler_requests_in_flight 1
+# HELP promhttp_metric_handler_requests_total Total number of scrapes by HTTP status code.
+# TYPE promhttp_metric_handler_requests_total counter
+promhttp_metric_handler_requests_total{code="200"} 232120
+promhttp_metric_handler_requests_total{code="500"} 0
+promhttp_metric_handler_requests_total{code="503"} 0
+go_gc_duration_seconds{quantile="0"} 6.8351e-05
+go_gc_duration_seconds{quantile="0.25"} 8.3713e-05
+go_gc_duration_seconds{quantile="0.5"} 9.7217e-05
+go_gc_duration_seconds{quantile="0.75"} 0.000111506
+go_gc_duration_seconds{quantile="1"} 0.007684436
+go_gc_duration_seconds_sum 61.817980628
+go_gc_duration_seconds_count 421506
+go_memstats_alloc_bytes 4.6062048e+07
+go_memstats_alloc_bytes_total 1.0090612325728e+13
+go_memstats_buck_hash_sys_bytes 2.542213e+06
+go_memstats_frees_total 5.914759217e+09
+go_memstats_gc_sys_bytes 4.803888e+06
+go_memstats_heap_alloc_bytes 4.6062048e+07
+go_memstats_heap_idle_bytes 9.4855168e+07
+go_memstats_heap_inuse_bytes 5.9973632e+07
+go_memstats_heap_objects 203635
+go_memstats_heap_released_bytes 8.7064576e+07
+go_memstats_heap_sys_bytes 1.548288e+08
+go_memstats_last_gc_time_seconds 1.7939514047292078e+09
+go_memstats_mallocs_total 5.914962852e+09
+go_memstats_mspan_inuse_bytes 1.07376e+06
+go_memstats_mspan_sys_bytes 1.51776e+06
+go_memstats_next_gc_bytes 5.8482698e+07
+go_memstats_other_sys_bytes 9.421651e+06
+go_memstats_stack_inuse_bytes 4.554752e+06
+go_memstats_stack_sys_bytes 4.554752e+06
+go_memstats_sys_bytes 1.7773188e+08
+metallb_k8s_client_updates_total 92502
+metallb_speaker_announced{ip="203.0.113.50",node="node-b",protocol="bgp",service="tenant-1/lb-1"} 1
+metallb_speaker_announced{ip="203.0.113.51",node="node-b",protocol="bgp",service="hosted-cluster-1/apps"} 1
+metallb_speaker_announced{ip="203.0.113.52",node="node-b",protocol="bgp",service="hosted-cluster-1/kube-apiserver"} 1
+metallb_speaker_announced{ip="203.0.113.53",node="node-b",protocol="bgp",service="tenant-2/lb-2"} 1
+metallb_speaker_announced{ip="203.0.113.54",node="node-b",protocol="bgp",service="tenant-3/lb-3"} 1
+metallb_speaker_announced{ip="203.0.113.55",node="node-b",protocol="bgp",service="tenant-4/lb-4"} 1
+metallb_speaker_announced{ip="203.0.113.56",node="node-b",protocol="bgp",service="tenant-5/lb-5"} 1
+metallb_speaker_announced{ip="203.0.113.57",node="node-b",protocol="bgp",service="tenant-6/lb-6"} 1
+metallb_speaker_announced{ip="203.0.113.60",node="node-b",protocol="bgp",service="tenant-7/lb-7"} 1
+metallb_speaker_announced{ip="203.0.113.61",node="node-b",protocol="bgp",service="tenant-8/lb-8"} 1
+metallb_speaker_announced{ip="203.0.113.62",node="node-b",protocol="bgp",service="tenant-9/lb-9"} 1
+process_cpu_seconds_total 35302.4
+process_network_receive_bytes_total 1.99906702918584e+14
+process_network_transmit_bytes_total 2.17700872535743e+14
+process_resident_memory_bytes 9.6301056e+07
+process_start_time_seconds 1.79286452852e+09
+process_virtual_memory_bytes 5.46424832e+09
+promhttp_metric_handler_requests_total{code="200"} 289806
+go_gc_duration_seconds{quantile="0"} 7.2771e-05
+go_gc_duration_seconds{quantile="0.25"} 9.0958e-05
+go_gc_duration_seconds{quantile="0.5"} 0.000105802
+go_gc_duration_seconds{quantile="0.75"} 0.000128948
+go_gc_duration_seconds{quantile="1"} 0.00245142
+go_gc_duration_seconds_sum 38.372983106
+go_gc_duration_seconds_count 156143
+go_goroutines 285
+go_memstats_alloc_bytes 3.7437504e+07
+go_memstats_alloc_bytes_total 3.83694897016e+12
+go_memstats_buck_hash_sys_bytes 2.213781e+06
+go_memstats_frees_total 2.286900044e+09
+go_memstats_gc_sys_bytes 4.769584e+06
+go_memstats_heap_alloc_bytes 3.7437504e+07
+go_memstats_heap_idle_bytes 8.511488e+07
+go_memstats_heap_inuse_bytes 4.8939008e+07
+go_memstats_heap_objects 201827
+go_memstats_heap_released_bytes 7.2204288e+07
+go_memstats_heap_sys_bytes 1.34053888e+08
+go_memstats_last_gc_time_seconds 1.7939514020497622e+09
+go_memstats_mallocs_total 2.287101871e+09
+go_memstats_mspan_inuse_bytes 844320
+go_memstats_mspan_sys_bytes 1.4688e+06
+go_memstats_next_gc_bytes 5.2166042e+07
+go_memstats_other_sys_bytes 8.260483e+06
+go_memstats_stack_inuse_bytes 4.358144e+06
+go_memstats_stack_sys_bytes 4.358144e+06
+go_memstats_sys_bytes 1.55187496e+08
+metallb_k8s_client_updates_total 27164
+metallb_speaker_announced{ip="203.0.113.49",node="node-a",protocol="bgp",service="openshift-ingress/router-public"} 1
+metallb_speaker_announced{ip="203.0.113.50",node="node-a",protocol="bgp",service="tenant-1/lb-1"} 1
+metallb_speaker_announced{ip="203.0.113.51",node="node-a",protocol="bgp",service="hosted-cluster-1/apps"} 1
+metallb_speaker_announced{ip="203.0.113.52",node="node-a",protocol="bgp",service="hosted-cluster-1/kube-apiserver"} 1
+metallb_speaker_announced{ip="203.0.113.53",node="node-a",protocol="bgp",service="tenant-2/lb-2"} 1
+metallb_speaker_announced{ip="203.0.113.54",node="node-a",protocol="bgp",service="tenant-3/lb-3"} 1
+metallb_speaker_announced{ip="203.0.113.55",node="node-a",protocol="bgp",service="tenant-4/lb-4"} 1
+metallb_speaker_announced{ip="203.0.113.56",node="node-a",protocol="bgp",service="tenant-5/lb-5"} 1
+metallb_speaker_announced{ip="203.0.113.57",node="node-a",protocol="bgp",service="tenant-6/lb-6"} 1
+metallb_speaker_announced{ip="203.0.113.60",node="node-a",protocol="bgp",service="tenant-7/lb-7"} 1
+metallb_speaker_announced{ip="203.0.113.61",node="node-a",protocol="bgp",service="tenant-8/lb-8"} 1
+metallb_speaker_announced{ip="203.0.113.62",node="node-a",protocol="bgp",service="tenant-9/lb-9"} 1
+process_cpu_seconds_total 12634.06
+process_network_receive_bytes_total 2.78918154201089e+14
+process_network_transmit_bytes_total 2.96926479716567e+14
+process_open_fds 24
+process_resident_memory_bytes 9.0476544e+07
+process_start_time_seconds 1.79363224744e+09
+process_virtual_memory_bytes 5.462675456e+09
+promhttp_metric_handler_requests_total{code="200"} 85065

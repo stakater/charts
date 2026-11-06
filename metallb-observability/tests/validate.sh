@@ -109,7 +109,9 @@ def walk(panels):
         walk(p.get("panels"))
 walk(json.load(open(dash)).get("panels", []))
 # Grafana variables are not PromQL: substitute plausible literals before parsing.
-subs = {"$__rate_interval": "5m", "$__interval": "1m", "$namespace": "metallb-system", "$datasource": "x"}
+# Order matters: "$frr_namespace" must go before "$namespace" (a substring of it).
+subs = {"$__rate_interval": "5m", "$__interval": "1m", "$frr_namespace": "openshift-frr-k8s",
+        "$namespace": "metallb-operator", "$datasource": "x"}
 def sub(e):
     for k, v in subs.items(): e = e.replace(k, v)
     return e

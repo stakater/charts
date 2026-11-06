@@ -1,17 +1,19 @@
 {{- $r := .Values.prometheus.rules.watchdog.metricsAbsent }}
 {{- if and ($r) ($r.enabled) }}
 {{- $targets := list }}
-{{- if and .Values.prometheus.monitors.speakerPodMonitor .Values.prometheus.monitors.speakerPodMonitor.enabled }}
-{{- $targets = append $targets (dict "target" "speaker" "expr" (printf "absent(up{job=\"%s\"})" .Values.prometheus.monitors.speakerPodMonitor.job)) }}
+{{- $op := .Values.metallb.operatorManagedMonitors }}
+{{- if or $op (and .Values.prometheus.monitors.speakerPodMonitor .Values.prometheus.monitors.speakerPodMonitor.enabled) }}
+{{- $targets = append $targets (dict "target" "speaker" "expr" (printf "absent(up{job=\"%s\"})" .Values.metallb.speaker.job)) }}
 {{- end }}
-{{- if and .Values.prometheus.monitors.frrK8sPodMonitor .Values.prometheus.monitors.frrK8sPodMonitor.enabled }}
-{{- $targets = append $targets (dict "target" "frr-k8s" "expr" (printf "absent(up{job=\"%s\"})" .Values.prometheus.monitors.frrK8sPodMonitor.job)) }}
+{{- if or $op (and .Values.prometheus.monitors.frrK8sPodMonitor .Values.prometheus.monitors.frrK8sPodMonitor.enabled) }}
+{{- $targets = append $targets (dict "target" "frr-k8s" "expr" (printf "absent(up{job=\"%s\"})" .Values.metallb.frrk8s.job)) }}
 {{- end }}
 {{- if $targets }}
 # The blindness watchdog: a scrape target that VANISHES (monitor deleted, selector
 # drift, DaemonSet gone, UWM off) leaves no up series, so the down alerts cannot fire
-# and every metric-based alert is silently disarmed. One absent() per ENABLED monitor.
-# The controller is covered by MetalLBControllerDown's own absent() clause.
+# and every metric-based alert is silently disarmed. One absent() per SCRAPED target
+# (operator-managed monitors, or an enabled chart PodMonitor). The controller is
+# covered by MetalLBControllerDown's own absent() clause.
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

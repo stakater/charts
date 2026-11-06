@@ -1,66 +1,73 @@
 # metallb-observability
 
-A Helm chart for **MetalLB** observability, integrated with **OpenShift user-workload
-monitoring (UWM)**. Built docs-first: every alert and panel traces to a story in
-[`docs/roadmap.md`](docs/roadmap.md), and every metric it references was **captured live**
-(MetalLB v0.15.3, **FRR-K8s mode** — provenance in
-[`tests/fixtures/README.md`](tests/fixtures/README.md)).
+A Helm chart for **MetalLB** observability on **OpenShift**, built for the **MetalLB
+operator** layout and usable with upstream MetalLB. Built docs-first: every alert and
+panel traces to a story in [`docs/roadmap.md`](docs/roadmap.md), and every metric it
+references was **captured live** — from the OpenShift MetalLB operator (4.22, FRR-K8s
+mode) and from upstream v0.15.3 — provenance in
+[`tests/fixtures/README.md`](tests/fixtures/README.md).
 
-It ships three kinds of resource into the MetalLB namespace:
+It ships three kinds of resource:
 
 | Resource | Purpose |
 | --- | --- |
-| `PodMonitor` (×3) | Controller and speaker on plain-HTTP `monitoring:7472`; FRR-K8s via its kube-rbac-proxy TLS ports (`metricshttps` 9140/9141, bearer token + optional shipped RBAC). No metrics Services exist in MetalLB installs, hence PodMonitors. |
 | `PrometheusRule` (×12) | Alerts on address-pool capacity, BGP/BFD session health, configuration health, component availability, and a blindness watchdog. One rule per file under `templates/prometheus/rules/`. |
 | `GrafanaDashboard` | Pools, sessions, announcements, L2 activity and config health, applied via grafana-operator. Gated on `grafana.dashboard.enabled`. |
+| `PodMonitor` (×3, **off by default**) | For **upstream** MetalLB only, where nothing else scrapes it: controller and speaker on the plain-HTTP `monitoring` port; FRR-K8s via its kube-rbac-proxy TLS ports (bearer token + optional shipped RBAC). The OpenShift operator ships its own `ServiceMonitor`s — leave these off there. |
 
 ## Prerequisites
 
-### 1. OpenShift user-workload monitoring enabled
+### 1. Something scrapes MetalLB
 
-```yaml
-# openshift-monitoring/cluster-monitoring-config configmap
-data:
-  config.yaml: |
-    enableUserWorkload: true
-```
+**OpenShift MetalLB operator (default):** nothing to do. The operator creates
+`ServiceMonitor`s for the controller, the speakers and FRR-K8s in namespaces labelled
+`openshift.io/cluster-monitoring=true`, and the **platform** Prometheus scrapes them
+under the jobs `controller-monitor-service`, `speaker-monitor-service` and
+`frr-k8s-monitor-service`. The chart's rules and dashboard target those jobs
+(`metallb.*.job`) and its `up`-based alerts render because
+`metallb.operatorManagedMonitors: true`.
 
-UWM evaluates these `PrometheusRule`s in `thanos-ruler-user-workload`.
+**Upstream MetalLB (helm chart):** set `metallb.operatorManagedMonitors: false`, the
+upstream pod selectors and your own job names, and enable the three PodMonitors — see
+`tests/e2e/values-e2e.yaml`, the upstream profile.
 
 ### 2. MetalLB in FRR-K8s mode
 
 The BGP/BFD alerts target the **`frrk8s_*` metric family**, which FRR-K8s mode exports
-(the upstream default and what recent OpenShift MetalLB operators deploy). On a
-native-BGP-mode install the `metallb_bgp_*` family exists instead and the session alerts
-stay silent — check the mode before relying on them.
+(the upstream default and what the OpenShift MetalLB operator deploys — on OpenShift the
+`frr-k8s` DaemonSet runs in its own `openshift-frr-k8s` namespace, `metallb.frrk8s.namespace`).
+On a native-BGP-mode install the `metallb_bgp_*` family exists instead and the session
+alerts stay silent — check the mode before relying on them.
 
 ### 3. Install into the MetalLB namespace
 
-The monitors select MetalLB's pods by label, so the chart must land in MetalLB's
-namespace (`metallb-system` on operator installs): `global.namespace` or the release
-namespace. Pod label selectors default to the upstream chart's labels
-(`app.kubernetes.io/name` + `app.kubernetes.io/component`); verify them on an operator
-install and override `metallb.*.selector` if they differ.
+Install into MetalLB's namespace (`metallb-operator` on OpenShift operator installs):
+`global.namespace` or the release namespace. On the operator that namespace carries
+`openshift.io/cluster-monitoring=true`, so the **platform** Prometheus evaluates the
+`PrometheusRule`s (it has every MetalLB series; UWM explicitly excludes such
+namespaces). The Grafana dashboard goes wherever `grafana.namespace` points (defaults to
+the same namespace; `allowCrossNamespaceImport` is on).
 
-### 4. FRR-K8s metrics auth
+### 4. FRR-K8s metrics auth (chart PodMonitor only)
 
-FRR-K8s binds its raw metrics to localhost; the chart scrapes the kube-rbac-proxy TLS
-ports and authenticates with a token whose ServiceAccount must be allowed
-`get /metrics`. The chart ships that ServiceAccount + token Secret + ClusterRole/Binding
-(`frrK8sPodMonitor.metricsReader.create: true`); disable it if the scraping Prometheus
-is already authorized.
+FRR-K8s binds its raw metrics to localhost; the chart's PodMonitor scrapes the
+kube-rbac-proxy TLS ports and authenticates with a token whose ServiceAccount must be
+allowed `get /metrics`. The chart ships that ServiceAccount + token Secret +
+ClusterRole/Binding (`frrK8sPodMonitor.metricsReader.create: true`); disable it if the
+scraping Prometheus is already authorized. Not needed when the operator scrapes.
 
 ## Configuration
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `metallb.controller.selector` | upstream labels | Pod labels of the controller Deployment. |
-| `metallb.speaker.selector` | upstream labels | Pod labels of the speaker DaemonSet. |
-| `metallb.frrk8s.selector` | upstream labels | Pod labels of the FRR-K8s DaemonSet. |
-| `prometheus.monitors.controllerPodMonitor.enabled` | `false` | Scrape the controller. |
-| `prometheus.monitors.speakerPodMonitor.enabled` | `false` | Scrape every speaker. |
-| `prometheus.monitors.frrK8sPodMonitor.enabled` | `false` | Scrape FRR-K8s (BGP/BFD source). |
-| `prometheus.monitors.<m>.job` | `metallb-*` | Pinned job label; rules and dashboard reference it — change together. |
+| `metallb.operatorManagedMonitors` | `true` | The operator's ServiceMonitors already scrape MetalLB: render the `up`-based alerts without the chart's PodMonitors. Set `false` for upstream MetalLB. |
+| `metallb.controller.selector` / `.speaker.selector` / `.frrk8s.selector` | operator labels (`app` + `component`) | Pod labels the chart PodMonitors select. Upstream uses `app.kubernetes.io/name` + `app.kubernetes.io/component`. |
+| `metallb.controller.job` / `.speaker.job` / `.frrk8s.job` | `*-monitor-service` (operator) | The `job` label of each component's series; rules and dashboard reference it, and the chart PodMonitors pin it. |
+| `metallb.frrk8s.namespace` | `openshift-frr-k8s` | Namespace of the FRR-K8s DaemonSet (empty = the chart's namespace, as upstream). |
+| `prometheus.monitors.controllerPodMonitor.enabled` | `false` | Scrape the controller (upstream only). |
+| `prometheus.monitors.speakerPodMonitor.enabled` | `false` | Scrape every speaker (upstream only). |
+| `prometheus.monitors.frrK8sPodMonitor.enabled` | `false` | Scrape FRR-K8s (upstream only). |
+| `prometheus.monitors.frrK8sPodMonitor.ports` | `[metricshttps, frrmetricshttps]` | kube-rbac-proxy port names to scrape (operator names; upstream names both `metricshttps`). |
 | `prometheus.monitors.frrK8sPodMonitor.metricsReader.create` | `true` | Ship the token + RBAC the TLS scrape needs. |
 | `prometheus.rules.labels` | `{}` | Extra labels on every `PrometheusRule` (Alertmanager routing / `ruleSelector`). |
 | `prometheus.rules.metallb.<alert>.*` | see `values.yaml` | Per-alert `enabled` / `for` / `severity` / thresholds. |
@@ -78,22 +85,24 @@ is already authorized.
 | `MetalLBConfigNotLoaded` | critical | a pod has never loaded a config |
 | `MetalLBConfigStale` | warning | the latest config failed; an old one is live |
 | `MetalLBK8sClientErrors` | warning | config update errors in the last 10m |
-| `MetalLBControllerDown` | critical | controller scrape failing **or absent** (needs its monitor) |
-| `MetalLBSpeakerDown` | warning | a speaker target failing its scrape (needs its monitor) |
+| `MetalLBControllerDown` | critical | controller scrape failing **or absent** |
+| `MetalLBSpeakerDown` | warning | a speaker target failing its scrape |
 | `MetalLBFRRK8sDown` | warning | an FRR-K8s metrics endpoint failing (BGP/BFD alerts blind) |
 | `MetalLBMetricsAbsent` | warning | watchdog: speaker / frr-k8s series vanished entirely |
 
-The `up`-based alerts render only while their PodMonitor is enabled — without the scrape
-there is nothing to alert on.
+The `up`-based alerts render while something scrapes the component: the operator's
+monitors (`metallb.operatorManagedMonitors: true`) or the matching chart PodMonitor.
+Without a scrape there is nothing to alert on.
 
 ## Dashboard
 
 Enabled with `grafana.dashboard.enabled=true`. Defaults to the `prometheus` data source;
-a `namespace` variable scopes every query.
+a `namespace` variable (MetalLB) and a `frr_namespace` variable (FRR-K8s, a separate
+namespace on OpenShift) scope every query. The availability tiles use `metallb.*.job`.
 
 | Panel | Query basis | Value / purpose |
 | --- | --- | --- |
-| **Controller / Speakers up** | `up{job="metallb-*"}` | Scrape-health tiles; pairs with the Down alerts. |
+| **Controller / Speakers up** | `up{job=<metallb.*.job>}` | Scrape-health tiles; pairs with the Down alerts. |
 | **BGP / BFD sessions down** | `frrk8s_{bgp,bfd}_session_up == 0` | Top-of-glass reachability state. |
 | **Pools at capacity / Stale-config pods** | allocator + `config_stale_bool` | The two silent failure modes, visible. |
 | **Pool utilization** | `in_use / total` per pool | Bar gauge with the 80/90% thresholds the alerts use. |
@@ -118,12 +127,12 @@ a `namespace` variable scopes every query.
 ```
 
 ```bash
-# Tilt against a cluster (deploys into metallb-system):
+# Tilt against a cluster (deploys into metallb-operator):
 tilt up
 tilt down -f Tiltfile-delete
 ```
 
-> **Before release:** re-run the capture read-only against a cluster running the MetalLB
-> **operator** and diff the scrape surface (pod labels, rbac-proxy ports, operator-created
-> monitors) against `tests/fixtures/README.md` — then adjust `metallb.*.selector` /
-> monitor defaults if the operator's layout differs. See `tests/e2e/README.md`.
+Validation history lives in `tests/reports/`: the kind alert e2e (every alert fired and
+resolved) and the read-only comparison against an OpenShift cluster running the MetalLB
+operator (scrape surface diffed, every alert and panel query evaluated live, server
+dry-run install).

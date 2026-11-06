@@ -32,55 +32,73 @@ grafana:
   dashboard:
     enabled: true
 
-# Identity of the MetalLB installation being monitored. Pod label selectors as
-# captured from the upstream helm chart (v0.15.3, FRR-K8s mode). The OpenShift
-# MetalLB operator may label pods differently (e.g. `app: metallb` +
-# `component: speaker`) — verify on the target cluster and override here.
+# Identity of the MetalLB installation being monitored. Defaults are the
+# OpenShift MetalLB OPERATOR layout (captured 2026-11-06, operator 4.22 on
+# OCP 4.22): pod labels `app` + `component`, FRR-K8s in its own namespace, and
+# the operator's own ServiceMonitors already feeding the platform Prometheus
+# under the job labels below. For upstream MetalLB (helm chart) see
+# tests/e2e/values-e2e.yaml — the upstream profile.
 metallb:
+  # true (operator): the operator ships ServiceMonitors (controller-monitor,
+  # speaker-monitor, frr-k8s-monitor) into namespaces labelled
+  # openshift.io/cluster-monitoring=true, so the platform Prometheus already
+  # scrapes everything and the `up`-based alerts render without the chart's
+  # PodMonitors. false (upstream): nothing scrapes MetalLB until the
+  # PodMonitors below are enabled, and the `up` alerts render only with them.
+  operatorManagedMonitors: true
   controller:
     selector:
-      app.kubernetes.io/name: metallb
-      app.kubernetes.io/component: controller
+      app: metallb
+      component: controller
+    # Series identity: the `job` label on this component's metrics. Rules and the
+    # dashboard reference it; a chart PodMonitor pins it by relabeling.
+    job: controller-monitor-service
   speaker:
     selector:
-      app.kubernetes.io/name: metallb
-      app.kubernetes.io/component: speaker
-  # FRR-K8s daemon pods: the BGP/BFD metric source in FRR-K8s mode.
+      app: metallb
+      component: speaker
+    job: speaker-monitor-service
+  # FRR-K8s daemon pods: the BGP/BFD metric source in FRR-K8s mode. The operator
+  # runs them in their OWN namespace; empty = the chart's namespace (upstream).
   frrk8s:
+    namespace: openshift-frr-k8s
     selector:
-      app.kubernetes.io/name: frr-k8s
-      app.kubernetes.io/component: frr-k8s
+      app: frr-k8s
+      component: frr-k8s
+    job: frr-k8s-monitor-service
 
 prometheus:
+  # Chart-shipped PodMonitors. Off by default: the OpenShift operator already
+  # scrapes (see metallb.operatorManagedMonitors); enabling them there scrapes
+  # every target twice. Enable them for upstream MetalLB installs.
   monitors:
-    # Controller: plain HTTP on the `monitoring` container port (7472).
+    # Controller: plain HTTP on the `monitoring` container port (29150 on the
+    # operator, 7472 upstream — the port NAME is the same on both).
     controllerPodMonitor:
       enabled: false
       interval: 30s
       scrapeTimeout: 10s
       port: monitoring
-      # The job label is pinned by relabeling (release-name-independent); the
-      # rules and the dashboard reference it. Change both together.
-      job: metallb-controller
-    # Speaker DaemonSet: plain HTTP on the `monitoring` container port (7472).
+    # Speaker DaemonSet: plain HTTP on the `monitoring` container port.
     # hostNetwork — the speaker answers on its node IP (= its pod IP).
     speakerPodMonitor:
       enabled: false
       interval: 30s
       scrapeTimeout: 10s
       port: monitoring
-      job: metallb-speaker
     # FRR-K8s DaemonSet: the raw metrics ports bind 127.0.0.1 only; the ONLY
-    # scrapeable surface is the two kube-rbac-proxy TLS ports, both named
-    # `metricshttps` (9140 = frr-k8s controller metrics, 9141 = BGP/BFD metrics).
-    # One endpoint on the shared port name scrapes both; auth is a bearer token
-    # checked by SubjectAccessReview against GET /metrics.
+    # scrapeable surface is the two kube-rbac-proxy TLS ports (9140 = frr-k8s
+    # controller metrics, 9141 = BGP/BFD metrics). The operator names them
+    # `metricshttps` + `frrmetricshttps`; upstream names BOTH `metricshttps`
+    # (one entry scrapes both there). Auth is a bearer token checked by
+    # SubjectAccessReview against GET /metrics.
     frrK8sPodMonitor:
       enabled: false
       interval: 30s
       scrapeTimeout: 10s
-      port: metricshttps
-      job: metallb-frr-k8s
+      ports:
+        - metricshttps
+        - frrmetricshttps
       tls:
         # The proxies serve a self-signed cert unless frr-k8s is configured
         # with a metricsTLSSecret; verification is off by default.

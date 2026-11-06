@@ -1,7 +1,7 @@
 # promtool unit tests for metallb-observability rule LOGIC.
 # Runs against tests/.rendered/rules.yaml (all groups merged, values substituted with
-# chart defaults — pinned job labels: metallb-controller / metallb-speaker /
-# metallb-frr-k8s; thresholds: pool 90%, flapping >3 in 30m, client errors over 10m).
+# chart defaults — operator job labels: controller-monitor-service / speaker-monitor-service /
+# frr-k8s-monitor-service; thresholds: pool 90%, flapping >3 in 30m, client errors over 10m).
 rule_files:
   - ../.rendered/rules.yaml
 
@@ -203,7 +203,7 @@ tests:
   # Controller target failing its scrape -> critical after 5m; recovers.
   - interval: 1m
     input_series:
-      - series: 'up{job="metallb-controller", pod="metallb-controller-1"}'
+      - series: 'up{job="controller-monitor-service", pod="metallb-controller-1"}'
         values: '0x10 1x10'
     alert_rule_test:
       - eval_time: 7m
@@ -212,7 +212,7 @@ tests:
           - exp_labels:
               severity: critical
               rulesgroup: metallb
-              job: metallb-controller
+              job: controller-monitor-service
               pod: metallb-controller-1
             exp_annotations:
               summary: "MetalLB controller is down"
@@ -232,7 +232,7 @@ tests:
           - exp_labels:
               severity: critical
               rulesgroup: metallb
-              job: metallb-controller
+              job: controller-monitor-service
             exp_annotations:
               summary: "MetalLB controller is down"
               description: "The MetalLB controller is down or unscrapeable. Nothing allocates LoadBalancer IPs: every new or changed LoadBalancer Service hangs <pending> until it is back. Existing allocations keep working."
@@ -240,9 +240,9 @@ tests:
   # One speaker failing its scrape -> warning naming pod and node; others quiet.
   - interval: 1m
     input_series:
-      - series: 'up{job="metallb-speaker", pod="metallb-speaker-a", node="worker-1"}'
+      - series: 'up{job="speaker-monitor-service", pod="metallb-speaker-a", node="worker-1"}'
         values: '0x10 1x10'
-      - series: 'up{job="metallb-speaker", pod="metallb-speaker-b", node="worker-2"}'
+      - series: 'up{job="speaker-monitor-service", pod="metallb-speaker-b", node="worker-2"}'
         values: '1x20'
     alert_rule_test:
       - eval_time: 7m
@@ -251,7 +251,7 @@ tests:
           - exp_labels:
               severity: warning
               rulesgroup: metallb
-              job: metallb-speaker
+              job: speaker-monitor-service
               pod: metallb-speaker-a
               node: worker-1
             exp_annotations:
@@ -263,9 +263,9 @@ tests:
   # An frr-k8s metrics endpoint failing -> warning naming the container.
   - interval: 1m
     input_series:
-      - series: 'up{job="metallb-frr-k8s", pod="metallb-frr-k8s-x", node="worker-1", container="kube-rbac-proxy-frr"}'
+      - series: 'up{job="frr-k8s-monitor-service", pod="metallb-frr-k8s-x", node="worker-1", container="kube-rbac-proxy-frr"}'
         values: '0x10'
-      - series: 'up{job="metallb-frr-k8s", pod="metallb-frr-k8s-x", node="worker-1", container="kube-rbac-proxy"}'
+      - series: 'up{job="frr-k8s-monitor-service", pod="metallb-frr-k8s-x", node="worker-1", container="kube-rbac-proxy"}'
         values: '1x10'
     alert_rule_test:
       - eval_time: 7m
@@ -274,7 +274,7 @@ tests:
           - exp_labels:
               severity: warning
               rulesgroup: metallb
-              job: metallb-frr-k8s
+              job: frr-k8s-monitor-service
               pod: metallb-frr-k8s-x
               node: worker-1
               container: kube-rbac-proxy-frr
@@ -297,7 +297,7 @@ tests:
               severity: warning
               rulesgroup: metallb
               target: speaker
-              job: metallb-speaker
+              job: speaker-monitor-service
             exp_annotations:
               summary: "MetalLB monitoring is blind: no speaker metrics"
               description: "The speaker metrics this chart alerts on have NO series at all. Every alert that depends on them is silently disarmed. Likely causes: the PodMonitor or the pods vanished, selector drift, or user-workload monitoring stopped scraping the namespace."
@@ -305,7 +305,7 @@ tests:
               severity: warning
               rulesgroup: metallb
               target: frr-k8s
-              job: metallb-frr-k8s
+              job: frr-k8s-monitor-service
             exp_annotations:
               summary: "MetalLB monitoring is blind: no frr-k8s metrics"
               description: "The frr-k8s metrics this chart alerts on have NO series at all. Every alert that depends on them is silently disarmed. Likely causes: the PodMonitor or the pods vanished, selector drift, or user-workload monitoring stopped scraping the namespace."
@@ -313,9 +313,9 @@ tests:
   # Healthy scrape across the board -> watchdog quiet.
   - interval: 1m
     input_series:
-      - series: 'up{job="metallb-speaker", pod="s-a"}'
+      - series: 'up{job="speaker-monitor-service", pod="s-a"}'
         values: '1x25'
-      - series: 'up{job="metallb-frr-k8s", pod="f-a"}'
+      - series: 'up{job="frr-k8s-monitor-service", pod="f-a"}'
         values: '1x25'
     alert_rule_test:
       - eval_time: 17m
