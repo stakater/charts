@@ -104,10 +104,29 @@ At capture time the public BGP pool had **one free IP**. The next `LoadBalancer`
 against it will sit `<pending>` — exactly the silent failure class behind the incidents
 that motivated this chart. Installing the chart would page `warning` immediately.
 
-## 5. Not done / caveats
+## 5. Live install on the same cluster (later the same day)
+
+After the read-only pass the chart was **installed for real** (`helm install` from the
+local checkout, default values, into the MetalLB namespace) to prove the two things a
+dry-run cannot: rule pickup by the platform Prometheus and the Grafana import.
+
+| Check | Result |
+| --- | --- |
+| Rule pickup | within one scrape interval the platform Prometheus listed all **12 groups / 13 rules**, every rule `health: ok` |
+| Alert state | `MetalLBAddressPoolNearExhaustion` **firing** on the public pool; all other alerts inactive |
+| Alertmanager | the alert arrived in `alertmanager-main` as `active`, `severity=warning`, routed to the cluster's receiver — the end-to-end path works |
+| Transient | `MetalLBControllerDown` showed `pending` for one evaluation right after rule load (the `absent()` clause before the first `up` sample landed in the new group), cleared on the next evaluation, never fired — the 5m `for` absorbs it as designed |
+| Dashboard, first attempt | the `GrafanaDashboard` in the MetalLB namespace got **no status and no operator log line for two hours**. Cause: grafana-operator is installed through a single-namespace `OperatorGroup`, so it never reconciles CRs outside its own namespace (`allowCrossNamespaceImport` cannot help with that) |
+| Dashboard, fix | `helm upgrade --set grafana.namespace=stakater-grafana-operator` → `DashboardSynchronized: Dashboard was successfully applied to 1 instances`, uid `metallb-observability`, listed on the `Grafana` CR within seconds. README now says to set `grafana.namespace` on SAAP |
+
+The release was **left installed** (revision 2) so the pool alert keeps paging until the
+chart arrives through the regular pin; remove with
+`helm uninstall metallb-observability -n metallb-operator` if that is not wanted.
+
+## 6. Not done / caveats
 
 - No failure scenarios were induced on the shared cluster (per the procedure); the
   fire-and-resolve proof remains the kind e2e (`e2e-kind-2026-11-01.md`).
-- The chart was **not installed**; the Grafana import and Alertmanager routing are
-  validated by the server dry-run and the existing-dashboard conventions only.
+- The dashboard was verified through the operator's sync status and by evaluating
+  every panel query against the same Prometheus, not by eye in the Grafana UI.
 - Alert thresholds are still the roadmap placeholders pending 2–4 weeks of baseline.
