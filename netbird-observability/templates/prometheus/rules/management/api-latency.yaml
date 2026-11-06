@@ -1,0 +1,36 @@
+{{- $r := .Values.prometheus.rules.management.apiLatencyHigh }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $job := include "netbird-observability.managementJob" . }}
+# p95 latency of the management HTTP API, aggregated across endpoints (the *_total
+# histogram is the cross-endpoint aggregate; captured in tests/fixtures/). With no API
+# traffic the quantile is NaN and the comparison is false — quiet, as intended.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-management-api-latency
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.management
+      rules:
+        - alert: NetBirdManagementApiLatencyHigh
+          expr: |
+            histogram_quantile(0.95,
+              sum by (namespace, job, le) (rate(management_http_request_duration_ms_total_milliseconds_bucket{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}]))
+            ) > {{ $r.maxP95Ms }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird management API in {{`{{ $labels.namespace }}`}} is slow (p95 {{`{{ $value | humanize }}`}}ms)"
+            description: "p95 management HTTP API latency exceeded {{ $r.maxP95Ms }}ms over the last {{ $r.window }}. Check management pod resources and the store (PostgreSQL) latency — NetBirdManagementStoreSlow firing alongside points at the database."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdmanagementapilatencyhigh"
+{{- end }}

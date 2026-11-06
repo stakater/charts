@@ -1,0 +1,37 @@
+{{- $r := .Values.prometheus.rules.management.syncLatencyHigh }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $job := include "netbird-observability.managementJob" . }}
+# p95 latency of the peer Sync gRPC call. Slow syncs precede reconnect storms: peers time
+# out, re-login, and the login/sync load compounds. The metric is lazily registered (no
+# series until the instance has served a sync) — absence is the watchdogs' job, not this
+# alert's.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-management-sync-latency
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.management
+      rules:
+        - alert: NetBirdManagementSyncLatencyHigh
+          expr: |
+            histogram_quantile(0.95,
+              sum by (namespace, job, le) (rate(management_grpc_sync_request_duration_ms_milliseconds_bucket{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}]))
+            ) > {{ $r.maxP95Ms }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird peer sync in {{`{{ $labels.namespace }}`}} is slow (p95 {{`{{ $value | humanize }}`}}ms)"
+            description: "p95 Sync gRPC latency exceeded {{ $r.maxP95Ms }}ms over the last {{ $r.window }}. Peers are slow to receive network-map updates and may start timing out and re-logging in. Check management resources, store latency, and the account's peer count."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdmanagementsynclatencyhigh"
+{{- end }}

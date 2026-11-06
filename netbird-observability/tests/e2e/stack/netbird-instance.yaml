@@ -1,0 +1,159 @@
+# One REAL NetBird instance (official v0.75.0 images: management + signal + relay), shaped
+# like the platform's netbird install: same pod labels (which the chart's metrics Services
+# select on), same ports, management on sqlite with IdP none (the capture-rig config —
+# enrolling real peers needs an IdP, which is out of scope for this harness; peer-level
+# alert logic is covered by promtool unit tests).
+# Applied once per mesh namespace by up.sh, with __NS__ substituted.
+apiVersion: v1
+kind: Namespace
+metadata: {name: __NS__}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: netbird-management-config
+  namespace: __NS__
+data:
+  management.json: |
+    {
+      "Stuns": [{"Proto": "udp", "URI": "stun:localhost:3478"}],
+      "TURNConfig": {"Turns": [], "CredentialsTTL": "12h", "Secret": "e2e-turn-secret"},
+      "Relay": {"Addresses": ["rel://netbird-relay.__NS__.svc:33080"], "CredentialsTTL": "24h", "Secret": "e2e-relay-secret"},
+      "Signal": {"Proto": "http", "URI": "netbird-signal.__NS__.svc:10000"},
+      "Datadir": "/var/lib/netbird/",
+      "DataStoreEncryptionKey": "/zwX5wszSBnOChizAnyyAeJVLYWroImUHOnNeCbuT2U=",
+      "HttpConfig": {"Address": "0.0.0.0:8080"},
+      "IdpManagerConfig": {"ManagerType": "none"},
+      "StoreConfig": {"Engine": "sqlite"}
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbird-management
+  namespace: __NS__
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: netbird-management
+      app.kubernetes.io/instance: mesh
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: netbird-management
+        app.kubernetes.io/instance: mesh
+    spec:
+      containers:
+        - name: netbird-management
+          image: docker.io/netbirdio/management:0.75.0
+          args:
+            - --port=8080
+            - --metrics-port=9090
+            - --log-file=console
+            - --log-level=info
+            - --disable-anonymous-metrics=true
+          ports:
+            - {name: mgmt, containerPort: 8080}
+            - {name: metrics, containerPort: 9090}
+          volumeMounts:
+            - {name: config, mountPath: /etc/netbird}
+            - {name: data, mountPath: /var/lib/netbird}
+      volumes:
+        - name: config
+          configMap: {name: netbird-management-config}
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netbird-management
+  namespace: __NS__
+spec:
+  selector:
+    app.kubernetes.io/name: netbird-management
+    app.kubernetes.io/instance: mesh
+  ports:
+    - {name: mgmt, port: 8080, targetPort: 8080}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbird-signal
+  namespace: __NS__
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: netbird-signal
+      app.kubernetes.io/instance: mesh
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: netbird-signal
+        app.kubernetes.io/instance: mesh
+    spec:
+      containers:
+        - name: netbird-signal
+          image: docker.io/netbirdio/signal:0.75.0
+          args:
+            - --port=10000
+            - --metrics-port=9090
+            - --log-file=console
+            - --log-level=info
+          ports:
+            - {name: signal, containerPort: 10000}
+            - {name: metrics, containerPort: 9090}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netbird-signal
+  namespace: __NS__
+spec:
+  selector:
+    app.kubernetes.io/name: netbird-signal
+    app.kubernetes.io/instance: mesh
+  ports:
+    - {name: signal, port: 10000, targetPort: 10000}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbird-relay
+  namespace: __NS__
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: netbird-relay
+      app.kubernetes.io/instance: mesh
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: netbird-relay
+        app.kubernetes.io/instance: mesh
+    spec:
+      containers:
+        - name: netbird-relay
+          image: docker.io/netbirdio/relay:0.75.0
+          env:
+            - {name: NB_LOG_LEVEL, value: info}
+            - {name: NB_LISTEN_ADDRESS, value: ":33080"}
+            - {name: NB_EXPOSED_ADDRESS, value: "rel://netbird-relay.__NS__.svc:33080"}
+            - {name: NB_AUTH_SECRET, value: "e2e-relay-secret"}
+          ports:
+            - {name: relay, containerPort: 33080}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netbird-relay
+  namespace: __NS__
+spec:
+  selector:
+    app.kubernetes.io/name: netbird-relay
+    app.kubernetes.io/instance: mesh
+  ports:
+    - {name: relay, port: 33080, targetPort: 33080}

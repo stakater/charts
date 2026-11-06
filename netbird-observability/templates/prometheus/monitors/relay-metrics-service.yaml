@@ -1,0 +1,21 @@
+{{- if and (.Values.prometheus.monitors.relay) (.Values.prometheus.monitors.relay.enabled) }}
+# Fixed-name metrics Service for the relay pods — see management-metrics-service.yaml
+# for why the name is not release-derived.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "netbird-observability.relayJob" . }}
+  namespace: {{ include "netbird-observability.namespace" . }}
+  labels:
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: relay-metrics
+spec:
+  type: ClusterIP
+  selector:
+    {{- toYaml .Values.netbird.relay.podLabels | nindent 4 }}
+  ports:
+    - name: metrics
+      port: {{ .Values.netbird.relay.metricsPort }}
+      targetPort: {{ .Values.netbird.relay.metricsPort }}
+      protocol: TCP
+{{- end }}
