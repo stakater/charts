@@ -1,5 +1,5 @@
 {
-  "title": "MetalLB Observability",
+  "title": "MetalLB / Overview",
   "uid": "metallb-observability",
   "tags": ["metallb", "networking", "load-balancer"],
   "description": "MetalLB health: address pools, BGP/BFD sessions (FRR-K8s metric family), service announcements, L2 activity and configuration health. Ships with the metallb-observability chart; the availability tiles use the job labels the chart is configured with (metallb.*.job — the OpenShift operator's own monitors by default).",
