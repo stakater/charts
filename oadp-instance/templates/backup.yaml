@@ -10,6 +10,10 @@ spec:
     snapshotVolumes: false   # Only take object backups
     includedNamespaces:
 {{ toYaml .Values.backupSchedule.includedNamespaces | nindent 6 }}
+    {{- with .Values.backupSchedule.excludedNamespaces }}
+    excludedNamespaces:
+{{ toYaml . | nindent 6 }}
+    {{- end }}
     excludedResources:
 {{ toYaml .Values.backupSchedule.excludedResources | nindent 6 }}
     ttl: {{ .Values.clusterBackup.ttl | default "48h0m0s" }} # 48 backups present at once for the last day
