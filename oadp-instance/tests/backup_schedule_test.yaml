@@ -1,0 +1,21 @@
+suite: default-object-schedule namespaces
+templates:
+  - templates/backup.yaml
+tests:
+  - it: renders no excludedNamespaces by default
+    asserts:
+      - notExists:
+          path: spec.template.excludedNamespaces
+      - equal:
+          path: spec.template.includedNamespaces
+          value: ["*"]
+
+  - it: renders excludedNamespaces, glob patterns included, when set
+    set:
+      backupSchedule.excludedNamespaces:
+        - hypershift-*
+        - kube-hosted-clusters-*
+    asserts:
+      - equal:
+          path: spec.template.excludedNamespaces
+          value: ["hypershift-*", "kube-hosted-clusters-*"]

@@ -19,6 +19,9 @@ developmentMode:
 backupSchedule:
   includedNamespaces:
     - "*"
+  # Namespaces to leave out of the object backup. Velero matches glob patterns
+  # here (e.g. "hypershift-*"). Empty renders no excludedNamespaces field.
+  excludedNamespaces: []
   excludedResources:
     - imagetags
     - images
