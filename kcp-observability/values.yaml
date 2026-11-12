@@ -86,6 +86,11 @@ prometheus:
     frontProxyServiceMonitor:
       enabled: false
       component: front-proxy
+      # Optional client-cert auth for /metrics (secret with tls.crt/tls.key in the
+      # release namespace). Empty = anonymous scrape, which works on kcp v0.32.1 but
+      # gets 401 on v0.33.6 (verified on eu-3, 2026-11-12). The cert used for
+      # shardServiceMonitor.certSecret is accepted by the front-proxy too.
+      certSecret: ""
     # druid etcd via the <name>-client Service; scraped with the etcd client cert.
     etcdServiceMonitor:
       enabled: false
