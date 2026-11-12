@@ -29,6 +29,9 @@ prometheus:
       certSecret: kcp-metrics-scraper-cert
     frontProxyServiceMonitor:
       enabled: true
+      # kcp v0.33.6 front-proxy answers 401 to an anonymous /metrics (v0.32.1 did not).
+      # Verified live 2026-11-12: 401 anonymous, 200 with the shard scraper cert.
+      certSecret: kcp-metrics-scraper-cert
     etcdServiceMonitor:
       enabled: true
       # druid-created secrets, both present in kcp-config on eu-3.

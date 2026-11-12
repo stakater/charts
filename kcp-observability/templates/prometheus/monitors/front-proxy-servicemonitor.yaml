@@ -1,6 +1,7 @@
 {{- if and (.Values.prometheus.monitors.frontProxyServiceMonitor) (.Values.prometheus.monitors.frontProxyServiceMonitor.enabled) }}
 {{- $m := .Values.prometheus.monitors.frontProxyServiceMonitor }}
-# Scrapes the kcp front-proxy (anonymous /metrics — verified on v0.32.1).
+# Scrapes the kcp front-proxy. /metrics is anonymous on kcp v0.32.1 but returns 401 on
+# v0.33.6, so set certSecret there (the shard scraper cert is accepted).
 # NOTE: if a hand-made `kcp-front-proxy` ServiceMonitor exists in this namespace
 # (us-2 has one), remove it when enabling this — otherwise the pods are double-scraped.
 apiVersion: monitoring.coreos.com/v1
@@ -18,6 +19,15 @@ spec:
       scheme: https
       tlsConfig:
         insecureSkipVerify: true
+        {{- if $m.certSecret }}
+        cert:
+          secret:
+            name: {{ $m.certSecret }}
+            key: tls.crt
+        keySecret:
+          name: {{ $m.certSecret }}
+          key: tls.key
+        {{- end }}
       relabelings:
         - action: replace
           sourceLabels: [__meta_kubernetes_pod_name]
