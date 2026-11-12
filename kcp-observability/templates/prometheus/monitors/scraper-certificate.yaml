@@ -1,0 +1,30 @@
+{{- if and (.Values.prometheus.monitors.scraperCertificate) (.Values.prometheus.monitors.scraperCertificate.enabled) }}
+{{- $c := .Values.prometheus.monitors.scraperCertificate }}
+# Client cert for scraping kcp /metrics, issued by the kcp-operator-generated shard
+# client CA. Its Secret is what shardServiceMonitor.certSecret and
+# frontProxyServiceMonitor.certSecret point at. Requires cert-manager.
+#
+# TODO(hardening): O=system:kcp:admin is broader than needed. Replace with a dedicated
+# group + a kcp ClusterRoleBinding on nonResourceURL /metrics in the root workspace.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $c.secretName }}
+  namespace: {{ include "kcp-observability.namespace" . }}
+  labels:
+    {{- include "kcp-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics-scraper
+spec:
+  commonName: kcp-metrics-scraper
+  issuerRef:
+    name: {{ $c.issuerName }}
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  secretName: {{ $c.secretName }}
+  subject:
+    organizations:
+      - system:kcp:admin
+  usages:
+    - client auth
+{{- end }}

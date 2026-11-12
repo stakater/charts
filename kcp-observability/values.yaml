@@ -67,6 +67,14 @@ prometheus:
   # scraping until the operator opts in). See README for the per-monitor prerequisites
   # (shard /metrics authz, etcd client cert).
   monitors:
+    # cert-manager Certificate for the scrape client cert, issued by the shard client CA
+    # that kcp-operator creates (`<rootshard>-client-ca`). Enable it and point the
+    # certSecret of the shard / front-proxy monitors at secretName. Off by default so a
+    # cluster that manages the cert elsewhere, or allows anonymous /metrics, is unaffected.
+    scraperCertificate:
+      enabled: false
+      secretName: kcp-metrics-scraper-cert
+      issuerName: root-client-ca
     # Root shard(s): selects the kcp-operator shard Services (component=rootshard).
     # PREREQUISITE: shard /metrics returns 403 to anonymous clients by default —
     # add extraArgs "--authorization-always-allow-paths=...,/metrics" on the

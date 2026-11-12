@@ -20,6 +20,9 @@ grafana:
 
 prometheus:
   monitors:
+    # Chart-managed scrape client cert (was hand-applied on eu-3 until chart 0.0.7).
+    scraperCertificate:
+      enabled: true
     shardServiceMonitor:
       enabled: true
       # Prerequisite applied on eu-3: cert-manager Certificate kcp-metrics-scraper-cert

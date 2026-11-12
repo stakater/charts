@@ -1,3 +1,7 @@
+# NOTE: the chart can now create this Certificate itself: set
+# prometheus.monitors.scraperCertificate.enabled=true. This file is kept as a reference
+# for clusters that manage the cert outside the chart.
+#
 # SRE prerequisite (option B in README step 2): a client cert the shard trusts, for the
 # shard ServiceMonitor's tlsConfig. Applied on us-2 2026-07-10; verified HTTP 200 on
 # /metrics. Issuer `root-client-ca` is the kcp-operator-generated shard client CA.
