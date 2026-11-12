@@ -28,6 +28,7 @@ ALL_FLAGS=(
   --set prometheus.monitors.frontProxyServiceMonitor.enabled=true
   --set prometheus.monitors.etcdServiceMonitor.enabled=true
   --set prometheus.monitors.syncAgentPodMonitor.enabled=true
+  --set prometheus.monitors.scraperCertificate.enabled=true
   # default-disabled alerts (kcp#4277 gauge drift) still get their logic tested
   --set prometheus.rules.workspaces.stuck.enabled=true
   --set prometheus.rules.workspaces.logicalClustersStuck.enabled=true
