@@ -1,0 +1,23 @@
+{{- if and (.Values.prometheus.monitors.signal) (.Values.prometheus.monitors.signal.enabled) }}
+# Fixed-name metrics Service for the signal pods — see management-metrics-service.yaml
+# for why the name is not release-derived. Signal's standalone metrics are UNPREFIXED
+# (active_peers, registrations_total, …), so every query against them must be scoped by
+# this Service's job label.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "netbird-observability.signalJob" . }}
+  namespace: {{ include "netbird-observability.namespace" . }}
+  labels:
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: signal-metrics
+spec:
+  type: ClusterIP
+  selector:
+    {{- toYaml .Values.netbird.signal.podLabels | nindent 4 }}
+  ports:
+    - name: metrics
+      port: {{ .Values.netbird.signal.metricsPort }}
+      targetPort: {{ .Values.netbird.signal.metricsPort }}
+      protocol: TCP
+{{- end }}

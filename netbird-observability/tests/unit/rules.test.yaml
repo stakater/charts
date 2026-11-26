@@ -1,0 +1,423 @@
+# promtool unit tests for the netbird-observability alert LOGIC.
+# Run via tests/validate.sh, which renders the chart with release namespace
+# "netbird-mesh" and merges all PrometheusRules into tests/.rendered/rules.yaml.
+# Series below therefore carry namespace="netbird-mesh" and the fleet-stable job labels.
+rule_files:
+  - ../.rendered/rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # ── NetBirdTargetDown: fires per component on up==0, resolves on recovery ────────────
+  - interval: 1m
+    input_series:
+      - series: 'up{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '1x10 0x20 1x10'
+      - series: 'up{job="netbird-signal-metrics", namespace="netbird-mesh", pod="signal-1"}'
+        values: '1x41'
+      - series: 'up{job="netbird-relay-metrics", namespace="netbird-mesh", pod="relay-1"}'
+        values: '1x41'
+    alert_rule_test:
+      # healthy: quiet
+      - eval_time: 8m
+        alertname: NetBirdTargetDown
+        exp_alerts: []
+      # management down 5m+ (down from 11m; for: 5m)
+      - eval_time: 17m
+        alertname: NetBirdTargetDown
+        exp_alerts:
+          - exp_labels:
+              job: netbird-management-metrics
+              namespace: netbird-mesh
+              pod: mgmt-1
+              severity: critical
+              rulesgroup: netbird
+              target: management
+            exp_annotations:
+              summary: "NetBird management mgmt-1 in netbird-mesh is down"
+              description: "Prometheus cannot scrape the NetBird management of this instance. While it is down, peers cannot (re)connect, authenticate, or receive network-map updates. Alerts that depend on its metrics cannot fire."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdtargetdown"
+      # recovered: resolves
+      - eval_time: 38m
+        alertname: NetBirdTargetDown
+        exp_alerts: []
+      # the whole time, the other components never fired (covered by the exp_alerts above
+      # listing only management at 17m)
+
+  # ── NetBirdMetricsAbsent: fires when the up series itself vanishes ───────────────────
+  - interval: 1m
+    input_series:
+      - series: 'up{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '1x60'
+      - series: 'up{job="netbird-relay-metrics", namespace="netbird-mesh", pod="relay-1"}'
+        values: '1x60'
+      # signal up series never exists -> its absent() watchdog must fire; the others not.
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: NetBirdMetricsAbsent
+        exp_alerts:
+          - exp_labels:
+              job: netbird-signal-metrics
+              namespace: netbird-mesh
+              severity: warning
+              rulesgroup: netbird
+              target: signal
+            exp_annotations:
+              summary: "NetBird monitoring is blind: no signal metrics in netbird-mesh"
+              description: "The signal scrape target of this NetBird instance has NO series at all. Every alert that depends on it is silently disarmed. Likely causes: the metrics Service or ServiceMonitor was deleted, the pod selector drifted, or the component was removed without disabling its monitor in this chart's values."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdmetricsabsent"
+
+  # ── NetBirdManagementApiErrorRateHigh: 5xx ratio over threshold fires; 4xx does not ──
+  - interval: 1m
+    input_series:
+      # aggregate request counter (endpoint="") — 10 req/min
+      - series: 'management_http_request_counter_total{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '0+10x45'
+      # 2 of 10 responses per minute are 500s -> 20% > 5%
+      - series: 'management_http_response_counter_code_total{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", code="500"}'
+        values: '0+2x45'
+      - series: 'management_http_response_counter_code_total{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", code="401"}'
+        values: '0+8x45'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: NetBirdManagementApiErrorRateHigh
+        exp_alerts:
+          - exp_labels:
+              job: netbird-management-metrics
+              namespace: netbird-mesh
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird management API in netbird-mesh is returning 5xx (20% of requests)"
+              description: "More than 5% of management HTTP API requests returned a server error over the last 10m. Dashboard, automation and provisioning against this instance are failing. Check the management pod logs and the store (PostgreSQL) health."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdmanagementapierrorratehigh"
+
+  # 4xx-only traffic stays quiet (client errors are not a server outage)
+  - interval: 1m
+    input_series:
+      - series: 'management_http_request_counter_total{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '0+10x45'
+      - series: 'management_http_response_counter_code_total{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", code="401"}'
+        values: '0+10x45'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: NetBirdManagementApiErrorRateHigh
+        exp_alerts: []
+
+  # ── NetBirdManagementApiLatencyHigh: p95 above 500ms fires ───────────────────────────
+  - interval: 1m
+    input_series:
+      # all requests land between 500ms and 1000ms -> p95 ~975ms > 500ms
+      - series: 'management_http_request_duration_ms_total_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="500"}'
+        values: '0x45'
+      - series: 'management_http_request_duration_ms_total_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="1000"}'
+        values: '0+10x45'
+      - series: 'management_http_request_duration_ms_total_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="+Inf"}'
+        values: '0+10x45'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: NetBirdManagementApiLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              job: netbird-management-metrics
+              namespace: netbird-mesh
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird management API in netbird-mesh is slow (p95 975ms)"
+              description: "p95 management HTTP API latency exceeded 500ms over the last 10m. Check management pod resources and the store (PostgreSQL) latency — NetBirdManagementStoreSlow firing alongside points at the database."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdmanagementapilatencyhigh"
+
+  # fast API stays quiet (all under 500ms)
+  - interval: 1m
+    input_series:
+      - series: 'management_http_request_duration_ms_total_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="500"}'
+        values: '0+10x45'
+      - series: 'management_http_request_duration_ms_total_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="1000"}'
+        values: '0+10x45'
+      - series: 'management_http_request_duration_ms_total_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="+Inf"}'
+        values: '0+10x45'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: NetBirdManagementApiLatencyHigh
+        exp_alerts: []
+
+  # ── NetBirdManagementSyncLatencyHigh: p95 sync latency above 1000ms fires ────────────
+  - interval: 1m
+    input_series:
+      - series: 'management_grpc_sync_request_duration_ms_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="1000"}'
+        values: '0x45'
+      - series: 'management_grpc_sync_request_duration_ms_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="5000"}'
+        values: '0+10x45'
+      - series: 'management_grpc_sync_request_duration_ms_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="+Inf"}'
+        values: '0+10x45'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: NetBirdManagementSyncLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              job: netbird-management-metrics
+              namespace: netbird-mesh
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird peer sync in netbird-mesh is slow (p95 4.8kms)"
+              description: "p95 Sync gRPC latency exceeded 1000ms over the last 10m. Peers are slow to receive network-map updates and may start timing out and re-logging in. Check management resources, store latency, and the account's peer count."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdmanagementsynclatencyhigh"
+
+  # ── NetBirdManagementRequestsBlocked: sustained rate-limiter rejections fire ─────────
+  - interval: 1m
+    input_series:
+      - series: 'management_grpc_login_request_blocked_counter_total{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '0+5x30'
+      - series: 'management_grpc_sync_request_blocked_counter_total{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '0+3x30'
+    alert_rule_test:
+      - eval_time: 22m
+        alertname: NetBirdManagementRequestsBlocked
+        exp_alerts:
+          - exp_labels:
+              job: netbird-management-metrics
+              namespace: netbird-mesh
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird management in netbird-mesh is rate-limiting peers (83.33m blocked req/s)"
+              description: "Management has been rejecting login/sync requests via its rate limiter for the whole window. Peers are being locked out in waves — look for a reconnect storm (management or signal restart, LB flap) or an account whose peer count outgrew the limiter."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdmanagementrequestsblocked"
+
+  # no blocking: quiet
+  - interval: 1m
+    input_series:
+      - series: 'management_grpc_login_request_blocked_counter_total{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '0x30'
+    alert_rule_test:
+      - eval_time: 22m
+        alertname: NetBirdManagementRequestsBlocked
+        exp_alerts: []
+
+  # ── NetBirdManagementStoreSlow: p95 persistence latency above 500ms fires ────────────
+  - interval: 1m
+    input_series:
+      - series: 'management_store_persistence_duration_ms_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="500"}'
+        values: '0x45'
+      - series: 'management_store_persistence_duration_ms_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="1000"}'
+        values: '0+10x45'
+      - series: 'management_store_persistence_duration_ms_milliseconds_bucket{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1", le="+Inf"}'
+        values: '0+10x45'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: NetBirdManagementStoreSlow
+        exp_alerts:
+          - exp_labels:
+              job: netbird-management-metrics
+              namespace: netbird-mesh
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird management store in netbird-mesh is slow (p95 975ms)"
+              description: "p95 store persistence latency exceeded 500ms over the last 10m. Management is waiting on its PostgreSQL — check the instance's CNPG cluster (cloudnative-pg-observability) for the database-side cause."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdmanagementstoreslow"
+
+  # ── NetBirdPeersDisconnected: had peers, now zero, management still up ───────────────
+  - interval: 1m
+    input_series:
+      # 25 peers for 2h, then zero
+      - series: 'management_grpc_connected_streams_ratio{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '25x120 0x60'
+    alert_rule_test:
+      # while peers are connected: quiet
+      - eval_time: 100m
+        alertname: NetBirdPeersDisconnected
+        exp_alerts: []
+      # zero since 2h00; for: 10m -> firing at 2h15
+      - eval_time: 135m
+        alertname: NetBirdPeersDisconnected
+        exp_alerts:
+          - exp_labels:
+              job: netbird-management-metrics
+              namespace: netbird-mesh
+              severity: critical
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "All NetBird peers of netbird-mesh disconnected"
+              description: "This instance had connected peers within the last 6h and now has zero open Sync streams, while management itself is still up. Peers cannot hold their management connection — check the management LoadBalancer/DNS, the gRPC listener, and the management TLS certificate."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdpeersdisconnected"
+
+  # a management pod restart must NOT erase the baseline: old pod's series ends, the new
+  # pod reports 0 — the namespace/job aggregate still remembers the peers.
+  - interval: 1m
+    input_series:
+      - series: 'management_grpc_connected_streams_ratio{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-old"}'
+        values: '25x120 stale'
+      - series: 'management_grpc_connected_streams_ratio{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-new"}'
+        values: '_x121 0x60'
+    alert_rule_test:
+      - eval_time: 140m
+        alertname: NetBirdPeersDisconnected
+        exp_alerts:
+          - exp_labels:
+              job: netbird-management-metrics
+              namespace: netbird-mesh
+              severity: critical
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "All NetBird peers of netbird-mesh disconnected"
+              description: "This instance had connected peers within the last 6h and now has zero open Sync streams, while management itself is still up. Peers cannot hold their management connection — check the management LoadBalancer/DNS, the gRPC listener, and the management TLS certificate."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdpeersdisconnected"
+
+  # a mesh that never had peers stays quiet
+  - interval: 1m
+    input_series:
+      - series: 'management_grpc_connected_streams_ratio{job="netbird-management-metrics", namespace="netbird-mesh", pod="mgmt-1"}'
+        values: '0x180'
+    alert_rule_test:
+      - eval_time: 170m
+        alertname: NetBirdPeersDisconnected
+        exp_alerts: []
+
+  # ── NetBirdSignalRegistrationFailures: sustained failures fire ───────────────────────
+  - interval: 1m
+    input_series:
+      - series: 'registration_failures_total{job="netbird-signal-metrics", namespace="netbird-mesh", pod="signal-1"}'
+        values: '0+2x40'
+    alert_rule_test:
+      - eval_time: 32m
+        alertname: NetBirdSignalRegistrationFailures
+        exp_alerts:
+          - exp_labels:
+              job: netbird-signal-metrics
+              namespace: netbird-mesh
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird signal registrations failing in netbird-mesh (33.33m/s)"
+              description: "Peers have been failing to register on the signal stream for the whole window. New peer-to-peer connections cannot be negotiated for this instance. Check signal pod logs and the signal TLS certificate."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdsignalregistrationfailures"
+
+  # the same series under ANOTHER job label must stay quiet: signal metrics are
+  # unprefixed, and the job matcher is what stops cross-workload matches.
+  - interval: 1m
+    input_series:
+      - series: 'registration_failures_total{job="some-other-app", namespace="netbird-mesh", pod="other-1"}'
+        values: '0+2x40'
+    alert_rule_test:
+      - eval_time: 32m
+        alertname: NetBirdSignalRegistrationFailures
+        exp_alerts: []
+
+  # ── NetBirdSignalForwardFailures: high failure share fires, low share stays quiet ────
+  - interval: 1m
+    input_series:
+      - series: 'messages_forwarded_total{job="netbird-signal-metrics", namespace="netbird-mesh", pod="signal-1"}'
+        values: '0+10x40'
+      - series: 'message_forward_failures_total{job="netbird-signal-metrics", namespace="netbird-mesh", pod="signal-1"}'
+        values: '0+10x40'
+    alert_rule_test:
+      # 50% failing > 10%
+      - eval_time: 32m
+        alertname: NetBirdSignalForwardFailures
+        exp_alerts:
+          - exp_labels:
+              job: netbird-signal-metrics
+              namespace: netbird-mesh
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird signal forwarding degraded in netbird-mesh (50% failing)"
+              description: "More than 10% of signal messages failed to forward over the last 15m. Peers of this instance cannot reliably negotiate connections with each other — check whether a subset of peers mass-disconnected (NetBirdPeersDisconnected) or signal is overloaded."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdsignalforwardfailures"
+
+  - interval: 1m
+    input_series:
+      - series: 'messages_forwarded_total{job="netbird-signal-metrics", namespace="netbird-mesh", pod="signal-1"}'
+        values: '0+99x40'
+      - series: 'message_forward_failures_total{job="netbird-signal-metrics", namespace="netbird-mesh", pod="signal-1"}'
+        values: '0+1x40'
+    alert_rule_test:
+      - eval_time: 32m
+        alertname: NetBirdSignalForwardFailures
+        exp_alerts: []
+
+  # ── NetBirdPodRestarting: a crashlooping component fires; a stable one stays quiet ───
+  - interval: 1m
+    input_series:
+      # 4 restarts in the first 20 minutes (> threshold 2 over the 1h window)
+      - series: 'kube_pod_container_status_restarts_total{namespace="netbird-mesh", pod="relay-1", container="netbird-relay"}'
+        values: '0 1 1 2 2 3 3 4 4x60'
+      - series: 'kube_pod_container_status_restarts_total{namespace="netbird-mesh", pod="signal-1", container="netbird-signal"}'
+        values: '0x68'
+      # a non-netbird container crashing in the same namespace must NOT fire
+      - series: 'kube_pod_container_status_restarts_total{namespace="netbird-mesh", pod="other-1", container="postgres"}'
+        values: '0 2 4 6 8 10 12 14 16x60'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: NetBirdPodRestarting
+        exp_alerts:
+          - exp_labels:
+              namespace: netbird-mesh
+              pod: relay-1
+              container: netbird-relay
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird container netbird-relay in netbird-mesh is restarting"
+              description: "Container netbird-relay of pod relay-1 restarted more than 2 times in 1h. While it crashes this instance's peers lose the component's function — check the pod's logs and whether NetBirdPodOOM fires alongside (memory-bound crashloop)."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdpodrestarting"
+
+  # ── NetBirdPodOOM: recent OOM fires; a LATCHED old reason without restarts must not ──
+  - interval: 1m
+    input_series:
+      - series: 'kube_pod_container_status_last_terminated_reason{namespace="netbird-mesh", pod="mgmt-1", container="netbird-management", reason="OOMKilled"}'
+        values: '1x120'
+      # restarts happened early, then the container stayed up for over the 1h window
+      - series: 'kube_pod_container_status_restarts_total{namespace="netbird-mesh", pod="mgmt-1", container="netbird-management"}'
+        values: '0 1 2 2x118'
+    alert_rule_test:
+      # restarts within the window: fires
+      - eval_time: 10m
+        alertname: NetBirdPodOOM
+        exp_alerts:
+          - exp_labels:
+              namespace: netbird-mesh
+              pod: mgmt-1
+              container: netbird-management
+              reason: OOMKilled
+              severity: warning
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird container netbird-management in netbird-mesh was OOM-killed"
+              description: "Container netbird-management of pod mgmt-1 was OOM-killed within the last 1h. Raise its memory limit — for management, memory grows with the account's peer count. While it restarts, peers lose the component's function."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdpodoom"
+      # the reason label latches forever, but a full hour without a restart resolves it
+      - eval_time: 110m
+        alertname: NetBirdPodOOM
+        exp_alerts: []
+
+  # ── NetBirdPodCPUThrottled: heavy throttling fires; light throttling stays quiet ─────
+  - interval: 1m
+    input_series:
+      # ~50% of periods throttled
+      - series: 'container_cpu_cfs_periods_total{namespace="netbird-mesh", pod="mgmt-1", container="netbird-management"}'
+        values: '0+100x40'
+      - series: 'container_cpu_cfs_throttled_periods_total{namespace="netbird-mesh", pod="mgmt-1", container="netbird-management"}'
+        values: '0+50x40'
+      # ~1% throttled on signal: quiet
+      - series: 'container_cpu_cfs_periods_total{namespace="netbird-mesh", pod="signal-1", container="netbird-signal"}'
+        values: '0+100x40'
+      - series: 'container_cpu_cfs_throttled_periods_total{namespace="netbird-mesh", pod="signal-1", container="netbird-signal"}'
+        values: '0+1x40'
+    alert_rule_test:
+      - eval_time: 32m
+        alertname: NetBirdPodCPUThrottled
+        exp_alerts:
+          - exp_labels:
+              namespace: netbird-mesh
+              pod: mgmt-1
+              container: netbird-management
+              severity: info
+              rulesgroup: netbird
+            exp_annotations:
+              summary: "NetBird container netbird-management in netbird-mesh is CPU-throttled (50% of periods)"
+              description: "Container netbird-management of pod mgmt-1 spent more than 25% of CFS periods throttled over 15m. Its CPU limit is under-provisioned — peers experience this as slow logins/syncs long before anything fails outright."
+              runbook_url: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md#netbirdpodcputhrottled"

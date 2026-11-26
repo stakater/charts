@@ -1,0 +1,37 @@
+{{- $r := .Values.prometheus.rules.management.storeSlow }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $job := include "netbird-observability.managementJob" . }}
+# The NetBird-side symptom of a degraded store: p95 persistence latency as MANAGEMENT
+# experiences it. The database itself (CNPG PostgreSQL) is cloudnative-pg-observability's
+# mechanism; this alert supplies the correlation — "and that is why this instance's peers
+# see login/sync timeouts".
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-management-store-slow
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.management
+      rules:
+        - alert: NetBirdManagementStoreSlow
+          expr: |
+            histogram_quantile(0.95,
+              sum by (namespace, job, le) (rate(management_store_persistence_duration_ms_milliseconds_bucket{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}]))
+            ) > {{ $r.maxP95Ms }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird management store in {{`{{ $labels.namespace }}`}} is slow (p95 {{`{{ $value | humanize }}`}}ms)"
+            description: "p95 store persistence latency exceeded {{ $r.maxP95Ms }}ms over the last {{ $r.window }}. Management is waiting on its PostgreSQL — check the instance's CNPG cluster (cloudnative-pg-observability) for the database-side cause."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdmanagementstoreslow"
+{{- end }}

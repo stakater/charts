@@ -1,0 +1,26 @@
+{{- if .Values.grafana.dashboard.enabled }}
+# Fleet dashboard: the $namespace variable spans every NetBird instance the datasource can
+# see (job labels are fixed chart-wide, so no per-release wiring). Enable on exactly ONE
+# install per cluster — each enabled install ships an identical copy into Grafana.
+# The JSON is loaded verbatim with .Files.Get (not templated), so Grafana's double-brace
+# legends need no escaping. fromJson/toPrettyJson, never tpl.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-dashboard
+  namespace: {{ include "netbird-observability.namespace" . }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder | quote }}
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{- include "netbird-observability.grafana.instanceSelector" . | nindent 4 }}
+  datasources:
+    {{- toYaml .Values.grafana.datasources | nindent 4 }}
+  {{- $dash := .Files.Get "files/netbird_grafana_dashboard.json" | fromJson }}
+  json: |-
+{{ toPrettyJson $dash | indent 4 }}
+{{- end }}

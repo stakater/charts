@@ -1,0 +1,47 @@
+{{- $r := .Values.prometheus.rules.watchdog.targetDown }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $targets := list }}
+{{- if and .Values.prometheus.monitors.management .Values.prometheus.monitors.management.enabled }}
+{{- $targets = append $targets (dict "target" "management" "job" (include "netbird-observability.managementJob" .) "impact" "peers cannot (re)connect, authenticate, or receive network-map updates") }}
+{{- end }}
+{{- if and .Values.prometheus.monitors.signal .Values.prometheus.monitors.signal.enabled }}
+{{- $targets = append $targets (dict "target" "signal" "job" (include "netbird-observability.signalJob" .) "impact" "peers cannot negotiate NEW peer-to-peer connections; established tunnels keep running") }}
+{{- end }}
+{{- if and .Values.prometheus.monitors.relay .Values.prometheus.monitors.relay.enabled }}
+{{- $targets = append $targets (dict "target" "relay" "job" (include "netbird-observability.relayJob" .) "impact" "peers behind hard NAT lose their fallback path; direct connections keep running") }}
+{{- end }}
+{{- if $targets }}
+# A scrape target exists but fails. While it does, every alert that depends on its
+# metrics is disarmed (absent() cannot see this: the up series exists, at 0).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-target-down
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.watchdog
+      rules:
+        {{- range $t := $targets }}
+        - alert: NetBirdTargetDown
+          expr: |
+            up{job="{{ $t.job }}", namespace="{{ $ns }}"} == 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+            target: {{ $t.target }}
+          annotations:
+            summary: "NetBird {{ $t.target }} {{`{{ $labels.pod }}`}} in {{`{{ $labels.namespace }}`}} is down"
+            description: "Prometheus cannot scrape the NetBird {{ $t.target }} of this instance. While it is down, {{ $t.impact }}. Alerts that depend on its metrics cannot fire."
+            runbook_url: "{{ $.Values.prometheus.rules.runbookBaseURL }}#netbirdtargetdown"
+        {{- end }}
+{{- end }}
+{{- end }}

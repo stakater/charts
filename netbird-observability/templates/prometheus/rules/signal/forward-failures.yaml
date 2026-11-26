@@ -1,0 +1,43 @@
+{{- $r := .Values.prometheus.rules.signal.forwardFailures }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $job := include "netbird-observability.signalJob" . }}
+# Share of signal messages that fail to forward (offline target peer, send error).
+# Forwarding to an offline peer is normal in small doses; a sustained high ratio means
+# peers cannot negotiate connections with each other. The denominator is successes +
+# failures, so the alert still fires when EVERY forward fails (and stays silent with no
+# traffic at all).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-signal-forward-failures
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.signal
+      rules:
+        - alert: NetBirdSignalForwardFailures
+          expr: |
+            sum by (namespace, job) (rate(message_forward_failures_total{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}]))
+            /
+            (
+              sum by (namespace, job) (rate(message_forward_failures_total{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}]))
+              +
+              sum by (namespace, job) (rate(messages_forwarded_total{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}]))
+            )
+            > {{ $r.maxFailureRatio }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird signal forwarding degraded in {{`{{ $labels.namespace }}`}} ({{`{{ $value | humanizePercentage }}`}} failing)"
+            description: "More than {{ $r.maxFailureRatio | float64 | mulf 100 }}% of signal messages failed to forward over the last {{ $r.window }}. Peers of this instance cannot reliably negotiate connections with each other — check whether a subset of peers mass-disconnected (NetBirdPeersDisconnected) or signal is overloaded."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdsignalforwardfailures"
+{{- end }}

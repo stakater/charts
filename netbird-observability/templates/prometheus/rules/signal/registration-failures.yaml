@@ -1,0 +1,35 @@
+{{- $r := .Values.prometheus.rules.signal.registrationFailures }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $job := include "netbird-observability.signalJob" . }}
+# Peers fail to register on the signal stream: new peer-to-peer connections cannot be
+# negotiated even though the service is up. Signal's standalone metrics are UNPREFIXED
+# (registration_failures_total), so the job matcher is load-bearing — without it this
+# query would match any workload exporting the same generic name.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-signal-registration-failures
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.signal
+      rules:
+        - alert: NetBirdSignalRegistrationFailures
+          expr: |
+            sum by (namespace, job) (rate(registration_failures_total{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}])) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird signal registrations failing in {{`{{ $labels.namespace }}`}} ({{`{{ $value | humanize }}`}}/s)"
+            description: "Peers have been failing to register on the signal stream for the whole window. New peer-to-peer connections cannot be negotiated for this instance. Check signal pod logs and the signal TLS certificate."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdsignalregistrationfailures"
+{{- end }}

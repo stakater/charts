@@ -1,0 +1,203 @@
+# netbird-observability values.
+#
+# Installed ONCE PER NETBIRD INSTANCE NAMESPACE (see docs/roadmap.md for why: UWM tenancy).
+# Metric names are pinned from a live capture of NetBird v0.75.0 (tests/fixtures/); lazily
+# registered metrics are confirmed against the upstream docs
+# (tests/metrics-allowlist.documented.txt). Do not add a rule that references a metric in
+# neither list — tests/validate.sh enforces this.
+
+nameOverride: ""
+fullnameOverride: ""
+# Namespace the monitoring objects land in. Must be the namespace the NetBird instance
+# runs in so UWM can resolve the scrape targets. Defaults to the release namespace.
+namespaceOverride: ""
+
+# --- What we are observing ---------------------------------------------------------------
+# One NetBird instance per namespace: management, signal and relay deployments. All three
+# expose Prometheus metrics on :9090/metrics by default (no NetBird configuration needed).
+# The chart ships its own metrics Service per component (fixed name = stable Prometheus
+# `job` label across the whole fleet) selecting the component's pods by label.
+netbird:
+  management:
+    # Pod labels of the management pods (the stakater `netbird` catalog chart and the
+    # upstream netbirdio/helms subchart both stamp these).
+    podLabels:
+      app.kubernetes.io/name: netbird-management
+    metricsPort: 9090
+    # The metrics Service name, which UWM derives the `job` label from. Fixed (not
+    # release-derived) so every instance in the fleet exports the same job label.
+    jobName: netbird-management-metrics
+  signal:
+    podLabels:
+      app.kubernetes.io/name: netbird-signal
+    metricsPort: 9090
+    jobName: netbird-signal-metrics
+  relay:
+    podLabels:
+      app.kubernetes.io/name: netbird-relay
+    metricsPort: 9090
+    jobName: netbird-relay-metrics
+  # Container-name regex the footprint (saturation) alerts key on. kube-state-metrics and
+  # cadvisor series carry the CONTAINER name, which is stable across releases and both
+  # deployment layouts (the catalog chart and the upstream subchart name their containers
+  # netbird-management / netbird-signal / netbird-relay), unlike pod-name prefixes.
+  footprint:
+    containerRegex: "netbird-(management|signal|relay)"
+
+grafana:
+  # The dashboard is fleet-capable ($namespace variable spans all instances): enable it on
+  # exactly ONE install per cluster.
+  folder: "NetBird Observability"
+  allowCrossNamespaceImport: true
+  # Which Grafana instance imports the dashboard. UNSET resolves to the Stakater Cloud
+  # convention ({app: grafana}) inside a helper — the default is kept OUT of values
+  # because instanceSelector is a MAP and Helm deep-merges maps: a values default would
+  # UNION with a per-cluster override, matchLabels is an AND, and the dashboard would
+  # silently stop being imported. Override with the COMPLETE selector.
+  instanceSelector: {}
+  # Binds every dashboard panel to a datasource BY NAME. grafana-operator does a plain
+  # string replace of "${inputName}" with datasourceName — it does not look the datasource
+  # up, so this must match the NAME of a Prometheus datasource in the target Grafana.
+  # Default is the Stakater Cloud convention ("prometheus", pointing at thanos-querier).
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "prometheus"
+  dashboard:
+    enabled: true
+
+prometheus:
+  # ServiceMonitor + metrics Service per component. Default OFF — the operator opts in per
+  # instance. Disabling a component (e.g. a tenant mesh that runs no relay of its own)
+  # also disarms its watchdog alerts.
+  monitors:
+    management:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+    signal:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+    relay:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+
+  # One block per alert (one PrometheusRule file each). See docs/runbook.md.
+  # Thresholds are PLACEHOLDERS until calibrated against a real fleet baseline
+  # (docs/roadmap.md, calibration note).
+  rules:
+    # Alertmanager routing / ruleSelector labels merged into every PrometheusRule.
+    labels: {}
+    # Base URL of the runbook; each alert appends #<alertname-lowercased>.
+    runbookBaseURL: "https://github.com/stakater/charts/blob/main/netbird-observability/docs/runbook.md"
+
+    management:
+      # The management HTTP API returns server errors (5xx ratio over the window).
+      # Dashboard, Crossplane provider and bootstrap automation all drive this API.
+      apiErrorRateHigh:
+        enabled: true
+        for: 10m
+        severity: warning
+        # 5xx responses / all requests, both as rate over this window.
+        window: 10m
+        maxErrorRatio: 0.05
+      # p95 HTTP API latency over the threshold (aggregate across endpoints).
+      apiLatencyHigh:
+        enabled: true
+        for: 15m
+        severity: warning
+        window: 10m
+        maxP95Ms: 500
+      # p95 of peer Sync gRPC latency over the threshold. Slow syncs precede reconnect
+      # storms: peers time out and re-login. (Lazily registered metric: the alert can
+      # only fire once the instance has served syncs — absence is covered by the watchdogs.)
+      syncLatencyHigh:
+        enabled: true
+        for: 15m
+        severity: warning
+        window: 10m
+        maxP95Ms: 1000
+      # The built-in rate limiter is rejecting login/sync requests. Expected only during
+      # reconnect storms; sustained blocking means peers are flapping or the limiter is
+      # mis-sized for the account's peer count.
+      requestsBlocked:
+        enabled: true
+        for: 10m
+        severity: warning
+        window: 10m
+      # p95 store persistence latency over the threshold: the NetBird-side symptom of a
+      # degraded PostgreSQL (the database itself is cloudnative-pg-observability's job).
+      storeSlow:
+        enabled: true
+        for: 15m
+        severity: warning
+        window: 10m
+        maxP95Ms: 500
+      # An instance that HAD connected peers now has none while management is still up:
+      # the peer-facing path (LB, gRPC, TLS) is broken even though the pod looks healthy.
+      peersDisconnected:
+        enabled: true
+        for: 10m
+        severity: critical
+        # Fires only if the instance had at least this many connected peers in the
+        # baseline window — a mesh that never had peers stays quiet.
+        minPeers: 1
+        baselineWindow: 6h
+
+    signal:
+      # Peers fail to register on the signal stream: new peer-to-peer connections cannot
+      # be negotiated even though the service is up.
+      registrationFailures:
+        enabled: true
+        for: 15m
+        severity: warning
+        window: 15m
+      # Share of signal messages that fail to forward. Forwarding to an offline peer is
+      # normal in small doses; a sustained high ratio means peers cannot reach each other.
+      forwardFailures:
+        enabled: true
+        for: 15m
+        severity: warning
+        window: 15m
+        maxFailureRatio: 0.10
+
+    # Saturation (roadmap Story 5.3): the components' resource footprint. Management's
+    # memory grows with peer count — without these, an OOM crashloop surfaces only as a
+    # flapping TargetDown (symptom, not cause). From kube-state-metrics + cadvisor.
+    footprint:
+      # A component container restarts repeatedly over the lookback window.
+      podRestarting:
+        enabled: true
+        threshold: 2
+        window: 1h
+        for: 10m
+        severity: warning
+      # A component container was OOM-killed recently.
+      podOOM:
+        enabled: true
+        window: 1h
+        for: 5m
+        severity: warning
+      # Fraction of CFS periods a component container spent throttled (under-provisioned
+      # CPU limit: slows every sync/login before anything "fails").
+      podCPUThrottled:
+        enabled: true
+        threshold: 0.25
+        window: 15m
+        for: 15m
+        severity: info
+
+    # Blindness: if the metrics vanish, every alert above is silently disarmed.
+    # Rendered only for ENABLED monitors, so a disabled component never fires them.
+    watchdog:
+      # A scrape target exists but fails (up == 0): the component is down or unreachable.
+      targetDown:
+        enabled: true
+        for: 5m
+        severity: critical
+      # The up series itself vanished: ServiceMonitor/Service deleted or selector drift.
+      metricsAbsent:
+        enabled: true
+        for: 10m
+        severity: warning

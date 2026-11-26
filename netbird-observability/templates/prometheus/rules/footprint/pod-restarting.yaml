@@ -1,0 +1,33 @@
+{{- $r := .Values.prometheus.rules.footprint.podRestarting }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+# A NetBird component container is restarting (roadmap Story 5.3). A crashloop otherwise
+# surfaces only as a flapping TargetDown — this names the cause. Keyed on the CONTAINER
+# name (stable across releases and deployment layouts), from kube-state-metrics.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-pod-restarting
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.footprint
+      rules:
+        - alert: NetBirdPodRestarting
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="{{ $ns }}", container=~"{{ .Values.netbird.footprint.containerRegex }}"}[{{ $r.window }}]) > {{ $r.threshold }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird container {{`{{ $labels.container }}`}} in {{`{{ $labels.namespace }}`}} is restarting"
+            description: "Container {{`{{ $labels.container }}`}} of pod {{`{{ $labels.pod }}`}} restarted more than {{ $r.threshold }} times in {{ $r.window }}. While it crashes this instance's peers lose the component's function — check the pod's logs and whether NetBirdPodOOM fires alongside (memory-bound crashloop)."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdpodrestarting"
+{{- end }}

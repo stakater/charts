@@ -1,0 +1,39 @@
+{{- $r := .Values.prometheus.rules.management.requestsBlocked }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $job := include "netbird-observability.managementJob" . }}
+# Management's built-in rate limiter is rejecting peer login/sync requests. Brief blocking
+# during a reconnect storm is by design; SUSTAINED blocking means peers are flapping (and
+# being locked out in waves) or the limiter is mis-sized for the account's peer count.
+# The two blocked counters are OR-ed, not summed under one __name__ regex: rate() drops
+# __name__, and both counters share every other label, so a single-selector sum collides
+# ("vector cannot contain metrics with the same labelset").
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-management-requests-blocked
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.management
+      rules:
+        - alert: NetBirdManagementRequestsBlocked
+          expr: |
+            sum by (namespace, job) (rate(management_grpc_login_request_blocked_counter_total{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}])) > 0
+            or
+            sum by (namespace, job) (rate(management_grpc_sync_request_blocked_counter_total{job="{{ $job }}", namespace="{{ $ns }}"}[{{ $r.window }}])) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "NetBird management in {{`{{ $labels.namespace }}`}} is rate-limiting peers ({{`{{ $value | humanize }}`}} blocked req/s)"
+            description: "Management has been rejecting login/sync requests via its rate limiter for the whole window. Peers are being locked out in waves — look for a reconnect storm (management or signal restart, LB flap) or an account whose peer count outgrew the limiter."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdmanagementrequestsblocked"
+{{- end }}

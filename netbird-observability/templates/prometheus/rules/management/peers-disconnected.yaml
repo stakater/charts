@@ -1,0 +1,41 @@
+{{- $r := .Values.prometheus.rules.management.peersDisconnected }}
+{{- if and ($r) ($r.enabled) }}
+{{- $ns := include "netbird-observability.namespace" . }}
+{{- $job := include "netbird-observability.managementJob" . }}
+# An instance that HAD connected peers now has none while management is still scrapable:
+# the peer-facing path (LoadBalancer, gRPC listener, TLS) is broken even though the pod
+# looks healthy — the failure mode the customer notices before we do.
+#
+# management_grpc_connected_streams_ratio is the live gauge of open Sync streams
+# (~connected peers). The baseline uses a subquery over the namespace/job aggregate, not
+# the raw series, so a management pod restart (new pod label = new series) cannot erase
+# the baseline and blind the alert. A mesh that never had >= minPeers stays quiet.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-management-peers-disconnected
+  namespace: {{ $ns }}
+  labels:
+    role: alert-rules
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: netbird.management
+      rules:
+        - alert: NetBirdPeersDisconnected
+          expr: |
+            sum by (namespace, job) (management_grpc_connected_streams_ratio{job="{{ $job }}", namespace="{{ $ns }}"}) == 0
+            and
+            max_over_time(sum by (namespace, job) (management_grpc_connected_streams_ratio{job="{{ $job }}", namespace="{{ $ns }}"})[{{ $r.baselineWindow }}:5m]) >= {{ $r.minPeers }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: netbird
+          annotations:
+            summary: "All NetBird peers of {{`{{ $labels.namespace }}`}} disconnected"
+            description: "This instance had connected peers within the last {{ $r.baselineWindow }} and now has zero open Sync streams, while management itself is still up. Peers cannot hold their management connection — check the management LoadBalancer/DNS, the gRPC listener, and the management TLS certificate."
+            runbook_url: "{{ .Values.prometheus.rules.runbookBaseURL }}#netbirdpeersdisconnected"
+{{- end }}

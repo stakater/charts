@@ -1,0 +1,11 @@
+{
+  "Stuns": [{"Proto": "udp", "URI": "stun:localhost:3478"}],
+  "TURNConfig": {"Turns": [], "CredentialsTTL": "12h", "Secret": "test-secret"},
+  "Relay": {"Addresses": ["rel://localhost:33080"], "CredentialsTTL": "24h", "Secret": "test-relay-secret"},
+  "Signal": {"Proto": "http", "URI": "localhost:10000"},
+  "Datadir": "/var/lib/netbird/",
+  "DataStoreEncryptionKey": "/zwX5wszSBnOChizAnyyAeJVLYWroImUHOnNeCbuT2U=",
+  "HttpConfig": {"Address": "0.0.0.0:8080"},
+  "IdpManagerConfig": {"ManagerType": "none"},
+  "StoreConfig": {"Engine": "sqlite"}
+}

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: netbird-observability
+description: >-
+  Observability for a fleet of self-hosted NetBird instances (management, signal, relay):
+  Grafana dashboard, Prometheus ServiceMonitors and alert rules. Installed once per
+  NetBird instance namespace.
+type: application
+# The published version comes from git tags via the release pipeline, not from here.
+version: 0.0.1
+# The NetBird server version the metrics were captured from (tests/fixtures/).
+appVersion: "0.75.0"

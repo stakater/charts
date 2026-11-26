@@ -1,0 +1,23 @@
+{{- if and (.Values.prometheus.monitors.signal) (.Values.prometheus.monitors.signal.enabled) }}
+{{- $m := .Values.prometheus.monitors.signal }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "netbird-observability.fullname" . }}-signal
+  namespace: {{ include "netbird-observability.namespace" . }}
+  labels:
+    {{- include "netbird-observability.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: signal-metrics
+  namespaceSelector:
+    matchNames:
+      - {{ include "netbird-observability.namespace" . }}
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: {{ $m.interval }}
+      scrapeTimeout: {{ $m.scrapeTimeout }}
+{{- end }}
