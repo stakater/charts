@@ -365,7 +365,7 @@ CostJob CR (written by the loader pod), `kube_cronjob_*` is un-alertable from UW
 the operator exports no custom metrics. So the stories below are **blocked on one
 small upstream change** (Q7) — which is exactly why it is written down first.
 
-## Story 7.1 — Is cost data fresh? 📝 Draft — **the headline story**
+## Story 7.1 — Is cost data fresh? 🔨 Built (chart side; live on the gauge release) — **the headline story**
 
 > **As a FinOps/platform owner, I want a page when any CostJob's last successful
 > execution is older than its interval allows, because every way this fails —
@@ -388,7 +388,7 @@ small upstream change** (Q7) — which is exactly why it is written down first.
 - **Interim until upstream lands:** no honest UWM alert exists. Dashboard-only KSM
   panels + Story 7.3 (operator up) as a weak proxy. Say so loudly in the README.
 
-## Story 7.2 — Is a CostJob failing (not just stale)? 📝 Draft
+## Story 7.2 — Is a CostJob failing (not just stale)? 🔨 Built (chart side; live on the gauge release)
 
 > **As an SRE, I want to distinguish "runs but fails" from "never runs", because the
 > fix differs: a failing loader points at OpenCost/PostgreSQL/credentials; a

@@ -28,10 +28,23 @@ HibernationOperator / TemplateOperator):
 | `MTO<Op>WebhookErrors` | warning | an admission webhook returns 5xx for 10m |
 | `MTO<Op>WebhookLatencyHigh` | warning | webhook p99 latency > 1s for 10m |
 
+## Alerts (Tier 1 — the finops cost pipeline)
+
+Built on the `finops_costjob_*` gauges (needs a finops-operator release carrying
+them); the full spec and failure-shape matrix live in
+[`docs/finops-alerts.md`](docs/finops-alerts.md):
+
+| Alert | Severity | Fires when |
+| --- | --- | --- |
+| `MTOCostDataStale` | critical | no successful collection for `staleAfterSeconds` (default 2h) — the headline alert |
+| `MTOCostJobNeverSucceeded` | critical | a CostJob exists but has never succeeded (30m grace) |
+| `MTOCostJobFailing` | warning | last execution ended `Failed`/`Error` for 10m |
+| `MTOFinopsMetricsAbsent` | warning | no `finops_costjob` series scraped at all — the watchdog |
+
 Thresholds are placeholders until a live baseline; every one is a value under
-`prometheus.rules.mto.*`. Monitors default **off**; enabling them also creates the
-scraper ServiceAccount/token bound to a `GET /metrics` ClusterRole (every operator
-serves authenticated HTTPS metrics).
+`prometheus.rules.mto.*` / `prometheus.rules.finops.*`. Monitors default **off**;
+enabling them also creates the scraper ServiceAccount/token bound to a
+`GET /metrics` ClusterRole.
 
 ## Prerequisites (planned surface)
 

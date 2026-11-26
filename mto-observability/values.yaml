@@ -147,6 +147,34 @@ prometheus:
     # Extra labels added to every PrometheusRule (e.g. for Alertmanager routing,
     # or to match your Prometheus ruleSelector).
     labels: {}
+    # Tier 1 — the finops cost pipeline (docs/finops-alerts.md): built on the
+    # finops_costjob_* gauges, [captured] in tests/fixtures/ from the gauge PR
+    # branch build. A RELEASED finops-operator must carry them for these alerts
+    # to have data — the chart pins that release as its minimum once cut.
+    finops:
+      costDataStale:
+        enabled: true
+        # Page when the last successful collection is older than this. Keep it
+        # at least 2x the largest CostJob interval on the cluster (placeholder
+        # until a live baseline; per-CostJob tuning is a gate decision).
+        staleAfterSeconds: 7200
+        for: 5m
+        severity: critical
+      costJobNeverSucceeded:
+        enabled: true
+        # Grace for a new CostJob's first runs before paging.
+        for: 30m
+        severity: critical
+      costJobFailing:
+        enabled: true
+        for: 10m
+        severity: warning
+      # Watchdog for the three above: without the scrape they silently stop
+      # evaluating. Needs podMonitors.enabled (no series exists otherwise).
+      metricsAbsent:
+        enabled: true
+        for: 15m
+        severity: warning
     # Tier 2 — generic operator health, rendered per enabled operator. The
     # Down/absent alerts render only while podMonitors.enabled: without the
     # scrape there is no `up` series and absent() would fire forever.

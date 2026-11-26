@@ -2,9 +2,12 @@
 
 The concrete alerts this chart will ship for finops-operator. Names and logic are
 settled; thresholds and `for:` windows are **placeholders** until the approval gate and
-a live baseline. Status: 📝 planned — Tier 2 is buildable now; Tier 1 is gated on a
-finops-operator release carrying the `finops_costjob_*` gauges (upstream change in
-review), which the chart then pins as its minimum supported version.
+a live baseline. Status: 🔨 **both tiers are BUILT** behind a green `tests/validate.sh` (every alert
+promtool-tested to fire and resolve); the gauge families are [captured] in the chart
+fixtures from the gauge PR branch build. Tier 1 goes LIVE once a finops-operator
+release carries the gauges — the chart then pins that release as its minimum
+supported version. Until then `MTOFinopsMetricsAbsent` fires by design on clusters
+running older finops versions.
 
 ## Tier 1 — cost pipeline (the reason this chart exists)
 
