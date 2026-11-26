@@ -1,0 +1,5 @@
+# metrics-allowlist.documented.txt — metric families a rule or panel may reference
+# although they are NOT in the captured fixtures, each with a citation for WHY it is
+# trusted (lazily-registered, kube-state-metrics, or documented upstream).
+# Format: <metric_family>  # <citation>
+# EMPTY: populated story by story once the capture settles what is actually absent.

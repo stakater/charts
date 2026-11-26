@@ -1,0 +1,86 @@
+# Default values for mto-observability.
+#
+# BOOTSTRAP STATE: the stories in docs/roadmap.md are 📝 Draft — no rules or
+# dashboard ship yet. This file holds the settled identity/monitor surface;
+# per-alert blocks are added story by story once approved and built against a
+# live metrics capture (tests/METRICS-CAPTURE.md).
+
+global:
+  # Namespace the monitoring objects are created in. Defaults to the release
+  # namespace, which must be the namespace MTO runs in (multi-tenant-operator
+  # on OperatorHub installs) so UWM can resolve the scrape targets and the
+  # scraper RBAC lands next to the pods.
+  namespace:
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Grafana dashboard (managed via grafana-operator GrafanaDashboard CR).
+grafana:
+  # Namespace to create the GrafanaDashboard in. Defaults to the release
+  # namespace. Set this to the Grafana instance's namespace when the
+  # grafana-operator does not honour allowCrossNamespaceImport.
+  namespace: ""
+  folder: "MTO Observability"
+  allowCrossNamespaceImport: true
+  # Selects the target Grafana instance. Default matches the SAAP convention
+  # (app: grafana); override per-cluster if the live instance is labelled
+  # differently.
+  instanceSelector:
+    matchLabels:
+      app: "grafana"
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Prometheus"
+  dashboard:
+    enabled: true
+
+# Identity of the MTO installation being monitored. Defaults are the
+# OperatorHub/OLM layout of MTO v1.10.x: one Deployment per controller, each
+# serving authenticated HTTPS metrics on container port :6443, selected by its
+# `control-plane` label. Only tenant / quota-intconfig / pilot ship a metrics
+# Service; the rest (namespace, webhook, db, extensions) expose only the pod
+# port. Capture pending — see docs/roadmap.md "Structural facts".
+mto:
+  controllers:
+    tenant:
+      selector:
+        control-plane: controller-manager-tenant
+    quotaIntconfig:
+      selector:
+        control-plane: controller-manager-quota-intconfig
+    pilot:
+      selector:
+        control-plane: controller-manager-pilot
+
+prometheus:
+  # Chart-shipped monitors. Off by default: installing the chart must not start
+  # scraping until the operator of the cluster opts in (repo convention), and
+  # MTO's metrics endpoint is authenticated — the scrape needs the
+  # metrics-reader RBAC to be in place first.
+  monitors:
+    # ServiceMonitors against the three metrics Services MTO ships
+    # (tenant / quota-intconfig / pilot). HTTPS, bearer token, served cert is
+    # self-signed by default hence insecureSkipVerify.
+    tenantServiceMonitor:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+    quotaIntconfigServiceMonitor:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+    pilotServiceMonitor:
+      enabled: false
+      interval: 30s
+      scrapeTimeout: 10s
+    # Monitors for the deployments WITHOUT a metrics Service (webhook,
+    # namespace, db, extensions) are an open design question — roadmap Q1.
+
+  rules:
+    # Extra labels added to every PrometheusRule (e.g. for Alertmanager routing,
+    # or to match your Prometheus ruleSelector).
+    labels: {}
+    # Per-alert blocks (enabled / for / severity / thresholds) are added here
+    # per approved story — none built yet.
+    mto: {}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mto-observability
+description: A Helm chart for Multi Tenant Operator (MTO) observability (monitors + PrometheusRules + Grafana dashboard), integrated with OpenShift user-workload monitoring.
+type: application
+version: 0.0.1
+appVersion: "0.0.1"

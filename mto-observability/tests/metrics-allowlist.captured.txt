@@ -1,0 +1,5 @@
+# metrics-allowlist.captured.txt — metric families PROVEN to exist, extracted from
+# tests/fixtures/**/*-metrics.txt — real /metrics scrapes of the MTO controller
+# deployments; provenance in fixtures/README.md.
+# Regenerate with ./tests/generate-allowlist.sh — validate.sh fails if out of sync.
+# EMPTY: no capture yet (bootstrap state — see tests/METRICS-CAPTURE.md).
