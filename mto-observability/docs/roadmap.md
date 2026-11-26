@@ -77,7 +77,10 @@ per story; killing a weak Draft here is the method working.
    Platform families (`apiserver_admission_webhook_*`, kube-state-metrics) are
    dashboard-only here **[ksm]**. This bites hardest in Area 7: `kube_cronjob_*` /
    `kube_job_*` — the obvious signals for a failing cost-collection CronJob — **cannot
-   be alerted on from UWM.**
+   be alerted on from UWM.** They ARE alertable where rules are shipped into the
+   **platform** monitoring stack instead (some fleets deploy rules that way) — which
+   stack evaluates this chart's rules is Q9, and it decides whether KSM-based
+   expressions are allowed in alerts or stay dashboard-only.
 7. **The other three operators export NO custom metrics at all** **[code]**:
    finops-operator, hibernation-operator and template-operator-v2 each serve only the
    controller-runtime default families (authenticated HTTPS, same pattern as fact 2 —
@@ -477,3 +480,8 @@ small upstream change** (Q7) — which is exactly why it is written down first.
 - **Q8 — Dependency boundary for the cost pipeline.** How far does this chart reach
   toward OpenCost and PostgreSQL (7.4): reachability-only here, deep health in their
   own charts (postgres-observability exists) — confirm.
+- **Q9 — Where do the rules evaluate: UWM or the platform stack?** A parallel
+  incident-driven effort drafted finops job alerts on KSM/kubelet series shipped
+  platform-side, where those series ARE alertable (fact 6). One home per alert, no
+  duplicate paging: decide which alerts live in this chart (UWM, operator-gauge-based)
+  vs platform-side rule packs, and fold the drafted rules into that split.
