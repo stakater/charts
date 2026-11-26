@@ -7,3 +7,6 @@ finops_costjob_last_successful_execution_timestamp_seconds  # lazy: registers on
 multi_tenant_operator_resources_deployed  # lazy: emitted by the manifest/resource-mapping deploy path only (MTO docs Reference→Metrics); the lab Tenant deployed none — reconcile_count/seconds ARE captured
 multi_tenant_operator_resources_deployed_total  # lazy: same path as resources_deployed (MTO docs Reference→Metrics)
 multi_tenant_operator_reconcile_error  # lazy: registers only when a resource enters reconcile error (MTO docs Reference→Metrics); alert on presence, never aggregate its errors label
+kube_cronjob_status_last_successful_time  # kube-state-metrics (platform Prometheus on OpenShift): https://github.com/kubernetes/kube-state-metrics/blob/main/docs/metrics/workload/cronjob-metrics.md — DASHBOARD-ONLY, never in alerts (UWM cannot evaluate it)
+kube_job_status_failed  # kube-state-metrics (platform Prometheus on OpenShift): https://github.com/kubernetes/kube-state-metrics/blob/main/docs/metrics/workload/job-metrics.md — DASHBOARD-ONLY, never in alerts
+template_operator_instance_synced  # lazy: publishes only once the Synced condition exists on a TemplateInstance (template-operator-v2 PR sa-9740, docs/metrics.md); the lab instances failed at NamespaceNotPermitted before any sync — ready/phase/rendered_resources ARE captured

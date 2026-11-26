@@ -304,7 +304,7 @@ quotas, and stay that way.
 
 What has MTO built, for whom, and how fast — context for every alert above. No paging.
 
-## Story 4.1 — What is deployed per tenant? 📝 Draft
+## Story 4.1 — What is deployed per tenant? 🔨 Built (dashboard panel)
 
 > **As a platform operator, I want to see what MTO has deployed per kind and namespace,
 > because "what did the operator just change" is the first question in every incident.**
@@ -313,7 +313,7 @@ What has MTO built, for whom, and how fast — context for every alert above. No
   `…_resources_deployed{…,type}` **[documented]**
 - **Dashboard:** deployed-resources by kind; per-namespace drill-down. No alert.
 
-## Story 4.2 — Which reconciles are slow? 📝 Draft
+## Story 4.2 — Which reconciles are slow? 🔨 Built (dashboard panel)
 
 > **As an SRE, I want the slowest reconcile targets visible, because one pathological
 > Template/TGI can dominate a controller's cycle and starve the rest.**
@@ -335,7 +335,7 @@ What has MTO built, for whom, and how fast — context for every alert above. No
 
 # Capability Area 5 — Process & API-client health (dashboard-first)
 
-## Story 5.1 — Is MTO abusing or losing the API server? 📝 Draft
+## Story 5.1 — Is MTO abusing or losing the API server? 🔨 Built (dashboard panels; alert deferred to baseline)
 
 > **As an SRE, I want client-side request/error rates per controller, because MTO at
 > scale is one of the busiest API clients on the cluster, and client-side 429/5xx

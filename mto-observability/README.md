@@ -46,6 +46,17 @@ Thresholds are placeholders until a live baseline; every one is a value under
 enabling them also creates the scraper ServiceAccount/token bound to a
 `GET /metrics` ClusterRole.
 
+## Dashboard
+
+One `GrafanaDashboard` CR, **MTO / Suite Overview** (folder from `grafana.folder`),
+six sections: finops cost-pipeline freshness front and center (success age, failing /
+never-succeeded counts, one-hot status, platform CronJob view), suite health
+(up/leaders/certwatcher), reconciliation (rates, error ratio, workqueue, errored
+resources, slowest reconciles), admission webhooks (p99, codes), tenancy state
+(deployed resources, supervisor states and next transitions, TemplateInstance
+phases/out-of-sync), and process/API saturation. Job labels are substituted from
+`mto.operators.*.job`; gate on `grafana.dashboard.enabled`.
+
 ## Prerequisites (planned surface)
 
 - OpenShift with **user-workload monitoring** enabled
