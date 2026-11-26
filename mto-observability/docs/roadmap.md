@@ -1,25 +1,27 @@
 # MTO Observability Roadmap
 
-**Status:** 📝 **Draft — awaiting live metrics capture and story approval.** Nothing below
-is built: this chart ships no rules, monitors or dashboard until stories pass the human
-approval gate AND every metric they use is verified against a capture from a real cluster
-(`tests/METRICS-CAPTURE.md`). The facts in this draft come from the operators' **OLM
-bundle/kustomize manifests and source**, plus the **published MTO documentation**
-(Reference → Metrics), not from a live scrape — label shapes and lazily-registered
-families must be confirmed before any expression is trusted.
+**Status:** 🔨 **Captured (kind lab, 2026-11-26) — Tier 2 built; approval + real-cluster
+comparison pending.** The metric-reality step ran against a live kind lab running the
+full suite (10 of 11 pods scraped, 210 families in `tests/fixtures/`, provenance in
+`tests/fixtures/README.md`): every metric below tagged **[captured]** carries labels
+verified from a real scrape, including the three pre-release gauge families from the
+upstream PR branches. Remaining gates: per-story approval (Q1–Q9) and a read-only
+comparison capture on a real OpenShift cluster before release (TLS/Service/label
+parity — the metallb precedent).
 **Scope (settled 2026-11-26):** MTO is a suite of **four operators**, and this chart
 covers all of them: **tenant-operator** (Areas 1–6), **finops-operator** (Area 7 — the
 priority: cost-collection jobs failing silently is the incident class that motivated
 this chart), **hibernation-operator** (Area 8), **template-operator-v2** (Area 9).
 MTO Console/Gateway remain out of scope (separate systems).
 **Build status (2026-11-26):** the **generic Tier 2 suite is built** behind a green
-`tests/validate.sh` — PodMonitors + scraper RBAC for all four operators and the
-Down / ReconcileErrors / WorkqueueBacklog / WebhookErrors / WebhookLatencyHigh alerts
-(stories 1.1, 2.3, 3.2, 3.3 and their per-operator twins: 🔨 In progress — release
-gated on the capture re-verifying selectors/ports). Story 6.1's watchdog is **folded
-into the Down alerts** (their `absent()` half). The three upstream state-gauge changes
-(finops CostJob, hibernation supervisor, template-v2 instance) are in review; Tier 1
-builds when they release.
+`tests/validate.sh`, and the **kind-lab capture is done** — selectors, ports and all
+Tier 2 families re-verified [captured]; the per-operator `scheme` and the
+hibernation-manager-only selector are capture corrections already folded into the
+chart. Story 6.1's watchdog is **folded into the Down alerts** (their `absent()`
+half); stories 1.2 / 2.4 / 3.4 are unblocked ([captured] families). The three
+upstream state-gauge PRs are CI-green in review and their families are [captured]
+from branch builds — Tier 1 builds the moment they release. Before release:
+story approval (Q1–Q9) and the OpenShift comparison capture.
 **Owner:** Platform / SRE
 
 ---
@@ -33,7 +35,11 @@ per story; killing a weak Draft here is the method working.
 
 ### Metric reality (the discipline)
 
-- **[captured]** — in `tests/fixtures/` with the exact labels stated. **None yet.**
+- **[captured]** — in `tests/fixtures/` with the exact labels stated (kind lab
+  2026-11-26; the three suite-operator gauge families come from the upstream PR
+  branch builds, pre-release).
+- **[captured, lazy]** — family proven on this build but the series registers only on
+  an event (first success, first error): `absent()`-style logic must account for it.
 - **[documented]** — in the published MTO docs (Reference → Metrics) or the
   controller-runtime metrics reference, not yet in our fixtures.
 - **[cr-default]** — standard controller-runtime / client-go / Go runtime family that
@@ -53,28 +59,28 @@ per story; killing a weak Draft here is the method working.
    (`…-quota-intconfig`), *pilot* (`…-pilot`), *db* (`…-db-controller`), *extensions-argocd*
    (`…-extensions-argocd`), and a dedicated *webhook* server (`…-webhook`). db and
    extensions-argocd are optional components (enabled per install).
-2. **The metrics endpoint is authenticated HTTPS** **[documented]**: container port
-   `:6443`, requests authenticated/authorized against the Kubernetes API
-   (TokenReview + SubjectAccessReview) — a scraper must present a token bound to the
-   `metrics-reader` ClusterRole. The serving cert is self-signed unless a cert is
-   configured, so scrapes need `insecureSkipVerify` (or a configured CA). Upstream
-   default is metrics **disabled** (`--metrics-bind-address=0`); the OLM bundle enables
-   it — whether a given install serves metrics at all is a capture-time check.
+2. **The metrics scheme depends on cert configuration — CAPTURED both ways.** With a
+   cert dir the endpoint is HTTPS with TokenReview+SubjectAccessReview (finops and
+   template-v2 served https in the lab). **Without one, controller-runtime serves
+   PLAIN HTTP** (`Serving metrics server {"secure": false}`) — every tenant-operator
+   deployment and the hibernation manager did **[captured]**. The chart's monitors
+   therefore take a per-operator `scheme` value; which scheme a real install uses is
+   the main question for the OpenShift comparison capture. Also **[captured]**: macOS
+   curl (LibreSSL) cannot even handshake the https variants — capture runs from an
+   in-cluster pod (`tests/capture.sh`).
 3. **Only three metrics Services exist** **[bundle]**: `…-tenant-metrics-service`,
    `…-quota-intconfig-metrics-service`, `…-pilot-metrics-service` (port 8443 → named
    port `https`). The namespace, webhook, db and extensions deployments expose the pod
    port only. The ServiceMonitor in MTO's kustomize config is **not** in the OLM bundle —
    **on an OperatorHub install nothing scrapes MTO until this chart does.**
-4. **Custom metrics are five GAUGES under `multi_tenant_operator_*`** **[documented]**:
-   `resources_deployed_total{kind,name,namespace}`,
-   `resources_deployed{kind,name,namespace,type}`,
-   `reconcile_error{kind,name,namespace,state,errors}`, `reconcile_count{kind,name}`,
-   `reconcile_seconds{kind,name}`. All gauges — `rate()` applies to **none** of them,
-   including the `_total`-suffixed ones. `reconcile_error` carries the **error text in a
-   label** (unbounded cardinality: alert on presence, never aggregate across `errors`).
-   Which deployment exports which family is unknown until capture — the emitting code
-   paths sit in the tenant-side reconcilers, so expect them on the tenant controller and
-   possibly nowhere else.
+4. **Custom metrics are five GAUGES under `multi_tenant_operator_*`** — now settled:
+   `reconcile_count{kind,name}` and `reconcile_seconds{kind,name}` **[captured]** on
+   the **tenant controller only**, exactly as predicted; `resources_deployed`,
+   `resources_deployed_total` and `reconcile_error` are **[captured, lazy]** — they
+   register only when the manifest-deploy path runs / a resource errors (the lab
+   Tenant exercised neither). All gauges — `rate()` applies to **none** of them.
+   `reconcile_error` carries the **error text in a label** (unbounded cardinality:
+   alert on presence, never aggregate across `errors`).
 5. **Webhook failure policies split in two** **[bundle]**: `failurePolicy: Fail` on the
    Tenant, Quota and IntegrationConfig validators — webhook down ⇒ **every tenancy
    admin-plane write is rejected cluster-wide**. `failurePolicy: Ignore` on the
@@ -89,12 +95,31 @@ per story; killing a weak Draft here is the method working.
    **platform** monitoring stack instead (some fleets deploy rules that way) — which
    stack evaluates this chart's rules is Q9, and it decides whether KSM-based
    expressions are allowed in alerts or stay dashboard-only.
-7. **The other three operators export NO custom metrics at all** **[code]**:
-   finops-operator, hibernation-operator and template-operator-v2 each serve only the
-   controller-runtime default families (authenticated HTTPS, same pattern as fact 2 —
-   finops on `:8443`, hibernation/template on `:6443`; upstream default disabled).
-   Everything workload-specific below that is tagged **[absent]** is an upstream ask.
-8. **finops-operator shape** **[code/bundle]**: one manager Deployment; Offering +
+7. **The three suite-operator gauge families now EXIST and are [captured]** (from
+   the upstream PR branch builds, pending release): `finops_costjob_*` (one-hot
+   status incl. the all-zero never-executed shape AND a live `Failed=1`;
+   `last_successful_execution_timestamp_seconds` is **[captured, lazy]** — registers
+   on first success), `hibernation_supervisor_*`
+   (`{kind,supervisor,namespace}` + `ready{reason}`, next-reconcile timestamps live),
+   `template_operator_instance_*` (`{instance,namespace,template,template_namespace}`,
+   a real `ready{reason="NamespaceNotPermitted"} 0` + `phase{Failed} 1` in the
+   fixtures). Released operator versions still carry none of these — the chart pins
+   the gauge releases as minimum versions.
+8. **Capture-settled generic families**: `leader_election_master_status`,
+   `certwatcher_read_certificate_*` and `controller_runtime_reconcile_panics_total`
+   are **[captured]** across the suite — stories 1.2, 2.4 and 3.4 are buildable as
+   written. `controller_runtime_webhook_*` is **[captured]** on finops, template-v2,
+   tenant-webhook and quota-intconfig.
+9. **Scrape-surface gaps found by the capture** (upstream asks): the
+   **hibernation webhook pod serves no metrics at all** (no `--metrics-bind-address`
+   — its Down story is blind until fixed; the chart's monitor covers the manager
+   only); **template-v2's kustomize metrics patch does not reach the rendered
+   Deployment** (no metrics arg — enabled by hand in the lab); tenant-operator
+   **crashes on vanilla Kubernetes** unless `PLATFORM_TYPE=Kubernetes` (watches
+   OpenShift-only CRDs); finops CronJobs render an **`OPERATOR_IMAGE_PLACEHOLDER`**
+   image until that env is set on the manager — itself a live demonstration of the
+   silent cost-collection failure (pods `InvalidImageName`, status forever empty).
+10. **finops-operator shape** **[code/bundle]**: one manager Deployment; Offering +
    Subscription validating webhooks, both `failurePolicy: Fail`. A `CostJob` CR renders
    a **CronJob** per job type — `ResourceCostCollection` (OpenCost → PostgreSQL) and
    `SubscriptionChargeCollection` (charge records) — and the **loader pod itself**
@@ -103,10 +128,10 @@ per story; killing a weak Draft here is the method working.
    the CronJob never starts (suspended, image pull, quota, schedule drift), the status
    simply goes **stale** — no error is recorded anywhere. Freshness, not failure, is
    the only honest SLI.
-9. **hibernation-operator shape** **[code/bundle]**: manager + webhook Deployments;
+11. **hibernation-operator shape** **[code/bundle]**: manager + webhook Deployments;
    `ResourceSupervisor`/`ClusterResourceSupervisor` CRs with a `Ready` condition;
    both validators `failurePolicy: Fail`. A webhook metrics Service exists.
-10. **template-operator-v2 shape** **[code/bundle]**: manager (+ webhook Service);
+12. **template-operator-v2 shape** **[code/bundle]**: manager (+ webhook Service);
     `Template`/`TemplateInstance` (v2alpha1) with `observedGeneration`, `phase` and a
     `Synced` condition; validating webhook `failurePolicy: Fail`. The bundle ships a
     metrics Service and a `metrics-reader` ClusterRole. Note: tenant-operator v1's

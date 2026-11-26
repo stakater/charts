@@ -21,11 +21,13 @@ spec:
   podMetricsEndpoints:
     - targetPort: {{ $op.metricsPort }}
       path: /metrics
-      scheme: https
+      scheme: {{ $op.scheme | default "https" }}
       interval: {{ $m.interval }}
       scrapeTimeout: {{ $m.scrapeTimeout }}
+      {{- if eq ($op.scheme | default "https") "https" }}
       tlsConfig:
         insecureSkipVerify: {{ $m.tls.insecureSkipVerify }}
+      {{- end }}
       authorization:
         credentials:
           name: {{ include "mto-observability.fullname" $ }}-metrics-reader-token

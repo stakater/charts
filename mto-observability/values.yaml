@@ -43,6 +43,11 @@ grafana:
 # namespace (empty = the chart's namespace) and the scraper token Secret is
 # created alongside it.
 mto:
+  # CAPTURE FINDING (kind lab, 2026-11-26): without a metrics cert dir,
+  # controller-runtime serves the metrics endpoint as PLAIN HTTP ("secure:
+  # false") — the kustomize layout does this for every operator except where
+  # certs are mounted. The scheme is therefore per-install: keep https for
+  # OLM/cert layouts, set scheme: http where the capture says so.
   operators:
     tenant-operator:
       enabled: true
@@ -52,9 +57,10 @@ mto:
       job: mto-tenant-operator
       # Alert name prefix: MTO<alertName>Down etc.
       alertName: TenantOperator
-      # Authenticated HTTPS metrics; the container port is not named in the
-      # bundle, so the monitor targets the number.
+      # Authenticated metrics; the container port is not named in the bundle,
+      # so the monitor targets the number.
       metricsPort: 6443
+      scheme: https
       # Has admission webhooks (webhook alerts render only then). The Tenant /
       # Quota / IntegrationConfig validators are failurePolicy: Fail.
       webhook: true
@@ -79,6 +85,7 @@ mto:
       job: mto-finops-operator
       alertName: FinopsOperator
       metricsPort: 8443
+      scheme: https
       # Offering + Subscription validators, both failurePolicy: Fail.
       webhook: true
       downSeverity: critical
@@ -92,23 +99,24 @@ mto:
       job: mto-hibernation-operator
       alertName: HibernationOperator
       metricsPort: 6443
+      scheme: https
       webhook: true
       # Down is critical: a dead controller silently stops acting on sleep/wake
       # schedules — a tenant not woken is a user-facing outage.
       downSeverity: critical
+      # CAPTURE FINDING: the webhook deployment serves NO metrics (no
+      # --metrics-bind-address) — scraping it would only create a dead target,
+      # so the monitor covers the manager alone until upstream enables it.
       podSelector:
-        matchExpressions:
-          - key: control-plane
-            operator: In
-            values:
-              - hibernation-controller-manager
-              - hibernation-controller-manager-webhook
+        matchLabels:
+          control-plane: hibernation-controller-manager
     template-operator:
       enabled: true
       namespace: ""
       job: mto-template-operator
       alertName: TemplateOperator
       metricsPort: 8443
+      scheme: https
       webhook: true
       downSeverity: critical
       podSelector:

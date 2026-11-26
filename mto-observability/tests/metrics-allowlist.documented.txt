@@ -1,11 +1,9 @@
 # metrics-allowlist.documented.txt — metric families a rule or panel may reference
 # although they are NOT in the captured fixtures, each with a citation for WHY it is
-# trusted. Everything below is to be re-tagged [captured] (or [absent]) when the live
-# capture lands (tests/METRICS-CAPTURE.md) — none of it is workload-specific.
+# trusted (lazily-registered, kube-state-metrics, or documented upstream).
 # Format: <metric_family>  # <citation>
-up  # synthesized by Prometheus itself for every scrape target: https://prometheus.io/docs/concepts/jobs_instances/#automatically-generated-labels-and-time-series
-controller_runtime_reconcile_total  # controller-runtime default metrics: https://book.kubebuilder.io/reference/metrics-reference
-controller_runtime_reconcile_errors_total  # controller-runtime default metrics: https://book.kubebuilder.io/reference/metrics-reference
-controller_runtime_webhook_requests_total  # controller-runtime webhook metrics: https://book.kubebuilder.io/reference/metrics-reference
-controller_runtime_webhook_latency_seconds_bucket  # controller-runtime webhook metrics (histogram): https://book.kubebuilder.io/reference/metrics-reference
-workqueue_depth  # client-go workqueue metrics exported by every controller-runtime manager: https://book.kubebuilder.io/reference/metrics-reference
+up  # synthesized by Prometheus itself for every scrape target, never in a /metrics payload: https://prometheus.io/docs/concepts/jobs_instances/#automatically-generated-labels-and-time-series
+finops_costjob_last_successful_execution_timestamp_seconds  # lazy: registers on the first SUCCESSFUL execution (finops-operator PR sa-9738, docs/metrics.md); the capture cluster had no OpenCost so no job ever succeeded — last_execution/one-hot ARE captured
+multi_tenant_operator_resources_deployed  # lazy: emitted by the manifest/resource-mapping deploy path only (MTO docs Reference→Metrics); the lab Tenant deployed none — reconcile_count/seconds ARE captured
+multi_tenant_operator_resources_deployed_total  # lazy: same path as resources_deployed (MTO docs Reference→Metrics)
+multi_tenant_operator_reconcile_error  # lazy: registers only when a resource enters reconcile error (MTO docs Reference→Metrics); alert on presence, never aggregate its errors label

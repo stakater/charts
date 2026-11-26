@@ -26,11 +26,14 @@ TEMPLATE_NS="${TEMPLATE_NS:-$MTO_NS}"
 K="kubectl --context ${CONTEXT}"
 SA=mto-obs-metrics-capture
 CRB=mto-obs-metrics-capture
-LOCAL_PORT=18443
+CURL_POD=mto-obs-metrics-capture-curl
+# The scrape runs from a pod INSIDE the cluster: several operators' metrics
+# servers enforce a TLS policy that macOS curl (LibreSSL) cannot negotiate,
+# so a laptop-side port-forward scrape fails with a protocol-version alert.
+CURL_IMAGE="${CURL_IMAGE:-curlimages/curl:8.10.1}"
 
-PFS=()
 cleanup() {
-  for pf in ${PFS[@]+"${PFS[@]}"}; do kill "$pf" 2>/dev/null || true; done
+  $K -n "$MTO_NS" delete pod "$CURL_POD" --ignore-not-found --grace-period=0 --force >/dev/null 2>&1 || true
   $K -n "$MTO_NS" delete serviceaccount "$SA" --ignore-not-found >/dev/null 2>&1 || true
   $K delete clusterrolebinding "$CRB" --ignore-not-found >/dev/null 2>&1 || true
   $K delete clusterrole "$CRB" --ignore-not-found >/dev/null 2>&1 || true
@@ -63,6 +66,11 @@ subjects:
 EOF
 TOKEN=$($K -n "$MTO_NS" create token "$SA" --duration=30m)
 
+echo "== in-cluster curl pod (removed on exit)"
+$K -n "$MTO_NS" run "$CURL_POD" --image="$CURL_IMAGE" --restart=Never \
+  --command -- sleep 1800 >/dev/null
+$K -n "$MTO_NS" wait --for=condition=ready pod "$CURL_POD" --timeout=120s >/dev/null
+
 # component-name|namespace|pod-label-selector|container-port
 TARGETS=(
   "tenant|$MTO_NS|control-plane=controller-manager-tenant|6443"
@@ -81,24 +89,32 @@ TARGETS=(
 ok=0; skipped=0; failed=0
 for t in "${TARGETS[@]}"; do
   IFS='|' read -r name ns sel port <<<"$t"
-  pod=$($K -n "$ns" get pod -l "$sel" -o name 2>/dev/null | head -1)
+  pod=$($K -n "$ns" get pod -l "$sel" --field-selector=status.phase=Running -o name 2>/dev/null | head -1)
   if [ -z "$pod" ]; then
-    echo "SKIP  ${name}: no pod matches -l ${sel} in ${ns} (not installed, or the selector needs revising — record it)"
+    echo "SKIP  ${name}: no running pod matches -l ${sel} in ${ns} (not installed, or the selector needs revising — record it)"
     skipped=$((skipped+1)); continue
   fi
-  $K -n "$ns" port-forward "$pod" ${LOCAL_PORT}:${port} >/dev/null 2>&1 &
-  PFS+=($!); sleep 2
+  ip=$($K -n "$ns" get "$pod" -o jsonpath='{.status.podIP}')
   out="${T}/fixtures/${name}-metrics.txt"
-  if curl -sk --max-time 15 -H "Authorization: Bearer ${TOKEN}" \
-       "https://127.0.0.1:${LOCAL_PORT}/metrics" > "$out" && [ -s "$out" ] \
-       && head -1 "$out" | grep -qE '^#|^[a-zA-Z_]'; then
-    echo "OK    ${name}: $(grep -c '^[a-zA-Z_]' "$out") series lines -> fixtures/${name}-metrics.txt"
+  # Try HTTPS first, then plain HTTP: without a metrics cert dir
+  # controller-runtime serves INSECURE http ("secure: false") — which scheme
+  # answered is itself a scrape-surface fact, so it is printed.
+  got=""
+  for scheme in https http; do
+    if $K -n "$MTO_NS" exec "$CURL_POD" -- curl -sk --max-time 15 \
+         -H "Authorization: Bearer ${TOKEN}" \
+         "${scheme}://${ip}:${port}/metrics" > "$out" 2>/dev/null && [ -s "$out" ] \
+         && head -1 "$out" | grep -qE '^#|^[a-zA-Z_]'; then
+      got="$scheme"; break
+    fi
+  done
+  if [ -n "$got" ]; then
+    echo "OK    ${name}: $(grep -c '^[a-zA-Z_]' "$out") series lines via ${got} -> fixtures/${name}-metrics.txt"
     ok=$((ok+1))
   else
-    echo "FAIL  ${name}: scrape failed or empty (port ${port} on ${pod#pod/}) — fixture removed"
+    echo "FAIL  ${name}: scrape failed or empty (${ip}:${port}, https and http, from in-cluster curl) — fixture removed"
     rm -f "$out"; failed=$((failed+1))
   fi
-  kill "${PFS[${#PFS[@]}-1]}" 2>/dev/null || true
 done
 
 echo
