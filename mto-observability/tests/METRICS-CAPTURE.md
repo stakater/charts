@@ -19,6 +19,16 @@ One fixture per controller Deployment, named `<component>-metrics.txt`:
 | `db-controller-metrics.txt` | `controller-manager-db-controller` (if installed) |
 | `extensions-argocd-metrics.txt` | `controller-manager-extensions-argocd` (if installed) |
 
+And one per **suite operator** (each in its own install namespace; same authenticated
+HTTPS procedure — finops serves on `:8443`, the others on `:6443`):
+
+| fixture | operator |
+| --- | --- |
+| `finops-operator-metrics.txt` | finops-operator manager |
+| `hibernation-operator-metrics.txt` | hibernation-operator manager |
+| `hibernation-webhook-metrics.txt` | hibernation-operator webhook |
+| `template-operator-metrics.txt` | template-operator-v2 manager |
+
 Capture at a moment when at least one Tenant exists and, ideally, one resource is in a
 known reconcile-error state — the `multi_tenant_operator_*` gauges and their label
 shapes are the whole point, and several register lazily.
@@ -76,3 +86,6 @@ Then:
   2.3, 2.4, 3.4)?
 - Exact `job` label values once the chart's monitors scrape (naming feeds every `up`
   expression).
+- For the suite operators (fixtures above): confirm **no `finops_*` / `hibernation_*` /
+  `template_*` families exist yet** (roadmap fact 7 / Q7 — the Area 7–9 [absent] tags
+  rest on this), and whether UWM already scrapes OpenCost (story 7.4).

@@ -8,8 +8,10 @@ user-workload monitoring (UWM) and the grafana-operator.
 > The story set is drafted in [`docs/roadmap.md`](docs/roadmap.md) and is gated on
 > (1) a live metrics capture from a real MTO cluster
 > ([`tests/METRICS-CAPTURE.md`](tests/METRICS-CAPTURE.md)) and (2) per-story human
-> approval. Scope is the MTO **operator** itself (controller deployments + admission
-> webhook); MTO Console/Gateway are separate systems and out of scope.
+> approval. Scope is the **MTO suite of four operators** — tenant-operator,
+> finops-operator (priority: silent cost-collection failure), hibernation-operator,
+> template-operator-v2 — covering their controllers and admission webhooks. MTO
+> Console/Gateway are separate systems and out of scope.
 
 ## Prerequisites (planned surface)
 

@@ -3,10 +3,15 @@
 **Status:** 📝 **Draft — awaiting live metrics capture and story approval.** Nothing below
 is built: this chart ships no rules, monitors or dashboard until stories pass the human
 approval gate AND every metric they use is verified against a capture from a real cluster
-(`tests/METRICS-CAPTURE.md`). The facts in this draft come from the Multi Tenant Operator
-**v1.10.x OLM bundle manifests** and the **published MTO documentation**
+(`tests/METRICS-CAPTURE.md`). The facts in this draft come from the operators' **OLM
+bundle/kustomize manifests and source**, plus the **published MTO documentation**
 (Reference → Metrics), not from a live scrape — label shapes and lazily-registered
 families must be confirmed before any expression is trusted.
+**Scope (settled 2026-11-26):** MTO is a suite of **four operators**, and this chart
+covers all of them: **tenant-operator** (Areas 1–6), **finops-operator** (Area 7 — the
+priority: cost-collection jobs failing silently is the incident class that motivated
+this chart), **hibernation-operator** (Area 8), **template-operator-v2** (Area 9).
+MTO Console/Gateway remain out of scope (separate systems).
 **Owner:** Platform / SRE
 
 ---
@@ -70,7 +75,32 @@ per story; killing a weak Draft here is the method working.
    blast radii; both argue the webhook is the single most alert-worthy component.
 6. **UWM evaluation constraint**: alerts render only from series UWM itself scrapes.
    Platform families (`apiserver_admission_webhook_*`, kube-state-metrics) are
-   dashboard-only here **[ksm]**.
+   dashboard-only here **[ksm]**. This bites hardest in Area 7: `kube_cronjob_*` /
+   `kube_job_*` — the obvious signals for a failing cost-collection CronJob — **cannot
+   be alerted on from UWM.**
+7. **The other three operators export NO custom metrics at all** **[code]**:
+   finops-operator, hibernation-operator and template-operator-v2 each serve only the
+   controller-runtime default families (authenticated HTTPS, same pattern as fact 2 —
+   finops on `:8443`, hibernation/template on `:6443`; upstream default disabled).
+   Everything workload-specific below that is tagged **[absent]** is an upstream ask.
+8. **finops-operator shape** **[code/bundle]**: one manager Deployment; Offering +
+   Subscription validating webhooks, both `failurePolicy: Fail`. A `CostJob` CR renders
+   a **CronJob** per job type — `ResourceCostCollection` (OpenCost → PostgreSQL) and
+   `SubscriptionChargeCollection` (charge records) — and the **loader pod itself**
+   writes `status.lastExecutionTime/lastSuccessfulExecutionTime/lastExecutionStatus` +
+   a 10-entry `executionHistory` (with error text) back to the CR. Consequence: when
+   the CronJob never starts (suspended, image pull, quota, schedule drift), the status
+   simply goes **stale** — no error is recorded anywhere. Freshness, not failure, is
+   the only honest SLI.
+9. **hibernation-operator shape** **[code/bundle]**: manager + webhook Deployments;
+   `ResourceSupervisor`/`ClusterResourceSupervisor` CRs with a `Ready` condition;
+   both validators `failurePolicy: Fail`. A webhook metrics Service exists.
+10. **template-operator-v2 shape** **[code/bundle]**: manager (+ webhook Service);
+    `Template`/`TemplateInstance` (v2alpha1) with `observedGeneration`, `phase` and a
+    `Synced` condition; validating webhook `failurePolicy: Fail`. The bundle ships a
+    metrics Service and a `metrics-reader` ClusterRole. Note: tenant-operator v1's
+    custom gauges covered template reconciliation (TGI); v2 has none — an
+    observability **regression** to raise upstream.
 
 ### The SLI / SLO / SLA distinction
 
@@ -84,6 +114,12 @@ per story; killing a weak Draft here is the method working.
 > live baseline on a real cluster.
 
 ---
+
+> **Areas 1–6 are written against tenant-operator** (the suite's largest member). The
+> *generic* stories — controller down (1.1), leader election (1.2), webhook down/slow
+> (2.1/2.3), reconcile errors (3.2), backlog (3.3), panics (3.4), watchdog (6.1) —
+> apply to **all four operators** and are built per-operator from the same templates;
+> their fixtures and `job` names are per-operator capture items.
 
 # Capability Area 1 — Control-plane availability (is MTO running at all?)
 
@@ -284,6 +320,124 @@ What has MTO built, for whom, and how fast — context for every alert above. No
 - **Metric(s):** `absent(up{job=…})` per enabled monitor **[captured-pending]**
 - **Alert:** `MTOMetricsAbsent` — 15m → warning
 
+# Capability Area 7 — finops-operator: cost collection (the priority)
+
+The incident class that motivated this chart: **a cost-collection CronJob stops
+running, nobody notices, and FinOps — charges, invoicing, everything downstream —
+silently runs on stale data.** Facts 6–8: the job's own status lives only in the
+CostJob CR (written by the loader pod), `kube_cronjob_*` is un-alertable from UWM, and
+the operator exports no custom metrics. So the stories below are **blocked on one
+small upstream change** (Q7) — which is exactly why it is written down first.
+
+## Story 7.1 — Is cost data fresh? 📝 Draft — **the headline story**
+
+> **As a FinOps/platform owner, I want a page when any CostJob's last successful
+> execution is older than its interval allows, because every way this fails —
+> CronJob suspended, image unpullable, quota blocking the pod, loader crash, OpenCost
+> or PostgreSQL down — looks identical: data quietly stops, and billing/showback runs
+> on stale numbers until a human notices weeks later.**
+
+- **Metric(s):** `finops_costjob_last_successful_execution_timestamp_seconds{costjob,type}`
+  — **[absent]: does not exist yet.** Upstream ask (Q7): the finops-operator reconciler
+  already reads CostJob status; publishing it as gauges is a small change. Freshness is
+  the right SLI precisely because the status goes *stale* rather than *failed* when the
+  job never runs (fact 8).
+- **SLI:** `time() - last_successful_execution_timestamp`, per CostJob (both types:
+  ResourceCostCollection AND SubscriptionChargeCollection)
+- **SLO:** age < 2× the CostJob interval (placeholder) | **SLA:** ✅ candidate — this IS
+  the finops promise
+- **Alert:** `MTOCostDataStale` — age > 2× interval → **critical**; plus
+  `absent()` guard so a deleted/never-reconciled CostJob also fires
+- **Dashboard:** per-CostJob freshness stat (green/red by age) + `kube_cronjob_status_last_successful_time` / `kube_job_status_failed` panels **[ksm — dashboard-only]**
+- **Interim until upstream lands:** no honest UWM alert exists. Dashboard-only KSM
+  panels + Story 7.3 (operator up) as a weak proxy. Say so loudly in the README.
+
+## Story 7.2 — Is a CostJob failing (not just stale)? 📝 Draft
+
+> **As an SRE, I want to distinguish "runs but fails" from "never runs", because the
+> fix differs: a failing loader points at OpenCost/PostgreSQL/credentials; a
+> never-running one at the CronJob/schedule/quota.**
+
+- **Metric(s):** `finops_costjob_last_execution_status{costjob,type,status}` or
+  `finops_costjob_consecutive_failures` — **[absent]**, same upstream ask (status enum
+  Success/Failed/Error already in `executionHistory`)
+- **Alert:** `MTOCostJobFailing` — last status != Success for > 1 interval → warning,
+  escalating critical
+- **Dashboard:** execution-history table (status, duration, error)
+
+## Story 7.3 — Is the finops-operator itself healthy? 📝 Draft
+
+> **As an SRE, I want the generic suite (down / webhook / reconcile errors / backlog)
+> on finops-operator, because its webhooks are `failurePolicy: Fail` — operator outage
+> blocks every Offering/Subscription write — and its reconcile errors are the earliest
+> real signal we can alert on today.**
+
+- **Metric(s):** `up`, `controller_runtime_*`, `workqueue_*` **[cr-default — capture]**
+- **Alert:** per Areas 1–3 templates: `MTOFinopsOperatorDown` critical,
+  webhook/reconcile/backlog warnings
+- **Note:** until Q7 lands, **this is the only alertable finops signal** — it must not
+  be mistaken for cost-data coverage (an operator can be perfectly healthy while its
+  CronJobs rot).
+
+## Story 7.4 — Are the cost pipeline's dependencies up? 📝 Draft
+
+> **As an SRE, I want OpenCost (the data source) and the finops PostgreSQL (the sink)
+> visible next to the CostJob story, because 7.1 firing with OpenCost down is a
+> different incident than 7.1 firing alone.**
+
+- **Metric(s):** OpenCost's own `/metrics` (`up{job=<opencost>}`, if UWM scrapes it —
+  capture question), PostgreSQL via the existing `postgres-observability` chart
+- **Open (Q8):** boundary — this chart alerts on *reachability from the finops
+  perspective* at most; deep Postgres/OpenCost health belongs to their own charts.
+
+# Capability Area 8 — hibernation-operator: sleep/wake
+
+## Story 8.1 — Is the hibernation control plane healthy? 📝 Draft
+
+> **As an SRE, I want the generic suite on hibernation-operator, because both its
+> validators are `failurePolicy: Fail` (outage blocks supervisor CRUD) and a dead
+> controller means schedules silently stop being acted on.**
+
+- **Metric(s):** `up`, `controller_runtime_*` **[cr-default — capture]**; webhook
+  metrics Service exists [bundle]
+- **Alert:** `MTOHibernationOperatorDown` → critical (a tenant not woken on schedule
+  is a user-facing outage), generic webhook/reconcile warnings
+
+## Story 8.2 — Did sleep/wake actually happen on schedule? 📝 Draft
+
+> **As a platform owner, I want to know when a supervised namespace missed its wake
+> (tenant outage) or its sleep (silent cost leak), because a healthy operator that
+> skips transitions is invisible today.**
+
+- **Metric(s):** supervisor state/transition gauges (e.g.
+  `hibernation_supervisor_state{supervisor}`,
+  `…_last_transition_timestamp_seconds`) — **[absent]**, upstream ask alongside Q7;
+  the `Ready` condition exists on the CR but no metric exposes it
+- **Alert:** deferred until the metric exists; interim: Ready-condition dashboard via
+  KSM custom-resource state **[ksm — only if configured; verify]**
+
+# Capability Area 9 — template-operator-v2: template distribution
+
+## Story 9.1 — Is template distribution healthy? 📝 Draft
+
+> **As an SRE, I want the generic suite on template-operator-v2, because failed
+> template reconciliation is tenants missing secrets/configs they were promised, and
+> v2 lost the custom gauges v1 had (fact 10) — generic signals are all there is.**
+
+- **Metric(s):** `up`, `controller_runtime_reconcile_errors_total`, `workqueue_*`
+  **[cr-default — capture]**; bundle ships metrics Service + metrics-reader role
+- **Alert:** `MTOTemplateOperatorDown` critical; reconcile-errors/backlog warnings
+
+## Story 9.2 — How many TemplateInstances are out of sync? 📝 Draft
+
+> **As a platform owner, I want a count of TemplateInstances not Synced/degraded,
+> because that is the tenant-visible promise, and `phase`/`Synced` live only in CR
+> status today.**
+
+- **Metric(s):** `template_operator_instances{phase}` or per-condition gauge —
+  **[absent]**, upstream ask (restoring v1-level visibility)
+- **Dashboard:** phase breakdown; alert deferred until the metric exists.
+
 ---
 
 ## Open design questions (settle at the approval gate)
@@ -298,9 +452,10 @@ What has MTO built, for whom, and how fast — context for every alert above. No
 - **Q2 — Do OperatorHub installs serve metrics at all?** Bundle args say yes (:6443),
   upstream default says no. First capture settles it; README gets a prerequisite either
   way.
-- **Q3 — Scope.** One chart, one mechanism: the MTO **operator** (controllers +
-  webhook). MTO Console/Gateway are separate systems → separate chart if wanted.
-  Per-tenant quota dashboards (4.3) default **out**. Confirm.
+- **Q3 — Scope. ~~Settled 2026-11-26~~:** the chart covers the MTO **suite of four
+  operators** (tenant, finops, hibernation, template-v2 — the mechanism is the MTO
+  control plane). MTO Console/Gateway stay out (separate systems). Per-tenant quota
+  dashboards (4.3) still default **out** — confirm that part.
 - **Q4 — Optional components.** db-controller and extensions-argocd exist only on some
   installs — their monitors/alerts sit behind per-component `enabled` toggles, default
   off?
@@ -308,4 +463,17 @@ What has MTO built, for whom, and how fast — context for every alert above. No
   aggregate it away everywhere. Upstream ask: drop the label / convert the gauges to
   counters + histogram (would unlock rate-based stories in Areas 3–4).
 - **Q6 — Severity map.** Which stories page (critical) vs ticket (warning), and which
-  become the SLA set (2.1, 3.1, 3.3 proposed).
+  become the SLA set (2.1, 3.1, 3.3, **7.1** proposed).
+- **Q7 — The upstream metrics ask (the critical path for Area 7).** finops-operator,
+  hibernation-operator and template-operator-v2 export no workload metrics; the
+  stories that matter most (7.1/7.2 cost freshness, 8.2 missed transitions, 9.2
+  unsynced instances) are **unbuildable in UWM** until each operator publishes small
+  state gauges from status it already tracks. Proposal: a shared `localmetrics`-style
+  package (tenant-operator precedent) with per-CR gauges:
+  `*_last_successful_execution_timestamp_seconds`, `*_last_execution_status`,
+  state/condition gauges. File the upstream issues at approval time; sequence the
+  chart so generic stories (Areas 1–3 per operator) ship first and the [absent]
+  stories land as the operators do.
+- **Q8 — Dependency boundary for the cost pipeline.** How far does this chart reach
+  toward OpenCost and PostgreSQL (7.4): reachability-only here, deep health in their
+  own charts (postgres-observability exists) — confirm.
