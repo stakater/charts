@@ -1,0 +1,33 @@
+{{- $r := .Values.prometheus.rules.mto.workqueueBacklog }}
+{{- if and ($r) ($r.enabled) }}
+{{- range $name, $op := .Values.mto.operators }}
+{{- if $op.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-{{ $name }}-workqueue-backlog
+  namespace: {{ include "mto-observability.namespace" $ }}
+  labels:
+    role: alert-rules
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+    {{- with $.Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mto.{{ $name }}.workqueue-backlog
+      rules:
+        - alert: MTO{{ $op.alertName }}WorkqueueBacklog
+          expr: |
+            max by (name) (workqueue_depth{job="{{ $op.job }}"}) > {{ $r.depth }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: mto
+          annotations:
+            summary: "{{ $name }} workqueue {{`{{ $labels.name }}`}} is backing up"
+            description: "Queue {{`{{ $labels.name }}`}} has held more than {{ $r.depth }} items for {{ $r.for }} (currently {{`{{ $value }}`}}). Work is arriving faster than the controller drains it — tenants see slow convergence before anything errors."
+{{- end }}
+{{- end }}
+{{- end }}

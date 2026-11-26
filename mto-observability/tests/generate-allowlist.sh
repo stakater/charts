@@ -18,10 +18,14 @@ while getopts "o:" opt; do case $opt in o) OUT="$OPTARG";; esac; done
   # From every fixture: take series lines (skip comments), strip labels/values -> family name.
   # _bucket/_sum/_count suffixes are kept as-is: the gate matches exact names, and rules
   # reference the _bucket series explicitly.
+  # The greps exit 1 on no matches, which is a legal state before the first
+  # capture — hence the || true on the pipeline.
   find "${T}/fixtures" -name '*-metrics.txt' -print0 | xargs -0 cat \
     | grep -vE '^#|^$' \
     | sed -E 's/\{.*//; s/ .*//' \
     | grep -E '^[a-zA-Z_][a-zA-Z0-9_]*$' \
-    | sort -u
+    | sort -u || true
 } > "$OUT"
-echo "wrote $(grep -cvE '^#|^$' "$OUT") metric families to $OUT"
+# grep -c exits 1 on a zero count, which is a legal state before the first capture.
+COUNT=$(grep -cvE '^#|^$' "$OUT" || true)
+echo "wrote ${COUNT} metric families to $OUT"

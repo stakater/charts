@@ -122,7 +122,8 @@ def load_dashboard_exprs(path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--rules", required=True)
-    ap.add_argument("--dashboard", required=True)
+    ap.add_argument("--dashboard", default=None,
+                    help="dashboard JSON; omit while the chart ships no dashboard yet")
     ap.add_argument("--allowlist", action="append", default=[],
                     help="CAPTURED metric set (real /metrics from the pinned fixtures). Repeatable.")
     ap.add_argument("--documented", action="append", default=[],
@@ -132,7 +133,7 @@ def main():
     a = ap.parse_args()
 
     rule_exprs, defined = load_rule_exprs(a.rules)
-    dash_exprs = load_dashboard_exprs(a.dashboard)
+    dash_exprs = load_dashboard_exprs(a.dashboard) if a.dashboard else []
     all_exprs = rule_exprs + dash_exprs
 
     external, internal, unknown_funcs = set(), set(), set()

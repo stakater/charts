@@ -12,6 +12,14 @@ covers all of them: **tenant-operator** (Areas 1–6), **finops-operator** (Area
 priority: cost-collection jobs failing silently is the incident class that motivated
 this chart), **hibernation-operator** (Area 8), **template-operator-v2** (Area 9).
 MTO Console/Gateway remain out of scope (separate systems).
+**Build status (2026-11-26):** the **generic Tier 2 suite is built** behind a green
+`tests/validate.sh` — PodMonitors + scraper RBAC for all four operators and the
+Down / ReconcileErrors / WorkqueueBacklog / WebhookErrors / WebhookLatencyHigh alerts
+(stories 1.1, 2.3, 3.2, 3.3 and their per-operator twins: 🔨 In progress — release
+gated on the capture re-verifying selectors/ports). Story 6.1's watchdog is **folded
+into the Down alerts** (their `absent()` half). The three upstream state-gauge changes
+(finops CostJob, hibernation supervisor, template-v2 instance) are in review; Tier 1
+builds when they release.
 **Owner:** Platform / SRE
 
 ---

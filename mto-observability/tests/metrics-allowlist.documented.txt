@@ -1,5 +1,11 @@
 # metrics-allowlist.documented.txt — metric families a rule or panel may reference
 # although they are NOT in the captured fixtures, each with a citation for WHY it is
-# trusted (lazily-registered, kube-state-metrics, or documented upstream).
+# trusted. Everything below is to be re-tagged [captured] (or [absent]) when the live
+# capture lands (tests/METRICS-CAPTURE.md) — none of it is workload-specific.
 # Format: <metric_family>  # <citation>
-# EMPTY: populated story by story once the capture settles what is actually absent.
+up  # synthesized by Prometheus itself for every scrape target: https://prometheus.io/docs/concepts/jobs_instances/#automatically-generated-labels-and-time-series
+controller_runtime_reconcile_total  # controller-runtime default metrics: https://book.kubebuilder.io/reference/metrics-reference
+controller_runtime_reconcile_errors_total  # controller-runtime default metrics: https://book.kubebuilder.io/reference/metrics-reference
+controller_runtime_webhook_requests_total  # controller-runtime webhook metrics: https://book.kubebuilder.io/reference/metrics-reference
+controller_runtime_webhook_latency_seconds_bucket  # controller-runtime webhook metrics (histogram): https://book.kubebuilder.io/reference/metrics-reference
+workqueue_depth  # client-go workqueue metrics exported by every controller-runtime manager: https://book.kubebuilder.io/reference/metrics-reference

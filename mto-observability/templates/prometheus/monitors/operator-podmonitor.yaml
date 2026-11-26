@@ -1,0 +1,48 @@
+{{- $m := .Values.prometheus.monitors.podMonitors }}
+{{- if and ($m) ($m.enabled) }}
+{{- range $name, $op := .Values.mto.operators }}
+{{- if $op.enabled }}
+---
+# Scrapes every {{ $name }} controller pod. The endpoint is authenticated HTTPS
+# (TokenReview + SubjectAccessReview on GET /metrics), hence the token from the
+# chart's metrics-reader Secret; the serving cert is self-signed by default.
+# The metrics container port is not named in the shipped bundles, so the
+# endpoint targets the port number.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-{{ $name }}
+  namespace: {{ $op.namespace | default (include "mto-observability.namespace" $) }}
+  labels:
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+spec:
+  selector:
+    {{- toYaml $op.podSelector | nindent 4 }}
+  podMetricsEndpoints:
+    - targetPort: {{ $op.metricsPort }}
+      path: /metrics
+      scheme: https
+      interval: {{ $m.interval }}
+      scrapeTimeout: {{ $m.scrapeTimeout }}
+      tlsConfig:
+        insecureSkipVerify: {{ $m.tls.insecureSkipVerify }}
+      authorization:
+        credentials:
+          name: {{ include "mto-observability.fullname" $ }}-metrics-reader-token
+          key: token
+      relabelings:
+        # Pin the series identity every rule and panel references.
+        - action: replace
+          targetLabel: job
+          replacement: {{ $op.job }}
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        # Which controller deployment a series belongs to (tenant-operator runs
+        # seven; the others one or two).
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_label_control_plane]
+          targetLabel: control_plane
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,61 @@
+{{- $m := .Values.prometheus.monitors.podMonitors }}
+{{- if and ($m) ($m.enabled) ($m.metricsReader) ($m.metricsReader.create) }}
+{{- /* One ServiceAccount + token Secret per namespace that hosts a PodMonitor
+(the monitor can only reference a credentials Secret in its own namespace),
+plus one ClusterRole and one ClusterRoleBinding over all of them. Every MTO
+operator authorizes a scrape with a SubjectAccessReview on GET /metrics. */}}
+{{- $namespaces := dict }}
+{{- range $name, $op := .Values.mto.operators }}
+{{- if $op.enabled }}
+{{- $_ := set $namespaces ($op.namespace | default (include "mto-observability.namespace" $)) true }}
+{{- end }}
+{{- end }}
+{{- range $ns, $_ := $namespaces }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-metrics-reader
+  namespace: {{ $ns }}
+  labels:
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-metrics-reader-token
+  namespace: {{ $ns }}
+  annotations:
+    kubernetes.io/service-account.name: {{ include "mto-observability.fullname" $ }}-metrics-reader
+  labels:
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+type: kubernetes.io/service-account-token
+---
+{{- end }}
+# Cluster-scoped; name carries the chart namespace to avoid collisions between installs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "mto-observability.namespace" . }}-{{ include "mto-observability.fullname" . }}-metrics-reader
+  labels:
+    {{- include "mto-observability.labels" . | nindent 4 }}
+rules:
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "mto-observability.namespace" . }}-{{ include "mto-observability.fullname" . }}-metrics-reader
+  labels:
+    {{- include "mto-observability.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "mto-observability.namespace" . }}-{{ include "mto-observability.fullname" . }}-metrics-reader
+subjects:
+  {{- range $ns, $_ := $namespaces }}
+  - kind: ServiceAccount
+    name: {{ include "mto-observability.fullname" $ }}-metrics-reader
+    namespace: {{ $ns }}
+  {{- end }}
+{{- end }}

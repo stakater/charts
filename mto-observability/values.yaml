@@ -1,9 +1,11 @@
 # Default values for mto-observability.
 #
-# BOOTSTRAP STATE: the stories in docs/roadmap.md are 📝 Draft — no rules or
-# dashboard ship yet. This file holds the settled identity/monitor surface;
-# per-alert blocks are added story by story once approved and built against a
-# live metrics capture (tests/METRICS-CAPTURE.md).
+# STATE: Tier 2 (generic operator-health alerts) is built behind tests/validate.sh.
+# Scrape-surface defaults (selectors, ports) come from the operators' shipped
+# bundles and MUST be re-verified against a live capture before release
+# (tests/METRICS-CAPTURE.md). Tier 1 (finops cost-pipeline alerts) is gated on a
+# finops-operator release carrying the finops_costjob_* gauges — see
+# docs/finops-alerts.md and docs/roadmap.md.
 
 global:
   # Namespace the monitoring objects are created in. Defaults to the release
@@ -35,52 +37,136 @@ grafana:
   dashboard:
     enabled: true
 
-# Identity of the MTO installation being monitored. Defaults are the
-# OperatorHub/OLM layout of MTO v1.10.x: one Deployment per controller, each
-# serving authenticated HTTPS metrics on container port :6443, selected by its
-# `control-plane` label. Only tenant / quota-intconfig / pilot ship a metrics
-# Service; the rest (namespace, webhook, db, extensions) expose only the pod
-# port. Capture pending — see docs/roadmap.md "Structural facts".
+# The MTO suite: one entry per operator. Monitors and the generic (Tier 2)
+# alerts render per enabled operator. On OpenShift UWM a PodMonitor only
+# scrapes its own namespace, so each monitor is created in the operator's
+# namespace (empty = the chart's namespace) and the scraper token Secret is
+# created alongside it.
 mto:
-  controllers:
-    tenant:
-      selector:
-        control-plane: controller-manager-tenant
-    quotaIntconfig:
-      selector:
-        control-plane: controller-manager-quota-intconfig
-    pilot:
-      selector:
-        control-plane: controller-manager-pilot
+  operators:
+    tenant-operator:
+      enabled: true
+      namespace: ""
+      # Stable job label the monitor pins by relabeling; every alert and panel
+      # references it.
+      job: mto-tenant-operator
+      # Alert name prefix: MTO<alertName>Down etc.
+      alertName: TenantOperator
+      # Authenticated HTTPS metrics; the container port is not named in the
+      # bundle, so the monitor targets the number.
+      metricsPort: 6443
+      # Has admission webhooks (webhook alerts render only then). The Tenant /
+      # Quota / IntegrationConfig validators are failurePolicy: Fail.
+      webhook: true
+      # Severity of the Down alert for this operator.
+      downSeverity: critical
+      # All seven controller deployments of tenant-operator v1.10.x+ [bundle].
+      podSelector:
+        matchExpressions:
+          - key: control-plane
+            operator: In
+            values:
+              - controller-manager
+              - controller-manager-tenant
+              - controller-manager-quota-intconfig
+              - controller-manager-pilot
+              - controller-manager-webhook
+              - controller-manager-db-controller
+              - controller-manager-extensions-argocd
+    finops-operator:
+      enabled: true
+      namespace: ""
+      job: mto-finops-operator
+      alertName: FinopsOperator
+      metricsPort: 8443
+      # Offering + Subscription validators, both failurePolicy: Fail.
+      webhook: true
+      downSeverity: critical
+      podSelector:
+        matchLabels:
+          control-plane: controller-manager
+          app.kubernetes.io/name: finops-operator
+    hibernation-operator:
+      enabled: true
+      namespace: ""
+      job: mto-hibernation-operator
+      alertName: HibernationOperator
+      metricsPort: 6443
+      webhook: true
+      # Down is critical: a dead controller silently stops acting on sleep/wake
+      # schedules — a tenant not woken is a user-facing outage.
+      downSeverity: critical
+      podSelector:
+        matchExpressions:
+          - key: control-plane
+            operator: In
+            values:
+              - hibernation-controller-manager
+              - hibernation-controller-manager-webhook
+    template-operator:
+      enabled: true
+      namespace: ""
+      job: mto-template-operator
+      alertName: TemplateOperator
+      metricsPort: 8443
+      webhook: true
+      downSeverity: critical
+      podSelector:
+        matchLabels:
+          control-plane: controller-manager
+          app.kubernetes.io/name: template-operator-v2
 
 prometheus:
-  # Chart-shipped monitors. Off by default: installing the chart must not start
-  # scraping until the operator of the cluster opts in (repo convention), and
-  # MTO's metrics endpoint is authenticated — the scrape needs the
-  # metrics-reader RBAC to be in place first.
   monitors:
-    # ServiceMonitors against the three metrics Services MTO ships
-    # (tenant / quota-intconfig / pilot). HTTPS, bearer token, served cert is
-    # self-signed by default hence insecureSkipVerify.
-    tenantServiceMonitor:
+    # Chart-shipped PodMonitors, one per enabled operator. Off by default:
+    # installing the chart must not start scraping until the cluster operator
+    # opts in (repo convention), and every endpoint is authenticated HTTPS —
+    # the scrape works only with the metricsReader RBAC below in place.
+    podMonitors:
       enabled: false
       interval: 30s
       scrapeTimeout: 10s
-    quotaIntconfigServiceMonitor:
-      enabled: false
-      interval: 30s
-      scrapeTimeout: 10s
-    pilotServiceMonitor:
-      enabled: false
-      interval: 30s
-      scrapeTimeout: 10s
-    # Monitors for the deployments WITHOUT a metrics Service (webhook,
-    # namespace, db, extensions) are an open design question — roadmap Q1.
+      tls:
+        # The operators serve self-signed certs unless configured otherwise.
+        insecureSkipVerify: true
+      # ServiceAccount + token Secret + ClusterRole/Binding (GET /metrics) the
+      # monitors authenticate with, created in every namespace that hosts a
+      # monitor. Disable if the scraping Prometheus is already authorized.
+      metricsReader:
+        create: true
 
   rules:
     # Extra labels added to every PrometheusRule (e.g. for Alertmanager routing,
     # or to match your Prometheus ruleSelector).
     labels: {}
-    # Per-alert blocks (enabled / for / severity / thresholds) are added here
-    # per approved story — none built yet.
-    mto: {}
+    # Tier 2 — generic operator health, rendered per enabled operator. The
+    # Down/absent alerts render only while podMonitors.enabled: without the
+    # scrape there is no `up` series and absent() would fire forever.
+    # Numeric thresholds are placeholders until a live baseline.
+    mto:
+      operatorDown:
+        enabled: true
+        for: 5m
+      reconcileErrors:
+        enabled: true
+        window: 15m
+        # Error ratio per controller above which the alert fires.
+        ratio: 0.10
+        for: 15m
+        severity: warning
+      workqueueBacklog:
+        enabled: true
+        depth: 50
+        for: 15m
+        severity: warning
+      webhookErrors:
+        enabled: true
+        window: 10m
+        for: 10m
+        severity: warning
+      webhookLatencyHigh:
+        enabled: true
+        window: 15m
+        thresholdSeconds: 1
+        for: 10m
+        severity: warning

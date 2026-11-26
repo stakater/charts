@@ -24,10 +24,9 @@ green() { printf "\033[32m%s\033[0m\n" "$*"; }
 step()  { printf "\n\033[1m== %s ==\033[0m\n" "$*"; }
 
 ALL_FLAGS=(
-  --set prometheus.monitors.tenantServiceMonitor.enabled=true
-  --set prometheus.monitors.quotaIntconfigServiceMonitor.enabled=true
-  --set prometheus.monitors.pilotServiceMonitor.enabled=true
+  --set prometheus.monitors.podMonitors.enabled=true
 )
+DASHBOARD="${CHART}/files/mto_grafana_dashboard.json"
 
 run_promtool() {
   if command -v promtool >/dev/null 2>&1; then promtool "$@";
@@ -86,13 +85,18 @@ fi
 green "captured allowlist matches fixtures"
 
 step "4b. metric-reality gate (captured fixtures + documented-upstream)"
+DASH_FLAG=()
+[ -f "$DASHBOARD" ] && DASH_FLAG=(--dashboard "$DASHBOARD")
 python3 "${T}/check_metrics.py" \
   --rules "${RENDER_DIR}/all.yaml" \
-  --dashboard "${CHART}/files/mto_grafana_dashboard.json" \
+  ${DASH_FLAG[@]+"${DASH_FLAG[@]}"} \
   --allowlist "${T}/metrics-allowlist.captured.txt" \
   --documented "${T}/metrics-allowlist.documented.txt"
 
 step "5. dashboard JSON"
+if [ ! -f "$DASHBOARD" ]; then
+  green "no dashboard shipped yet - skipped (the dashboard story is not built)"
+else
 jq -e . "${CHART}/files/mto_grafana_dashboard.json" >/dev/null
 DUP=$(jq '[.. | objects | select(has("gridPos")) | .id] | (length) as $n | (unique|length) as $u | $n-$u' "${CHART}/files/mto_grafana_dashboard.json")
 [ "$DUP" = "0" ] && green "valid JSON, panel ids unique" || { red "duplicate panel ids"; exit 1; }
@@ -120,6 +124,7 @@ open(out, "w").write("groups:\n  - name: dashboard.exprs\n    rules:\n" + rules 
 print(f"extracted {len(exprs)} panel queries")
 PY
 run_promtool check rules "${P}/tests/.rendered/dash-exprs.yaml" >/dev/null && green "all panel queries parse"
+fi
 
 step "6. kubeconform — CRD schema validation (monitors, rules, dashboard, rbac)"
 # Strict, NO -ignore-missing-schemas: every rendered object must validate against a schema,
