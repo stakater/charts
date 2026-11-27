@@ -1,0 +1,69 @@
+# E2e overlay: lab namespaces/schemes (the kind suite runs cert-less, so
+# tenant + hibernation serve plain http) and SHRUNK alert windows so every
+# fire/resolve cycle completes in minutes. Never use these thresholds anywhere
+# real.
+mto:
+  operators:
+    tenant-operator:
+      namespace: multi-tenant-operator
+      scheme: http
+    finops-operator:
+      namespace: finops-operator-system
+    hibernation-operator:
+      namespace: hibernation-operator-system
+      scheme: http
+    template-operator:
+      namespace: template-operator-v2-system
+grafana:
+  dashboard:
+    enabled: false
+prometheus:
+  monitors:
+    serviceMonitors:
+      enabled: true
+      interval: 15s
+  rules:
+    mto:
+      operatorDown:
+        enabled: true
+        for: 1m
+      reconcileErrors:
+        enabled: true
+        window: 5m
+        ratio: 0.10
+        for: 2m
+        severity: warning
+      workqueueBacklog:
+        enabled: true
+        depth: 50
+        for: 2m
+        severity: warning
+      webhookErrors:
+        enabled: true
+        window: 5m
+        for: 2m
+        severity: warning
+      webhookLatencyHigh:
+        enabled: true
+        window: 5m
+        thresholdSeconds: 1
+        for: 2m
+        severity: warning
+    finops:
+      costDataStale:
+        enabled: true
+        staleAfterSeconds: 180
+        for: 1m
+        severity: critical
+      costJobNeverSucceeded:
+        enabled: true
+        for: 3m
+        severity: critical
+      costJobFailing:
+        enabled: true
+        for: 2m
+        severity: warning
+      metricsAbsent:
+        enabled: true
+        for: 2m
+        severity: warning
