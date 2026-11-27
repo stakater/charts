@@ -68,6 +68,16 @@ resources, slowest reconciles), admission webhooks (p99, codes), tenancy state
 phases/out-of-sync), and process/API saturation. Job labels are substituted from
 `mto.operators.*.job`; gate on `grafana.dashboard.enabled`.
 
+## Running only part of the suite
+
+Each operator has its own switch: `mto.operators.<name>.enabled`. A cluster running
+only finops-operator sets the other three to `false`
+([docs/examples/values-finops-only.yaml](docs/examples/values-finops-only.yaml)) and
+gets exactly the finops scrape surface and its nine alerts — no dead targets, no
+absent()-alerts for operators that are not installed. The shared dashboard's panels
+for absent operators read "No data"; disable it via `grafana.dashboard.enabled` if
+unwanted.
+
 ## Prerequisites (planned surface)
 
 - OpenShift with **user-workload monitoring** enabled

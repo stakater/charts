@@ -46,6 +46,10 @@ helm lint "$CHART"
 step "1. helm template (defaults)"
 helm template mto-observability "$CHART" >/dev/null && green "renders"
 
+step "1. helm template (finops-only profile renders)"
+helm template mto-observability "$CHART" -f "${CHART}/docs/examples/values-finops-only.yaml" \
+  | grep -q 'alert: MTOCostDataStale' && green "renders (9 finops alerts only)"
+
 step "1. helm template (everything enabled)"
 helm template mto-observability "$CHART" "${ALL_FLAGS[@]}" > "${RENDER_DIR}/all.yaml" && green "renders"
 

@@ -1,0 +1,20 @@
+# Profile: finops-operator only.
+# Every operator entry has its own enabled flag, so a cluster running just a
+# part of the MTO suite monitors exactly what it runs: this renders the finops
+# scrape Service + ServiceMonitor + scraper RBAC and the nine finops alerts
+# (Tier 1 cost pipeline + Tier 2 operator health) - nothing else, so no dead
+# scrape targets and no absent()-based alerts for operators that are not there.
+# The suite dashboard is shared; panels for absent operators read "No data"
+# (disable it with grafana.dashboard.enabled: false if unwanted).
+mto:
+  operators:
+    tenant-operator:
+      enabled: false
+    hibernation-operator:
+      enabled: false
+    template-operator:
+      enabled: false
+prometheus:
+  monitors:
+    serviceMonitors:
+      enabled: true
