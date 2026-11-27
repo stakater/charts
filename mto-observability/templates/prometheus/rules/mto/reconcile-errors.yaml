@@ -1,0 +1,36 @@
+{{- $r := .Values.prometheus.rules.mto.reconcileErrors }}
+{{- if and ($r) ($r.enabled) }}
+{{- range $name, $op := .Values.mto.operators }}
+{{- if $op.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-{{ $name }}-reconcile-errors
+  namespace: {{ include "mto-observability.namespace" $ }}
+  labels:
+    role: alert-rules
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+    {{- with $.Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mto.{{ $name }}.reconcile-errors
+      rules:
+        - alert: MTO{{ $op.alertName }}ReconcileErrors
+          expr: |
+            sum by (controller) (rate(controller_runtime_reconcile_errors_total{job="{{ $op.job }}"}[{{ $r.window }}]))
+              /
+            sum by (controller) (rate(controller_runtime_reconcile_total{job="{{ $op.job }}"}[{{ $r.window }}]))
+              > {{ $r.ratio }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: mto
+          annotations:
+            summary: "{{ $name }} controller {{`{{ $labels.controller }}`}} is failing reconciles"
+            description: "More than {{ mulf $r.ratio 100 }}% of {{`{{ $labels.controller }}`}} reconciles errored over the last {{ $r.window }} (current ratio {{`{{ $value | humanizePercentage }}`}}). The resources this controller owns are not converging; its logs name the failing object."
+{{- end }}
+{{- end }}
+{{- end }}

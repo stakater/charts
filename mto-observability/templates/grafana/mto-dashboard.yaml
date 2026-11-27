@@ -1,0 +1,28 @@
+{{- if and (.Values.grafana.dashboard) (.Values.grafana.dashboard.enabled) }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: mto-dashboard
+  namespace: {{ .Values.grafana.namespace | default (include "mto-observability.namespace" .) }}
+  labels:
+    grafana_dashboard: "true"
+    grafanaDashboard: grafana-operator
+    {{- include "mto-observability.labels" . | nindent 4 }}
+spec:
+  folder: {{ .Values.grafana.folder }}
+  allowCrossNamespaceImport: {{ .Values.grafana.allowCrossNamespaceImport }}
+  instanceSelector:
+    {{ toYaml .Values.grafana.instanceSelector | nindent 3 }}
+  datasources:
+    {{ toYaml .Values.grafana.datasources | nindent 3 }}
+  # Panels select by job label; the placeholders are substituted with the
+  # configured series identities (mto.operators.*.job) so the dashboard follows
+  # the same source as the alerts.
+  json: |-
+{{ .Files.Get "files/mto_grafana_dashboard.json"
+  | replace "__TENANT_JOB__" (index .Values.mto.operators "tenant-operator").job
+  | replace "__FINOPS_JOB__" (index .Values.mto.operators "finops-operator").job
+  | replace "__HIBERNATION_JOB__" (index .Values.mto.operators "hibernation-operator").job
+  | replace "__TEMPLATE_JOB__" (index .Values.mto.operators "template-operator").job
+  | indent 4 }}
+{{- end }}

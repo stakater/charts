@@ -1,0 +1,31 @@
+{{- $r := .Values.prometheus.rules.finops.costJobFailing }}
+{{- $op := index .Values.mto.operators "finops-operator" }}
+{{- if and ($r) ($r.enabled) ($op) ($op.enabled) }}
+# Separates "runs but fails" (OpenCost, PostgreSQL, credentials) from "never
+# runs" (CronJob, schedule, quota) - the fix differs, so the alert does too.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mto-observability.fullname" . }}-finops-cost-job-failing
+  namespace: {{ include "mto-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "mto-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mto.finops.cost-job-failing
+      rules:
+        - alert: MTOCostJobFailing
+          expr: |
+            finops_costjob_last_execution_status{job="{{ $op.job }}", status=~"Failed|Error"} == 1
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: mto
+          annotations:
+            summary: "CostJob {{`{{ $labels.costjob }}`}} is failing"
+            description: "The last execution of CostJob {{`{{ $labels.costjob }}`}} ({{`{{ $labels.type }}`}}) ended {{`{{ $labels.status }}`}} and it has stayed failing for {{ $r.for }}. The job runs but cannot complete — check OpenCost reachability, PostgreSQL and credentials in the loader Job's logs; the CostJob's executionHistory carries the error text."
+{{- end }}

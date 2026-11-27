@@ -1,0 +1,35 @@
+{{- $r := .Values.prometheus.rules.mto.webhookLatencyHigh }}
+{{- if and ($r) ($r.enabled) }}
+{{- range $name, $op := .Values.mto.operators }}
+{{- if and $op.enabled $op.webhook }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-{{ $name }}-webhook-latency-high
+  namespace: {{ include "mto-observability.namespace" $ }}
+  labels:
+    role: alert-rules
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+    {{- with $.Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mto.{{ $name }}.webhook-latency
+      rules:
+        - alert: MTO{{ $op.alertName }}WebhookLatencyHigh
+          expr: |
+            histogram_quantile(0.99,
+              sum by (le, webhook) (rate(controller_runtime_webhook_latency_seconds_bucket{job="{{ $op.job }}"}[{{ $r.window }}]))
+            ) > {{ $r.thresholdSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: mto
+          annotations:
+            summary: "{{ $name }} webhook {{`{{ $labels.webhook }}`}} is slow"
+            description: "p99 admission latency of {{`{{ $labels.webhook }}`}} has been above {{ $r.thresholdSeconds }}s for {{ $r.for }} (currently {{`{{ $value }}`}}s). The webhook sits in the write path of the requests it guards — its latency is every caller's latency."
+{{- end }}
+{{- end }}
+{{- end }}

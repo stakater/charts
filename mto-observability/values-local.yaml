@@ -1,0 +1,9 @@
+# Values for local deployment of the chart when using Tilt
+prometheus:
+  monitors:
+    controllerPodMonitor:
+      enabled: true
+    speakerPodMonitor:
+      enabled: true
+    frrK8sPodMonitor:
+      enabled: true

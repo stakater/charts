@@ -1,0 +1,295 @@
+# promtool unit tests for mto-observability rule LOGIC (Tier 2 — generic
+# operator health). Runs against tests/.rendered/rules.yaml (all groups merged,
+# chart-default values: job labels mto-{tenant,finops,hibernation,template}-operator,
+# reconcile error ratio 0.10 over 15m, workqueue depth 50 over 15m, webhook p99 1s).
+rule_files:
+  - ../.rendered/rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # ------------------------------------------------ operator down: up == 0
+  - interval: 1m
+    input_series:
+      - series: 'up{job="mto-finops-operator", pod="finops-0", control_plane="controller-manager"}'
+        values: '0x20'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MTOFinopsOperatorDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: mto
+              job: mto-finops-operator
+              pod: finops-0
+              control_plane: controller-manager
+            exp_annotations:
+              summary: "finops-operator is down or not being scraped"
+              description: "No metrics from job mto-finops-operator (pod finops-0, controller controller-manager) for 5m: the pod is down, crash-looping, or the scrape is broken. Its controllers are not reconciling, and while its Fail-policy admission webhooks are unreachable the writes they guard are rejected cluster-wide. Check the pods in the operator namespace and the PodMonitor's target status."
+
+  # ------------------------------------------------ operator down: resolves
+  - interval: 1m
+    input_series:
+      - series: 'up{job="mto-finops-operator", pod="finops-0", control_plane="controller-manager"}'
+        values: '0x9 1x20'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: MTOFinopsOperatorDown
+        exp_alerts: []
+
+  # ---------------------------------- operator down: absent() half (no series at all)
+  # No hibernation series exist in this test; absent(up{job=...}) carries the
+  # equality matcher's labels.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="mto-tenant-operator", pod="tenant-0", control_plane="controller-manager-tenant"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: MTOHibernationOperatorDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: mto
+              job: mto-hibernation-operator
+            exp_annotations:
+              summary: "hibernation-operator is down or not being scraped"
+              description: "No metrics from job mto-hibernation-operator (pod , controller ) for 5m: the pod is down, crash-looping, or the scrape is broken. Its controllers are not reconciling, and while its Fail-policy admission webhooks are unreachable the writes they guard are rejected cluster-wide. Check the pods in the operator namespace and the PodMonitor's target status."
+      - eval_time: 7m
+        alertname: MTOTenantOperatorDown
+        exp_alerts: []
+
+  # ------------------------------------------------ reconcile error ratio
+  # 2 errors/min of 10 reconciles/min = 20% > 10% for 15m -> fires; errors
+  # stopping resolves it.
+  - interval: 1m
+    input_series:
+      - series: 'controller_runtime_reconcile_errors_total{job="mto-finops-operator", controller="costjob"}'
+        values: '0+2x40'
+      - series: 'controller_runtime_reconcile_total{job="mto-finops-operator", controller="costjob"}'
+        values: '0+10x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: MTOFinopsOperatorReconcileErrors
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: mto
+              controller: costjob
+            exp_annotations:
+              summary: "finops-operator controller costjob is failing reconciles"
+              description: "More than 10% of costjob reconciles errored over the last 15m (current ratio 20%). The resources this controller owns are not converging; its logs name the failing object."
+  - interval: 1m
+    input_series:
+      - series: 'controller_runtime_reconcile_errors_total{job="mto-finops-operator", controller="costjob"}'
+        values: '0x45'
+      - series: 'controller_runtime_reconcile_total{job="mto-finops-operator", controller="costjob"}'
+        values: '0+10x45'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: MTOFinopsOperatorReconcileErrors
+        exp_alerts: []
+
+  # ------------------------------------------------ workqueue backlog
+  - interval: 1m
+    input_series:
+      - series: 'workqueue_depth{job="mto-tenant-operator", name="tenant"}'
+        values: '100x25'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MTOTenantOperatorWorkqueueBacklog
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: mto
+              name: tenant
+            exp_annotations:
+              summary: "tenant-operator workqueue tenant is backing up"
+              description: "Queue tenant has held more than 50 items for 15m (currently 100). Work is arriving faster than the controller drains it — tenants see slow convergence before anything errors."
+  - interval: 1m
+    input_series:
+      - series: 'workqueue_depth{job="mto-tenant-operator", name="tenant"}'
+        values: '100x5 0x30'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: MTOTenantOperatorWorkqueueBacklog
+        exp_alerts: []
+
+  # ------------------------------------------------ webhook 5xx
+  - interval: 1m
+    input_series:
+      - series: 'controller_runtime_webhook_requests_total{job="mto-tenant-operator", webhook="/validate-tenant", code="500"}'
+        values: '0+5x30'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: MTOTenantOperatorWebhookErrors
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: mto
+              webhook: /validate-tenant
+            exp_annotations:
+              summary: "tenant-operator webhook /validate-tenant is returning 5xx"
+              description: "Admission webhook /validate-tenant has returned 5xx for 10m. For Fail-policy webhooks these are user-visible rejections of the writes they guard; for Ignore-policy ones the requests pass unvalidated instead."
+  - interval: 1m
+    input_series:
+      - series: 'controller_runtime_webhook_requests_total{job="mto-tenant-operator", webhook="/validate-tenant", code="500"}'
+        values: '0+5x10 50x40'
+    alert_rule_test:
+      - eval_time: 45m
+        alertname: MTOTenantOperatorWebhookErrors
+        exp_alerts: []
+
+  # ------------------------------------------------ webhook latency p99
+  # Every request lands between 1s and 5s -> p99 ~ 5s > 1s; requests moving
+  # into the <=1s bucket resolves it.
+  - interval: 1m
+    input_series:
+      - series: 'controller_runtime_webhook_latency_seconds_bucket{job="mto-finops-operator", webhook="/validate-offering", le="1"}'
+        values: '0x30'
+      - series: 'controller_runtime_webhook_latency_seconds_bucket{job="mto-finops-operator", webhook="/validate-offering", le="5"}'
+        values: '0+10x30'
+      - series: 'controller_runtime_webhook_latency_seconds_bucket{job="mto-finops-operator", webhook="/validate-offering", le="+Inf"}'
+        values: '0+10x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: MTOFinopsOperatorWebhookLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: mto
+              webhook: /validate-offering
+            exp_annotations:
+              summary: "finops-operator webhook /validate-offering is slow"
+              description: "p99 admission latency of /validate-offering has been above 1s for 10m (currently 4.959999999999999s). The webhook sits in the write path of the requests it guards — its latency is every caller's latency."
+  - interval: 1m
+    input_series:
+      - series: 'controller_runtime_webhook_latency_seconds_bucket{job="mto-finops-operator", webhook="/validate-offering", le="1"}'
+        values: '0+10x30'
+      - series: 'controller_runtime_webhook_latency_seconds_bucket{job="mto-finops-operator", webhook="/validate-offering", le="5"}'
+        values: '0+10x30'
+      - series: 'controller_runtime_webhook_latency_seconds_bucket{job="mto-finops-operator", webhook="/validate-offering", le="+Inf"}'
+        values: '0+10x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: MTOFinopsOperatorWebhookLatencyHigh
+        exp_alerts: []
+
+  # ================================================= Tier 1: finops cost pipeline
+  # ------------------------------------------------ cost data stale (the headline)
+  # Last success at t=600s, frozen. At eval 180m: time()-600 = 10200s > 7200s.
+  - interval: 1m
+    input_series:
+      - series: 'finops_costjob_last_successful_execution_timestamp_seconds{job="mto-finops-operator", costjob="daily", namespace="finops-operator-system", type="ResourceCostCollection"}'
+        values: '600x200'
+    alert_rule_test:
+      - eval_time: 180m
+        alertname: MTOCostDataStale
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: mto
+              job: mto-finops-operator
+              costjob: daily
+              namespace: finops-operator-system
+              type: ResourceCostCollection
+            exp_annotations:
+              summary: "Cost data from CostJob daily is stale"
+              description: "CostJob daily (ResourceCostCollection, namespace finops-operator-system) has had no successful collection for over 7200s. Every way this happens — CronJob suspended, unpullable image, quota blocking the pod, loader crash, OpenCost or PostgreSQL down — looks identical: cost data has silently stopped and billing/showback is running on stale numbers. Check the CronJob and its latest Job's pods in the operator namespace; the CostJob's executionHistory carries any error."
+  # Resolves when a fresh success lands: timestamp jumps near now.
+  - interval: 1m
+    input_series:
+      - series: 'finops_costjob_last_successful_execution_timestamp_seconds{job="mto-finops-operator", costjob="daily", namespace="finops-operator-system", type="ResourceCostCollection"}'
+        values: '600x150 10200x100'
+    alert_rule_test:
+      - eval_time: 240m
+        alertname: MTOCostDataStale
+        exp_alerts: []
+
+  # ------------------------------------------------ never succeeded
+  # One-hot present (all-zero: never executed), no success timestamp series.
+  - interval: 1m
+    input_series:
+      - series: 'finops_costjob_last_execution_status{job="mto-finops-operator", costjob="new-job", namespace="finops-operator-system", type="SubscriptionChargeCollection", status="Success"}'
+        values: '0x40'
+      - series: 'finops_costjob_last_execution_status{job="mto-finops-operator", costjob="new-job", namespace="finops-operator-system", type="SubscriptionChargeCollection", status="Failed"}'
+        values: '0x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: MTOCostJobNeverSucceeded
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              rulesgroup: mto
+              costjob: new-job
+              namespace: finops-operator-system
+              type: SubscriptionChargeCollection
+            exp_annotations:
+              summary: "CostJob new-job has never succeeded"
+              description: "CostJob new-job (SubscriptionChargeCollection, namespace finops-operator-system) exists but has never completed a successful collection (30m grace). Either its CronJob never ran — schedule, suspension, quota, or an unresolvable image such as an unset OPERATOR_IMAGE rendering a placeholder — or every run failed. No cost data has ever landed for it."
+  # Resolves the moment a success timestamp exists.
+  - interval: 1m
+    input_series:
+      - series: 'finops_costjob_last_execution_status{job="mto-finops-operator", costjob="new-job", namespace="finops-operator-system", type="SubscriptionChargeCollection", status="Success"}'
+        values: '0x10 1x30'
+      - series: 'finops_costjob_last_successful_execution_timestamp_seconds{job="mto-finops-operator", costjob="new-job", namespace="finops-operator-system", type="SubscriptionChargeCollection"}'
+        values: '_x10 600x30'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: MTOCostJobNeverSucceeded
+        exp_alerts: []
+
+  # ------------------------------------------------ failing (runs but fails)
+  - interval: 1m
+    input_series:
+      - series: 'finops_costjob_last_execution_status{job="mto-finops-operator", costjob="daily", namespace="finops-operator-system", type="ResourceCostCollection", status="Failed"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: MTOCostJobFailing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: mto
+              job: mto-finops-operator
+              costjob: daily
+              namespace: finops-operator-system
+              type: ResourceCostCollection
+              status: Failed
+            exp_annotations:
+              summary: "CostJob daily is failing"
+              description: "The last execution of CostJob daily (ResourceCostCollection) ended Failed and it has stayed failing for 10m. The job runs but cannot complete — check OpenCost reachability, PostgreSQL and credentials in the loader Job's logs; the CostJob's executionHistory carries the error text."
+  # Recovers: the one-hot flips to Success.
+  - interval: 1m
+    input_series:
+      - series: 'finops_costjob_last_execution_status{job="mto-finops-operator", costjob="daily", namespace="finops-operator-system", type="ResourceCostCollection", status="Failed"}'
+        values: '1x10 0x30'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: MTOCostJobFailing
+        exp_alerts: []
+
+  # ------------------------------------------------ metrics absent (watchdog)
+  - interval: 1m
+    input_series:
+      - series: 'up{job="mto-finops-operator", pod="finops-0", control_plane="controller-manager"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MTOFinopsMetricsAbsent
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              rulesgroup: mto
+              job: mto-finops-operator
+            exp_annotations:
+              summary: "Finops CostJob metrics are absent"
+              description: "No finops_costjob series are being scraped: the finops-operator is down, the scrape is broken, the running version predates the gauges, or no CostJob exists on this cluster. While this fires, the cost-pipeline alerts (MTOCostDataStale and friends) are blind. If no CostJob is expected here, disable this alert."
+  - interval: 1m
+    input_series:
+      - series: 'finops_costjob_last_execution_status{job="mto-finops-operator", costjob="daily", namespace="finops-operator-system", type="ResourceCostCollection", status="Success"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MTOFinopsMetricsAbsent
+        exp_alerts: []

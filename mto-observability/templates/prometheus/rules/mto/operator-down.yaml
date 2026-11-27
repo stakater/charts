@@ -1,0 +1,36 @@
+{{- $r := .Values.prometheus.rules.mto.operatorDown }}
+{{- $m := .Values.prometheus.monitors.serviceMonitors }}
+{{- /* Renders only while the chart's monitors scrape: without them there is
+no `up{job=...}` series and the absent() half would fire forever. */}}
+{{- if and ($r) ($r.enabled) ($m) ($m.enabled) }}
+{{- range $name, $op := .Values.mto.operators }}
+{{- if $op.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-{{ $name }}-down
+  namespace: {{ include "mto-observability.namespace" $ }}
+  labels:
+    role: alert-rules
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+    {{- with $.Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mto.{{ $name }}.down
+      rules:
+        - alert: MTO{{ $op.alertName }}Down
+          expr: |
+            up{job="{{ $op.job }}"} == 0 or absent(up{job="{{ $op.job }}"})
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $op.downSeverity }}
+            rulesgroup: mto
+          annotations:
+            summary: "{{ $name }} is down or not being scraped"
+            description: "No metrics from job {{ $op.job }} (pod {{`{{ $labels.pod }}`}}, controller {{`{{ $labels.control_plane }}`}}) for {{ $r.for }}: the pod is down, crash-looping, or the scrape is broken. Its controllers are not reconciling{{ if $op.webhook }}, and while its Fail-policy admission webhooks are unreachable the writes they guard are rejected cluster-wide{{ end }}. Check the pods in the operator namespace and the PodMonitor's target status."
+{{- end }}
+{{- end }}
+{{- end }}

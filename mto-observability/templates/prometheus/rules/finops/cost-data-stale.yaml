@@ -1,0 +1,32 @@
+{{- $r := .Values.prometheus.rules.finops.costDataStale }}
+{{- $op := index .Values.mto.operators "finops-operator" }}
+{{- if and ($r) ($r.enabled) ($op) ($op.enabled) }}
+# The headline alert of this chart: cost data has silently stopped flowing.
+# The loader pod writes CostJob status, so a job that never runs leaves the
+# last-success timestamp frozen - this fires on its age, whatever the cause.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mto-observability.fullname" . }}-finops-cost-data-stale
+  namespace: {{ include "mto-observability.namespace" . }}
+  labels:
+    role: alert-rules
+    {{- include "mto-observability.labels" . | nindent 4 }}
+    {{- with .Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mto.finops.cost-data-stale
+      rules:
+        - alert: MTOCostDataStale
+          expr: |
+            time() - finops_costjob_last_successful_execution_timestamp_seconds{job="{{ $op.job }}"} > {{ $r.staleAfterSeconds }}
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: mto
+          annotations:
+            summary: "Cost data from CostJob {{`{{ $labels.costjob }}`}} is stale"
+            description: "CostJob {{`{{ $labels.costjob }}`}} ({{`{{ $labels.type }}`}}, namespace {{`{{ $labels.namespace }}`}}) has had no successful collection for over {{ $r.staleAfterSeconds }}s. Every way this happens — CronJob suspended, unpullable image, quota blocking the pod, loader crash, OpenCost or PostgreSQL down — looks identical: cost data has silently stopped and billing/showback is running on stale numbers. Check the CronJob and its latest Job's pods in the operator namespace; the CostJob's executionHistory carries any error."
+{{- end }}

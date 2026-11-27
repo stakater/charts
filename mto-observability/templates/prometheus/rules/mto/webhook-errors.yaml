@@ -1,0 +1,33 @@
+{{- $r := .Values.prometheus.rules.mto.webhookErrors }}
+{{- if and ($r) ($r.enabled) }}
+{{- range $name, $op := .Values.mto.operators }}
+{{- if and $op.enabled $op.webhook }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-{{ $name }}-webhook-errors
+  namespace: {{ include "mto-observability.namespace" $ }}
+  labels:
+    role: alert-rules
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+    {{- with $.Values.prometheus.rules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mto.{{ $name }}.webhook-errors
+      rules:
+        - alert: MTO{{ $op.alertName }}WebhookErrors
+          expr: |
+            sum by (webhook) (rate(controller_runtime_webhook_requests_total{job="{{ $op.job }}", code=~"5.."}[{{ $r.window }}])) > 0
+          for: {{ $r.for }}
+          labels:
+            severity: {{ $r.severity }}
+            rulesgroup: mto
+          annotations:
+            summary: "{{ $name }} webhook {{`{{ $labels.webhook }}`}} is returning 5xx"
+            description: "Admission webhook {{`{{ $labels.webhook }}`}} has returned 5xx for {{ $r.for }}. For Fail-policy webhooks these are user-visible rejections of the writes they guard; for Ignore-policy ones the requests pass unvalidated instead."
+{{- end }}
+{{- end }}
+{{- end }}
