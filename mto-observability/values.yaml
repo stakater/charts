@@ -66,19 +66,33 @@ mto:
       webhook: true
       # Severity of the Down alert for this operator.
       downSeverity: critical
-      # All seven controller deployments of tenant-operator v1.10.x+ [bundle].
-      podSelector:
-        matchExpressions:
-          - key: control-plane
-            operator: In
-            values:
-              - controller-manager
-              - controller-manager-tenant
-              - controller-manager-quota-intconfig
-              - controller-manager-pilot
-              - controller-manager-webhook
-              - controller-manager-db-controller
-              - controller-manager-extensions-argocd
+      # One headless scrape Service per controller deployment: the pods share
+      # no common label (Service selectors are equality-only) and declare no
+      # container ports, which also rules PodMonitors out — targetPort-by-number
+      # silently drops undeclared ports [verified live on the kind lab].
+      # All seven deployments of tenant-operator v1.10.x+ [bundle].
+      components:
+        - name: tenant
+          selector:
+            control-plane: controller-manager-tenant
+        - name: namespace
+          selector:
+            control-plane: controller-manager
+        - name: quota-intconfig
+          selector:
+            control-plane: controller-manager-quota-intconfig
+        - name: pilot
+          selector:
+            control-plane: controller-manager-pilot
+        - name: webhook
+          selector:
+            control-plane: controller-manager-webhook
+        - name: db-controller
+          selector:
+            control-plane: controller-manager-db-controller
+        - name: extensions-argocd
+          selector:
+            control-plane: controller-manager-extensions-argocd
     finops-operator:
       enabled: true
       namespace: ""
@@ -89,10 +103,11 @@ mto:
       # Offering + Subscription validators, both failurePolicy: Fail.
       webhook: true
       downSeverity: critical
-      podSelector:
-        matchLabels:
-          control-plane: controller-manager
-          app.kubernetes.io/name: finops-operator
+      components:
+        - name: manager
+          selector:
+            control-plane: controller-manager
+            app.kubernetes.io/name: finops-operator
     hibernation-operator:
       enabled: true
       namespace: ""
@@ -106,10 +121,11 @@ mto:
       downSeverity: critical
       # CAPTURE FINDING: the webhook deployment serves NO metrics (no
       # --metrics-bind-address) — scraping it would only create a dead target,
-      # so the monitor covers the manager alone until upstream enables it.
-      podSelector:
-        matchLabels:
-          control-plane: hibernation-controller-manager
+      # so the chart covers the manager alone until upstream enables it.
+      components:
+        - name: manager
+          selector:
+            control-plane: hibernation-controller-manager
     template-operator:
       enabled: true
       namespace: ""
@@ -119,18 +135,21 @@ mto:
       scheme: https
       webhook: true
       downSeverity: critical
-      podSelector:
-        matchLabels:
-          control-plane: controller-manager
-          app.kubernetes.io/name: template-operator-v2
+      components:
+        - name: manager
+          selector:
+            control-plane: controller-manager
+            app.kubernetes.io/name: template-operator-v2
 
 prometheus:
   monitors:
-    # Chart-shipped PodMonitors, one per enabled operator. Off by default:
-    # installing the chart must not start scraping until the cluster operator
-    # opts in (repo convention), and every endpoint is authenticated HTTPS —
-    # the scrape works only with the metricsReader RBAC below in place.
-    podMonitors:
+    # Chart-shipped scrape surface, one headless Service per operator component
+    # plus one ServiceMonitor per operator (the upstream pods declare no
+    # container ports and share no common label, so Services are the only
+    # deterministic way to scrape them). Off by default: installing the chart
+    # must not start scraping until the cluster operator opts in (repo
+    # convention), and the scrape needs the metricsReader RBAC below in place.
+    serviceMonitors:
       enabled: false
       interval: 30s
       scrapeTimeout: 10s
@@ -170,13 +189,13 @@ prometheus:
         for: 10m
         severity: warning
       # Watchdog for the three above: without the scrape they silently stop
-      # evaluating. Needs podMonitors.enabled (no series exists otherwise).
+      # evaluating. Needs serviceMonitors.enabled (no series exists otherwise).
       metricsAbsent:
         enabled: true
         for: 15m
         severity: warning
     # Tier 2 — generic operator health, rendered per enabled operator. The
-    # Down/absent alerts render only while podMonitors.enabled: without the
+    # Down/absent alerts render only while serviceMonitors.enabled: without the
     # scrape there is no `up` series and absent() would fire forever.
     # Numeric thresholds are placeholders until a live baseline.
     mto:

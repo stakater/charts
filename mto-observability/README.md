@@ -4,8 +4,9 @@ Observability for the **Multi Tenant Operator (MTO)**: Prometheus monitors +
 `PrometheusRule` alerts + a Grafana dashboard, integrated with OpenShift
 user-workload monitoring (UWM) and the grafana-operator.
 
-> **Status: 🔨 Tier 2 built, unreleased.** The chart now ships PodMonitors + scraper
-> RBAC for all four MTO operators and the generic operator-health alert set below,
+> **Status: 🔨 built, unreleased.** The chart ships headless scrape Services +
+> ServiceMonitors + scraper RBAC for all four MTO operators, both alert tiers and
+> the suite dashboard below,
 > all behind a green [`tests/validate.sh`](tests/validate.sh). **Release stays gated**
 > on (1) a live metrics capture re-verifying the scrape surface
 > ([`tests/METRICS-CAPTURE.md`](tests/METRICS-CAPTURE.md)) and (2) the remaining
@@ -22,7 +23,7 @@ HibernationOperator / TemplateOperator):
 
 | Alert | Severity | Fires when |
 | --- | --- | --- |
-| `MTO<Op>Down` | critical | `up == 0` or the job is absent for 5m (needs `prometheus.monitors.podMonitors.enabled`) |
+| `MTO<Op>Down` | critical | `up == 0` or the job is absent for 5m (needs `prometheus.monitors.serviceMonitors.enabled`) |
 | `MTO<Op>ReconcileErrors` | warning | a controller's reconcile error ratio > 10% over 15m |
 | `MTO<Op>WorkqueueBacklog` | warning | a workqueue holds > 50 items for 15m |
 | `MTO<Op>WebhookErrors` | warning | an admission webhook returns 5xx for 10m |
@@ -43,8 +44,18 @@ them); the full spec and failure-shape matrix live in
 
 Thresholds are placeholders until a live baseline; every one is a value under
 `prometheus.rules.mto.*` / `prometheus.rules.finops.*`. Monitors default **off**;
-enabling them also creates the scraper ServiceAccount/token bound to a
-`GET /metrics` ClusterRole.
+enabling them creates one headless Service per controller deployment, one
+ServiceMonitor per operator, and the scraper ServiceAccount/token bound to a
+`GET /metrics` ClusterRole (the upstream pods declare no container ports and share
+no common label, so chart-shipped Services are the only deterministic scrape).
+
+## Live on the kind lab
+
+The whole chart — monitors, 24 rules, dashboard — ran end-to-end on the capture
+lab: 10/10 intended targets discovered, 8 up (two tenant components crash-loop on
+missing optional CRDs there), and three alerts genuinely firing on real failures.
+
+![MTO / Suite Overview](docs/img/dashboard-overview.png)
 
 ## Dashboard
 

@@ -1,6 +1,6 @@
-{{- $m := .Values.prometheus.monitors.podMonitors }}
+{{- $m := .Values.prometheus.monitors.serviceMonitors }}
 {{- if and ($m) ($m.enabled) ($m.metricsReader) ($m.metricsReader.create) }}
-{{- /* One ServiceAccount + token Secret per namespace that hosts a PodMonitor
+{{- /* One ServiceAccount + token Secret per namespace that hosts a ServiceMonitor
 (the monitor can only reference a credentials Secret in its own namespace),
 plus one ClusterRole and one ClusterRoleBinding over all of them. Every MTO
 operator authorizes a scrape with a SubjectAccessReview on GET /metrics. */}}

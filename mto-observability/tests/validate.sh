@@ -24,7 +24,7 @@ green() { printf "\033[32m%s\033[0m\n" "$*"; }
 step()  { printf "\n\033[1m== %s ==\033[0m\n" "$*"; }
 
 ALL_FLAGS=(
-  --set prometheus.monitors.podMonitors.enabled=true
+  --set prometheus.monitors.serviceMonitors.enabled=true
 )
 DASHBOARD="${CHART}/files/mto_grafana_dashboard.json"
 

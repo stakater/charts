@@ -51,7 +51,7 @@
       "id": 2,
       "type": "stat",
       "title": "Age of last successful collection",
-      "description": "Per CostJob: time since cost data last landed. This is what MTOCostDataStale pages on (threshold 2h by default). A frozen age means the pipeline is silently dead, whatever the cause.",
+      "description": "Per CostJob: time since cost data last landed. This is what MTOCostDataStale pages on (threshold 2h by default). A frozen age means the pipeline is silently dead, whatever the cause. Shows 'never' when no CostJob has ever succeeded (the MTOCostJobNeverSucceeded condition).",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
@@ -92,7 +92,20 @@
                 "value": 7200
               }
             ]
-          }
+          },
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "never",
+                  "color": "red"
+                }
+              }
+            }
+          ],
+          "noValue": "never"
         },
         "overrides": []
       },

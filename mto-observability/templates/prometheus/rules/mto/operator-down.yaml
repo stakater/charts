@@ -1,6 +1,6 @@
 {{- $r := .Values.prometheus.rules.mto.operatorDown }}
-{{- $m := .Values.prometheus.monitors.podMonitors }}
-{{- /* Renders only while the chart's PodMonitors scrape: without them there is
+{{- $m := .Values.prometheus.monitors.serviceMonitors }}
+{{- /* Renders only while the chart's monitors scrape: without them there is
 no `up{job=...}` series and the absent() half would fire forever. */}}
 {{- if and ($r) ($r.enabled) ($m) ($m.enabled) }}
 {{- range $name, $op := .Values.mto.operators }}

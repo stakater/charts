@@ -1,0 +1,75 @@
+{{- $m := .Values.prometheus.monitors.serviceMonitors }}
+{{- if and ($m) ($m.enabled) }}
+{{- range $name, $op := .Values.mto.operators }}
+{{- if $op.enabled }}
+{{- $ns := $op.namespace | default (include "mto-observability.namespace" $) }}
+{{- range $c := $op.components }}
+---
+# Headless scrape Service for the {{ $name }} {{ $c.name }} deployment. The
+# upstream pods declare no container ports (so a PodMonitor targetPort silently
+# matches nothing) and share no common label - the chart's own Service with an
+# explicit targetPort is the only deterministic scrape surface.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-{{ $name }}-{{ $c.name }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+    mto-observability.stakater.com/scrape: {{ $name }}
+spec:
+  clusterIP: None
+  selector:
+    {{- toYaml $c.selector | nindent 4 }}
+  ports:
+    - name: metrics
+      port: {{ $op.metricsPort }}
+      targetPort: {{ $op.metricsPort }}
+{{- end }}
+---
+# Scrapes every {{ $name }} metrics Service above. The endpoint is
+# authenticated (TokenReview + SubjectAccessReview on GET /metrics) where the
+# operator serves https, hence the token from the chart's metrics-reader
+# Secret; the serving cert is self-signed by default. scheme is per-install:
+# cert-less layouts serve plain http (see values).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mto-observability.fullname" $ }}-{{ $name }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "mto-observability.labels" $ | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      mto-observability.stakater.com/scrape: {{ $name }}
+  endpoints:
+    - port: metrics
+      path: /metrics
+      scheme: {{ $op.scheme | default "https" }}
+      interval: {{ $m.interval }}
+      scrapeTimeout: {{ $m.scrapeTimeout }}
+      {{- if eq ($op.scheme | default "https") "https" }}
+      tlsConfig:
+        insecureSkipVerify: {{ $m.tls.insecureSkipVerify }}
+      {{- end }}
+      authorization:
+        credentials:
+          name: {{ include "mto-observability.fullname" $ }}-metrics-reader-token
+          key: token
+      relabelings:
+        # Pin the series identity every rule and panel references.
+        - action: replace
+          targetLabel: job
+          replacement: {{ $op.job }}
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        # Which controller deployment a series belongs to (tenant-operator runs
+        # seven; the others one or two).
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_label_control_plane]
+          targetLabel: control_plane
+{{- end }}
+{{- end }}
+{{- end }}

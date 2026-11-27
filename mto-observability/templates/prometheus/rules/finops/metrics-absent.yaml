@@ -1,6 +1,6 @@
 {{- $r := .Values.prometheus.rules.finops.metricsAbsent }}
 {{- $op := index .Values.mto.operators "finops-operator" }}
-{{- $m := .Values.prometheus.monitors.podMonitors }}
+{{- $m := .Values.prometheus.monitors.serviceMonitors }}
 {{- /* Needs the chart's monitors: without the scrape no series ever exists and
 absent() would fire forever. */}}
 {{- if and ($r) ($r.enabled) ($op) ($op.enabled) ($m) ($m.enabled) }}

@@ -478,7 +478,13 @@ small upstream change** (Q7) — which is exactly why it is written down first.
 
 ## Open design questions (settle at the approval gate)
 
-- **Q1 — Scrape surface.** The bundle gives Services for only tenant / quota-intconfig /
+- **Q1 — Scrape surface. ~~Settled by live validation~~:** the chart ships
+  **headless Services (one per controller deployment) + one ServiceMonitor per
+  operator** + scraper RBAC. PodMonitors were tried first and failed live on the
+  kind lab: `targetPort`-by-number silently matches nothing when pods declare no
+  container ports (all MTO pods), and the pods share no common label for a single
+  Service. Original question kept for the record below.
+- **Q1 (original) — Scrape surface.** The bundle gives Services for only tenant / quota-intconfig /
   pilot. The *webhook* and *namespace* controllers — the two most alert-worthy pods —
   have none. Options: (a) ServiceMonitors for the three Services + PodMonitors for the
   rest; (b) PodMonitors for all seven (one mechanism, uniform relabeling); (c) chart
